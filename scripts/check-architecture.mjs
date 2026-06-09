@@ -596,6 +596,66 @@ function assertCorePhaseNineCodexWorkerExecution() {
   }
 }
 
+function assertCorePhaseTenFixtureCorpusBase() {
+  for (const path of [
+    'packages/core/src/fixture_corpus/index.ts',
+    'packages/core/src/fixture_corpus/registry.ts',
+    'packages/core/src/fixture_corpus/load.ts',
+    'packages/core/src/fixture_corpus/execution.ts',
+    'packages/core/src/fixture_corpus/run_log.ts',
+    'packages/core/src/fixture_corpus/runners/static_stages.ts',
+    'packages/core/tests/fixture_corpus/load.test.ts',
+    'packages/core/tests/fixture_corpus/execution_smoke.test.ts',
+    'packages/core/tests/fixture_corpus/run_log.test.ts',
+    'packages/core/tests/fixture_corpus/runners/static_stages.test.ts',
+    'packages/cli/src/commands/corpus.ts',
+    'packages/cli/tests/fixture_corpus/cli/corpus-command.test.ts',
+  ]) {
+    assert.equal(existsSync(join(root, path)), true, `Phase 10 fixture corpus base must include ${path}`)
+  }
+
+  const staticStagesSource = readFileSync(join(root, 'packages/core/src/fixture_corpus/runners/static_stages.ts'), 'utf8')
+  assert.equal(
+    staticStagesSource.includes('build_pattern_profile'),
+    true,
+    'fixture corpus static stages must include build_pattern_profile',
+  )
+  assert.equal(
+    staticStagesSource.indexOf('build_graph') < staticStagesSource.indexOf('build_pattern_profile')
+      && staticStagesSource.indexOf('build_pattern_profile') < staticStagesSource.indexOf('build_models'),
+    true,
+    'fixture corpus static stages must run build_pattern_profile between build_graph and build_models',
+  )
+
+  const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
+  assert.equal(
+    coreEntrypointSource.includes("fixture_corpus/index"),
+    true,
+    'core must export fixture corpus helpers for CLI use',
+  )
+
+  const cliCorpusSource = readFileSync(join(root, 'packages/cli/src/commands/corpus.ts'), 'utf8')
+  assert.equal(cliCorpusSource.includes('@platty/core'), true, 'CLI corpus command must use @platty/core public API')
+  assert.equal(cliCorpusSource.includes('@/'), false, 'CLI corpus command must not import core internals via @/')
+  assert.equal(cliCorpusSource.includes('openLocalPlattyDb'), false, 'CLI corpus command must not use project-local DB config')
+  assert.equal(cliCorpusSource.includes('sdd_v2.db'), false, 'CLI corpus command must not reference legacy DB paths')
+
+  for (const forbiddenPath of [
+    'packages/core/src/fixture_corpus/self_improve',
+    'packages/cli/src/commands/self-improve-once.ts',
+  ]) {
+    assert.equal(existsSync(join(root, forbiddenPath)), false, `Phase 10 must keep self-improve for Phase 11: ${forbiddenPath}`)
+  }
+
+  const fixtureFiles = sourceFiles('packages/core/src/fixture_corpus')
+  for (const absPath of fixtureFiles) {
+    const source = readFileSync(absPath, 'utf8')
+    const relPath = relative(root, absPath).split(sep).join('/')
+    assert.equal(source.includes('schema-diversity/prisma/relations-basic'), false, `${relPath} must not hard-code source real-project corpus ids`)
+    assert.equal(source.includes('service/multi-repo/heroines-poc'), false, `${relPath} must not import source service fixture corpus ids`)
+  }
+}
+
 assertRootManifest()
 assertTsconfigReferences()
 assertEntrypointsExist()
@@ -608,6 +668,7 @@ assertCorePhaseSixGenerationRuns()
 assertCorePhaseSevenBuildEpics()
 assertCorePhaseEightBusinessDocs()
 assertCorePhaseNineCodexWorkerExecution()
+assertCorePhaseTenFixtureCorpusBase()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)

@@ -4,7 +4,7 @@ import { commandArgvAfter, stripGlobalFlags, value } from './argv.js'
 import { failure, success, type PlattyCommandResponse } from './output.js'
 
 const VERSION = '0.1.0'
-const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'version'])
+const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'corpus', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'version'])
 
 type DispatchOptions = PlattyCommandRunOptions & { cwd: string }
 type CommandHandler = () => Promise<PlattyCommandResponse>
@@ -167,6 +167,13 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
       openDb: _options.openDb,
       project: value(_argv, '--project'),
       businessDocsTaskInvoker: _options.businessDocsTaskInvoker,
+    })
+  }, setResponse)
+
+  setAction(configurePassthrough(program.command('corpus').description('Inspect and dry-run fixture corpus validation.')), async () => {
+    const { runCorpusCommand } = await import('./commands/corpus.js')
+    return runCorpusCommand(commandArgvAfter('corpus', stripGlobalFlags(_argv)), {
+      cwd: _options.cwd,
     })
   }, setResponse)
 
