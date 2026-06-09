@@ -270,7 +270,6 @@ function assertCorePhaseTwoStaticPipeline() {
 function assertCliPhaseThreeFoundation() {
   const forbiddenCommandFiles = [
     'packages/cli/src/commands/docs.ts',
-    'packages/cli/src/commands/epics.ts',
     'packages/cli/src/commands/business-docs.ts',
     'packages/cli/src/commands/service-map.ts',
     'packages/cli/src/commands/business-map.ts',
@@ -434,6 +433,68 @@ function assertCorePhaseSixGenerationRuns() {
   assert.equal(adapterSource.includes("stage === 'build_docs'"), true, 'generation run resolver must dispatch build_docs runs')
 }
 
+function assertCorePhaseSevenBuildEpics() {
+  for (const path of [
+    'packages/core/src/pipeline_modules/build_epics_cli_runtime/index.ts',
+    'packages/core/src/pipeline_modules/build_epics_cli_runtime/runtime.ts',
+    'packages/core/src/pipeline_modules/build_epics_cli_runtime/worker_runner.ts',
+    'packages/core/src/pipeline_modules/build_epics_core/index.ts',
+    'packages/core/src/pipeline_modules/build_epics_core/f0_assert_docs_complete.ts',
+    'packages/core/src/pipeline_modules/build_epics_core/f1_load_doc_index.ts',
+    'packages/core/src/pipeline_modules/build_epics_core/f9_validate_plan.ts',
+    'packages/core/src/pipeline_modules/build_epics_core/f10_persist_confirmed_epics.ts',
+    'packages/core/src/pipeline_modules/build_epics_sync/index.ts',
+    'packages/core/src/pipeline_modules/build_epics_sync/runtime.ts',
+    'packages/core/src/pipeline_modules/build_epics_sync/worker_runner.ts',
+    'packages/core/src/pipeline_modules/generation_runs/build_epics_adapter.ts',
+    'packages/core/tests/pipeline_modules/build_epics_cli_runtime/runtime.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics_cli_runtime/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics_core/f0_assert_docs_complete.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics_core/f1_load_doc_index_review_decisions.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics_sync/runtime.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics_sync/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/generation_runs/build_epics_adapter.test.ts',
+    'packages/cli/src/commands/epics.ts',
+    'packages/cli/tests/epics-command.test.ts',
+  ]) {
+    assert.equal(existsSync(join(root, path)), true, `Phase 7 build epics runtime must include ${path}`)
+  }
+
+  const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
+  for (const token of [
+    'pipeline_modules/build_epics_cli_runtime/index',
+    'buildEpicsCore',
+    'pipeline_modules/build_epics_sync/index',
+  ]) {
+    assert.equal(coreEntrypointSource.includes(token), true, `core must export Phase 7 build epics surface: ${token}`)
+  }
+
+  const generationRunIndexSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/generation_runs/index.ts'), 'utf8')
+  assert.equal(generationRunIndexSource.includes("stage === 'build_epics'"), true, 'generation run resolver must dispatch build_epics runs')
+  assert.equal(generationRunIndexSource.includes('business_docs_adapter'), false, 'Phase 7 generation run resolver must not import Phase 8 business docs adapter')
+
+  for (const sourceDir of [
+    'packages/core/src/pipeline_modules/build_epics_cli_runtime',
+    'packages/core/src/pipeline_modules/build_epics_core',
+    'packages/core/src/pipeline_modules/build_epics_sync',
+  ]) {
+    for (const absPath of sourceFiles(sourceDir)) {
+      const source = readFileSync(absPath, 'utf8')
+      const relPath = relative(root, absPath).split(sep).join('/')
+      assert.equal(source.includes('legacy_generation/build_epics'), false, `${relPath} must not import legacy build_epics`)
+      assert.equal(source.includes('@/pipeline_modules/build_epics/'), false, `${relPath} must not import legacy build_epics monolith`)
+      assert.equal(source.includes('build_business_docs_cli'), false, `${relPath} must not import Phase 8 business docs runtime yet`)
+      assert.equal(source.includes('sync_v2'), false, `${relPath} must use sync naming, not sync_v2`)
+    }
+  }
+
+  const cliEpicsSource = readFileSync(join(root, 'packages/cli/src/commands/epics.ts'), 'utf8')
+  assert.equal(cliEpicsSource.includes('@platty/core'), true, 'CLI epics command must use @platty/core public API')
+  assert.equal(cliEpicsSource.includes('@/'), false, 'CLI epics command must not import core internals via @/')
+  assert.equal(cliEpicsSource.includes('localDbPath'), false, 'CLI epics command must not use project-local DB config')
+  assert.equal(cliEpicsSource.includes('openLocalPlattyDb'), false, 'CLI epics command must use global CLI DB opener')
+}
+
 assertRootManifest()
 assertTsconfigReferences()
 assertEntrypointsExist()
@@ -443,6 +504,7 @@ assertCliPhaseThreeFoundation()
 assertCorePhaseFourSync()
 assertCorePhaseFiveSharedSegments()
 assertCorePhaseSixGenerationRuns()
+assertCorePhaseSevenBuildEpics()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)

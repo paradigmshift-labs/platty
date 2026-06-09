@@ -7,6 +7,12 @@ import {
   retryBuildDocsRunTasks,
   statusBuildDocsRun,
 } from './build_docs_adapter.js'
+import {
+  releaseBuildEpicsRunLeases,
+  resumeBuildEpicsRun,
+  retryBuildEpicsRunTasks,
+  statusBuildEpicsRun,
+} from './build_epics_adapter.js'
 import type { UnifiedRunAdapter, UnifiedRunRetryInput } from './types.js'
 
 export function resolveUnifiedRunAdapter(
@@ -27,6 +33,15 @@ export function resolveUnifiedRunAdapter(
       releaseLeases: (args) => releaseBuildDocsRunLeases(db, args),
     }
   }
+  if (run?.stage === 'build_epics') {
+    return {
+      kind: 'build_epics',
+      status: (args) => statusBuildEpicsRun(db, args),
+      resume: (args) => resumeBuildEpicsRun(db, args),
+      retry: (args: UnifiedRunRetryInput) => retryBuildEpicsRunTasks(db, args),
+      releaseLeases: (args) => releaseBuildEpicsRunLeases(db, args),
+    }
+  }
 
   throw codeError('RUN_NOT_FOUND', 'Run not found')
 }
@@ -36,6 +51,7 @@ function codeError(code: string, message: string): Error & { code: string } {
 }
 
 export * from './build_docs_adapter.js'
+export * from './build_epics_adapter.js'
 export * from './lease_engine.js'
 export * from './resumable_run_resolver.js'
 export * from './shared_generation_adapter.js'
