@@ -557,6 +557,45 @@ function assertCorePhaseEightBusinessDocs() {
   assert.equal(cliBusinessDocsSource.includes('openLocalPlattyDb'), false, 'CLI business-docs command must use global CLI DB opener')
 }
 
+function assertCorePhaseNineCodexWorkerExecution() {
+  for (const path of [
+    'packages/core/src/pipeline_modules/cli_agent_runner/codex_cli.ts',
+    'packages/core/tests/pipeline_modules/cli_agent_runner/codex_cli.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_cli_runtime/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics_cli_runtime/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/build_business_docs_cli/fake_worker_e2e.test.ts',
+  ]) {
+    assert.equal(existsSync(join(root, path)), true, `Phase 9 Codex worker execution must include ${path}`)
+  }
+
+  const codexCliSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/cli_agent_runner/codex_cli.ts'), 'utf8')
+  for (const token of [
+    'normalizeCodexOutputSchema',
+    '--output-schema',
+    'resultPath',
+    'logPath',
+    'model_reasoning_effort',
+    '--skip-git-repo-check',
+    '--ephemeral',
+  ]) {
+    assert.equal(codexCliSource.includes(token), true, `Codex CLI wrapper must preserve ${token}`)
+  }
+
+  for (const sourceDir of [
+    'packages/core/src/pipeline_modules/build_docs_cli_runtime',
+    'packages/core/src/pipeline_modules/build_epics_cli_runtime',
+    'packages/core/src/pipeline_modules/build_business_docs_cli',
+  ]) {
+    for (const absPath of sourceFiles(sourceDir)) {
+      const source = readFileSync(absPath, 'utf8')
+      const relPath = relative(root, absPath).split(sep).join('/')
+      if (!relPath.endsWith('worker_runner.ts')) continue
+      assert.equal(source.includes('invokeCodexCliJson'), true, `${relPath} must call the shared Codex CLI wrapper`)
+      assert.equal(source.includes('taskInvoker'), true, `${relPath} must keep fake/injected task invoker test seam`)
+    }
+  }
+}
+
 assertRootManifest()
 assertTsconfigReferences()
 assertEntrypointsExist()
@@ -568,6 +607,7 @@ assertCorePhaseFiveSharedSegments()
 assertCorePhaseSixGenerationRuns()
 assertCorePhaseSevenBuildEpics()
 assertCorePhaseEightBusinessDocs()
+assertCorePhaseNineCodexWorkerExecution()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)

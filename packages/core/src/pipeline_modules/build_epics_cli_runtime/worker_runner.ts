@@ -1,6 +1,6 @@
-import { spawn } from 'node:child_process'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
+import { invokeCodexCliJson, safeName } from '@/pipeline_modules/cli_agent_runner/codex_cli.js'
 import type { BuildEpicsCliRuntime } from './runtime.js'
 import type { BuildEpicsRuntimePolicyInput, BuildEpicsRuntimeTaskType } from './types.js'
 
@@ -398,33 +398,16 @@ function createBuildEpicsTaskInvoker(provider: BuildEpicsRunnerProvider): BuildE
     throw new Error('CLAUDE_CODE_HEADLESS_UNSUPPORTED')
   }
   return async (input) => {
-    await mkdir(input.workDir, { recursive: true })
-    const base = safeName(`${input.targetKey}-${input.taskId}`)
-    const schemaPath = path.join(input.workDir, `${base}.schema.json`)
-    const resultPath = path.join(input.workDir, `${base}.result.json`)
-    const logPath = path.join(input.workDir, `${base}.log`)
-    await writeJson(schemaPath, input.schema)
-    const output = await runCodexCli({ ...input, schemaPath, resultPath, logPath })
-    await writeJson(resultPath, output)
-    return output
+    if (input.model.provider !== 'codex_cli') throw new Error(`Unsupported Codex CLI model provider: ${input.model.provider}`)
+    return await invokeCodexCliJson({
+      model: { provider: 'codex_cli', model: input.model.model, effort: input.model.effort },
+      prompt: input.prompt,
+      schema: input.schema,
+      workDir: input.workDir,
+      baseName: `${input.targetKey}-${input.taskId}`,
+      timeoutMs: input.timeoutMs,
+    })
   }
-}
-
-async function runCodexCli(input: BuildEpicsTaskInvokerInput & { schemaPath: string; resultPath: string; logPath: string }) {
-  const args = [
-    'exec',
-    '-m', input.model.model,
-    '-c', `model_reasoning_effort=${input.model.effort ?? 'medium'}`,
-    '--skip-git-repo-check',
-    '--ephemeral',
-    '-C', input.workDir,
-    '--output-schema', input.schemaPath,
-    '-o', input.resultPath,
-  ]
-  const result = await spawnCapture('codex', args, { input: input.prompt, timeoutMs: input.timeoutMs })
-  await writeFile(input.logPath, result.stdout + result.stderr, 'utf8')
-  if (result.code !== 0) throw new Error(`codex exited ${result.code}: ${(result.stderr || result.stdout).slice(-500)}`)
-  return JSON.parse(await readFile(input.resultPath, 'utf8')) as unknown
 }
 
 function schemaForContext(content: Record<string, any>): Record<string, unknown> {
@@ -699,41 +682,8 @@ function addNormalizationStats(target: NormalizationStats, source: Normalization
   target.duplicateCrossLinkRemoved += source.duplicateCrossLinkRemoved
 }
 
-function spawnCapture(command: string, args: string[], options: { input: string; timeoutMs: number }): Promise<{ code: number | null; stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    const proc = spawn(command, args, { stdio: ['pipe', 'pipe', 'pipe'] })
-    let stdout = ''
-    let stderr = ''
-    const timer = setTimeout(() => {
-      proc.kill('SIGTERM')
-      setTimeout(() => proc.kill('SIGKILL'), 2_000).unref()
-      reject(new Error(`${command} timed out after ${options.timeoutMs}ms`))
-    }, options.timeoutMs)
-    timer.unref()
-    proc.stdout.on('data', (chunk: Buffer) => { stdout += chunk.toString('utf8') })
-    proc.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString('utf8') })
-    proc.on('error', (error) => {
-      clearTimeout(timer)
-      reject(error)
-    })
-    proc.on('close', (code) => {
-      clearTimeout(timer)
-      resolve({ code, stdout, stderr })
-    })
-    proc.stdin.end(options.input)
-  })
-}
-
 function asRecord(value: unknown): Record<string, any> {
   return typeof value === 'object' && value !== null ? { ...(value as Record<string, any>) } : {}
-}
-
-async function writeJson(filePath: string, value: unknown): Promise<void> {
-  await writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8')
-}
-
-function safeName(value: string): string {
-  return value.replace(/[^a-zA-Z0-9._:-]+/g, '_')
 }
 
 function unique<T>(values: T[]): T[] {
