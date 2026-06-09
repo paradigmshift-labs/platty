@@ -415,15 +415,18 @@ Create `tsconfig.base.json`:
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "baseUrl": ".",
+    "paths": {
+      "@platty/core": ["packages/core/src/index.ts"],
+      "@platty/sdk": ["packages/sdk/src/index.ts"]
+    },
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-    "rootDir": "src",
-    "outDir": "dist"
+    "sourceMap": true
   }
 }
 ```
@@ -475,7 +478,10 @@ Create `packages/core/tsconfig.json`:
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*.ts"]
 }
@@ -528,7 +534,10 @@ Create `packages/sdk/tsconfig.json`:
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*.ts"]
 }
@@ -607,7 +616,10 @@ Create `packages/cli/tsconfig.json`:
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "references": [
     { "path": "../core" },
@@ -623,6 +635,13 @@ Create `packages/cli/src/main.ts`:
 #!/usr/bin/env node
 import { getPlattyEngineInfo } from '@platty/core'
 import { createPlattyClient } from '@platty/sdk'
+
+declare const process: {
+  readonly argv: readonly string[]
+  readonly stdout: {
+    write(output: string): void
+  }
+}
 
 export function runPlattyCli(): string {
   const engine = getPlattyEngineInfo()
@@ -667,7 +686,10 @@ Create `apps/backend/tsconfig.json`:
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "references": [
     { "path": "../../packages/core" }
@@ -680,6 +702,13 @@ Create `apps/backend/src/main.ts`:
 
 ```ts
 import { getPlattyEngineInfo } from '@platty/core'
+
+declare const process: {
+  readonly argv: readonly string[]
+  readonly stdout: {
+    write(output: string): void
+  }
+}
 
 export function describeBackend(): string {
   return `platty backend ready: ${getPlattyEngineInfo().name}`
@@ -721,7 +750,10 @@ Create `apps/web/tsconfig.json`:
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "references": [
     { "path": "../../packages/sdk" }
@@ -771,7 +803,10 @@ Create `apps/desktop/tsconfig.json`:
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "references": [
     { "path": "../../packages/sdk" }
