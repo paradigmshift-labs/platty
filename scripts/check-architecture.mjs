@@ -79,7 +79,10 @@ function assertWorkspaceManifest(workspace) {
   const manifest = readJson(workspace.manifestPath)
   assert.equal(manifest.name, workspace.name, `${workspace.manifestPath} has an unexpected package name`)
   assert.equal(manifest.type, 'module', `${workspace.manifestPath} must use ESM`)
-  assert.equal(manifest.scripts?.build, 'tsc -b', `${workspace.manifestPath} must expose a build script`)
+  const expectedBuildScript = workspace.manifestPath === 'packages/core/package.json'
+    ? 'tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs dist'
+    : 'tsc -b'
+  assert.equal(manifest.scripts?.build, expectedBuildScript, `${workspace.manifestPath} must expose a build script`)
   const expectedTestScript = workspace.manifestPath === 'packages/core/package.json' || workspace.manifestPath === 'packages/cli/package.json'
     ? 'vitest run'
     : 'node --test'

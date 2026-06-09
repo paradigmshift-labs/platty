@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs dist",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "test:db": "vitest run tests/db",

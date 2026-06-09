@@ -100,7 +100,10 @@ describe('Platty monorepo workspace contract', () => {
       assert.equal(manifest.name, expectedName)
       assert.equal(manifest.private, expectedPrivate)
       assert.equal(manifest.type, 'module')
-      assert.equal(manifest.scripts.build, 'tsc -b')
+      const expectedBuildScript = manifestPath === 'packages/core/package.json'
+        ? 'tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs dist'
+        : 'tsc -b'
+      assert.equal(manifest.scripts.build, expectedBuildScript)
       const expectedTestScript = manifestPath === 'packages/core/package.json' || manifestPath === 'packages/cli/package.json'
         ? 'vitest run'
         : 'node --test'
