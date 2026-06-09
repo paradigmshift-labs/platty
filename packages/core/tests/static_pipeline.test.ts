@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createTestPlattyDb } from '../src/db/testing.js'
-import { repositories, repositoryPhaseStatus } from '../src/db/schema/core.js'
+import { projectPhaseStatus, repositories, repositoryPhaseStatus } from '../src/db/schema/core.js'
 import { createProject } from '../src/project_service.js'
 import { addRepository } from '../src/repository_service.js'
 import {
@@ -12,7 +12,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 function gitRepo() {
   const dir = mkdtempSync(join(tmpdir(), 'platty-static-project-'))
@@ -175,6 +175,42 @@ describe('static_pipeline', () => {
       type: 'run_static_analysis',
       stage: 'build_service_map',
       repoId: repo.id,
+    })
+    client.close()
+  })
+
+  it('runs the project-level service map before reporting build_docs', async () => {
+    const client = createTestPlattyDb()
+    const project = createProject(client.db, { name: 'Demo' })
+    const repo = addRepository(client.db, { projectId: project.id, path: gitRepo(), name: 'api' })
+
+    for (const stage of STATIC_PIPELINE_STAGES) {
+      client.db.insert(repositoryPhaseStatus).values({
+        repositoryId: repo.id,
+        phase: stage,
+        status: 'passed',
+        validity: 'fresh',
+        builtAt: '2026-06-09T00:00:00.000Z',
+        confirmedAt: stage === 'analyze_repo' ? '2026-06-09T00:00:00.000Z' : null,
+      }).run()
+    }
+
+    const result = await runStaticPipelineForProject({
+      db: client.db,
+      projectId: project.id,
+      stepOnly: true,
+    })
+
+    const servicePhase = client.db.select().from(projectPhaseStatus)
+      .where(and(
+        eq(projectPhaseStatus.projectId, project.id),
+        eq(projectPhaseStatus.phase, 'build_service_map'),
+      ))
+      .get()
+
+    expect(servicePhase?.status).toBe('passed')
+    expect(result.nextAction).toMatchObject({
+      type: 'build_docs',
     })
     client.close()
   })

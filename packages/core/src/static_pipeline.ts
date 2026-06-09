@@ -7,7 +7,7 @@ import { runBuildRoute } from './pipeline_modules/build_route/index.js'
 import { runBuildRelations } from './pipeline_modules/build_relations/index.js'
 import { runBuildServiceMap } from './pipeline_modules/build_service_map/index.js'
 import { listRepositories } from './repository_service.js'
-import { repositoryPhaseStatus } from './db/schema/core.js'
+import { projectPhaseStatus, repositoryPhaseStatus, type Repository } from './db/schema/core.js'
 import { and, eq } from 'drizzle-orm'
 
 export const STATIC_PIPELINE_STAGES = [
@@ -95,6 +95,15 @@ function phaseStatus(input: { db: DB; repoId: string; stage: StaticPipelineStage
     .get()
 }
 
+function projectServiceMapPhaseStatus(input: { db: DB; projectId: string }) {
+  return input.db.select().from(projectPhaseStatus)
+    .where(and(
+      eq(projectPhaseStatus.projectId, input.projectId),
+      eq(projectPhaseStatus.phase, 'build_service_map'),
+    ))
+    .get()
+}
+
 function isFreshPassed(phase: ReturnType<typeof phaseStatus>) {
   return phase?.status === 'passed' && phase.validity === 'fresh'
 }
@@ -103,6 +112,30 @@ function isFreshPassedForCommit(phase: ReturnType<typeof phaseStatus>, expectedC
   if (!isFreshPassed(phase)) return false
   if (!expectedCommit) return true
   return (phase?.sourceCommit ?? phase?.builtFromCommit ?? null) === expectedCommit
+}
+
+function phaseTime(value: string | number | null | undefined): number {
+  if (typeof value === 'number') return value
+  if (!value) return 0
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
+    ? `${value.replace(' ', 'T')}Z`
+    : value
+  const parsed = Date.parse(normalized)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function isProjectServiceMapFresh(input: { db: DB; projectId: string; repositories: Repository[] }): boolean {
+  const phase = projectServiceMapPhaseStatus(input)
+  if (phase?.status !== 'passed') return false
+  const latestRelationsAt = Math.max(
+    0,
+    ...input.repositories.map((repo) => phaseTime(phaseStatus({
+      db: input.db,
+      repoId: repo.id,
+      stage: 'build_relations',
+    })?.builtAt)),
+  )
+  return phaseTime(phase.updatedAt) >= latestRelationsAt
 }
 
 export function nextStaticPipelineStage(input: { db: DB; repoId: string; expectedCommit?: string | null }): StaticPipelineStage | StaticPipelineNextAction {
@@ -140,9 +173,19 @@ export async function runStaticPipelineForProject(input: RunStaticPipelineForPro
         expectedCommit: repository.lastSyncedCommit,
       })
       if (typeof nextStage !== 'string') {
-        nextAction = nextStage.type === 'completed'
-          ? { type: 'build_docs', command: ['platty', 'docs', 'start', '--project', input.projectId] }
-          : nextStage
+        if (nextStage.type === 'completed' && !isProjectServiceMapFresh({ db: input.db, projectId: input.projectId, repositories })) {
+          await runBuildServiceMap({
+            db: input.db,
+            projectId: input.projectId,
+            parentRunId: input.parentRunId,
+            signal: input.signal,
+          })
+          nextAction = { type: 'build_docs', command: ['platty', 'docs', 'start', '--project', input.projectId] }
+        } else {
+          nextAction = nextStage.type === 'completed'
+            ? { type: 'build_docs', command: ['platty', 'docs', 'start', '--project', input.projectId] }
+            : nextStage
+        }
         break
       }
 
@@ -163,6 +206,15 @@ export async function runStaticPipelineForProject(input: RunStaticPipelineForPro
       })
     }
     completedRepositoryIds.push(repository.id)
+  }
+
+  if (!input.stepOnly && !isProjectServiceMapFresh({ db: input.db, projectId: input.projectId, repositories })) {
+    await runBuildServiceMap({
+      db: input.db,
+      projectId: input.projectId,
+      parentRunId: input.parentRunId,
+      signal: input.signal,
+    })
   }
 
   return {
