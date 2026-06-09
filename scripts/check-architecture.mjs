@@ -342,7 +342,8 @@ function assertCorePhaseFiveSharedSegments() {
 
   const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
   assert.equal(
-    coreEntrypointSource.includes("pipeline_modules/build_docs_generation/shared_segments"),
+    coreEntrypointSource.includes("pipeline_modules/build_docs_generation/shared_segments")
+      || coreEntrypointSource.includes("pipeline_modules/build_docs_generation/index"),
     true,
     'core must export shared code segment helpers for later docs runtime/CLI use',
   )
@@ -350,6 +351,87 @@ function assertCorePhaseFiveSharedSegments() {
   const sharedSegmentsSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/build_docs_generation/shared_segments.ts'), 'utf8')
   assert.equal(sharedSegmentsSource.includes('rebuildSharedCodeSegmentsForProject'), true, 'shared segments must expose project rebuild helper')
   assert.equal(sharedSegmentsSource.includes('loadSharedCodeSegmentsForEntryPoints'), true, 'shared segments must expose entry-point context loader')
+}
+
+function assertCorePhaseSixGenerationRuns() {
+  for (const path of [
+    'packages/core/src/pipeline_modules/build_docs_cli_runtime/index.ts',
+    'packages/core/src/pipeline_modules/build_docs_cli_runtime/runtime.ts',
+    'packages/core/src/pipeline_modules/build_docs_cli_runtime/worker_runner.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/agent_packet.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/context_builder.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/draft_contract.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/draft_json_repair.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/index.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/materialize_document_graph.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/persist_helpers.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/pre_llm_context.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/quality_audit.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/relation_compactor.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/runtime.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/service_map_facts.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/source_closure.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/source_links.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/static_envelope.ts',
+    'packages/core/src/pipeline_modules/build_docs_generation/system_merge.ts',
+    'packages/core/src/pipeline_modules/generation_runs/build_docs_adapter.ts',
+    'packages/core/src/pipeline_modules/generation_runs/index.ts',
+    'packages/core/src/pipeline_modules/generation_runs/lease_engine.ts',
+    'packages/core/src/pipeline_modules/generation_runs/resumable_run_resolver.ts',
+    'packages/core/src/pipeline_modules/generation_runs/shared_generation_adapter.ts',
+    'packages/core/src/pipeline_modules/generation_runs/types.ts',
+    'packages/core/src/pipeline_modules/cli_agent_runner/codex_cli.ts',
+    'packages/core/tests/pipeline_modules/build_docs_cli_runtime/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/agent_packet.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/context_builder.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/draft_contract.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/draft_json_repair.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/quality_audit.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/runtime.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/source_closure.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/source_links.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/static_envelope.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/system_merge.test.ts',
+    'packages/core/tests/pipeline_modules/generation_runs/build_docs_adapter.test.ts',
+    'packages/core/tests/pipeline_modules/generation_runs/lease_engine.test.ts',
+    'packages/core/tests/pipeline_modules/generation_runs/shared_generation_adapter.test.ts',
+  ]) {
+    assert.equal(existsSync(join(root, path)), true, `core build-docs runtime phase must include ${path}`)
+  }
+
+  const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
+  assert.equal(
+    coreEntrypointSource.includes("pipeline_modules/build_docs_generation/index"),
+    true,
+    'core must export build docs generation runtime for CLI use',
+  )
+  assert.equal(
+    coreEntrypointSource.includes("pipeline_modules/build_docs_cli_runtime/index"),
+    true,
+    'core must export build docs CLI runtime for CLI package use',
+  )
+  assert.equal(
+    coreEntrypointSource.includes("pipeline_modules/generation_runs/index"),
+    true,
+    'core must export generation run lifecycle helpers for later docs runtime/CLI use',
+  )
+
+  for (const sourceDir of [
+    'packages/core/src/pipeline_modules/build_docs_cli_runtime',
+    'packages/core/src/pipeline_modules/build_docs_generation',
+    'packages/core/src/pipeline_modules/generation_runs',
+  ]) {
+    for (const absPath of sourceFiles(sourceDir)) {
+      const source = readFileSync(absPath, 'utf8')
+      const relPath = relative(root, absPath).split(sep).join('/')
+      assert.equal(source.includes('build_business_docs_cli'), false, `${relPath} must not import Phase 8 business docs runtime yet`)
+      assert.equal(source.includes('sync_v2'), false, `${relPath} must use sync naming, not sync_v2`)
+    }
+  }
+
+  const adapterSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/generation_runs/index.ts'), 'utf8')
+  assert.equal(adapterSource.includes('resolveUnifiedRunAdapter'), true, 'generation run index must expose adapter resolver')
+  assert.equal(adapterSource.includes("stage === 'build_docs'"), true, 'generation run resolver must dispatch build_docs runs')
 }
 
 assertRootManifest()
@@ -360,6 +442,7 @@ assertCorePhaseTwoStaticPipeline()
 assertCliPhaseThreeFoundation()
 assertCorePhaseFourSync()
 assertCorePhaseFiveSharedSegments()
+assertCorePhaseSixGenerationRuns()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)
