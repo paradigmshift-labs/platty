@@ -1,0 +1,22 @@
+{
+  "name": "platty-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "node --test tests && npm run check:architecture",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@platty/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@platty/core": "0.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

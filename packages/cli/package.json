@@ -1,0 +1,32 @@
+{
+  "name": "@pshift/platty",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Platty CLI for repository static analysis and documentation workflows.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bin": {
+    "platty": "dist/main.js"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test",
+    "release:pack:dry-run": "npm pack --dry-run",
+    "release:publish:dry-run": "npm publish --dry-run"
+  },
+  "dependencies": {
+    "@platty/core": "0.1.0",
+    "@platty/sdk": "0.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@platty/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@platty/sdk": "0.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
