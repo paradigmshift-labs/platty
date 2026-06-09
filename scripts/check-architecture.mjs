@@ -247,7 +247,6 @@ function assertCorePhaseTwoStaticPipeline() {
     'packages/core/src/artifacts',
     'packages/core/src/legacy',
     'packages/core/src/pipeline_modules/legacy_generation',
-    'packages/core/src/pipeline_modules/sync',
   ]
 
   for (const path of forbiddenPaths) {
@@ -296,12 +295,48 @@ function assertCliPhaseThreeFoundation() {
   }
 }
 
+function assertCorePhaseFourSync() {
+  for (const path of [
+    'packages/core/src/pipeline_modules/sync/hash.ts',
+    'packages/core/src/pipeline_modules/sync/static_map.ts',
+    'packages/core/src/pipeline_modules/sync/doc_sync.ts',
+    'packages/core/src/pipeline_modules/sync/index.ts',
+  ]) {
+    assert.equal(existsSync(join(root, path)), true, `core sync pipeline must include ${path}`)
+  }
+
+  assert.equal(
+    existsSync(join(root, 'packages/core/src/pipeline_modules/sync_v2')),
+    false,
+    'core must expose latest sync under sync, not sync_v2',
+  )
+
+  for (const absPath of sourceFiles('packages/core/src/pipeline_modules/sync')) {
+    const source = readFileSync(absPath, 'utf8')
+    const relPath = relative(root, absPath).split(sep).join('/')
+    assert.equal(source.includes('sync_v2'), false, `${relPath} must use sync naming, not sync_v2`)
+    assert.equal(source.includes('SyncV2'), false, `${relPath} must use sync naming, not SyncV2`)
+    assert.equal(source.includes('SYNC_V2'), false, `${relPath} must use sync naming, not SYNC_V2`)
+  }
+
+  const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
+  for (const symbol of [
+    'syncStaticMap',
+    'SyncStaticMapError',
+    'createDocSyncPlan',
+    'applyDocSyncPlan',
+  ]) {
+    assert.equal(coreEntrypointSource.includes(symbol) || coreEntrypointSource.includes("pipeline_modules/sync"), true, `core must export ${symbol}`)
+  }
+}
+
 assertRootManifest()
 assertTsconfigReferences()
 assertEntrypointsExist()
 assertCorePhaseOneInfrastructure()
 assertCorePhaseTwoStaticPipeline()
 assertCliPhaseThreeFoundation()
+assertCorePhaseFourSync()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)

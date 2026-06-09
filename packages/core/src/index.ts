@@ -73,6 +73,7 @@ export {
   type RunBuildServiceMapInput,
   type RunBuildServiceMapResult,
 } from './pipeline_modules/build_service_map/index.js'
+export * from './pipeline_modules/sync/index.js'
 export * from './project_service.js'
 export * from './repository_service.js'
 export * from './run_service.js'
