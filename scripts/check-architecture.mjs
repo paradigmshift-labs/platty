@@ -330,6 +330,28 @@ function assertCorePhaseFourSync() {
   }
 }
 
+function assertCorePhaseFiveSharedSegments() {
+  for (const path of [
+    'packages/core/src/db/schema/shared_code_segments.ts',
+    'packages/core/src/db/migrations/0034_shared_code_segments.sql',
+    'packages/core/src/pipeline_modules/build_docs_generation/shared_segments.ts',
+    'packages/core/tests/pipeline_modules/build_docs_generation/shared_segments.test.ts',
+  ]) {
+    assert.equal(existsSync(join(root, path)), true, `core shared segment phase must include ${path}`)
+  }
+
+  const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
+  assert.equal(
+    coreEntrypointSource.includes("pipeline_modules/build_docs_generation/shared_segments"),
+    true,
+    'core must export shared code segment helpers for later docs runtime/CLI use',
+  )
+
+  const sharedSegmentsSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/build_docs_generation/shared_segments.ts'), 'utf8')
+  assert.equal(sharedSegmentsSource.includes('rebuildSharedCodeSegmentsForProject'), true, 'shared segments must expose project rebuild helper')
+  assert.equal(sharedSegmentsSource.includes('loadSharedCodeSegmentsForEntryPoints'), true, 'shared segments must expose entry-point context loader')
+}
+
 assertRootManifest()
 assertTsconfigReferences()
 assertEntrypointsExist()
@@ -337,6 +359,7 @@ assertCorePhaseOneInfrastructure()
 assertCorePhaseTwoStaticPipeline()
 assertCliPhaseThreeFoundation()
 assertCorePhaseFourSync()
+assertCorePhaseFiveSharedSegments()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)
