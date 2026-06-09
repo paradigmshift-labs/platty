@@ -461,7 +461,7 @@ git commit -m "feat(cli): add docs command surface"
 - Modify imports in `packages/cli/src/commands/docs.ts`
 - Test: move `packages/core/tests/project_analysis_v2/review_decisions.test.ts` -> `packages/core/tests/pipeline_modules/build_route/review_decisions.test.ts`
 
-- [ ] **Step 1: Move files with compatibility shims**
+- [x] **Step 1: Move files with compatibility shims**
 
 New shim content for `packages/core/src/project_analysis_v2/review_decisions.ts`:
 
@@ -475,7 +475,7 @@ New shim content for `packages/core/src/project_analysis_v2/target_inventory.ts`
 export * from '@/pipeline_modules/build_route/target_inventory.js'
 ```
 
-- [ ] **Step 2: Update imports**
+- [x] **Step 2: Update imports**
 
 Replace:
 
@@ -491,7 +491,7 @@ With:
 @/pipeline_modules/build_route/target_inventory.js
 ```
 
-- [ ] **Step 3: Run targeted tests**
+- [x] **Step 3: Run targeted tests**
 
 ```bash
 npm run test --workspace packages/core -- tests/pipeline_modules/build_route tests/pipeline_modules/build_docs_generation tests/pipeline_modules/build_epics_core
@@ -503,7 +503,7 @@ Expected:
 PASS
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/core/src/project_analysis_v2 packages/core/src/pipeline_modules/build_route packages/core/tests/pipeline_modules/build_route packages/core/src/pipeline_modules/build_docs_generation packages/core/src/pipeline_modules/build_epics_core packages/cli/src/commands/docs.ts

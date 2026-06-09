@@ -5,7 +5,7 @@ import { entryPoints } from '@/db/schema/build_route.js'
 import { codeNodes } from '@/db/schema/code_graph.js'
 import { projects, repositories } from '@/db/schema/core.js'
 import { loadDocIndex } from '@/pipeline_modules/build_epics_core/f1_load_doc_index.js'
-import { upsertAnalysisReviewDecision } from '@/project_analysis_v2/review_decisions.js'
+import { upsertAnalysisReviewDecision } from '@/pipeline_modules/build_route/review_decisions.js'
 
 describe('loadDocIndex review decisions', () => {
   it('ignores passed API docs whose entry point scope is currently deprecated', async () => {

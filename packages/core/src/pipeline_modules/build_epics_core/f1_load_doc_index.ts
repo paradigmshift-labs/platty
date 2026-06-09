@@ -1,7 +1,7 @@
 import { eq, inArray } from 'drizzle-orm'
 import { docRelationLinks, documents } from '@/db/schema/build_docs.js'
 import type { DB } from '@/db/client.js'
-import { isDeprecatedDocumentScope, listDeprecatedEntryPointIds } from '@/project_analysis_v2/review_decisions.js'
+import { isDeprecatedDocumentScope, listDeprecatedEntryPointIds } from '@/pipeline_modules/build_route/review_decisions.js'
 import { BuildEpicsError, type ApiDocIndexItem, type BuildEpicsDocIndex, type BuildEpicsDocumentScope, type BuildEpicsDocumentType, type EpicRelationEvidence, type EventDocIndexItem, type ScheduleDocIndexItem, type ScreenDocIndexItem } from './types.js'
 
 export interface LoadDocIndexInput {

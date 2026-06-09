@@ -56,7 +56,7 @@ import {
   type TaskStatusCounts,
   type ValidationError,
 } from './types.js'
-import { applyReviewDecisionsToDocumentTargets, listAnalysisReviewDecisions } from '@/project_analysis_v2/review_decisions.js'
+import { applyReviewDecisionsToDocumentTargets, listAnalysisReviewDecisions } from '@/pipeline_modules/build_route/review_decisions.js'
 import { createDocSyncPlan, listDocSyncCandidates, markDocSyncCandidate } from '@/pipeline_modules/sync/doc_sync.js'
 import { createSharedGenerationLeaseEngine } from '@/pipeline_modules/generation_runs/lease_engine.js'
 

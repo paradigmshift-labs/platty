@@ -10,7 +10,7 @@ import {
   type NewDocumentLinkEvidence,
 } from '@/db/schema/build_docs.js'
 import { serviceMapEdges, type ServiceMapEdge, type ServiceMapEdgeKind, type ServiceMapEdgeSource, type ServiceMapNodeType } from '@/db/schema/build_service_map.js'
-import { isDeprecatedDocumentScope, listDeprecatedEntryPointIds } from '@/project_analysis_v2/review_decisions.js'
+import { isDeprecatedDocumentScope, listDeprecatedEntryPointIds } from '@/pipeline_modules/build_route/review_decisions.js'
 
 export const DOCUMENT_GRAPH_MATERIALIZER_CREATED_BY = 'build_docs_materializer_v1'
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { eq } from 'drizzle-orm'
-import { createTestDb, type DB } from '../server/helpers.js'
+import { createTestDb, type DB } from '../../server/helpers.js'
 import { projects, repositories } from '@/db/schema/core.js'
 import { codeNodes } from '@/db/schema/code_graph.js'
 import { entryPoints } from '@/db/schema/build_route.js'
@@ -12,7 +12,7 @@ import {
   listDeprecatedEntryPointIds,
   mapEntryPointKindToReviewTarget,
   upsertAnalysisReviewDecision,
-} from '@/project_analysis_v2/review_decisions.js'
+} from '@/pipeline_modules/build_route/review_decisions.js'
 import type { DocumentTarget } from '@/pipeline_modules/build_docs_generation/types.js'
 
 let db: DB

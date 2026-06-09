@@ -14,7 +14,7 @@ import { docSyncCandidates, staticMerkleSnapshots } from '@/db/schema/sync.js'
 import { BuildDocsGenerationRuntime, BuildDocsGenerationRuntimeError } from '@/pipeline_modules/build_docs_generation/runtime.js'
 import { buildDocumentLookup, DOCUMENT_GRAPH_MATERIALIZER_CREATED_BY } from '@/pipeline_modules/build_docs_generation/materialize_document_graph.js'
 import type { BuildDocsGenerationContextResponse } from '@/pipeline_modules/build_docs_generation/types.js'
-import { upsertAnalysisReviewDecision } from '@/project_analysis_v2/review_decisions.js'
+import { upsertAnalysisReviewDecision } from '@/pipeline_modules/build_route/review_decisions.js'
 import { createDocSyncPlan } from '@/pipeline_modules/sync/doc_sync.js'
 import { createViennaChainFixture, leaseApiTask } from './helpers.js'
 
