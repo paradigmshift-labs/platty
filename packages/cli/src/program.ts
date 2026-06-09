@@ -125,9 +125,20 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
     })
   }, setResponse)
 
-  for (const name of ['status', 'run', 'runs'] as const) {
-    setAction(configurePassthrough(program.command(name).description(`Run Platty ${name}.`)), async () => notImplementedResponse(name), setResponse)
+  for (const name of ['status', 'run'] as const) {
+    setAction(configurePassthrough(program.command(name).description(`Run Platty ${name}.`)), async () => {
+      const { runPipelineShortcutCommand } = await import('./commands/pipeline.js')
+      return runPipelineShortcutCommand(name, stripGlobalFlags(_argv).slice(1), {
+        cwd: _options.cwd,
+        db: _options.db,
+        openDb: _options.openDb,
+        project: value(_argv, '--project'),
+        staticPipelineRunner: _options.staticPipelineRunner,
+      })
+    }, setResponse)
   }
+
+  setAction(configurePassthrough(program.command('runs').description('Inspect and manage Platty runs.')), async () => notImplementedResponse('runs'), setResponse)
 
   setAction(configurePassthrough(program.command('version').description('Show Platty CLI version.')), async () => versionResponse(), setResponse)
 

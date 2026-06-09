@@ -7,12 +7,21 @@ import { commandLabel, hasFlag } from './argv.js'
 import { failure, renderJson, renderText, type PlattyCommandResponse } from './output.js'
 import { runPlattyCommanderDispatch } from './program.js'
 
+export interface StaticPipelineRunnerInput {
+  db: DB
+  projectId: string
+  stepOnly?: boolean
+}
+
+export type StaticPipelineRunner = (input: StaticPipelineRunnerInput) => Promise<unknown>
+
 export interface PlattyCommandRunOptions {
   cwd?: string
   db?: DB
   openDb?: () => OpenPlattyDbResult
   analyticsRecorder?: null
   now?: () => Date
+  staticPipelineRunner?: StaticPipelineRunner
 }
 
 export async function runPlattyCommand(argv: string[], options: PlattyCommandRunOptions = {}): Promise<PlattyCommandResponse> {

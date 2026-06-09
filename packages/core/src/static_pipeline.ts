@@ -6,6 +6,7 @@ import { runBuildModels } from './pipeline_modules/build_models/index.js'
 import { runBuildRoute } from './pipeline_modules/build_route/index.js'
 import { runBuildRelations } from './pipeline_modules/build_relations/index.js'
 import { runBuildServiceMap } from './pipeline_modules/build_service_map/index.js'
+import { listRepositories } from './repository_service.js'
 
 export const STATIC_PIPELINE_STAGES = [
   'analyze_repo',
@@ -57,5 +58,45 @@ export async function runStaticPipelineForRepository(input: RunStaticPipelineFor
   const stages = { ...DEFAULT_STATIC_PIPELINE_STAGES, ...(input.stages ?? {}) }
   for (const stage of STATIC_PIPELINE_STAGES) {
     await stages[stage](input)
+  }
+}
+
+export interface RunStaticPipelineForProjectInput {
+  db: DB
+  projectId: string
+  stepOnly?: boolean
+  parentRunId?: string
+  signal?: AbortSignal
+  stages?: StaticPipelineStageOverrides
+}
+
+export interface RunStaticPipelineForProjectResult {
+  projectId: string
+  repositoryCount: number
+  completedRepositoryIds: string[]
+  stepOnly: boolean
+}
+
+export async function runStaticPipelineForProject(input: RunStaticPipelineForProjectInput): Promise<RunStaticPipelineForProjectResult> {
+  const repositories = listRepositories(input.db, input.projectId)
+  const selectedRepositories = input.stepOnly ? repositories.slice(0, 1) : repositories
+  const completedRepositoryIds: string[] = []
+
+  for (const repository of selectedRepositories) {
+    await runStaticPipelineForRepository({
+      db: input.db,
+      repoId: repository.id,
+      parentRunId: input.parentRunId,
+      signal: input.signal,
+      stages: input.stages,
+    })
+    completedRepositoryIds.push(repository.id)
+  }
+
+  return {
+    projectId: input.projectId,
+    repositoryCount: repositories.length,
+    completedRepositoryIds,
+    stepOnly: input.stepOnly ?? false,
   }
 }
