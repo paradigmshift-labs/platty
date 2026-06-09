@@ -153,7 +153,7 @@ export function runAnalyzeRepo(
       // F1: validate_repo (sync)
       const repoInfo = await ctx.step(
         { step: 'F1:validate', label: 'repo 검증' },
-        () => validateRepo(paths.worktreeRoot),
+        () => validateRepo(paths.worktreeRoot, { allowedRoots: [worktree.path] }),
       )
 
       // F2a-1: read_manifests (sync)

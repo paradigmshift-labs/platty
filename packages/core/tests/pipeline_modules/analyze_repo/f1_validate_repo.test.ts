@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { validateRepo, ValidateRepoError } from '@/pipeline_modules/analyze_repo/f1_validate_repo.js'
 
@@ -57,6 +57,19 @@ describe('validateRepo', () => {
   // ── 3. path traversal ──
   it('throws OUT_OF_SCOPE for path outside cwd', () => {
     expect(() => validateRepo('/etc')).toThrow(/OUT_OF_SCOPE|허용 범위/)
+  })
+
+  it('accepts an outside path when it is under an explicit allowed root', () => {
+    const externalRoot = '/tmp/.test-validate-repo-managed-' + Date.now()
+    const repoPath = join(externalRoot, 'managed-worktree')
+    mkdirSync(join(repoPath, '.git'), { recursive: true })
+    try {
+      const result = validateRepo(repoPath, { allowedRoots: [externalRoot] })
+      expect(result.path).toBe(realpathSync(repoPath).replace(/\\/g, '/'))
+      expect(result.name).toBe('managed-worktree')
+    } finally {
+      rmSync(externalRoot, { recursive: true, force: true })
+    }
   })
 
   it('throws OUT_OF_SCOPE for ".." going above cwd', () => {

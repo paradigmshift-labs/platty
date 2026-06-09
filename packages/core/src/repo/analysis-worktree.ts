@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, realpathSync, rmSync, statSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { join, resolve } from 'node:path'
+import { getPlattyHomeDir } from '@/db/paths.js'
 
 export interface PrepareAnalysisWorktreeInput {
   sourceRepoPath: string
@@ -36,7 +37,7 @@ export class AnalysisWorktreeError extends Error {
 }
 
 export function getAnalysisWorktreeRoot(): string {
-  return resolve(process.env.PLATTY_WORKTREE_ROOT ?? process.env.PLATTY_WORKTREE_ROOT ?? join(process.cwd(), '.sdd', 'worktrees'))
+  return resolve(process.env.PLATTY_WORKTREE_ROOT ?? join(getPlattyHomeDir(), 'worktrees'))
 }
 
 export function cleanupAnalysisWorktree(input: {
