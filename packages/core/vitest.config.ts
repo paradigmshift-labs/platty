@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
+      '@platty/core': resolve(__dirname, 'src/index.ts'),
     },
   },
   test: {

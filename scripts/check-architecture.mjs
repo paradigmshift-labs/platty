@@ -270,7 +270,6 @@ function assertCorePhaseTwoStaticPipeline() {
 function assertCliPhaseThreeFoundation() {
   const forbiddenCommandFiles = [
     'packages/cli/src/commands/docs.ts',
-    'packages/cli/src/commands/business-docs.ts',
     'packages/cli/src/commands/service-map.ts',
     'packages/cli/src/commands/business-map.ts',
     'packages/cli/src/commands/search.ts',
@@ -418,7 +417,6 @@ function assertCorePhaseSixGenerationRuns() {
   for (const sourceDir of [
     'packages/core/src/pipeline_modules/build_docs_cli_runtime',
     'packages/core/src/pipeline_modules/build_docs_generation',
-    'packages/core/src/pipeline_modules/generation_runs',
   ]) {
     for (const absPath of sourceFiles(sourceDir)) {
       const source = readFileSync(absPath, 'utf8')
@@ -471,7 +469,6 @@ function assertCorePhaseSevenBuildEpics() {
 
   const generationRunIndexSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/generation_runs/index.ts'), 'utf8')
   assert.equal(generationRunIndexSource.includes("stage === 'build_epics'"), true, 'generation run resolver must dispatch build_epics runs')
-  assert.equal(generationRunIndexSource.includes('business_docs_adapter'), false, 'Phase 7 generation run resolver must not import Phase 8 business docs adapter')
 
   for (const sourceDir of [
     'packages/core/src/pipeline_modules/build_epics_cli_runtime',
@@ -495,6 +492,71 @@ function assertCorePhaseSevenBuildEpics() {
   assert.equal(cliEpicsSource.includes('openLocalPlattyDb'), false, 'CLI epics command must use global CLI DB opener')
 }
 
+function assertCorePhaseEightBusinessDocs() {
+  for (const path of [
+    'packages/core/src/pipeline_modules/build_business_docs_cli/index.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/lease.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/lifecycle.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/preview.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/quality.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/review.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/source_refs.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/start.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/submit.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/types.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/worker_runner.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/sot/f2_load_epic_sources.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_cli/sot/persist_graph.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_sync/index.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_sync/preview.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_sync/source_hashes.ts',
+    'packages/core/src/pipeline_modules/build_business_docs_sync/start.ts',
+    'packages/core/src/pipeline_modules/generation_runs/business_docs_adapter.ts',
+    'packages/core/tests/pipeline_modules/build_business_docs_cli/lease.test.ts',
+    'packages/core/tests/pipeline_modules/build_business_docs_cli/submit.test.ts',
+    'packages/core/tests/pipeline_modules/build_business_docs_cli/fake_worker_e2e.test.ts',
+    'packages/core/tests/pipeline_modules/build_business_docs_sync/start.test.ts',
+    'packages/core/tests/pipeline_modules/generation_runs/business_docs_adapter.test.ts',
+    'packages/cli/src/commands/business-docs.ts',
+    'packages/cli/tests/business-docs-command.test.ts',
+  ]) {
+    assert.equal(existsSync(join(root, path)), true, `Phase 8 business-docs runtime must include ${path}`)
+  }
+
+  const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
+  for (const token of [
+    'pipeline_modules/build_business_docs_cli/index',
+    'pipeline_modules/build_business_docs_sync/index',
+  ]) {
+    assert.equal(coreEntrypointSource.includes(token), true, `core must export Phase 8 business-docs surface: ${token}`)
+  }
+
+  const generationRunIndexSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/generation_runs/index.ts'), 'utf8')
+  assert.equal(generationRunIndexSource.includes('business_docs_adapter'), true, 'generation run resolver must import Phase 8 business docs adapter')
+  assert.equal(generationRunIndexSource.includes('businessDocGenerationRuns'), true, 'generation run resolver must inspect business-doc generation table')
+  assert.equal(generationRunIndexSource.includes("kind: 'build_business_docs'"), true, 'generation run resolver must dispatch build_business_docs runs')
+
+  for (const sourceDir of [
+    'packages/core/src/pipeline_modules/build_business_docs_cli',
+    'packages/core/src/pipeline_modules/build_business_docs_sync',
+    'packages/core/src/pipeline_modules/generation_runs',
+  ]) {
+    for (const absPath of sourceFiles(sourceDir)) {
+      const source = readFileSync(absPath, 'utf8')
+      const relPath = relative(root, absPath).split(sep).join('/')
+      assert.equal(source.includes('sync_v2'), false, `${relPath} must use sync naming, not sync_v2`)
+      assert.equal(source.includes('@/pipeline_modules/legacy_generation/'), false, `${relPath} must not import legacy generation modules`)
+      assert.equal(source.includes('@/pipeline_modules/build_business_docs/'), false, `${relPath} must not import legacy build_business_docs monolith`)
+    }
+  }
+
+  const cliBusinessDocsSource = readFileSync(join(root, 'packages/cli/src/commands/business-docs.ts'), 'utf8')
+  assert.equal(cliBusinessDocsSource.includes('@platty/core'), true, 'CLI business-docs command must use @platty/core public API')
+  assert.equal(cliBusinessDocsSource.includes('@/'), false, 'CLI business-docs command must not import core internals via @/')
+  assert.equal(cliBusinessDocsSource.includes('localDbPath'), false, 'CLI business-docs command must not use project-local DB config')
+  assert.equal(cliBusinessDocsSource.includes('openLocalPlattyDb'), false, 'CLI business-docs command must use global CLI DB opener')
+}
+
 assertRootManifest()
 assertTsconfigReferences()
 assertEntrypointsExist()
@@ -505,6 +567,7 @@ assertCorePhaseFourSync()
 assertCorePhaseFiveSharedSegments()
 assertCorePhaseSixGenerationRuns()
 assertCorePhaseSevenBuildEpics()
+assertCorePhaseEightBusinessDocs()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)

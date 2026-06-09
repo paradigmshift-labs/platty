@@ -2,7 +2,7 @@
 import { realpathSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { BuildEpicsTaskInvoker, DB, OpenPlattyDbResult } from '@platty/core'
+import type { BuildEpicsTaskInvoker, BusinessDocsTaskInvoker, DB, OpenPlattyDbResult } from '@platty/core'
 import { commandLabel, hasFlag } from './argv.js'
 import { failure, renderJson, renderText, type PlattyCommandResponse } from './output.js'
 import { runPlattyCommanderDispatch } from './program.js'
@@ -23,6 +23,7 @@ export interface PlattyCommandRunOptions {
   now?: () => Date
   staticPipelineRunner?: StaticPipelineRunner
   epicsTaskInvoker?: BuildEpicsTaskInvoker
+  businessDocsTaskInvoker?: BusinessDocsTaskInvoker
 }
 
 export async function runPlattyCommand(argv: string[], options: PlattyCommandRunOptions = {}): Promise<PlattyCommandResponse> {

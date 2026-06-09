@@ -1,9 +1,14 @@
 import type { GenerationRunStatus, GenerationTaskKind, GenerationTaskStatus } from '@/db/schema/build_docs.js'
+import type {
+  BusinessDocsGenerationRunStatus,
+  BusinessDocsGenerationTaskStatus,
+  BusinessDocsTaskType,
+} from '@/pipeline_modules/build_business_docs_cli/types.js'
 
-export type UnifiedGenerationRunKind = 'build_docs' | 'build_epics'
-export type UnifiedGenerationRunStatus = GenerationRunStatus
-export type UnifiedGenerationTaskType = GenerationTaskKind
-export type UnifiedGenerationTaskStatus = GenerationTaskStatus
+export type UnifiedGenerationRunKind = 'build_docs' | 'build_epics' | 'build_business_docs'
+export type UnifiedGenerationRunStatus = GenerationRunStatus | BusinessDocsGenerationRunStatus
+export type UnifiedGenerationTaskType = GenerationTaskKind | BusinessDocsTaskType
+export type UnifiedGenerationTaskStatus = GenerationTaskStatus | BusinessDocsGenerationTaskStatus
 export type UnifiedTaskCountKey = UnifiedGenerationTaskStatus | 'total'
 
 export type UnifiedRunNextAction =

@@ -1,5 +1,6 @@
 import { and, eq } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
+import { businessDocGenerationRuns } from '@/db/schema/build_business_docs_generation.js'
 import { generationRuns } from '@/db/schema/build_docs.js'
 import {
   releaseBuildDocsRunLeases,
@@ -13,6 +14,12 @@ import {
   retryBuildEpicsRunTasks,
   statusBuildEpicsRun,
 } from './build_epics_adapter.js'
+import {
+  releaseBusinessDocsRunLeases,
+  resumeBusinessDocsUnifiedRun,
+  retryBusinessDocsRunTasks,
+  statusBusinessDocsUnifiedRun,
+} from './business_docs_adapter.js'
 import type { UnifiedRunAdapter, UnifiedRunRetryInput } from './types.js'
 
 export function resolveUnifiedRunAdapter(
@@ -43,6 +50,21 @@ export function resolveUnifiedRunAdapter(
     }
   }
 
+  const businessDocsRun = db.select().from(businessDocGenerationRuns).where(and(
+    eq(businessDocGenerationRuns.id, input.runId),
+    eq(businessDocGenerationRuns.projectId, input.projectId),
+  )).get()
+
+  if (businessDocsRun) {
+    return {
+      kind: 'build_business_docs',
+      status: (args) => statusBusinessDocsUnifiedRun(db, args),
+      resume: (args) => resumeBusinessDocsUnifiedRun(db, args),
+      retry: (args: UnifiedRunRetryInput) => retryBusinessDocsRunTasks(db, args),
+      releaseLeases: (args) => releaseBusinessDocsRunLeases(db, args),
+    }
+  }
+
   throw codeError('RUN_NOT_FOUND', 'Run not found')
 }
 
@@ -52,6 +74,7 @@ function codeError(code: string, message: string): Error & { code: string } {
 
 export * from './build_docs_adapter.js'
 export * from './build_epics_adapter.js'
+export * from './business_docs_adapter.js'
 export * from './lease_engine.js'
 export * from './resumable_run_resolver.js'
 export * from './shared_generation_adapter.js'
