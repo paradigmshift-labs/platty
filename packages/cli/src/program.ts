@@ -138,7 +138,15 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
     }, setResponse)
   }
 
-  setAction(configurePassthrough(program.command('runs').description('Inspect and manage Platty runs.')), async () => notImplementedResponse('runs'), setResponse)
+  setAction(configurePassthrough(program.command('runs').description('Inspect and manage Platty runs.')), async () => {
+    const { runRunsCommand } = await import('./commands/runs.js')
+    return runRunsCommand(commandArgvAfter('runs', stripGlobalFlags(_argv)), {
+      cwd: _options.cwd,
+      db: _options.db,
+      openDb: _options.openDb,
+      project: value(_argv, '--project'),
+    })
+  }, setResponse)
 
   setAction(configurePassthrough(program.command('version').description('Show Platty CLI version.')), async () => versionResponse(), setResponse)
 

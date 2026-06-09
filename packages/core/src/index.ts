@@ -75,4 +75,5 @@ export {
 } from './pipeline_modules/build_service_map/index.js'
 export * from './project_service.js'
 export * from './repository_service.js'
+export * from './run_service.js'
 export * from './static_pipeline.js'
