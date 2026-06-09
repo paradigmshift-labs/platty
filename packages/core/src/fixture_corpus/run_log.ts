@@ -5,12 +5,16 @@ import { dirname } from 'node:path'
 export interface RunLogRecord {
   fixtureId: string
   stageId?: string
-  phase: 'run' | 'compare' | 'gate' | 'decision'
-  status: 'pass' | 'fail' | 'skip'
+  phase: 'select' | 'run' | 'compare' | 'oracle' | 'gate' | 'decision'
+  status: 'pass' | 'fail' | 'skip' | 'advisory'
   timestamp: string
   cycle: number
   reason?: string
   escalationReason?: string
+  candidatePath?: string
+  reportPath?: string
+  decision?: string
+  scenario?: string
 }
 
 export async function appendRunLogRecord(path: string, record: RunLogRecord): Promise<void> {

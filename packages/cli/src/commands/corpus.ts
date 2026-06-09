@@ -6,9 +6,11 @@ import {
   getFixtureCorpusSummary,
   loadFixture,
   loadFixtureExpected,
+  resolveSelfImproveStages,
+  stagesWithDependencies,
   selectFixtureCorpusEntries,
   type CorpusStageId,
-  type FixtureExecutionResult,
+  type SelfImproveStage,
 } from '@platty/core'
 import { value } from '../argv.js'
 import { failure, success, type PlattyCommandResponse } from '../output.js'
@@ -25,6 +27,7 @@ export async function runCorpusCommand(argv: string[], options: RunCorpusCommand
   if (subcommand === 'gate-check') return gateCheck(argv, options)
   if (subcommand === 'next-candidate') return nextCandidate(argv, options)
   if (subcommand === 'audit-queue') return auditQueue(argv, options)
+  if (subcommand === 'self-improve-once') return selfImproveOnce(argv, options)
 
   return {
     exitCode: 2,
@@ -32,6 +35,34 @@ export async function runCorpusCommand(argv: string[], options: RunCorpusCommand
     stdout: '',
     stderr: '',
   }
+}
+
+function selfImproveOnce(argv: string[], _options: RunCorpusCommandOptions): PlattyCommandResponse {
+  const id = value(argv, '--id')
+  if (!id) return missingFlag('--id')
+  const entry = loadFixture(id)
+  if (!entry) return fixtureNotFound(id)
+  const stage = parseSelfImproveStage(value(argv, '--stage') ?? 'build_models')
+  const dryRun = argv.includes('--dry-run')
+  const stages = stage === 'all' ? resolveSelfImproveStages(entry.layout.scope) : stagesWithDependencies(stage)
+
+  if (!dryRun) {
+    return {
+      exitCode: 2,
+      result: failure('SELF_IMPROVE_EXECUTION_REQUIRES_DRY_RUN', 'self-improve-once execution is not enabled from the packaged CLI yet; rerun with --dry-run'),
+      stdout: '',
+      stderr: '',
+    }
+  }
+
+  return ok({
+    command: 'self-improve-once',
+    fixtureId: entry.id,
+    dryRun: true,
+    stages,
+    writePolicy: 'report_only',
+    liveOracle: process.env.PLATTY_FIXTURE_LLM_LIVE === '1',
+  })
 }
 
 function runFixture(argv: string[], options: RunCorpusCommandOptions): PlattyCommandResponse {
@@ -179,4 +210,8 @@ function fixtureNotFound(id: string): PlattyCommandResponse {
 function parseStage(value: string | undefined): CorpusStageId | undefined {
   if (!value) return undefined
   return value as CorpusStageId
+}
+
+function parseSelfImproveStage(value: string): SelfImproveStage {
+  return value as SelfImproveStage
 }

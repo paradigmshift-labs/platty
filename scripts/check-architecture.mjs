@@ -641,7 +641,6 @@ function assertCorePhaseTenFixtureCorpusBase() {
   assert.equal(cliCorpusSource.includes('sdd_v2.db'), false, 'CLI corpus command must not reference legacy DB paths')
 
   for (const forbiddenPath of [
-    'packages/core/src/fixture_corpus/self_improve',
     'packages/cli/src/commands/self-improve-once.ts',
   ]) {
     assert.equal(existsSync(join(root, forbiddenPath)), false, `Phase 10 must keep self-improve for Phase 11: ${forbiddenPath}`)
@@ -653,6 +652,50 @@ function assertCorePhaseTenFixtureCorpusBase() {
     const relPath = relative(root, absPath).split(sep).join('/')
     assert.equal(source.includes('schema-diversity/prisma/relations-basic'), false, `${relPath} must not hard-code source real-project corpus ids`)
     assert.equal(source.includes('service/multi-repo/heroines-poc'), false, `${relPath} must not import source service fixture corpus ids`)
+  }
+}
+
+function assertCorePhaseElevenFixtureSelfImprove() {
+  for (const path of [
+    'packages/core/src/fixture_corpus/self_improve/index.ts',
+    'packages/core/src/fixture_corpus/self_improve/types.ts',
+    'packages/core/src/fixture_corpus/self_improve/decision.ts',
+    'packages/core/src/fixture_corpus/self_improve/oracle.ts',
+    'packages/core/src/fixture_corpus/self_improve/reports.ts',
+    'packages/core/src/fixture_corpus/self_improve/stage_order.ts',
+    'packages/core/src/fixture_corpus/self_improve/codex_oracle_provider.ts',
+    'packages/core/src/fixture_corpus/self_improve/run_once.ts',
+    'packages/core/src/fixture_corpus/self_improve/prompts/fixture-self-improve-goal.md',
+    'packages/core/tests/fixture_corpus/self_improve/decision.test.ts',
+    'packages/core/tests/fixture_corpus/self_improve/oracle.test.ts',
+    'packages/core/tests/fixture_corpus/self_improve/reports.test.ts',
+    'packages/core/tests/fixture_corpus/self_improve/stage_order.test.ts',
+    'packages/core/tests/fixture_corpus/self_improve/codex_oracle_provider.test.ts',
+    'packages/core/tests/fixture_corpus/self_improve/run_once.test.ts',
+    'packages/cli/tests/fixture_corpus/cli/self-improve-command.test.ts',
+  ]) {
+    assert.equal(existsSync(join(root, path)), true, `Phase 11 fixture self-improve must include ${path}`)
+  }
+
+  const stageOrderSource = readFileSync(join(root, 'packages/core/src/fixture_corpus/self_improve/stage_order.ts'), 'utf8')
+  assert.equal(stageOrderSource.includes('build_pattern_profile'), true, 'self-improve stage order must include build_pattern_profile')
+  assert.equal(stageOrderSource.indexOf('build_graph') < stageOrderSource.indexOf('build_pattern_profile'), true, 'self-improve stage order must run build_pattern_profile after build_graph')
+
+  const codexOracleSource = readFileSync(join(root, 'packages/core/src/fixture_corpus/self_improve/codex_oracle_provider.ts'), 'utf8')
+  assert.equal(codexOracleSource.includes('Do not copy actual pipeline output'), true, 'Codex oracle prompt must prohibit copying actual output')
+  assert.equal(codexOracleSource.includes('getLlmAdapter'), true, 'Codex oracle must keep real LLM behind adapter injection/registry')
+
+  const cliCorpusSource = readFileSync(join(root, 'packages/cli/src/commands/corpus.ts'), 'utf8')
+  assert.equal(cliCorpusSource.includes('self-improve-once'), true, 'CLI corpus command must expose self-improve-once')
+  assert.equal(cliCorpusSource.includes('--dry-run'), true, 'CLI self-improve command must support dry-run mode')
+  assert.equal(cliCorpusSource.includes('@platty/core'), true, 'CLI self-improve command must use @platty/core public API')
+  assert.equal(cliCorpusSource.includes('@/'), false, 'CLI self-improve command must not import core internals via @/')
+
+  for (const absPath of sourceFiles('packages/core/src/fixture_corpus/self_improve')) {
+    const source = readFileSync(absPath, 'utf8')
+    const relPath = relative(root, absPath).split(sep).join('/')
+    assert.equal(source.includes('schema-diversity/prisma/relations-basic'), false, `${relPath} must not hard-code source real-project corpus ids`)
+    assert.equal(source.includes('service/multi-repo/heroines-poc'), false, `${relPath} must not hard-code source service PoC ids`)
   }
 }
 
@@ -669,6 +712,7 @@ assertCorePhaseSevenBuildEpics()
 assertCorePhaseEightBusinessDocs()
 assertCorePhaseNineCodexWorkerExecution()
 assertCorePhaseTenFixtureCorpusBase()
+assertCorePhaseElevenFixtureSelfImprove()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)
