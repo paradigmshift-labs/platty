@@ -454,23 +454,29 @@ function assertCorePhaseSixGenerationRuns() {
 function assertCorePhaseSevenBuildEpics() {
   for (const path of [
     'packages/core/src/pipeline_modules/build_epics_cli_runtime/index.ts',
-    'packages/core/src/pipeline_modules/build_epics_cli_runtime/runtime.ts',
-    'packages/core/src/pipeline_modules/build_epics_cli_runtime/worker_runner.ts',
     'packages/core/src/pipeline_modules/build_epics_core/index.ts',
-    'packages/core/src/pipeline_modules/build_epics_core/f0_assert_docs_complete.ts',
-    'packages/core/src/pipeline_modules/build_epics_core/f1_load_doc_index.ts',
-    'packages/core/src/pipeline_modules/build_epics_core/f9_validate_plan.ts',
-    'packages/core/src/pipeline_modules/build_epics_core/f10_persist_confirmed_epics.ts',
     'packages/core/src/pipeline_modules/build_epics_sync/index.ts',
-    'packages/core/src/pipeline_modules/build_epics_sync/runtime.ts',
-    'packages/core/src/pipeline_modules/build_epics_sync/worker_runner.ts',
+    'packages/core/src/pipeline_modules/build_epics/runtime/index.ts',
+    'packages/core/src/pipeline_modules/build_epics/runtime/runtime.ts',
+    'packages/core/src/pipeline_modules/build_epics/source/index.ts',
+    'packages/core/src/pipeline_modules/build_epics/source/cards.ts',
+    'packages/core/src/pipeline_modules/build_epics/worker/index.ts',
+    'packages/core/src/pipeline_modules/build_epics/worker/worker_runner.ts',
+    'packages/core/src/pipeline_modules/build_epics/core/index.ts',
+    'packages/core/src/pipeline_modules/build_epics/core/f0_assert_docs_complete.ts',
+    'packages/core/src/pipeline_modules/build_epics/core/f1_load_doc_index.ts',
+    'packages/core/src/pipeline_modules/build_epics/core/f9_validate_plan.ts',
+    'packages/core/src/pipeline_modules/build_epics/core/f10_persist_confirmed_epics.ts',
+    'packages/core/src/pipeline_modules/build_epics/sync/index.ts',
+    'packages/core/src/pipeline_modules/build_epics/sync/runtime.ts',
+    'packages/core/src/pipeline_modules/build_epics/sync/worker_runner.ts',
     'packages/core/src/pipeline_modules/generation_runs/build_epics_adapter.ts',
-    'packages/core/tests/pipeline_modules/build_epics_cli_runtime/runtime.test.ts',
-    'packages/core/tests/pipeline_modules/build_epics_cli_runtime/worker_runner.test.ts',
-    'packages/core/tests/pipeline_modules/build_epics_core/f0_assert_docs_complete.test.ts',
-    'packages/core/tests/pipeline_modules/build_epics_core/f1_load_doc_index_review_decisions.test.ts',
-    'packages/core/tests/pipeline_modules/build_epics_sync/runtime.test.ts',
-    'packages/core/tests/pipeline_modules/build_epics_sync/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics/runtime/runtime.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics/worker/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics/core/f0_assert_docs_complete.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics/core/f1_load_doc_index_review_decisions.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics/sync/runtime.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics/sync/worker_runner.test.ts',
     'packages/core/tests/pipeline_modules/generation_runs/build_epics_adapter.test.ts',
     'packages/cli/src/commands/epics.ts',
     'packages/cli/tests/epics-command.test.ts',
@@ -480,26 +486,54 @@ function assertCorePhaseSevenBuildEpics() {
 
   const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
   for (const token of [
-    'pipeline_modules/build_epics_cli_runtime/index',
+    'pipeline_modules/build_epics/runtime/index',
+    'pipeline_modules/build_epics/source/index',
+    'pipeline_modules/build_epics/worker/index',
     'buildEpicsCore',
-    'pipeline_modules/build_epics_sync/index',
+    'pipeline_modules/build_epics/sync/index',
   ]) {
     assert.equal(coreEntrypointSource.includes(token), true, `core must export Phase 7 build epics surface: ${token}`)
   }
+
+  const legacyRuntimeShim = readFileSync(join(root, 'packages/core/src/pipeline_modules/build_epics_cli_runtime/index.ts'), 'utf8').trim()
+  assert.equal(
+    legacyRuntimeShim,
+    [
+      "export * from '@/pipeline_modules/build_epics/runtime/index.js'",
+      "export * from '@/pipeline_modules/build_epics/source/index.js'",
+      "export * from '@/pipeline_modules/build_epics/worker/index.js'",
+    ].join('\n'),
+    'legacy build_epics_cli_runtime entrypoint must be a temporary shim only',
+  )
+
+  const legacyCoreShim = readFileSync(join(root, 'packages/core/src/pipeline_modules/build_epics_core/index.ts'), 'utf8').trim()
+  assert.equal(
+    legacyCoreShim,
+    "export * from '@/pipeline_modules/build_epics/core/index.js'",
+    'legacy build_epics_core entrypoint must be a temporary shim only',
+  )
+
+  const legacySyncShim = readFileSync(join(root, 'packages/core/src/pipeline_modules/build_epics_sync/index.ts'), 'utf8').trim()
+  assert.equal(
+    legacySyncShim,
+    "export * from '@/pipeline_modules/build_epics/sync/index.js'",
+    'legacy build_epics_sync entrypoint must be a temporary shim only',
+  )
 
   const generationRunIndexSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/generation_runs/index.ts'), 'utf8')
   assert.equal(generationRunIndexSource.includes("stage === 'build_epics'"), true, 'generation run resolver must dispatch build_epics runs')
 
   for (const sourceDir of [
-    'packages/core/src/pipeline_modules/build_epics_cli_runtime',
-    'packages/core/src/pipeline_modules/build_epics_core',
-    'packages/core/src/pipeline_modules/build_epics_sync',
+    'packages/core/src/pipeline_modules/build_epics/runtime',
+    'packages/core/src/pipeline_modules/build_epics/source',
+    'packages/core/src/pipeline_modules/build_epics/worker',
+    'packages/core/src/pipeline_modules/build_epics/core',
+    'packages/core/src/pipeline_modules/build_epics/sync',
   ]) {
     for (const absPath of sourceFiles(sourceDir)) {
       const source = readFileSync(absPath, 'utf8')
       const relPath = relative(root, absPath).split(sep).join('/')
       assert.equal(source.includes('legacy_generation/build_epics'), false, `${relPath} must not import legacy build_epics`)
-      assert.equal(source.includes('@/pipeline_modules/build_epics/'), false, `${relPath} must not import legacy build_epics monolith`)
       assert.equal(source.includes('build_business_docs_cli'), false, `${relPath} must not import Phase 8 business docs runtime yet`)
       assert.equal(source.includes('sync_v2'), false, `${relPath} must use sync naming, not sync_v2`)
     }
@@ -590,7 +624,7 @@ function assertCorePhaseNineCodexWorkerExecution() {
     'packages/core/src/pipeline_modules/cli_agent_runner/codex_cli.ts',
     'packages/core/tests/pipeline_modules/cli_agent_runner/codex_cli.test.ts',
     'packages/core/tests/pipeline_modules/build_docs/worker/worker_runner.test.ts',
-    'packages/core/tests/pipeline_modules/build_epics_cli_runtime/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/build_epics/worker/worker_runner.test.ts',
     'packages/core/tests/pipeline_modules/build_business_docs_cli/fake_worker_e2e.test.ts',
   ]) {
     assert.equal(existsSync(join(root, path)), true, `Phase 9 Codex worker execution must include ${path}`)
@@ -611,7 +645,7 @@ function assertCorePhaseNineCodexWorkerExecution() {
 
   for (const sourceDir of [
     'packages/core/src/pipeline_modules/build_docs/worker',
-    'packages/core/src/pipeline_modules/build_epics_cli_runtime',
+    'packages/core/src/pipeline_modules/build_epics/worker',
     'packages/core/src/pipeline_modules/build_business_docs_cli',
   ]) {
     for (const absPath of sourceFiles(sourceDir)) {

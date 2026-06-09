@@ -26,8 +26,8 @@ afterEach(async () => {
 
 describe('platty epics CLI runtime', () => {
   it('does not import the pipeline infra barrel from CLI-loaded epic modules', () => {
-    const runtime = readFileSync(join(process.cwd(), '../core/src/pipeline_modules/build_epics_cli_runtime/runtime.ts'), 'utf8')
-    const persist = readFileSync(join(process.cwd(), '../core/src/pipeline_modules/build_epics_core/f10_persist_confirmed_epics.ts'), 'utf8')
+    const runtime = readFileSync(join(process.cwd(), '../core/src/pipeline_modules/build_epics/runtime/runtime.ts'), 'utf8')
+    const persist = readFileSync(join(process.cwd(), '../core/src/pipeline_modules/build_epics/core/f10_persist_confirmed_epics.ts'), 'utf8')
 
     expect(runtime).not.toContain('@/pipeline_infra/index.js')
     expect(persist).not.toContain('@/pipeline_infra/index.js')

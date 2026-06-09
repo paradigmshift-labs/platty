@@ -744,7 +744,7 @@ git commit -m "refactor(core): group build docs modules"
 - Modify: `packages/core/src/index.ts`
 - Modify: `packages/cli/src/commands/epics.ts`
 
-- [ ] **Step 1: Move core files**
+- [x] **Step 1: Move core files**
 
 Target:
 
@@ -752,7 +752,7 @@ Target:
 packages/core/src/pipeline_modules/build_epics/core/
 ```
 
-- [ ] **Step 2: Move runtime files**
+- [x] **Step 2: Move runtime files**
 
 Target:
 
@@ -767,7 +767,7 @@ runtime.ts
 lifecycle-style task/context/submit support files
 ```
 
-- [ ] **Step 3: Move worker files**
+- [x] **Step 3: Move worker files**
 
 Target:
 
@@ -781,7 +781,7 @@ Include:
 worker_runner.ts
 ```
 
-- [ ] **Step 4: Move source assembly files**
+- [x] **Step 4: Move source assembly files**
 
 Target:
 
@@ -793,15 +793,13 @@ Include files such as:
 
 ```text
 cards.ts
-draft.ts
-editing.ts
 taxonomy_consolidation.ts
 cross_domain.ts
 ```
 
 Only move a file to `source` when it primarily assembles agent input or draft material. Keep validation and persistence in `core`.
 
-- [ ] **Step 5: Move sync files**
+- [x] **Step 5: Move sync files**
 
 Target:
 
@@ -809,16 +807,18 @@ Target:
 packages/core/src/pipeline_modules/build_epics/sync/
 ```
 
-- [ ] **Step 6: Add temporary shims**
+- [x] **Step 6: Add temporary shims**
 
 Keep old top-level index files as re-exports for one phase.
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 ```bash
-npm run test --workspace packages/core -- tests/pipeline_modules/build_epics_core tests/pipeline_modules/build_epics_cli_runtime tests/pipeline_modules/build_epics_sync
-npm run test --workspace packages/cli -- tests/epics
+npm run test --workspace packages/core -- tests/pipeline_modules/build_epics
+npm run test --workspace packages/core -- tests/pipeline_modules/generation_runs/build_epics_adapter.test.ts
+npm run test --workspace packages/cli -- tests/epics-command.test.ts
 npm run typecheck
+npm run check:architecture
 ```
 
 Expected:
