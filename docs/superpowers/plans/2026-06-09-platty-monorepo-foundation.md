@@ -168,12 +168,17 @@ function readJson(relativePath) {
 }
 
 function assertWorkspaceDeps(manifestPath, requiredDeps, forbiddenDeps = []) {
-  const dependencies = readJson(manifestPath).dependencies ?? {}
+  const manifest = readJson(manifestPath)
+  const dependencies = manifest.dependencies ?? {}
   for (const [name, version] of Object.entries(requiredDeps)) {
     assert.equal(dependencies[name], version, `${manifestPath} should depend on ${name}@${version}`)
   }
-  for (const name of forbiddenDeps) {
-    assert.equal(dependencies[name], undefined, `${manifestPath} should not depend on ${name}`)
+  const dependencySections = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
+  for (const section of dependencySections) {
+    const sectionDeps = manifest[section] ?? {}
+    for (const name of forbiddenDeps) {
+      assert.equal(sectionDeps[name], undefined, `${manifestPath} should not list ${name} in ${section}`)
+    }
   }
 }
 
@@ -186,12 +191,37 @@ describe('Platty monorepo workspace contract', () => {
     assert.equal(rootPackage.type, 'module')
     assert.deepEqual(rootPackage.workspaces, ['packages/*', 'apps/*'])
     assert.deepEqual(rootPackage.engines, { node: '>=20' })
-    assert.deepEqual(rootPackage.scripts, {
-      build: 'npm run build --workspaces --if-present',
-      test: 'node --test tests && npm run check:architecture',
-      'check:architecture': 'node scripts/check-architecture.mjs',
-      typecheck: 'tsc -b',
+    assert.equal(rootPackage.scripts.build, 'npm run build --workspaces --if-present')
+    assert.equal(rootPackage.scripts.test, 'node --test tests && npm run check:architecture')
+    assert.equal(rootPackage.scripts['check:architecture'], 'node scripts/check-architecture.mjs')
+    assert.equal(rootPackage.scripts.typecheck, 'tsc -b')
+  })
+
+  it('declares TypeScript project references for every workspace', () => {
+    assert.equal(existsSync(join(root, 'tsconfig.base.json')), true, 'tsconfig.base.json should exist')
+    assert.deepEqual(readJson('tsconfig.json'), {
+      files: [],
+      references: [
+        { path: './packages/core' },
+        { path: './packages/sdk' },
+        { path: './packages/cli' },
+        { path: './apps/backend' },
+        { path: './apps/web' },
+        { path: './apps/desktop' },
+      ],
     })
+
+    const workspaceTsconfigs = [
+      'packages/core/tsconfig.json',
+      'packages/sdk/tsconfig.json',
+      'packages/cli/tsconfig.json',
+      'apps/backend/tsconfig.json',
+      'apps/web/tsconfig.json',
+      'apps/desktop/tsconfig.json',
+    ]
+    for (const tsconfigPath of workspaceTsconfigs) {
+      assert.equal(existsSync(join(root, tsconfigPath)), true, `${tsconfigPath} should exist`)
+    }
   })
 
   it('defines the expected workspace package manifests', () => {
