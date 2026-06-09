@@ -521,15 +521,16 @@ function assertCorePhaseEightBusinessDocs() {
     'packages/core/src/pipeline_modules/build_business_docs_cli/worker_runner.ts',
     'packages/core/src/pipeline_modules/build_business_docs_cli/sot/f2_load_epic_sources.ts',
     'packages/core/src/pipeline_modules/build_business_docs_cli/sot/persist_graph.ts',
+    'packages/core/src/pipeline_modules/build_business_docs/sync/index.ts',
+    'packages/core/src/pipeline_modules/build_business_docs/sync/preview.ts',
+    'packages/core/src/pipeline_modules/build_business_docs/sync/source_hashes.ts',
+    'packages/core/src/pipeline_modules/build_business_docs/sync/start.ts',
     'packages/core/src/pipeline_modules/build_business_docs_sync/index.ts',
-    'packages/core/src/pipeline_modules/build_business_docs_sync/preview.ts',
-    'packages/core/src/pipeline_modules/build_business_docs_sync/source_hashes.ts',
-    'packages/core/src/pipeline_modules/build_business_docs_sync/start.ts',
     'packages/core/src/pipeline_modules/generation_runs/business_docs_adapter.ts',
     'packages/core/tests/pipeline_modules/build_business_docs_cli/lease.test.ts',
     'packages/core/tests/pipeline_modules/build_business_docs_cli/submit.test.ts',
     'packages/core/tests/pipeline_modules/build_business_docs_cli/fake_worker_e2e.test.ts',
-    'packages/core/tests/pipeline_modules/build_business_docs_sync/start.test.ts',
+    'packages/core/tests/pipeline_modules/build_business_docs/sync/start.test.ts',
     'packages/core/tests/pipeline_modules/generation_runs/business_docs_adapter.test.ts',
     'packages/cli/src/commands/business-docs.ts',
     'packages/cli/tests/business-docs-command.test.ts',
@@ -540,10 +541,17 @@ function assertCorePhaseEightBusinessDocs() {
   const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
   for (const token of [
     'pipeline_modules/build_business_docs_cli/index',
-    'pipeline_modules/build_business_docs_sync/index',
+    'pipeline_modules/build_business_docs/sync/index',
   ]) {
     assert.equal(coreEntrypointSource.includes(token), true, `core must export Phase 8 business-docs surface: ${token}`)
   }
+
+  const legacySyncShim = readFileSync(join(root, 'packages/core/src/pipeline_modules/build_business_docs_sync/index.ts'), 'utf8').trim()
+  assert.equal(
+    legacySyncShim,
+    "export * from '@/pipeline_modules/build_business_docs/sync/index.js'",
+    'legacy build_business_docs_sync entrypoint must be a temporary shim only',
+  )
 
   const generationRunIndexSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/generation_runs/index.ts'), 'utf8')
   assert.equal(generationRunIndexSource.includes('business_docs_adapter'), true, 'generation run resolver must import Phase 8 business docs adapter')
@@ -552,7 +560,7 @@ function assertCorePhaseEightBusinessDocs() {
 
   for (const sourceDir of [
     'packages/core/src/pipeline_modules/build_business_docs_cli',
-    'packages/core/src/pipeline_modules/build_business_docs_sync',
+    'packages/core/src/pipeline_modules/build_business_docs/sync',
     'packages/core/src/pipeline_modules/generation_runs',
   ]) {
     for (const absPath of sourceFiles(sourceDir)) {
@@ -560,7 +568,7 @@ function assertCorePhaseEightBusinessDocs() {
       const relPath = relative(root, absPath).split(sep).join('/')
       assert.equal(source.includes('sync_v2'), false, `${relPath} must use sync naming, not sync_v2`)
       assert.equal(source.includes('@/pipeline_modules/legacy_generation/'), false, `${relPath} must not import legacy generation modules`)
-      assert.equal(source.includes('@/pipeline_modules/build_business_docs/'), false, `${relPath} must not import legacy build_business_docs monolith`)
+      assert.equal(source.includes('@/pipeline_modules/build_business_docs/index.js'), false, `${relPath} must not import legacy build_business_docs monolith`)
     }
   }
 

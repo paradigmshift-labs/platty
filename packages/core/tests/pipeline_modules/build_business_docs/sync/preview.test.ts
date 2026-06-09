@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { and, eq } from 'drizzle-orm'
-import { createTestDb } from '../../server/helpers.js'
-import { documents, docRelationLinks, documentLinks, generationRuns } from '../../../src/db/schema/build_docs.js'
-import { buildEpicsDrafts, epicDocumentLinks } from '../../../src/db/schema/build_epics.js'
-import { epics, projects, repositories } from '../../../src/db/schema/core.js'
-import { docSyncCandidates, docSyncPlans, staticMerkleSnapshots } from '../../../src/db/schema/sync.js'
-import { previewBusinessDocsSync } from '../../../src/pipeline_modules/build_business_docs_sync/preview.js'
-import { computeBusinessDocSourceHashes } from '../../../src/pipeline_modules/build_business_docs_sync/source_hashes.js'
+import { createTestDb } from '../../../server/helpers.js'
+import { documents, docRelationLinks, documentLinks, generationRuns } from '../../../../src/db/schema/build_docs.js'
+import { buildEpicsDrafts, epicDocumentLinks } from '../../../../src/db/schema/build_epics.js'
+import { epics, projects, repositories } from '../../../../src/db/schema/core.js'
+import { docSyncCandidates, docSyncPlans, staticMerkleSnapshots } from '../../../../src/db/schema/sync.js'
+import { previewBusinessDocsSync } from '../../../../src/pipeline_modules/build_business_docs/sync/preview.js'
+import { computeBusinessDocSourceHashes } from '../../../../src/pipeline_modules/build_business_docs/sync/source_hashes.js'
 
 const projectId = 'project:platty'
 const now = '2026-06-08T00:00:00.000Z'
 
 type TestDb = ReturnType<typeof createTestDb>
 
-describe('build_business_docs_sync preview', () => {
+describe('build_business_docs/sync preview', () => {
   it('reports fresh missing stale orphaned and taskPlanned counts from computed business source hashes', () => {
     const db = createPreviewFixture()
     const result = previewBusinessDocsSync(db, { projectId })

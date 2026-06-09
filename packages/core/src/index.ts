@@ -76,7 +76,7 @@ export {
 export * from './pipeline_modules/build_docs_cli_runtime/index.js'
 export * from './pipeline_modules/build_docs_generation/index.js'
 export * from './pipeline_modules/build_business_docs_cli/index.js'
-export * from './pipeline_modules/build_business_docs_sync/index.js'
+export * from './pipeline_modules/build_business_docs/sync/index.js'
 export * from './pipeline_modules/build_epics_cli_runtime/index.js'
 export * as buildEpicsCore from './pipeline_modules/build_epics_core/index.js'
 export * from './pipeline_modules/build_epics_sync/index.js'

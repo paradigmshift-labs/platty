@@ -1,14 +1,14 @@
 import { eq, sql } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
-import { documentItemDocumentLinks, documentItemItemLinks, documentItemRelationLinks, documentItems, documentLinkEvidence, documentLinks, documents } from '../../../src/db/schema/build_docs.js'
-import { epicDocumentLinks } from '../../../src/db/schema/build_epics.js'
-import { epics, projects } from '../../../src/db/schema/core.js'
+import { documentItemDocumentLinks, documentItemItemLinks, documentItemRelationLinks, documentItems, documentLinkEvidence, documentLinks, documents } from '../../../../src/db/schema/build_docs.js'
+import { epicDocumentLinks } from '../../../../src/db/schema/build_epics.js'
+import { epics, projects } from '../../../../src/db/schema/core.js'
 import {
   checkBusinessDocGraphInvariants,
   cleanupOrphanedBusinessDocumentGraph,
   cleanupStaleBusinessDocumentSourceLinks,
-} from '../../../src/pipeline_modules/build_business_docs_sync/graph_reconcile.js'
-import { createTestDb } from '../../server/helpers.js'
+} from '../../../../src/pipeline_modules/build_business_docs/sync/graph_reconcile.js'
+import { createTestDb } from '../../../server/helpers.js'
 
 const projectId = 'project:platty'
 const now = '2026-06-09T00:00:00.000Z'

@@ -1,25 +1,25 @@
 import { and, eq, sql } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
-import { createTestDb } from '../../server/helpers.js'
-import { documentItemDocumentLinks, documentItems, documentLinks, documents, generationRuns } from '../../../src/db/schema/build_docs.js'
-import { epicDocumentLinks } from '../../../src/db/schema/build_epics.js'
-import { epics, projects, repositories } from '../../../src/db/schema/core.js'
-import { staticMerkleSnapshots } from '../../../src/db/schema/sync.js'
+import { createTestDb } from '../../../server/helpers.js'
+import { documentItemDocumentLinks, documentItems, documentLinks, documents, generationRuns } from '../../../../src/db/schema/build_docs.js'
+import { epicDocumentLinks } from '../../../../src/db/schema/build_epics.js'
+import { epics, projects, repositories } from '../../../../src/db/schema/core.js'
+import { staticMerkleSnapshots } from '../../../../src/db/schema/sync.js'
 import {
   businessDocContextPages,
   businessDocGenerationRuns,
   businessDocGenerationTasks,
-} from '../../../src/db/schema/build_business_docs_generation.js'
-import { cancelBusinessDocsRun } from '../../../src/pipeline_modules/build_business_docs_cli/lifecycle.js'
-import { startBusinessDocsGeneration } from '../../../src/pipeline_modules/build_business_docs_cli/start.js'
-import { startBusinessDocsSync } from '../../../src/pipeline_modules/build_business_docs_sync/start.js'
+} from '../../../../src/db/schema/build_business_docs_generation.js'
+import { cancelBusinessDocsRun } from '../../../../src/pipeline_modules/build_business_docs_cli/lifecycle.js'
+import { startBusinessDocsGeneration } from '../../../../src/pipeline_modules/build_business_docs_cli/start.js'
+import { startBusinessDocsSync } from '../../../../src/pipeline_modules/build_business_docs/sync/start.js'
 
 const projectId = 'project:platty'
 const now = '2026-06-08T00:00:00.000Z'
 
 type TestDb = ReturnType<typeof createTestDb>
 
-describe('build_business_docs_sync start', () => {
+describe('build_business_docs/sync start', () => {
   it('marks stale business documents before any task is leased', () => {
     const db = createSyncStartFixture()
     seedLowerDocument(db, {

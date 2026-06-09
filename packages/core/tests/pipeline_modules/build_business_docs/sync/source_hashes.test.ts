@@ -1,18 +1,18 @@
 import { eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
-import { createTestDb } from '../../server/helpers.js'
-import { documents, docRelationLinks } from '../../../src/db/schema/build_docs.js'
-import { epicDocumentLinks } from '../../../src/db/schema/build_epics.js'
-import { epics, projects, repositories } from '../../../src/db/schema/core.js'
-import { staticMerkleSnapshots } from '../../../src/db/schema/sync.js'
-import { computeBusinessDocSourceHashes } from '../../../src/pipeline_modules/build_business_docs_sync/source_hashes.js'
+import { createTestDb } from '../../../server/helpers.js'
+import { documents, docRelationLinks } from '../../../../src/db/schema/build_docs.js'
+import { epicDocumentLinks } from '../../../../src/db/schema/build_epics.js'
+import { epics, projects, repositories } from '../../../../src/db/schema/core.js'
+import { staticMerkleSnapshots } from '../../../../src/db/schema/sync.js'
+import { computeBusinessDocSourceHashes } from '../../../../src/pipeline_modules/build_business_docs/sync/source_hashes.js'
 
 const projectId = 'project:platty'
 const now = '2026-06-08T00:00:00.000Z'
 
 type TestDb = ReturnType<typeof createTestDb>
 
-describe('build_business_docs_sync source hashes', () => {
+describe('build_business_docs/sync source hashes', () => {
   it('computes deterministic target hashes from sorted EPIC source inputs', () => {
     const db = createHashFixture()
     const first = computeBusinessDocSourceHashes(db, { projectId })

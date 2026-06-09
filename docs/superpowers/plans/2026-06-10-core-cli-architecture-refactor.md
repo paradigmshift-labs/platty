@@ -563,7 +563,7 @@ git commit -m "refactor(core): move run links into pipeline infra"
 - Modify imports in `packages/cli/src/commands/business-docs.ts`
 - Modify exports in `packages/core/src/index.ts`
 
-- [ ] **Step 1: Move sync files**
+- [x] **Step 1: Move sync files**
 
 Target paths:
 
@@ -576,7 +576,7 @@ packages/core/src/pipeline_modules/build_business_docs/sync/types.ts
 packages/core/src/pipeline_modules/build_business_docs/sync/index.ts
 ```
 
-- [ ] **Step 2: Add temporary shim**
+- [x] **Step 2: Add temporary shim**
 
 `packages/core/src/pipeline_modules/build_business_docs_sync/index.ts`:
 
@@ -584,7 +584,7 @@ packages/core/src/pipeline_modules/build_business_docs/sync/index.ts
 export * from '@/pipeline_modules/build_business_docs/sync/index.js'
 ```
 
-- [ ] **Step 3: Update public exports**
+- [x] **Step 3: Update public exports**
 
 In `packages/core/src/index.ts`, replace:
 
@@ -598,10 +598,10 @@ With:
 export * from './pipeline_modules/build_business_docs/sync/index.js'
 ```
 
-- [ ] **Step 4: Run targeted tests**
+- [x] **Step 4: Run targeted tests**
 
 ```bash
-npm run test --workspace packages/core -- tests/pipeline_modules/build_business_docs_sync tests/pipeline_modules/build_business_docs
+npm run test --workspace packages/core -- tests/pipeline_modules/build_business_docs/sync tests/pipeline_modules/build_business_docs_cli
 npm run test --workspace packages/cli -- tests/business-docs
 ```
 
@@ -611,7 +611,7 @@ Expected:
 PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/core/src/pipeline_modules/build_business_docs packages/core/src/pipeline_modules/build_business_docs_sync packages/core/src/index.ts packages/cli/src/commands/business-docs.ts packages/core/tests packages/cli/tests
