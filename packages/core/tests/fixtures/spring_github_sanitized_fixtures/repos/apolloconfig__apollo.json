@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "apolloconfig/apollo",
+  "htmlUrl": "https://github.com/apolloconfig/apollo",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "apollo-adminservice/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 28,
+          "lines": [
+            "<dependency>",
+            "<groupId>com.ctrip.framework.apollo</groupId>",
+            "<artifactId>apollo-audit-spring-boot-starter</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>",
+            "<scope>test</scope>",
+            "<exclusions>",
+            "<exclusion>",
+            "<artifactId>spring-cloud-starter-netflix-archaius</artifactId>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "</exclusion>",
+            "<exclusion>",
+            "<artifactId>spring-cloud-starter-netflix-ribbon</artifactId>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "</exclusion>",
+            "<exclusion>",
+            "<artifactId>ribbon-eureka</artifactId>",
+            "<groupId>com.netflix.ribbon</groupId>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "<plugin>",
+            "<artifactId>maven-assembly-plugin</artifactId>",
+            "<executions>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "apollo-adminservice/src/main/java/com/ctrip/framework/apollo/adminservice/AdminServiceApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@ComponentScan(basePackageClasses = {ApolloCommonConfig.class, ApolloBizConfig.class,",
+            "AdminServiceApplication.class})",
+            "public class AdminServiceApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(AdminServiceApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "apollo-adminservice/src/main/java/com/ctrip/framework/apollo/adminservice/controller/AccessKeyController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 34,
+          "lines": [
+            "@RestController",
+            "public class AccessKeyController {",
+            "private final AccessKeyService accessKeyService;",
+            "public AccessKeyController(AccessKeyService accessKeyService) {",
+            "this.accessKeyService = accessKeyService;",
+            "}",
+            "@PostMapping(value = \"/__path__\")",
+            "public AccessKeyDTO create(@PathVariable String appId, @RequestBody AccessKeyDTO dto) {",
+            "AccessKey entity = BeanUtils.transform(AccessKey.class, dto);",
+            "entity = accessKeyService.create(appId, entity);",
+            "return BeanUtils.transform(AccessKeyDTO.class, entity);",
+            "}",
+            "@GetMapping(value = \"/__path__\")",
+            "public List<AccessKeyDTO> findByAppId(@PathVariable String appId) {",
+            "List<AccessKey> accessKeyList = accessKeyService.findByAppId(appId);",
+            "return BeanUtils.batchTransform(AccessKeyDTO.class, accessKeyList);",
+            "}",
+            "@DeleteMapping(value = \"/__path__\")",
+            "public void delete(@PathVariable String appId, @PathVariable long id, String operator) {",
+            "accessKeyService.delete(appId, id, operator);",
+            "}",
+            "@PutMapping(value = \"/__path__\")",
+            "public void enable(@PathVariable String appId, @PathVariable long id,",
+            "@RequestParam(required = false, defaultValue = \"\" + FILTER) int mode, String operator) {",
+            "AccessKey entity = new AccessKey();",
+            "entity.setId(id);",
+            "entity.setMode(mode);",
+            "}",
+            "@PutMapping(value = \"/__path__\")",
+            "public void disable(@PathVariable String appId, @PathVariable long id, String operator) {",
+            "AccessKey entity = new AccessKey();",
+            "entity.setId(id);",
+            "entity.setMode(FILTER);",
+            "entity.setEnabled(false);"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "apollo-adminservice/src/main/java/com/ctrip/framework/apollo/adminservice/controller/AppController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 59,
+          "lines": [
+            "import java.util.Objects;",
+            "@RestController",
+            "public class AppController {",
+            "private static final Logger logger = LoggerFactory.getLogger(AppController.class);",
+            "private final AppService appService;",
+            "private final AdminService adminService;",
+            "private final AccessKeyService accessKeyService;",
+            "private final BizConfig bizConfig;",
+            "public AppController(final AppService appService, final AdminService adminService,",
+            "final AccessKeyService accessKeyService, final BizConfig bizConfig) {",
+            "this.appService = appService;",
+            "this.adminService = adminService;",
+            "this.accessKeyService = accessKeyService;",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "public AppDTO create(@Valid @RequestBody AppDTO dto) {",
+            "App entity = BeanUtils.transform(App.class, dto);",
+            "App managedEntity = appService.findOne(entity.getAppId());",
+            "if (managedEntity != null) {",
+            "throw BadRequestException.appAlreadyExists(entity.getAppId());",
+            "}",
+            "private AccessKey createDefaultAccessKey(App app) {",
+            "String operator = app.getDataChangeCreatedBy();",
+            "if (StringUtils.isBlank(operator)) {",
+            "operator = app.getDataChangeLastModifiedBy();",
+            "}",
+            "}",
+            "@DeleteMapping(\"/__path__\")",
+            "public void delete(@PathVariable(\"appId\") String appId, @RequestParam String operator) {",
+            "App entity = appService.findOne(appId);",
+            "if (entity == null) {",
+            "throw NotFoundException.appNotFound(appId);",
+            "}",
+            "}",
+            "@PutMapping(\"/__path__\")",
+            "public void update(@PathVariable String appId, @RequestBody App app) {",
+            "if (!Objects.equals(appId, app.getAppId())) {",
+            "throw new BadRequestException(\"<literal>\");",
+            "}",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public List<AppDTO> find(@RequestParam(value = \"name\", required = false) String name,",
+            "Pageable pageable) {",
+            "List<App> app;",
+            "if (StringUtils.isBlank(name)) {",
+            "app = appService.findAll(pageable);",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public AppDTO get(@PathVariable(\"appId\") String appId) {",
+            "App app = appService.findOne(appId);",
+            "if (app == null) {",
+            "throw NotFoundException.appNotFound(appId);",
+            "}",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public boolean isAppIdUnique(@PathVariable(\"appId\") String appId) {",
+            "return appService.isAppIdUnique(appId);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

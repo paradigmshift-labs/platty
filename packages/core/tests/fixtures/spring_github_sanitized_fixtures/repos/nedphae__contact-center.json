@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "nedphae/contact-center",
+  "htmlUrl": "https://github.com/nedphae/contact-center",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "GraphQLBFF/build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 23,
+          "lines": [
+            "plugins {",
+            "id(\"org.springframework.boot\")",
+            "id(\"io.spring.dependency-management\")",
+            "kotlin(\"jvm\")",
+            "kotlin(\"plugin.spring\")",
+            "kotlin(\"plugin.jpa\")",
+            "version = \"1.0.0-SNAPSHOT\"",
+            "dependencies {",
+            "implementation(project(\":common\")) {",
+            "this.exclude(\"org.springframework.boot\", \"spring-boot-starter-data-redis\")",
+            "}",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "}",
+            "configurations {",
+            "all {",
+            "this.exclude(\"org.springframework.boot\", \"spring-boot-starter-data-jpa\")",
+            "this.exclude(\"org.springframework.boot\", \"spring-boot-starter-data-r2dbc\")",
+            "this.exclude(\"io.r2dbc\", \"r2dbc-postgresql\")",
+            "this.exclude(\"org.postgresql\", \"postgresql\")",
+            "this.exclude(\"org.springframework.boot\", \"spring-boot-starter-data-redis\")",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "GraphQLBFF/src/main/kotlin/com/qinghzu/graphqlbff/GraphQlbffApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 21,
+          "lines": [
+            "import org.springframework.context.annotation.Bean",
+            "@SpringBootApplication",
+            "class GraphQlbffApplication {",
+            "@Bean",
+            "fun wiringFactory() = CustomDirectiveWiringFactory()",
+            "@Bean",
+            "fun hooks(wiringFactory: KotlinDirectiveWiringFactory) = CustomSchemaGeneratorHooks(wiringFactory)",
+            "@Bean",
+            "fun dataFetcherFactoryProvider(",
+            "springDataFetcherFactory: SpringDataFetcherFactory,",
+            "objectMapper: ObjectMapper,",
+            "applicationContext: ApplicationContext",
+            ") = CustomDataFetcherFactoryProvider(springDataFetcherFactory, objectMapper, applicationContext)",
+            "@Bean",
+            "fun dataFetcherExceptionHandler(): DataFetcherExceptionHandler = CustomDataFetcherExceptionHandler()",
+            "@Bean",
+            "fun apolloSubscriptionHooks(): ApolloSubscriptionHooks = MySubscriptionHooks()",
+            "}",
+            "fun main(args: Array<String>) {",
+            "runApplication<GraphQlbffApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "GraphQLBFF/src/main/kotlin/com/qinghzu/graphqlbff/exceptions/CustomDataFetcherExceptionHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 17,
+          "lines": [
+            "import org.slf4j.LoggerFactory",
+            "class CustomDataFetcherExceptionHandler : DataFetcherExceptionHandler {",
+            "private val log = LoggerFactory.getLogger(CustomDataFetcherExceptionHandler::class.java)",
+            "override fun onException(handlerParameters: DataFetcherExceptionHandlerParameters): DataFetcherExceptionHandlerResult {",
+            "val exception = handlerParameters.exception",
+            "val sourceLocation = handlerParameters.sourceLocation",
+            "val path = handlerParameters.path",
+            "@JsonIgnoreProperties(\"exception\")",
+            "class ValidationDataFetchingGraphQLError(",
+            "val constraintErrors: List<ConstraintError>,",
+            "path: ResultPath,",
+            "exception: Throwable,",
+            "sourceLocation: SourceLocation",
+            "sourceLocation",
+            ") {",
+            "override fun getErrorType(): ErrorType = ValidationError",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "bot/src/main/kotlin/com/qingzhu/bot/BotApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.cloud.client.discovery.EnableDiscoveryClient",
+            "@SpringBootApplication",
+            "@EnableDiscoveryClient",
+            "class BotApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<BotApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

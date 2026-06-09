@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "springfox/springfox",
+  "htmlUrl": "https://github.com/springfox/springfox",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 5,
+          "lines": [
+            "plugins {",
+            "id 'com.github.ben-manes.versions' version '0.29.0'",
+            "id 'se.patrikerdes.use-latest-versions' version '0.2.14'",
+            "id \"com.jfrog.bintray\" version \"1.8.5\"",
+            "id \"com.jfrog.artifactory\" version \"4.16.1\""
+          ]
+        }
+      ]
+    },
+    {
+      "path": "oas-contract-tests/src/main/java/springfox/test/contract/oas/OpenApiApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 13,
+          "lines": [
+            "import org.springframework.hateoas.config.EnableHypermediaSupport;",
+            "@SpringBootApplication",
+            "@SuppressWarnings(\"HideUtilityClassConstructor\")",
+            "@EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL)",
+            "@Import(value = {",
+            "SecuritySupport.class,",
+            "OpenApiTestConfig.class})",
+            "public class OpenApiApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(",
+            "OpenApiApplication.class,",
+            "args);",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "oas-contract-tests/src/main/java/springfox/test/contract/oas/api/HomeController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "@Controller",
+            "public class HomeController {",
+            "@Value(\"<literal>\")",
+            "private String swaggerUiPath;",
+            "@GetMapping(DEFAULT_PATH_SEPARATOR)",
+            "public String index() {",
+            "return REDIRECT_URL_PREFIX + swaggerUiPath;",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "oas-contract-tests/src/main/java/springfox/test/contract/oas/api/PetApiController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 14,
+          "lines": [
+            "date = \"2019-07-11T00:09:29.839+02:00[Europe/Paris]\")",
+            "@RestController",
+            "@RequestMapping(\"${openapi.openAPIPetstore.base-path:/}\")",
+            "public class PetApiController implements PetApi {",
+            "private final PetApiDelegate delegate;",
+            "public PetApiController(@Autowired(required = false) PetApiDelegate delegate) {",
+            "this.delegate = Optional.ofNullable(delegate).orElse(new PetApiDelegate() {",
+            "});",
+            "}",
+            "@Override",
+            "public PetApiDelegate getDelegate() {",
+            "return delegate;",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

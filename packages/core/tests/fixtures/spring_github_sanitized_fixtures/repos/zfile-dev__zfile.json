@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "zfile-dev/zfile",
+  "htmlUrl": "https://github.com/zfile-dev/zfile",
+  "defaultBranch": "main",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 65,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>3.3.2</version>",
+            "<relativePath/>",
+            "</parent>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-aop</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-configuration-processor</artifactId>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-redis</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-cache</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-thymeleaf</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-validation</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>",
+            "<groupId>com.baomidou</groupId>",
+            "<artifactId>mybatis-plus-spring-boot3-starter</artifactId>",
+            "<version>3.5.6</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>cn.dev33</groupId>",
+            "<artifactId>sa-token-spring-boot3-starter</artifactId>",
+            "<version>1.38.0</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.github.xiaoymin</groupId>",
+            "<artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>",
+            "<version>4.5.0</version>",
+            "</dependency>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.retry</groupId>",
+            "<artifactId>spring-retry</artifactId>",
+            "</dependency>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "<plugin>",
+            "<groupId>org.apache.maven.plugins</groupId>",
+            "<artifactId>maven-compiler-plugin</artifactId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/im/zhaojun/zfile/ZfileApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "@SpringBootApplication",
+            "@EnableAspectJAutoProxy(exposeProxy = true, proxyTargetClass = true)",
+            "@ServletComponentScan(basePackages = {\"im.zhaojun.zfile.core.filter\", \"im.zhaojun.zfile.module.storage.filter\"})",
+            "@ComponentScan(basePackages = \"im.zhaojun.zfile.*\")",
+            "public class ZfileApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(ZfileApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/im/zhaojun/zfile/core/config/mybatis/CollectionIntegerTypeHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 3,
+          "lines": [
+            "import java.util.Set;",
+            "public class CollectionIntegerTypeHandler extends CollectionTypeHandler<Set<Integer>> {",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/im/zhaojun/zfile/core/config/mybatis/CollectionStrTypeHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 3,
+          "lines": [
+            "import java.util.Set;",
+            "public class CollectionStrTypeHandler extends CollectionTypeHandler<Set<String>> {",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

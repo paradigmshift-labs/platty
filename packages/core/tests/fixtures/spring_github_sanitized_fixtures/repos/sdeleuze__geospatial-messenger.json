@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "sdeleuze/geospatial-messenger",
+  "htmlUrl": "https://github.com/sdeleuze/geospatial-messenger",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 33,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "val kotlinVersion = \"1.2.21\"",
+            "id(\"org.jetbrains.kotlin.jvm\") version kotlinVersion",
+            "id(\"org.jetbrains.kotlin.plugin.spring\") version kotlinVersion",
+            "id(\"io.spring.dependency-management\") version \"1.0.4.RELEASE\"",
+            "maven(\"https://repo.spring.io/milestone\")",
+            "}",
+            "dependencies {",
+            "classpath(\"<literal>\")",
+            "classpath(\"<literal>\")",
+            "classpath(\"<literal>\")",
+            "}",
+            "}",
+            "apply {",
+            "plugin(\"org.springframework.boot\")",
+            "}",
+            "tasks {",
+            "withType<KotlinCompile> {",
+            "}",
+            "dependencies {",
+            "compile(\"<literal>\") {",
+            "exclude(module = \"spring-boot-starter-validation\")",
+            "}",
+            "compile(\"<literal>\")",
+            "compile(\"org.springframework.boot:spring-boot-devtools\")",
+            "compile(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "compile(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "compile(\"<literal>\")",
+            "}",
+            "testCompile(\"<literal>\")",
+            "testCompile(\"<literal>\")",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/io/spring/messenger/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 24,
+          "lines": [
+            "import javax.sql.DataSource",
+            "@SpringBootApplication",
+            "@EnableTransactionManagement",
+            "class Application {",
+            "@Bean",
+            "fun objectMapper(): ObjectMapper {",
+            "val mapper:ObjectMapper = Jackson2ObjectMapperBuilder().modulesToInstall(PostGISModule()).build()",
+            "mapper.setSerializationInclusion(Include.NON_NULL)",
+            "return mapper",
+            "}",
+            "@Bean",
+            "fun transactionManager(dataSource: DataSource) = SpringTransactionManager(dataSource)",
+            "@Bean // PersistenceExceptionTranslationPostProcessor with proxyTargetClass=false, see https://github.com/spring-projects/spring-boot/issues/1844",
+            "fun persistenceExceptionTranslationPostProcessor() = PersistenceExceptionTranslationPostProcessor()",
+            "@Bean",
+            "fun init(ur: UserRepository, mr: MessageRepository) = CommandLineRunner {",
+            "ur.createTable()",
+            "mr.createTable()",
+            "mr.deleteAll()",
+            "ur.deleteAll()",
+            "}",
+            "fun main(args: Array<String>) {",
+            "runApplication<Application>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/io/spring/messenger/repository/CrudRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.postgis.Point",
+            "interface CrudRepository<T, K> {",
+            "fun createTable()",
+            "fun create(m: T): T",
+            "fun findAll(): Iterable<T>",
+            "fun deleteAll(): Int",
+            "fun findByBoundingBox(box: PGbox2d): Iterable<T>",
+            "fun updateLocation(userName:K, location: Point)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/io/spring/messenger/repository/DefaultMessageRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 26,
+          "lines": [
+            "import org.springframework.transaction.annotation.Transactional",
+            "interface MessageRepository: CrudRepository<Message, Int>",
+            "@Repository",
+            "@Transactional // Should be at @Service level in real applications",
+            "class DefaultMessageRepository : MessageRepository {",
+            "override fun createTable() = SchemaUtils.create(Messages)",
+            "override  fun create(m: Message): Message {",
+            "m.id = Messages.insert(toRow(m))[Messages.id]",
+            "return m",
+            "}",
+            "override fun findAll() = Messages.selectAll().map { fromRow(it) }",
+            "override fun findByBoundingBox(box: PGbox2d) = Messages.select { Messages.location within box }.map { fromRow(it) }",
+            "override fun updateLocation(userName:Int, location: Point) {",
+            "location.srid = 4326",
+            "Messages.update({ Messages.id eq userName }) { it[Messages.location] = location}",
+            "}",
+            "override fun deleteAll() = Messages.deleteAll()",
+            "private fun toRow(m: Message): Messages.(UpdateBuilder<*>) -> Unit = {",
+            "if (m.id != null) it[id] = m.id",
+            "it[content] = m.content",
+            "it[author] = m.author",
+            "it[location] = m.location",
+            "}",
+            "private fun fromRow(r: ResultRow) =",
+            "Message(r[Messages.content], r[Messages.author], r[Messages.location], r[Messages.id])",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "JetBrains/kotlin-compiler-server",
+  "htmlUrl": "https://github.com/JetBrains/kotlin-compiler-server",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build-settings-logic/build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 6,
+          "lines": [
+            "plugins {",
+            "`kotlin-dsl`",
+            "}",
+            "dependencies {",
+            "implementation(libs.gradle.develocity)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "completions/src/main/kotlin/completions/CompletionsApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "@EnableConfigurationProperties(value = [LspProperties::class])",
+            "class CompletionsApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<CompletionsApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "completions/src/main/kotlin/completions/controllers/rest/CompletionsRestController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 12,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "@RequestMapping(value = [\"/__path__\"])",
+            "class CompletionsRestController(",
+            "private val lspCompletionQueue: LspCompletionQueue,",
+            ") {",
+            "@PostMapping(\"/__path__\")",
+            "suspend fun complete(",
+            "@RequestBody completionRequest: CompletionRequest,",
+            "@RequestParam line: Int,",
+            "@RequestParam ch: Int,",
+            "): List<CompletionResponse> {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "completions/src/main/kotlin/completions/controllers/ws/LspCompletionWebSocketHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 51,
+          "lines": [
+            "@Component",
+            "class LspCompletionWebSocketHandler(",
+            "private val lspProxy: KotlinLspProxy,",
+            "private val lspCompletionProvider: LspCompletionProvider,",
+            "private val objectMapper: ObjectMapper,",
+            ") : WebSocketHandler {",
+            "private val logger = LoggerFactory.getLogger(LspCompletionWebSocketHandler::class.java)",
+            "private val objectReader = objectMapper.readerFor(WebSocketCompletionRequest::class.java)",
+            "override fun handle(session: WebSocketSession): Mono<Void?> {",
+            "val sessionId = session.id",
+            "val sideSink = Sinks.many().unicast().onBackpressureBuffer<Response>()",
+            "val sideFlux = sideSink.asFlux()",
+            "}",
+            "private fun getInitialMono(sessionId: String): Mono<Response> = mono {",
+            "runCatching {",
+            "lspProxy.requireAvailable()",
+            "lspProxy.onClientConnected(sessionId)",
+            "Response.Init(sessionId)",
+            "}.subscribeOn(Schedulers.boundedElastic())",
+            "private fun getCompletionRequests(session: WebSocketSession, sideSink: Sinks.Many<Response>): Flux<WebSocketCompletionRequest> =",
+            "session.receive()",
+            ".map { it.payloadAsText }",
+            ".onBackpressureDrop { dropped ->",
+            "runCatching { objectReader.readValue<WebSocketCompletionRequest>(dropped) }.onSuccess {",
+            "}, 1)",
+            "private fun handleCompletionRequest(sessionId: String, requests: Flux<WebSocketCompletionRequest>): Flux<Response> =",
+            "requests",
+            ".concatMap({ request ->",
+            "mono {",
+            "lspProxy.requireAvailable()",
+            "}, 1)",
+            "private fun WebSocketSession.startCompletionHandler(",
+            "initial: Mono<Response>,",
+            "vararg outboundFluxes: Flux<Response>,",
+            "): Mono<Void?> {",
+            "val outbound: Flux<WebSocketMessage> =",
+            "}",
+            "private fun Response.toJson(): String = objectMapper.writeValueAsString(this)",
+            "}",
+            "sealed interface Response {",
+            "val requestId: String?",
+            "open class Error(val message: String, override val requestId: String? = null) : Response",
+            "data class Init(val sessionId: String, override val requestId: String? = null) : Response",
+            "data class Completions(val completions: List<CompletionResponse>, override val requestId: String? = null) : Response",
+            "data class Discarded(override val requestId: String) : Error(\"discarded\", requestId)",
+            "}",
+            "private data class WebSocketCompletionRequest(",
+            "val requestId: String,",
+            "val completionRequest: CompletionRequest,",
+            "val line: Int,",
+            "val ch: Int,"
+          ]
+        }
+      ]
+    }
+  ]
+}

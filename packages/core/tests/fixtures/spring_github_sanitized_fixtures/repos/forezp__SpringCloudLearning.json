@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "forezp/SpringCloudLearning",
+  "htmlUrl": "https://github.com/forezp/SpringCloudLearning",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "chapter-sleuth-mysql/eureka-server/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 17,
+          "lines": [
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-eureka-server</artifactId>",
+            "</dependency>",
+            "</dependencies>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "chapter-sleuth-mysql/eureka-server/src/main/java/com/forezp/EurekaServerApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;",
+            "@SpringBootApplication",
+            "@EnableEurekaServer",
+            "public class EurekaServerApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(EurekaServerApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "chapter-sleuth-mysql/gateway-service/src/main/java/com/forezp/GatewayServiceApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.springframework.cloud.netflix.zuul.EnableZuulProxy;",
+            "@SpringBootApplication",
+            "@EnableZuulProxy",
+            "@EnableEurekaClient",
+            "public class GatewayServiceApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(GatewayServiceApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "chapter-sleuth-mysql/user-service/src/main/java/com/forezp/UserServiceApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "import org.springframework.cloud.netflix.eureka.EnableEurekaClient;",
+            "@SpringBootApplication",
+            "@EnableEurekaClient",
+            "public class UserServiceApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(UserServiceApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "lilishop/lilishop",
+  "htmlUrl": "https://github.com/lilishop/lilishop",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "buyer-api/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 8,
+          "lines": [
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>",
+            "</project>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "buyer-api/src/main/java/cn/lili/BuyerApiApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 14,
+          "lines": [
+            "@SpringBootApplication",
+            "@EnableCaching",
+            "@EnableAsync",
+            "public class BuyerApiApplication {",
+            "@Primary",
+            "@Bean",
+            "public TaskExecutor primaryTaskExecutor() {",
+            "return new ThreadPoolTaskExecutor();",
+            "}",
+            "public static void main(String[] args) {",
+            "System.setProperty(\"es.set.netty.runtime.available.processors\", \"false\");",
+            "System.setProperty(\"rocketmq.client.logUseSlf4j\",\"true\");",
+            "SpringApplication.run(BuyerApiApplication.class, args);",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "buyer-api/src/main/java/cn/lili/controller/distribution/DistributionBuyerController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 30,
+          "lines": [
+            "@RestController",
+            "@Tag(name = \"买家端,分销员接口\")",
+            "@RequestMapping(\"/__path__\")",
+            "public class DistributionBuyerController {",
+            "@Autowired",
+            "private DistributionService distributionService;",
+            "@Operation(summary = \"申请分销员\")",
+            "@PostMapping",
+            "public ResultMessage<Object> applyDistribution(DistributionApplyDTO distributionApplyDTO) {",
+            "return ResultUtil.data(distributionService.applyDistribution(distributionApplyDTO));",
+            "}",
+            "@Operation(summary = \"获取分销员分页订单列表\")",
+            "@GetMapping(\"/__path__\")",
+            "public ResultMessage<IPage<DistributionOrder>> distributionOrderPage(DistributionOrderSearchParams distributionOrderSearchParams) {",
+            "distributionOrderSearchParams.setDistributionId(distributionService.getDistribution().getId());",
+            "return ResultUtil.data(distributionOrderService.getDistributionOrderPage(distributionOrderSearchParams));",
+            "}",
+            "@Operation(summary = \"获取当前客户的分销员信息\", description = \"可根据分销员信息查询待提现金额以及冻结金额等信息\")",
+            "@GetMapping",
+            "public ResultMessage<Distribution> getDistribution() {",
+            "distributionService.checkDistributionSetting();",
+            "return ResultUtil.data(distributionService.getDistribution());",
+            "@Operation(summary = \"绑定分销员\")",
+            "@Parameter(name = \"distributionId\", description = \"分销员ID\", required = true)",
+            "@GetMapping(\"/__path__\")",
+            "public ResultMessage<Object> bindingDistribution(@PathVariable String distributionId) {",
+            "distributionService.bindingDistribution(distributionId);",
+            "return ResultUtil.success();",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "buyer-api/src/main/java/cn/lili/controller/distribution/DistributionCashBuyerController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 20,
+          "lines": [
+            "@RestController",
+            "@Tag(name = \"买家端,分销商品佣金提现接口\")",
+            "@RequestMapping(\"/__path__\")",
+            "@Validated",
+            "public class DistributionCashBuyerController {",
+            "@Autowired",
+            "private DistributionCashService distributionCashService;",
+            "@Parameter(name = \"price\", description = \"申请金额\", required = true)",
+            "})",
+            "@PostMapping",
+            "public ResultMessage<Object> cash(@Validated @Max(value = 9999, message = \"提现金额单次最多允许提现9999元\")",
+            "@Min(value = 1, message = \"提现金额单次最少提现金额为1元\")",
+            "@NotNull Double price) {",
+            "if (Boolean.TRUE.equals(distributionCashService.cash(price))) {",
+            "return ResultUtil.success();",
+            "@Operation(summary = \"分销员提现历史\")",
+            "@GetMapping",
+            "public ResultMessage<IPage<DistributionCash>> casHistory(PageVO page) {",
+            "return ResultUtil.data(distributorCashService.getDistributionCash(page));",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "macrozheng/mall-swarm",
+  "htmlUrl": "https://github.com/macrozheng/mall-swarm",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "mall-admin/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 34,
+          "lines": [
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-redis</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.aliyun.oss</groupId>",
+            "<artifactId>aliyun-sdk-oss</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-openfeign</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>cn.dev33</groupId>",
+            "<artifactId>sa-token-spring-boot3-starter</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>cn.dev33</groupId>",
+            "<artifactId>sa-token-redis-jackson</artifactId>",
+            "<dependency>",
+            "<groupId>de.codecentric</groupId>",
+            "<artifactId>spring-boot-admin-starter-client</artifactId>",
+            "</dependency>",
+            "</dependencies>",
+            "<build>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "<plugin>",
+            "<groupId>io.fabric8</groupId>",
+            "<artifactId>docker-maven-plugin</artifactId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "mall-admin/src/main/java/com/macro/mall/MallAdminApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@EnableFeignClients",
+            "@EnableDiscoveryClient",
+            "@SpringBootApplication",
+            "public class MallAdminApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(MallAdminApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "mall-admin/src/main/java/com/macro/mall/controller/CmsPrefrenceAreaController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 14,
+          "lines": [
+            "@Controller",
+            "@Tag(name = \"CmsPrefrenceAreaController\", description = \"商品优选管理\")",
+            "@RequestMapping(\"/__path__\")",
+            "public class CmsPrefrenceAreaController {",
+            "@Autowired",
+            "private CmsPrefrenceAreaService prefrenceAreaService;",
+            "@Operation(summary = \"获取所有商品优选\")",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.GET)",
+            "@ResponseBody",
+            "public CommonResult<List<CmsPrefrenceArea>> listAll() {",
+            "List<CmsPrefrenceArea> prefrenceAreaList = prefrenceAreaService.listAll();",
+            "return CommonResult.success(prefrenceAreaList);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "mall-admin/src/main/java/com/macro/mall/controller/CmsSubjectController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 21,
+          "lines": [
+            "@Controller",
+            "@Tag(name = \"CmsSubjectController\", description = \"商品专题管理\")",
+            "@RequestMapping(\"/__path__\")",
+            "public class CmsSubjectController {",
+            "@Autowired",
+            "private CmsSubjectService subjectService;",
+            "@Operation(summary = \"获取全部商品专题\")",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.GET)",
+            "@ResponseBody",
+            "public CommonResult<List<CmsSubject>> listAll() {",
+            "List<CmsSubject> subjectList = subjectService.listAll();",
+            "return CommonResult.success(subjectList);",
+            "}",
+            "@Operation(summary = \"根据专题名称分页获取专题\")",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.GET)",
+            "@ResponseBody",
+            "public CommonResult<CommonPage<CmsSubject>> getList(@RequestParam(value = \"keyword\", required = false) String keyword,",
+            "@RequestParam(value = \"pageNum\", defaultValue = \"1\") Integer pageNum,",
+            "@RequestParam(value = \"pageSize\", defaultValue = \"5\") Integer pageSize) {",
+            "List<CmsSubject> subjectList = subjectService.list(keyword, pageNum, pageSize);",
+            "return CommonResult.success(CommonPage.restPage(subjectList));"
+          ]
+        }
+      ]
+    }
+  ]
+}

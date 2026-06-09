@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "wuyouzhuguli/SpringAll",
+  "htmlUrl": "https://github.com/wuyouzhuguli/SpringAll",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "01.Start-Spring-Boot/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 24,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>1.5.9.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "</dependencies>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "01.Start-Spring-Boot/src/main/java/com/springboot/demo/DemoApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 12,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController;",
+            "@RestController",
+            "@SpringBootApplication",
+            "public class DemoApplication {",
+            "@RequestMapping(\"/__path__\")",
+            "String index() {",
+            "return \"hello spring boot\";",
+            "}",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(DemoApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "02.Spring-Boot-Config/src/main/java/com/springboot/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import com.springboot.bean.TestConfigBean;",
+            "@SpringBootApplication",
+            "@EnableConfigurationProperties({ConfigBean.class,TestConfigBean.class})",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "SpringApplication app = new SpringApplication(Application.class);",
+            "app.setAddCommandLineProperties(false);",
+            "app.run(args);",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "02.Spring-Boot-Config/src/main/java/com/springboot/controller/IndexController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 12,
+          "lines": [
+            "@RestController",
+            "public class IndexController {",
+            "@Autowired",
+            "private BlogProperties blogProperties;",
+            "@Autowired",
+            "private ConfigBean configBean;",
+            "private TestConfigBean testConfigBean;",
+            "@RequestMapping(\"/__path__\")",
+            "String index() {",
+            "return testConfigBean.getName()+\"，\"+testConfigBean.getAge();",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

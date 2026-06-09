@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "putuprema/spring-vs-aspnetcore",
+  "htmlUrl": "https://github.com/putuprema/spring-vs-aspnetcore",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "EaterSpring/build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 30,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "id(\"org.springframework.boot\") version \"2.5.5\"",
+            "id(\"io.spring.dependency-management\") version \"1.0.11.RELEASE\"",
+            "kotlin(\"jvm\") version \"1.5.21\"",
+            "kotlin(\"plugin.spring\") version \"1.5.21\"",
+            "kotlin(\"plugin.jpa\") version \"1.5.21\"",
+            "}",
+            "dependencies {",
+            "val jjwtVersion = \"0.11.2\"",
+            "implementation(\"io.jsonwebtoken:jjwt-api:${jjwtVersion}\")",
+            "implementation(\"io.jsonwebtoken:jjwt-impl:${jjwtVersion}\")",
+            "implementation(\"io.jsonwebtoken:jjwt-jackson:${jjwtVersion}\")",
+            "val mapstructVersion = \"1.4.2.Final\"",
+            "implementation(\"org.mapstruct:mapstruct:${mapstructVersion}\")",
+            "kapt(\"<literal>\")",
+            "implementation(\"com.github.javafaker:javafaker:1.0.2\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "runtimeOnly(\"mysql:mysql-connector-java\")",
+            "annotationProcessor(\"<literal>\")",
+            "testImplementation(\"<literal>\")",
+            "}",
+            "tasks.withType<KotlinCompile> {",
+            "kotlinOptions {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "EaterSpring/src/main/kotlin/xyz/purema/eater/EaterApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class EaterApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<EaterApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "EaterSpring/src/main/kotlin/xyz/purema/eater/advice/ControllerExceptionHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@RestControllerAdvice",
+            "class ControllerExceptionHandler : ResponseEntityExceptionHandler() {",
+            "@ExceptionHandler(AppException::class)",
+            "fun handleAppException(ex: AppException, handlerMethod: HandlerMethod): ResponseEntity<BaseResponseDto> {",
+            "return ex.getResponse()",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "EaterSpring/src/main/kotlin/xyz/purema/eater/config/security/ApiAccessDeniedHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import javax.servlet.http.HttpServletResponse",
+            "class ApiAccessDeniedHandler : AccessDeniedHandler {",
+            "override fun handle(",
+            "request: HttpServletRequest,",
+            "response: HttpServletResponse,",
+            "accessDeniedException: AccessDeniedException",
+            ") {"
+          ]
+        }
+      ]
+    }
+  ]
+}

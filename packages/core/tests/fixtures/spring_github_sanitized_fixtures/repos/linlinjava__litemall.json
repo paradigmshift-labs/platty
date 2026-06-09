@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "linlinjava/litemall",
+  "htmlUrl": "https://github.com/linlinjava/litemall",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "litemall-admin-api/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 15,
+          "lines": [
+            "<dependency>",
+            "<groupId>org.apache.shiro</groupId>",
+            "<artifactId>shiro-spring-boot-web-starter</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.github.penggle</groupId>",
+            "<artifactId>kaptcha</artifactId>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "<executions>",
+            "<execution>",
+            "<id>repackage</id>",
+            "<configuration>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "litemall-admin-api/src/main/java/org/linlinjava/litemall/admin/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 11,
+          "lines": [
+            "import org.springframework.transaction.annotation.EnableTransactionManagement;",
+            "@SpringBootApplication(scanBasePackages = {\"org.linlinjava.litemall.db\", \"org.linlinjava.litemall.core\",",
+            "\"org.linlinjava.litemall.admin\"})",
+            "@MapperScan(\"org.linlinjava.litemall.db.dao\")",
+            "@EnableTransactionManagement",
+            "@EnableScheduling",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(Application.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "litemall-admin-api/src/main/java/org/linlinjava/litemall/admin/config/ShiroExceptionHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 16,
+          "lines": [
+            "@ControllerAdvice",
+            "@Order(value = Ordered.HIGHEST_PRECEDENCE)",
+            "public class ShiroExceptionHandler {",
+            "private final Log logger = LogFactory.getLog(ShiroExceptionHandler.class);",
+            "@ExceptionHandler(AuthenticationException.class)",
+            "@ResponseBody",
+            "public Object unauthenticatedHandler(AuthenticationException e) {",
+            "logger.warn(e.getMessage(), e);",
+            "return ResponseUtil.unlogin();",
+            "}",
+            "@ExceptionHandler(AuthorizationException.class)",
+            "@ResponseBody",
+            "public Object unauthorizedHandler(AuthorizationException e) {",
+            "logger.warn(e.getMessage(), e);",
+            "return ResponseUtil.unauthz();",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "litemall-admin-api/src/main/java/org/linlinjava/litemall/admin/web/AdminAdController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 53,
+          "lines": [
+            "import java.util.List;",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "@Validated",
+            "public class AdminAdController {",
+            "private final Log logger = LogFactory.getLog(AdminAdController.class);",
+            "@Autowired",
+            "private LitemallAdService adService;",
+            "@RequiresPermissions(\"admin:ad:list\")",
+            "@RequiresPermissionsDesc(menu = {\"推广管理\", \"广告管理\"}, button = \"查询\")",
+            "@GetMapping(\"/__path__\")",
+            "public Object list(String name, String content,",
+            "@RequestParam(defaultValue = \"1\") Integer page,",
+            "@RequestParam(defaultValue = \"10\") Integer limit,",
+            "@Sort @RequestParam(defaultValue = \"add_time\") String sort,",
+            "@Order @RequestParam(defaultValue = \"desc\") String order) {",
+            "}",
+            "private Object validate(LitemallAd ad) {",
+            "String name = ad.getName();",
+            "if (StringUtils.isEmpty(name)) {",
+            "return ResponseUtil.badArgument();",
+            "}",
+            "@RequiresPermissions(\"admin:ad:create\")",
+            "@RequiresPermissionsDesc(menu = {\"推广管理\", \"广告管理\"}, button = \"添加\")",
+            "@PostMapping(\"/__path__\")",
+            "public Object create(@RequestBody LitemallAd ad) {",
+            "Object error = validate(ad);",
+            "if (error != null) {",
+            "return error;",
+            "}",
+            "@RequiresPermissions(\"admin:ad:read\")",
+            "@RequiresPermissionsDesc(menu = {\"推广管理\", \"广告管理\"}, button = \"详情\")",
+            "@GetMapping(\"/__path__\")",
+            "public Object read(@NotNull Integer id) {",
+            "LitemallAd ad = adService.findById(id);",
+            "return ResponseUtil.ok(ad);",
+            "}",
+            "@RequiresPermissions(\"admin:ad:update\")",
+            "@RequiresPermissionsDesc(menu = {\"推广管理\", \"广告管理\"}, button = \"编辑\")",
+            "@PostMapping(\"/__path__\")",
+            "public Object update(@RequestBody LitemallAd ad) {",
+            "Object error = validate(ad);",
+            "if (error != null) {",
+            "return error;",
+            "}",
+            "@RequiresPermissions(\"admin:ad:delete\")",
+            "@RequiresPermissionsDesc(menu = {\"推广管理\", \"广告管理\"}, button = \"删除\")",
+            "@PostMapping(\"/__path__\")",
+            "public Object delete(@RequestBody LitemallAd ad) {",
+            "Integer id = ad.getId();",
+            "if (id == null) {",
+            "return ResponseUtil.badArgument();",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "ZHENFENG13/spring-boot-projects",
+  "htmlUrl": "https://github.com/ZHENFENG13/spring-boot-projects",
+  "defaultBranch": "main",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "SpringBoot入门案例源码/spring-boot-RESTful-api/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 37,
+          "lines": [
+            "<modelVersion>4.0.0</modelVersion>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>3.0.0</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<groupId>cn.lanqiao</groupId>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-jdbc</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.mybatis.spring.boot</groupId>",
+            "<artifactId>mybatis-spring-boot-starter</artifactId>",
+            "<version>3.0.0</version>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "</dependencies>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>",
+            "</project>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "SpringBoot入门案例源码/spring-boot-RESTful-api/src/main/java/cn/lanqiao/springboot3/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "@MapperScan(\"cn.lanqiao.springboot3.dao\")",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "System.out.println(\"启动 Spring Boot...\");",
+            "SpringApplication.run(Application.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "SpringBoot入门案例源码/spring-boot-RESTful-api/src/main/java/cn/lanqiao/springboot3/controller/ApiController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 40,
+          "lines": [
+            "@Controller",
+            "@RequestMapping(\"/__path__\")",
+            "public class ApiController {",
+            "@Resource",
+            "UserDao userDao;",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.GET)",
+            "@ResponseBody",
+            "public Result<User> getOne(@PathVariable(\"id\") Integer id) {",
+            "if (id == null || id < 1) {",
+            "return ResultGenerator.genFailResult(\"缺少参数\");",
+            "}",
+            "User user = userDao.getUserById(id);",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.GET)",
+            "@ResponseBody",
+            "public Result<List<User>> queryAll() {",
+            "List<User> users = userDao.findAllUsers();",
+            "return ResultGenerator.genSuccessResult(users);",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.POST)",
+            "@ResponseBody",
+            "public Result<Boolean> insert(@RequestBody User user) {",
+            "if (StringUtils.isEmpty(user.getName()) || StringUtils.isEmpty(user.getPassword())) {",
+            "return ResultGenerator.genFailResult(\"缺少参数\");",
+            "}",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.PUT)",
+            "@ResponseBody",
+            "public Result<Boolean> update(@RequestBody User tempUser) {",
+            "if (tempUser.getId() == null || tempUser.getId() < 1 || StringUtils.isEmpty(tempUser.getName()) || StringUtils.isEmpty(tempUser.getPassword())) {",
+            "return ResultGenerator.genFailResult(\"缺少参数\");",
+            "}",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.DELETE)",
+            "@ResponseBody",
+            "public Result<Boolean> delete(@PathVariable(\"id\") Integer id) {",
+            "if (id == null || id < 1) {",
+            "return ResultGenerator.genFailResult(\"缺少参数\");",
+            "}",
+            "return ResultGenerator.genSuccessResult(userDao.delUser(id) > 0);"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "SpringBoot入门案例源码/spring-boot-ajax/src/main/java/cn/lanqiao/springboot3/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "System.out.println(\"启动 Spring Boot...\");",
+            "System.out.println(\"Spring Boot 项目实践之 Ajax 技术使用教程\");",
+            "SpringApplication.run(Application.class, args);",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

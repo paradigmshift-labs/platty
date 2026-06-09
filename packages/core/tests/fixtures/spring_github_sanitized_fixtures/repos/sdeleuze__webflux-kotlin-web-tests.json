@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "sdeleuze/webflux-kotlin-web-tests",
+  "htmlUrl": "https://github.com/sdeleuze/webflux-kotlin-web-tests",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 30,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.1.5.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-webflux</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.fasterxml.jackson.module</groupId>",
+            "<artifactId>jackson-module-kotlin</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "<exclusions>",
+            "<exclusion>",
+            "<groupId>junit</groupId>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "<plugin>",
+            "<artifactId>kotlin-maven-plugin</artifactId>",
+            "<groupId>org.jetbrains.kotlin</groupId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/example/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class WebfluxKotlinWebTestsApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<WebfluxKotlinWebTestsApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/example/FooController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class FooController(private val repository: FooRepository) {",
+            "@GetMapping(\"/__path__\")",
+            "fun foo() = repository.foo()",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/example/FooRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "import org.springframework.stereotype.Repository",
+            "@Repository",
+            "class FooRepository {",
+            "fun foo() = \"foo\"",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

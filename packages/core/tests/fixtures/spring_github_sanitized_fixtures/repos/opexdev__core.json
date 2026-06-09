@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "opexdev/core",
+  "htmlUrl": "https://github.com/opexdev/core",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "accountant/accountant-app/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 42,
+          "lines": [
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>co.nilin.opex.accountant.core</groupId>",
+            "<artifactId>accountant-core</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-vault-config</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-actuator</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>io.micrometer</groupId>",
+            "<artifactId>micrometer-registry-prometheus</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-stream</artifactId>",
+            "<version>3.2.6</version>",
+            "<type>test-jar</type>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.kafka</groupId>",
+            "<artifactId>spring-kafka-test</artifactId>",
+            "<version>2.9.4</version>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>",
+            "</project>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "accountant/accountant-app/src/main/kotlin/co/nilin/opex/accountant/app/controller/AccountantController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 13,
+          "lines": [
+            "import java.math.BigDecimal",
+            "@RestController",
+            "class AccountantController(",
+            "val walletProxy: WalletProxy,",
+            "val financialActionLoader: FinancialActionLoader",
+            ") {",
+            "private val logger = LoggerFactory.getLogger(AccountantController::class.java)",
+            "@GetMapping(\"{uuid}/create_order/{amount}_{currency}/allowed\")",
+            "suspend fun canCreateOrder(",
+            "@PathVariable(\"uuid\") uuid: String,",
+            "@PathVariable(\"currency\") currency: String,",
+            "@PathVariable(\"amount\") amount: BigDecimal",
+            "): BooleanResponse {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "accountant/accountant-app/src/main/kotlin/co/nilin/opex/accountant/app/controller/PairConfigController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 33,
+          "lines": [
+            "import org.springframework.web.bind.annotation.*",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class PairConfigController(private val pairConfigLoader: PairConfigLoader) {",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun fetchPairFeeConfig(",
+            "@PathVariable(\"pair\") pair: String,",
+            "@PathVariable(\"direction\") direction: OrderDirection,",
+            "@PathVariable(\"userLevel\") level: String",
+            "): PairFeeConfig {",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun fetchPairConfig(",
+            "@PathVariable(\"pair\") pair: String,",
+            "@PathVariable(\"direction\") direction: OrderDirection",
+            "): PairConfig {",
+            "return pairConfigLoader.load(pair, direction)",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun fetchPairConfigs(): List<PairConfig> {",
+            "return pairConfigLoader.loadPairConfigs()",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun getFeeConfigs(): List<PairFeeResponse> {",
+            "return pairConfigLoader.loadPairFeeConfigs()",
+            ".map { PairFeeResponse(it.pairConfig.pair, it.direction, it.userLevel, it.makerFee, it.takerFee) }",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun getFeeConfig(",
+            "@PathVariable pair: String,",
+            "@RequestParam(required = false) direction: OrderDirection?,",
+            "@RequestParam(required = false) userLevel: String?",
+            "): PairFeeResponse {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "accountant/accountant-ports/accountant-persister-postgres/src/main/kotlin/co/nilin/opex/accountant/ports/postgres/dao/FinancialActionErrorRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 4,
+          "lines": [
+            "import org.springframework.stereotype.Repository",
+            "@Repository",
+            "interface FinancialActionErrorRepository : ReactiveCrudRepository<FinancialActionErrorModel, Long> {",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

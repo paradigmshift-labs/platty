@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "techa03/goodsKill",
+  "htmlUrl": "https://github.com/techa03/goodsKill",
+  "defaultBranch": "main",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "goodskill-admin/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 35,
+          "lines": [
+            "<dependency>",
+            "<groupId>de.codecentric</groupId>",
+            "<artifactId>spring-boot-admin-starter-server</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.alibaba.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-security</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "</dependencies>",
+            "<dependencyManagement>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>de.codecentric</groupId>",
+            "<artifactId>spring-boot-admin-dependencies</artifactId>",
+            "<version>${spring-boot-admin.version}</version>",
+            "<type>pom</type>",
+            "<scope>import</scope>",
+            "</dependency>",
+            "</dependencies>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "<version>${springboot.version}</version>",
+            "<configuration>",
+            "<jvmArguments>-Dfile.encoding=UTF-8</jvmArguments>",
+            "</configuration>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "goodskill-admin/src/main/java/com/goodskill/admin/GoodskillAdminApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "@EnableAdminServer",
+            "public class GoodskillAdminApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(GoodskillAdminApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "goodskill-ai/src/main/java/com/goodskill/ai/AiBotApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 27,
+          "lines": [
+            "@SpringBootApplication",
+            "@EnableFeignClients(basePackages = \"com.goodskill.ai.service.feign\")",
+            "@EnableConfigurationProperties(KnowledgeBaseProperties.class)",
+            "public class AiBotApplication {",
+            "@Bean",
+            "public McpSyncHttpClientRequestCustomizer mcpSyncHttpClientRequestCustomizer() {",
+            "return new McpSyncHttpClientRequestCustomizer() {",
+            "@Override",
+            "public void customize(HttpRequest.Builder builder, String method, URI endpoint, String body, McpTransportContext context) {",
+            "String jinaApiKey = System.getenv(\"JINA_API_KEY\");",
+            "if (jinaApiKey != null && !jinaApiKey.isEmpty()) {",
+            "builder.header(\"Authorization\", \"Bearer \" + jinaApiKey);",
+            "}",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(AiBotApplication.class, args);",
+            "}",
+            "@Bean",
+            "@ConditionalOnMissingBean",
+            "public RestClient.Builder restClientBuilder() {",
+            "return RestClient.builder();",
+            "}",
+            "@Bean",
+            "@ConditionalOnMissingBean",
+            "public HttpMessageConverters messageConverters(ObjectProvider<HttpMessageConverter<?>> converters) {",
+            "return new HttpMessageConverters(converters.orderedStream().collect(Collectors.toList()));",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "goodskill-ai/src/main/java/com/goodskill/ai/controller/AssistantController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 12,
+          "lines": [
+            "@RequestMapping(\"/__path__\")",
+            "@RestController",
+            "public class AssistantController {",
+            "private final ChatClient chatClient;",
+            "public AssistantController(ChatClient.Builder chatClientBuilder) {",
+            "this.chatClient = chatClientBuilder.build();",
+            "}",
+            "@RequestMapping(path=\"/__path__\", produces = MediaType.TEXT_EVENT_STREAM_VALUE)",
+            "public Flux<String> chat(@RequestParam String chatId, @RequestParam String userMessage) {",
+            "return chatClient.prompt().user(userMessage).stream().content();",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

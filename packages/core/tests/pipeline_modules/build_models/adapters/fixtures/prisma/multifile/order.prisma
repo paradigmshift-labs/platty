@@ -1,0 +1,32 @@
+/// Order placed by a user
+model Order {
+  id            String        @id @default(uuid())
+  status        OrderStatus   @default(PENDING)
+  total         Decimal
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+  payment       Payment?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  quantity  Int     @default(1)
+  price     Decimal
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  amount        Decimal
+  method        PaymentMethod @default(CREDIT_CARD)
+  status        String        @default("PENDING")
+  orderId       String        @unique
+  order         Order         @relation(fields: [orderId], references: [id])
+  transactionId String?
+  createdAt     DateTime      @default(now())
+}

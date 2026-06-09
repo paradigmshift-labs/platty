@@ -1,0 +1,7 @@
+{
+  "source": "https://github.com/calcom/cal.com/blob/main/packages/prisma/schema.prisma",
+  "description": "Cal.com — 예약 서비스 (대형: ~90 모델, enterprise급)",
+  "downloadedAt": "2026-05-08T09:03:18.161Z",
+  "expectedModelCount": 102,
+  "expectedEnumCount": null
+}

@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "arcuri82/testing_security_development_enterprise_systems",
+  "htmlUrl": "https://github.com/arcuri82/testing_security_development_enterprise_systems",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "advanced/amqp/amqp-rest/e2e-tests/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 4,
+          "lines": [
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "advanced/amqp/amqp-rest/receiver/src/main/kotlin/org/tsdes/advanced/amqp/rest/receiver/ReceiverApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "@SpringBootApplication",
+            "class ReceiverApplication",
+            "fun main(args: Array<String>) {",
+            "SpringApplication.run(ReceiverApplication::class.java, *args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "advanced/amqp/amqp-rest/sender/src/main/kotlin/org/tsdes/advanced/amqp/rest/sender/SenderApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "@SpringBootApplication",
+            "class SenderApplication",
+            "fun main(args: Array<String>) {",
+            "SpringApplication.run(SenderApplication::class.java, *args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "advanced/amqp/direct-exchange/src/main/kotlin/org/tsdes/advanced/amqp/directexchange/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 32,
+          "lines": [
+            "@SpringBootApplication",
+            "class Application {",
+            "@Bean",
+            "fun direct(): DirectExchange {",
+            "return DirectExchange(\"tut.direct\")",
+            "}",
+            "@Bean",
+            "fun queueX(): Queue {",
+            "return AnonymousQueue()",
+            "}",
+            "@Bean",
+            "fun queueY(): Queue {",
+            "return AnonymousQueue()",
+            "}",
+            "@Bean",
+            "fun bindingX_ERROR(direct: DirectExchange,",
+            "queueX: Queue): Binding {",
+            "return BindingBuilder",
+            ".bind(queueX)",
+            ".to(direct)",
+            "@Bean",
+            "fun bindingY_ERROR(direct: DirectExchange,",
+            "queueY: Queue): Binding {",
+            "return BindingBuilder",
+            ".bind(queueY)",
+            ".to(direct)",
+            "@Bean",
+            "fun bindingY_WARN(direct: DirectExchange,",
+            "queueY: Queue): Binding {",
+            "return BindingBuilder",
+            ".bind(queueY)",
+            ".to(direct)"
+          ]
+        }
+      ]
+    }
+  ]
+}

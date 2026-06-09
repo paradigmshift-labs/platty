@@ -1,0 +1,8 @@
+name: flutter_gorouter_guard_fixture
+description: Static analysis fixture for Flutter GoRouter redirect guards.
+
+dependencies:
+  flutter:
+    sdk: flutter
+  go_router: ^14.0.0
+  dio: ^5.0.0

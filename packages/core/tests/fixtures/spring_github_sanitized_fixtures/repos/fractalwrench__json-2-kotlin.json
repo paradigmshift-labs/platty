@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "fractalwrench/json-2-kotlin",
+  "htmlUrl": "https://github.com/fractalwrench/json-2-kotlin",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 13,
+          "lines": [
+            "}",
+            "dependencies {",
+            "testImplementation \"junit:junit:4.12\"",
+            "implementation \"<literal>\"",
+            "implementation 'com.google.code.gson:gson:2.8.2'",
+            "implementation 'com.squareup:kotlinpoet:0.6.0'",
+            "jcenter()",
+            "}",
+            "dependencies {",
+            "classpath \"<literal>\"",
+            "}",
+            "}",
+            "compileKotlin {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring/src/main/kotlin/com/fractalwrench/json2kotlin/ConversionController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 19,
+          "lines": [
+            "@Controller",
+            "class ConversionController {",
+            "companion object {",
+            "val formKey = \"conversionForm\"",
+            "}",
+            "lateinit var conversionService: KotlinConversionService",
+            "@GetMapping(\"/__path__\")",
+            "fun displayConversionForm(model: Model): String {",
+            "if (!model.containsAttribute(formKey)) {",
+            "model.addAttribute(formKey, ConversionForm())",
+            "}",
+            "return \"conversion\"",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "fun convertToKotlin(model: Model, @ModelAttribute conversionForm: ConversionForm): String {",
+            "val pair = conversionService.convert(conversionForm.json)",
+            "model.addAttribute(formKey, conversionForm)",
+            "model.addAttribute(\"kotlin\", String(pair.first.toByteArray()))",
+            "model.addAttribute(\"filename\", pair.second)"
+          ]
+        }
+      ]
+    }
+  ]
+}

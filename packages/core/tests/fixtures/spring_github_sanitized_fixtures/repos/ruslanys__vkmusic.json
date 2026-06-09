@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "ruslanys/vkmusic",
+  "htmlUrl": "https://github.com/ruslanys/vkmusic",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 23,
+          "lines": [
+            "plugins {",
+            "id 'java'",
+            "id 'idea'",
+            "id 'org.jetbrains.kotlin.jvm' version '1.3.21'",
+            "id 'org.jetbrains.kotlin.kapt' version '1.3.21'",
+            "id 'org.jetbrains.kotlin.plugin.spring' version '1.3.21'",
+            "id 'org.jetbrains.kotlin.plugin.jpa' version '1.3.21'",
+            "id 'org.springframework.boot' version '2.1.3.RELEASE'",
+            "id 'io.zensoft.versioning' version '1.0.0'",
+            "}",
+            "apply plugin: 'io.spring.dependency-management'",
+            "}",
+            "dependencies {",
+            "compile('org.springframework.boot:spring-boot-starter')",
+            "compile(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "compile(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "compile('<literal>')",
+            "compile('com.mpatric:mp3agic:0.9.1')",
+            "kapt('<literal>')",
+            "testCompile('<literal>')",
+            "}",
+            "sourceSets {",
+            "main.kotlin.srcDirs += 'src/main/kotlin'"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/me/ruslanys/vkmusic/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 13,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication",
+            "@SpringBootApplication",
+            "class Application : AbstractJavaFxApplicationSupport() {",
+            "@set:Autowired",
+            "lateinit var loginController: LoginController",
+            "override fun start(stage: Stage) {",
+            "stage.icons.add(IconUtils.getDesktopIcon())",
+            "stage.title = \"Авторизация\"",
+            "stage.scene = Scene(loginController.rootView!!)",
+            "}",
+            "fun main(args: Array<String>) {",
+            "Application.launch(me.ruslanys.vkmusic.Application::class.java)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/me/ruslanys/vkmusic/annotation/FxmlController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 4,
+          "lines": [
+            "@Target(AnnotationTarget.CLASS)",
+            "@MustBeDocumented",
+            "@Controller",
+            "annotation class FxmlController(val view: String)"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/me/ruslanys/vkmusic/controller/BaseController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 2,
+          "lines": [
+            "import javafx.scene.Parent",
+            "abstract class BaseController(var rootView: Parent? = null)"
+          ]
+        }
+      ]
+    }
+  ]
+}

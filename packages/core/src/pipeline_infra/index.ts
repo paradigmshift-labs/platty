@@ -1,116 +1,160 @@
-import { asc, eq, sql } from 'drizzle-orm'
-import { nanoid } from 'nanoid'
-import type { DB } from '../db/client.js'
-import type { EventKind, Lifecycle, RunKind, TriggeredBy } from '../db/schema/enums.js'
-import {
-  pipelineEvents,
-  pipelineRuns,
-  type NewPipelineEvent,
-  type NewPipelineRun,
-  type PipelineEvent,
-  type PipelineRun,
-} from '../db/schema/pipeline_runs.js'
-
-export interface PipelineRuntimeOptions {
-  readonly db: DB
-  readonly idFactory?: () => string
-}
-
-export interface StartPipelineRunInput {
-  readonly projectId: string
-  readonly repoId?: string | null
-  readonly kind: RunKind
-  readonly triggeredBy?: TriggeredBy
-  readonly totalSteps?: number
-  readonly meta?: Record<string, unknown>
-}
-
-export interface RecordPipelineEventInput {
-  readonly runId: string
-  readonly stepId?: number | null
-  readonly kind?: EventKind
-  readonly visibility?: 'user' | 'admin'
-  readonly message: string
-  readonly messageKey?: string | null
-  readonly messageParams?: Record<string, string | number | boolean | null>
-  readonly data?: Record<string, unknown>
-}
-
-export interface FinishPipelineRunInput {
-  readonly runId: string
-  readonly status: Extract<Lifecycle, 'done' | 'failed' | 'cancelled' | 'waiting_for_user'>
-  readonly errorMessage?: string | null
-}
-
-export class PipelineRuntime {
-  private readonly db: DB
-  private readonly idFactory: () => string
-
-  constructor(options: PipelineRuntimeOptions) {
-    this.db = options.db
-    this.idFactory = options.idFactory ?? nanoid
-  }
-
-  startRun(input: StartPipelineRunInput): PipelineRun {
-    const row: NewPipelineRun = {
-      id: this.idFactory(),
-      projectId: input.projectId,
-      repoId: input.repoId ?? null,
-      kind: input.kind,
-      status: 'running',
-      triggeredBy: input.triggeredBy,
-      totalSteps: input.totalSteps,
-      meta: input.meta,
-    }
-    this.db.insert(pipelineRuns).values(row).run()
-    return this.getRun(row.id)
-  }
-
-  recordEvent(input: RecordPipelineEventInput): PipelineEvent {
-    const row: NewPipelineEvent = {
-      runId: input.runId,
-      stepId: input.stepId ?? null,
-      kind: input.kind ?? 'progress',
-      visibility: input.visibility ?? 'user',
-      message: input.message,
-      messageKey: input.messageKey ?? null,
-      messageParams: input.messageParams,
-      data: input.data,
-    }
-    const inserted = this.db.insert(pipelineEvents).values(row).returning().get()
-    if (!inserted) throw new Error('PIPELINE_EVENT_INSERT_FAILED')
-    return inserted
-  }
-
-  finishRun(input: FinishPipelineRunInput): PipelineRun {
-    this.db
-      .update(pipelineRuns)
-      .set({
-        status: input.status,
-        errorMessage: input.errorMessage ?? null,
-        finishedAt: sql`datetime('now')`,
-      })
-      .where(eq(pipelineRuns.id, input.runId))
-      .run()
-    return this.getRun(input.runId)
-  }
-
-  getRun(runId: string): PipelineRun {
-    const run = this.db.select().from(pipelineRuns).where(eq(pipelineRuns.id, runId)).get()
-    if (!run) throw new Error(`PIPELINE_RUN_NOT_FOUND: ${runId}`)
-    return run
-  }
-
-  listEvents(runId: string): PipelineEvent[] {
-    return this.db
-      .select()
-      .from(pipelineEvents)
-      .where(eq(pipelineEvents.runId, runId))
-      .orderBy(asc(pipelineEvents.id))
-      .all()
-  }
-}
-
-export function createPipelineRuntime(options: PipelineRuntimeOptions): PipelineRuntime {
-  return new PipelineRuntime(options)
-}
+export { PipelineExecution, PipelineContext } from './execution/pipeline_execution.js'
+export {
+  PipelineRuntime,
+  createPipelineRuntime,
+  type FinishPipelineRunInput,
+  type PipelineRuntimeOptions,
+  type RecordPipelineEventInput,
+  type StartPipelineRunInput,
+} from './runtime.js'
+export {
+  cancelActivePipelineRun,
+  isPipelineRunActive,
+  registerActivePipelineRun,
+} from './execution/cancellation.js'
+export {
+  linkPipelineRun,
+  listChildRunLinks,
+  listParentRunLinks,
+  PipelineRunLinkError,
+  type LinkPipelineRunInput,
+  type PipelineRunLink,
+  type PipelineRunLinkErrorCode,
+  type PipelineRunLinkRelation,
+} from './execution/run_links.js'
+export {
+  PipelineRun,
+  type LlmOverride,
+  type PipelineEventEmitOptions,
+  type PipelineEventVisibility,
+  type RunStartOptions,
+  type RunStatus,
+  type StepCtx,
+  type StepOptions,
+} from '@/observability/logger.js'
+export {
+  progressBus,
+  type ProgressEvent,
+  type ProgressEventKind,
+} from '@/observability/progress.js'
+export {
+  createPipelineLlmContext,
+  createPipelineLlmTaskRegistry,
+  PipelineLlmBudgetExceededError,
+  PIPELINE_ADAPTER_LLM_TASK_ID,
+  PIPELINE_SINGLE_LLM_TASK_ID,
+  type PipelineAdapterLlmAdapter,
+  type PipelineAdapterLlmGenerateInput,
+  type PipelineAdapterLlmGenerateOptions,
+  type CreatePipelineLlmContextOptions,
+  type LlmGatewayTaskId,
+  type PipelineGatewayOptions,
+  type PipelineGatewayTask,
+  type PipelineGatewayTaskContext,
+  type PipelineGatewayTaskMode,
+  type PipelineLlmGatewayEvent,
+  type PipelineLlmGatewayEventType,
+  type PipelineLlmCallRecord,
+  type PipelineLlmContext,
+  type PipelineLlmTaskRegistry,
+  type PipelineLlmTelemetry,
+  type PipelineSingleLlmGenerateInput,
+  type PipelineSingleLlmGenerateOutput,
+} from './llm/llm_context.js'
+export {
+  BudgetLimiter,
+  LlmBudgetExceededError,
+  LlmConcurrencyLimiter,
+  LlmRateLimiter,
+  ModelUsageTracker,
+  createBudgetLimiter,
+  createLlmConcurrencyLimiter,
+  createRateLimiter,
+  isLlmBudgetExceededError,
+  isTransientLlmError,
+  limitLlmGenerateAdapter,
+  policyFor,
+  resolveLlmTarget,
+  resolveProfileStageLlmPolicy,
+  resolveStageLlmPolicy,
+  stageTierForAttempt,
+  withTransportRetry,
+  type LlmAttemptRecord,
+  type LlmGenerateOptions,
+  type LlmExecutionPolicy,
+  type LlmRetryKind,
+  type LlmStage,
+  type LlmTier,
+  type ResolvedLlmTarget,
+  type ResolvedStageLlmPolicy,
+  type StageFailureReport,
+} from './llm/llm_policy.js'
+export {
+  createTokenAwareChunkPlanner,
+  createTokenEstimator,
+  extractJsonValue,
+  LlmGatewayError,
+  parseJsonWithSchema,
+  planLlmLargeTask,
+  PIPELINE_LEGACY_LARGE_TASK_ID,
+  planTokenAwareReduceGroups,
+  resolveModelProfile,
+  resolveTokenBudget,
+  runPipelineLegacyLargeTask,
+  type ChunkPlanner,
+  type LlmGatewayDebugEvent,
+  type LlmGatewayDebugRecorder,
+  type LlmGatewayErrorCode,
+  type LlmGatewayExecutionPolicy,
+  type LlmGatewayRunResult,
+  type LlmGatewayTask,
+  type LlmGatewayTelemetryEvent,
+  type LlmGatewayTelemetrySink,
+  type LlmGatewayTelemetrySnapshot,
+  type PipelineLegacyLargeTaskInput,
+  type RunLlmGatewayTaskOptions,
+  type TokenBudget,
+  type ValidationResult,
+} from './llm/large_task_gateway.js'
+export {
+  upsertProjectPhaseStatus,
+  upsertRepositoryPhaseStatus,
+  type PipelinePhaseStatusSource,
+} from './phase/phase_status.js'
+export {
+  skippedReasonForStage,
+  type GatedStageId,
+  type GatedStageStatus,
+} from './phase/stage_gate.js'
+export {
+  replayPipelineProgressEvents,
+  type ReplayedPipelineProgressEvent,
+} from './observability/progress_replay.js'
+export type {
+  ModelUsageBucket,
+  ModelUsageSummary,
+  PipelineRunMeta,
+  PipelineStageStatus,
+  PipelineStageStatusSummary,
+  ResolvedRunConfig,
+} from './observability/pipeline_run_meta.js'
+export type {
+  ArtifactRef,
+  MarkCancelledInput,
+  MarkFailedInput,
+  MarkPassedInput,
+  MarkSkippedInput,
+  MarkWaitingForUserInput,
+  PipelineFailure,
+  PipelineFailureKind,
+  PipelineStageStart,
+  PipelineStageResult,
+  PipelineStepContext,
+  RunChildInput,
+  RunStageInput,
+  StageOutcome,
+  StageSkippedReason,
+  StepInput,
+  UpstreamVersions,
+  UserActionRequest,
+} from './types.js'

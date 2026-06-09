@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "tschuehly/spring-view-component",
+  "htmlUrl": "https://github.com/tschuehly/spring-view-component",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "core/build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 21,
+          "lines": [
+            "import org.jreleaser.model.Active",
+            "plugins {",
+            "id(\"org.springframework.boot\") version \"4.0.3\"",
+            "id(\"io.spring.dependency-management\") version \"1.1.7\"",
+            "kotlin(\"jvm\") version \"2.2.21\"",
+            "kotlin(\"plugin.spring\") version \"2.2.21\"",
+            "}",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "compileOnly(\"org.springframework.boot:spring-boot-devtools\")",
+            "implementation(\"io.projectreactor:reactor-core\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "testFixturesImplementation(\"<literal>\")",
+            "testFixturesImplementation(\"<literal>\")",
+            "testFixturesImplementation(\"<literal>\")",
+            "testFixturesImplementation(\"org.springframework.boot:spring-boot-devtools\")",
+            "}",
+            "kotlin {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "core/src/main/kotlin/de/tschuehly/spring/viewcomponent/core/component/ViewContextMethodReturnValueHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 10,
+          "lines": [
+            "@Component",
+            "class ViewContextMethodReturnValueHandler : HandlerMethodReturnValueHandler {",
+            "override fun supportsReturnType(returnType: MethodParameter): Boolean {",
+            "return IViewContext::class.java.isAssignableFrom(returnType.parameterType)",
+            "}",
+            "override fun handleReturnValue(",
+            "returnValue: Any?,",
+            "returnType: MethodParameter,",
+            "mavContainer: ModelAndViewContainer,",
+            "webRequest: NativeWebRequest"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "examples/kte-example/src/main/kotlin/de/tschuehly/kteviewcomponentexample/web/TestController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 18,
+          "lines": [
+            "import org.springframework.web.bind.annotation.GetMapping",
+            "@Controller",
+            "class TestController(",
+            "private val simpleViewComponent: SimpleViewComponent,",
+            "private val indexViewComponent: IndexViewComponent,",
+            "private val layoutViewComponent: LayoutViewComponent",
+            ") {",
+            "@GetMapping(\"/__path__\")",
+            "fun indexComponent() = indexViewComponent.render()",
+            "@GetMapping(\"/__path__\")",
+            "fun simpleComponent() = simpleViewComponent.render()",
+            "@GetMapping(\"/__path__\")",
+            "fun layoutComponent() = layoutViewComponent.render(simpleViewComponent.render())",
+            "@GetMapping(\"/__path__\")",
+            "fun templateTest(): String {",
+            "return \"template-test\"",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "examples/thymeleaf-kotlin-example/src/main/kotlin/de/tschuehly/example/thymeleafkotlin/web/TestController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 18,
+          "lines": [
+            "import org.springframework.web.bind.annotation.GetMapping",
+            "@Controller",
+            "class TestController(",
+            "private val simpleViewComponent: SimpleViewComponent,",
+            "private val indexViewComponent: IndexViewComponent,",
+            "private val layoutViewComponent: LayoutViewComponent",
+            ") {",
+            "@GetMapping(\"/__path__\")",
+            "fun indexComponent() = indexViewComponent.render()",
+            "@GetMapping(\"/__path__\")",
+            "fun simpleComponent() = simpleViewComponent.render()",
+            "@GetMapping(\"/__path__\")",
+            "fun layoutComponent() = layoutViewComponent.render(simpleViewComponent.render())",
+            "@GetMapping(\"/__path__\")",
+            "fun templateTest(): String {",
+            "return \"template-test\"",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

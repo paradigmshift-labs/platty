@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "ZOOT-Plus/ZootPlusBackend",
+  "htmlUrl": "https://github.com/ZOOT-Plus/ZootPlusBackend",
+  "defaultBranch": "dev",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 54,
+          "lines": [
+            "import org.jlleitschuh.gradle.ktlint.reporter.ReporterType",
+            "plugins {",
+            "java",
+            "id(\"org.springframework.boot\") version \"4.0.2\"",
+            "id(\"io.spring.dependency-management\") version \"1.1.7\"",
+            "id(\"org.springdoc.openapi-gradle-plugin\") version \"1.9.0\"",
+            "id(\"org.hidetake.swagger.generator\") version \"2.19.2\"",
+            "id(\"com.gorylenko.gradle-git-properties\") version \"2.5.2\"",
+            "}",
+            "dependencies {",
+            "val ktormVersion = \"4.1.1\"",
+            "val hutoolVersion = \"5.8.43\"",
+            "val mapstructVersion = \"1.6.3\"",
+            "kapt(\"<literal>\")",
+            "testImplementation(\"io.mockk:mockk:1.14.4\")",
+            "testImplementation(\"<literal>\")",
+            "implementation(\"org.aspectj:aspectjrt:1.9.25.1\")",
+            "implementation(\"org.springframework:spring-aspects\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "kapt(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.jetbrains.kotlinx:kotlinx-coroutines-core\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "testImplementation(\"org.jetbrains.kotlinx:kotlinx-coroutines-test\")",
+            "implementation(\"io.github.oshai:kotlin-logging-jvm:7.0.7\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.ktorm:ktorm-core:$ktormVersion\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.postgresql:postgresql:42.7.7\")",
+            "implementation(\"com.sun.mail:javax.mail:1.6.2\")",
+            "implementation(\"cn.hutool:hutool-extra:$hutoolVersion\")",
+            "implementation(\"cn.hutool:hutool-jwt:$hutoolVersion\")",
+            "implementation(\"cn.hutool:hutool-dfa:$hutoolVersion\")",
+            "implementation(\"org.mapstruct:mapstruct:$mapstructVersion\")",
+            "kapt(\"<literal>\")",
+            "implementation(\"com.github.magese:ik-analyzer:8.5.0\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.freemarker:freemarker:2.3.34\")",
+            "implementation(\"com.github.ben-manes.caffeine:caffeine:3.2.2\")",
+            "implementation(\"com.networknt:json-schema-validator:1.5.8\")",
+            "swaggerCodegen(\"org.openapitools:openapi-generator-cli:7.14.0\")",
+            "implementation(\"com.belerweb:pinyin4j:2.5.0\")",
+            "}",
+            "val swaggerOutputDir = layout.buildDirectory.dir(\"docs\")",
+            "val swaggerOutputName = \"swagger.json\""
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/plus/maa/backend/MainApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "@EnableCaching",
+            "@EnableScheduling",
+            "@SpringBootApplication",
+            "@ConfigurationPropertiesScan",
+            "@EnableMethodSecurity",
+            "class MainApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<MainApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/plus/maa/backend/controller/ArkLevelController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 10,
+          "lines": [
+            "@RestController",
+            "@Tag(name = \"ArkLevelController\", description = \"关卡数据管理接口\")",
+            "class ArkLevelController(",
+            "private val arkLevelService: ArkLevelService,",
+            ") {",
+            "@GetMapping(\"/__path__\")",
+            "@ApiResponse(description = \"关卡数据\")",
+            "@Operation(summary = \"获取关卡数据\")",
+            "fun getLevels(): MaaResult<List<ArkLevelInfo>> = success(arkLevelService.arkLevelInfos)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/plus/maa/backend/controller/CommentsAreaController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 50,
+          "lines": [
+            "@RestController",
+            "@Tag(name = \"CommentArea\", description = \"评论区管理接口\")",
+            "@RequestMapping(\"/__path__\")",
+            "class CommentsAreaController(",
+            "private val commentsAreaService: CommentsAreaService,",
+            "private val authHelper: AuthenticationHelper,",
+            ") {",
+            "@PostMapping(\"/__path__\")",
+            "@Operation(summary = \"发送评论\")",
+            "@ApiResponse(description = \"发送评论结果\")",
+            "@RequireJwt",
+            "fun sendComments(@RequestBody comments: @Valid CommentsAddDTO): MaaResult<String> {",
+            "commentsAreaService.addComments(authHelper.userId, comments)",
+            "return success(\"评论成功\")",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "@Operation(summary = \"分页查询评论\")",
+            "@ApiResponse(description = \"评论区信息\")",
+            "fun queriesCommentsArea(@ParameterObject parsed: @Valid CommentsQueriesDTO): MaaResult<CommentsAreaInfo> =",
+            "success(commentsAreaService.queriesCommentsArea(parsed))",
+            "@PostMapping(\"/__path__\")",
+            "@Operation(summary = \"删除评论\")",
+            "@ApiResponse(description = \"评论删除结果\")",
+            "@RequireJwt",
+            "fun deleteComments(@RequestBody comments: @Valid CommentsDeleteDTO): MaaResult<String> {",
+            "commentsAreaService.deleteComments(authHelper.userId, comments.commentId)",
+            "return success(\"评论已删除\")",
+            "}",
+            "@ApiResponse(description = \"点赞结果\")",
+            "@RequireJwt",
+            "@PostMapping(\"/__path__\")",
+            "fun ratesComments(@RequestBody commentsRatingDTO: @Valid CommentsRatingDTO): MaaResult<String> {",
+            "commentsAreaService.rates(authHelper.obtainUserIdOrIpAddress(), commentsRatingDTO)",
+            "return success(\"成功\")",
+            "}",
+            "@ApiResponse(description = \"置顶/取消置顶结果\")",
+            "@RequireJwt",
+            "@PostMapping(\"/__path__\")",
+            "fun toppingComments(@RequestBody commentsToppingDTO: @Valid CommentsToppingDTO): MaaResult<String> {",
+            "commentsAreaService.topping(authHelper.userId, commentsToppingDTO)",
+            "return success(\"成功\")",
+            "}",
+            "@Operation(summary = \"设置通知接收状态\")",
+            "@RequireJwt",
+            "@GetMapping(\"/__path__\")",
+            "fun modifyStatus(@RequestParam id: Long, @RequestParam status: Boolean): MaaResult<String> {",
+            "commentsAreaService.notificationStatus(authHelper.userId, id, status)",
+            "return success(\"success\")",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

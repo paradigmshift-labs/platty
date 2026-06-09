@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "prontera/spring-cloud-rest-tcc",
+  "htmlUrl": "https://github.com/prontera/spring-cloud-rest-tcc",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 13,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.2.2.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-dependencies</artifactId>",
+            "<version>${spring-cloud.version}</version>",
+            "<type>pom</type>",
+            "<scope>import</scope>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "rest-tcc-commons/src/main/java/com/github/prontera/ChainHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "public interface ChainHandler<I, O> {",
+            "void invoke(@Nonnull I in, @Nonnull AtomicReference<O> out);",
+            "Type getType();",
+            "enum Type {",
+            "EXCLUSIVE,",
+            "SHARED,"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "rest-tcc-commons/src/main/java/com/github/prontera/GenericChainHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 10,
+          "lines": [
+            "public abstract class GenericChainHandler<I, O> implements ChainHandler<I, O> {",
+            "private volatile boolean isRequestCompletion;",
+            "@Override",
+            "public void complete() {",
+            "isRequestCompletion = true;",
+            "}",
+            "public boolean isRequestCompletion() {",
+            "return isRequestCompletion;",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "rest-tcc-commons/src/main/java/com/github/prontera/annotation/MyBatisRepository.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "@Retention(RetentionPolicy.RUNTIME)",
+            "@Documented",
+            "@Repository",
+            "public @interface MyBatisRepository {",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

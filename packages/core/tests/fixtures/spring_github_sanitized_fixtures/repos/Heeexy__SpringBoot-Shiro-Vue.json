@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "Heeexy/SpringBoot-Shiro-Vue",
+  "htmlUrl": "https://github.com/Heeexy/SpringBoot-Shiro-Vue",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "back/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 50,
+          "lines": [
+            "<description>权限后端</description>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.3.10.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<properties>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-aop</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-devtools</artifactId>",
+            "<scope>runtime</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>mysql</groupId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>",
+            "<groupId>org.mybatis.spring.boot</groupId>",
+            "<artifactId>mybatis-spring-boot-starter</artifactId>",
+            "<version>2.1.4</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-cache</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.github.ben-manes.caffeine</groupId>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "<configuration>",
+            "<executable>true</executable>",
+            "</configuration>",
+            "</plugin>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "back/src/main/java/com/heeexy/example/MyApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 13,
+          "lines": [
+            "@SpringBootApplication",
+            "@MapperScan(\"com.heeexy.example.dao\")",
+            "public class MyApplication extends SpringBootServletInitializer {",
+            "public static void main(String[] args) {",
+            "SpringApplication application = new SpringApplication(MyApplication.class);",
+            "application.setBannerMode(Banner.Mode.OFF);",
+            "application.run(args);",
+            "}",
+            "@Override",
+            "protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {",
+            "return builder.sources(MyApplication.class);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "back/src/main/java/com/heeexy/example/config/exception/GlobalExceptionHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 26,
+          "lines": [
+            "@ControllerAdvice",
+            "@ResponseBody",
+            "public class GlobalExceptionHandler {",
+            "private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());",
+            "@ExceptionHandler(value = Exception.class)",
+            "public JSONObject defaultErrorHandler(HttpServletRequest req, Exception e) {",
+            "String errorPosition = \"\";",
+            "if (e.getStackTrace().length > 0) {",
+            "StackTraceElement element = e.getStackTrace()[0];",
+            "@ExceptionHandler(HttpRequestMethodNotSupportedException.class)",
+            "public JSONObject httpRequestMethodHandler() {",
+            "return CommonUtil.errorJson(ErrorEnum.E_500);",
+            "}",
+            "@ExceptionHandler(CommonJsonException.class)",
+            "public JSONObject commonJsonExceptionHandler(CommonJsonException commonJsonException) {",
+            "return commonJsonException.getResultJson();",
+            "}",
+            "@ExceptionHandler(UnauthorizedException.class)",
+            "public JSONObject unauthorizedExceptionHandler() {",
+            "return CommonUtil.errorJson(ErrorEnum.E_502);",
+            "}",
+            "@ExceptionHandler(UnauthenticatedException.class)",
+            "public JSONObject unauthenticatedException() {",
+            "return CommonUtil.errorJson(ErrorEnum.E_20011);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "back/src/main/java/com/heeexy/example/config/exception/MainsiteErrorController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 13,
+          "lines": [
+            "@Controller",
+            "public class MainsiteErrorController implements ErrorController {",
+            "private static final String ERROR_PATH = \"/__path__\";",
+            "@RequestMapping(value = ERROR_PATH)",
+            "@ResponseBody",
+            "public JSONObject handleError() {",
+            "return CommonUtil.errorJson(ErrorEnum.E_501);",
+            "}",
+            "@Override",
+            "public String getErrorPath() {",
+            "return ERROR_PATH;",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

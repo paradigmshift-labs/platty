@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "AleksK1NG/Kotlin-ES-CQRS-Microservice",
+  "htmlUrl": "https://github.com/AleksK1NG/Kotlin-ES-CQRS-Microservice",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 80,
+          "lines": [
+            "<modelVersion>4.0.0</modelVersion>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.7.1</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<groupId>com.example.microservice</groupId>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-jdbc</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.flywaydb</groupId>",
+            "<artifactId>flyway-core</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-validation</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>io.netty</groupId>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-sleuth-zipkin</artifactId>",
+            "<version>3.1.3</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-sleuth</artifactId>",
+            "<version>3.1.3</version>",
+            "</dependency>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-actuator</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springdoc</groupId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.kafka</groupId>",
+            "<artifactId>spring-kafka</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.kafka</groupId>",
+            "<artifactId>spring-kafka-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-r2dbc</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-webflux</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.fasterxml.jackson.module</groupId>",
+            "<artifactId>jackson-module-kotlin</artifactId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-devtools</artifactId>",
+            "<scope>runtime</scope>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-configuration-processor</artifactId>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/example/microservice/MicroserviceApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class MicroserviceApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<MicroserviceApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/example/microservice/controllers/BankAccountController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 43,
+          "lines": [
+            "@RestController",
+            "@RequestMapping(path = [\"/__path__\"])",
+            "@Tag(name = \"Bank Accounts\", description = \"Bank Accounts REST API Group\")",
+            "class BankAccountController(",
+            "private val bankAccountCommandService: BankAccountCommandService,",
+            "private val bankAccountQueryService: BankAccountQueryService,",
+            ") {",
+            "@PostMapping(path = [\"/__path__\"], consumes = [MediaType.APPLICATION_JSON_VALUE])",
+            "suspend fun createBankAccount(@Valid @RequestBody request: CreateBankAccountRequest): ResponseEntity<String> {",
+            "val command = CreateBankAccountCommand(UUID.randomUUID().toString(), request.email, request.balance, request.currency)",
+            "bankAccountCommandService.handle(command)",
+            "return ResponseEntity.status(HttpStatus.CREATED).body(command.aggregateId).also { log.info(\"<literal>\") }",
+            "}",
+            "@PostMapping(path = [\"/__path__\"], consumes = [MediaType.APPLICATION_JSON_VALUE])",
+            "suspend fun depositBalance(",
+            "@PathVariable(value = \"id\", required = true, name = \"id\") id: String,",
+            "@Valid @RequestBody request: DepositBalanceRequest",
+            "): ResponseEntity.BodyBuilder {",
+            "val command = DepositBalanceCommand(id, request.amount)",
+            "}",
+            "@PostMapping(path = [\"/__path__\"], consumes = [MediaType.APPLICATION_JSON_VALUE])",
+            "suspend fun changeEmail(",
+            "@PathVariable(value = \"id\", required = true, name = \"id\") id: String,",
+            "@Valid @RequestBody request: ChangeEmailRequest",
+            "): ResponseEntity.BodyBuilder {",
+            "val command = ChangeEmailCommand(id, request.email)",
+            "@GetMapping(path = [\"/__path__\"], produces = [MediaType.APPLICATION_JSON_VALUE])",
+            "suspend fun getBankAccountById(",
+            "@PathVariable(value = \"id\", required = true, name = \"id\") id: String,",
+            "@RequestParam(name = \"store\", required = false, defaultValue = \"false\") fromStore: Boolean",
+            "): ResponseEntity<BankAccountResponse> {",
+            "return bankAccountQueryService.handle(GetBankAccountByIdQuery(id, fromStore))",
+            "}",
+            "@GetMapping(path = [\"/__path__\"], produces = [MediaType.APPLICATION_JSON_VALUE])",
+            "suspend fun getAllWithPagination(",
+            "@RequestParam(name = \"page\", required = false, defaultValue = \"0\") page: Int,",
+            "@RequestParam(name = \"size\", required = false, defaultValue = \"10\") size: Int",
+            "): ResponseEntity<PaginationResponse<BankAccountDocument>> {",
+            "return bankAccountQueryService.handle(GetAllQuery(PageRequest.of(page, size)))",
+            "companion object {",
+            "private val log = Loggers.getLogger(BankAccountController::class.java)",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/example/microservice/repository/BankAccountCoroutineMongoRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "interface BankAccountCoroutineMongoRepository {",
+            "suspend fun insert(bankAccountDocument: BankAccountDocument): BankAccountDocument",
+            "suspend fun updateByAggregateId(bankAccountDocument: BankAccountDocument): BankAccountDocument?",
+            "suspend fun deleteByAggregateId(aggregateId: String): DeleteResult",
+            "suspend fun findByAggregateId(aggregateId: String): BankAccountDocument",
+            "suspend fun findAll(pageRequest: PageRequest): PaginationResponse<BankAccountDocument>",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

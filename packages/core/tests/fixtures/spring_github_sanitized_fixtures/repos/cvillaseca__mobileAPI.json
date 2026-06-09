@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "cvillaseca/mobileAPI",
+  "htmlUrl": "https://github.com/cvillaseca/mobileAPI",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 24,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "id(\"org.springframework.boot\") version \"2.3.1.RELEASE\"",
+            "id(\"io.spring.dependency-management\") version \"1.0.9.RELEASE\"",
+            "kotlin(\"jvm\") version \"1.3.72\"",
+            "kotlin(\"plugin.spring\") version \"1.3.72\"",
+            "}",
+            "dependencies {",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "implementation(\"org.springframework.boot:spring-boot-starter\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "runtimeOnly(\"com.h2database:h2\")",
+            "testImplementation(\"<literal>\") {",
+            "exclude(group = \"org.junit.vintage\", module = \"junit-vintage-engine\")",
+            "exclude(module = \"mockito-core\")",
+            "}",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"com.ninja-squad:springmockk:2.0.2\")",
+            "detektPlugins(\"<literal>\")",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/cvillaseca/mobileapi/MobileApiApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class MobileApiApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<MobileApiApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/cvillaseca/mobileapi/controller/admin/UserController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 10,
+          "lines": [
+            "import javax.servlet.http.HttpServletRequest",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class UserController {",
+            "@Autowired",
+            "lateinit var userService: UserService",
+            "@RequestMapping(value = [\"/__path__\"], method = [(RequestMethod.GET)])",
+            "fun getAllUsersInfo(request: HttpServletRequest): ResponseEntity<List<UserInfo>> =",
+            "ResponseEntity.ok(userService.getAllUsers())",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/cvillaseca/mobileapi/controller/user/ChangePasswordController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 12,
+          "lines": [
+            "import javax.servlet.http.HttpServletRequest",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class ChangePasswordController {",
+            "@Autowired",
+            "lateinit var userService: UserService",
+            "@RequestMapping(value = [\"/__path__\"], method = [(RequestMethod.POST)])",
+            "fun changePassword(",
+            "@RequestParam(\"newPassword\") newPassword: String,",
+            "@RequestParam(\"oldPassword\") oldPassword: String,",
+            "request: HttpServletRequest",
+            "): ResponseEntity<Unit> ="
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "ask-resume/ask-resume-backend",
+  "htmlUrl": "https://github.com/ask-resume/ask-resume-backend",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 45,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "val kotlinVersion = \"1.8.20\"",
+            "id(\"org.springframework.boot\") version \"2.7.5\"",
+            "id(\"io.spring.dependency-management\") version \"1.0.15.RELEASE\"",
+            "kotlin(\"jvm\") version kotlinVersion",
+            "kotlin(\"plugin.spring\") version kotlinVersion",
+            "val springCloudVersion = \"2021.0.3\"",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "annotationProcessor(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.springdoc:springdoc-openapi-ui:1.7.0\")",
+            "implementation(\"org.apache.commons:commons-text:1.10.0\")",
+            "implementation(\"com.navercorp.lucy:lucy-xss-servlet:2.0.1\")",
+            "implementation(\"io.jsonwebtoken:jjwt:0.9.1\")",
+            "implementation(\"<literal>\")",
+            "runtimeOnly(\"com.h2database:h2\")",
+            "runtimeOnly(\"mysql:mysql-connector-java\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"com.querydsl:querydsl-jpa:5.0.0\")",
+            "kapt(\"com.querydsl:querydsl-apt:5.0.0:jpa\")",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"org.jeasy:easy-random-core:5.0.0\")",
+            "testImplementation(\"io.kotest:kotest-runner-junit5-jvm:5.8.0\")",
+            "testImplementation(\"org.mockito:mockito-inline:5.2.0\")",
+            "implementation(\"org.apache.pdfbox:pdfbox:2.0.27\")",
+            "implementation(\"com.vladmihalcea:hibernate-types-52:2.21.1\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"io.micrometer:micrometer-registry-prometheus\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"io.github.openfeign:feign-core:12.4\")",
+            "implementation(\"io.github.openfeign:feign-slf4j:12.4\")",
+            "implementation(\"io.github.openfeign:feign-jackson:12.4\")",
+            "}",
+            "dependencyManagement {",
+            "imports {",
+            "mavenBom(\"<literal>\")",
+            "}",
+            "}",
+            "tasks {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/app/askresume/AskResumeApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "@ConfigurationPropertiesScan",
+            "class AskResumeApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<AskResumeApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/app/askresume/api/access/controller/AccessController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 26,
+          "lines": [
+            "@Tag(name = \"authentication\", description = \"로그인/로그아웃/토큰재발급 API\")",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class AccessController(",
+            "private val accessUseCase: AccessUseCase,",
+            "private val cookieProvider: CookieProvider,",
+            "private val oAuthProperties: OAuthProperties,",
+            ") {",
+            "@Tag(name = \"authentication\")",
+            "@Operation(summary = \"로그아웃 API\", description = \"로그아웃시 refresh token 만료 처리\")",
+            "@PostMapping(\"/__path__\")",
+            "fun logout(@AccessToken token: TokenDto, request: HttpServletRequest): ResponseEntity<Void> {",
+            "accessUseCase.logout(token.token)",
+            "val expiredCookies = getAccessAndRefreshTokenCookies(oAuthProperties.domain, Duration.ZERO)",
+            "}",
+            "private fun getAccessAndRefreshTokenCookies(domain: String, maxAge: Duration): Array<ResponseCookie> {",
+            "val expiredAccessTokenCookie = cookieProvider.createCookie(",
+            "CookieOption(name = JwtTokenType.ACCESS.cookieName, domain = domain, maxAge = maxAge))",
+            "val expiredRefreshTokenCookie = cookieProvider.createCookie(",
+            "@Tag(name = \"authentication\")",
+            "@Operation(summary = \"Access Token 재발급 API\", description = \"쿠키에 저장된 Refresh 토큰을 읽어와 만료된 Access 토큰을 재발급해줍니다.\")",
+            "@GetMapping(\"/__path__\")",
+            "fun createAccessToken(@RefreshToken token: TokenDto): ResponseEntity<Void> {",
+            "val accessTokenDto = accessUseCase.createAccessTokenByRefreshToken(token.token)",
+            "val headers = HttpHeaders()",
+            "headers.add(HttpHeaders.SET_COOKIE, cookieProvider.createTokenCookie(accessTokenDto, oAuthProperties.domain).toString())"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/app/askresume/api/access/controller/OauthController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 23,
+          "lines": [
+            "@Tag(name = \"oauth2\", description = \"OAuth2.0 API\")",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class OauthController(",
+            "private val oauthUseCase: OauthUseCase,",
+            "private val cookieProvider: CookieProvider,",
+            "private val oauthProperties: OAuthProperties,",
+            ") {",
+            "\"\"\"",
+            ")",
+            "@GetMapping(\"/__path__\")",
+            "fun login(@PathVariable provider: String, response: HttpServletResponse): ResponseEntity<String> {",
+            "val providerEnum = OAuthProvider.fromKebabCase(provider)",
+            "val redirectUri = oauthUseCase.getAuthorizationUri(providerEnum)",
+            "return ResponseEntity",
+            "description = \"<literal>\"",
+            ")",
+            "@GetMapping(\"/__path__\")",
+            "fun loginCallback(",
+            "@PathVariable provider: String,",
+            "code: String,",
+            "response: HttpServletResponse,",
+            "): ResponseEntity<Void> {"
+          ]
+        }
+      ]
+    }
+  ]
+}

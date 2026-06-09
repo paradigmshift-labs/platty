@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "Exrick/xboot",
+  "htmlUrl": "https://github.com/Exrick/xboot",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "xboot-fast/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 80,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.4.8</version>",
+            "</parent>",
+            "<properties>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-validation</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-security</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-aop</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-elasticsearch</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-actuator</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>de.codecentric</groupId>",
+            "<artifactId>spring-boot-admin-starter-server</artifactId>",
+            "<version>2.4.2</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>de.codecentric</groupId>",
+            "<artifactId>spring-boot-admin-starter-client</artifactId>",
+            "<version>2.4.2</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.alibaba</groupId>",
+            "<artifactId>druid-spring-boot-starter</artifactId>",
+            "<version>1.2.6</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-quartz</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>io.jsonwebtoken</groupId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-jpa</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.baomidou</groupId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-redis</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.redisson</groupId>",
+            "<artifactId>redisson-spring-boot-starter</artifactId>",
+            "<version>3.15.6</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.github.xiaoymin</groupId>",
+            "<artifactId>knife4j-spring-boot-starter</artifactId>",
+            "<version>2.0.8</version>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>",
+            "<groupId>com.github.ulisesbocchio</groupId>",
+            "<artifactId>jasypt-spring-boot-starter</artifactId>",
+            "<version>3.0.3</version>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "xboot-fast/src/main/java/cn/exrick/xboot/XbootApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "@SpringBootApplication",
+            "@EnableJpaAuditing",
+            "@EnableCaching",
+            "@EnableAdminServer",
+            "public class XbootApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(XbootApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "xboot-fast/src/main/java/cn/exrick/xboot/base/XbootBaseController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 45,
+          "lines": [
+            "public abstract class XbootBaseController<E, ID extends Serializable> {",
+            "@Autowired",
+            "public abstract XbootBaseService<E, ID> getService();",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.GET)",
+            "@ResponseBody",
+            "@ApiOperation(value = \"通过id获取\")",
+            "public Result<E> get(@PathVariable ID id) {",
+            "E entity = getService().get(id);",
+            "return new ResultUtil<E>().setData(entity);",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.GET)",
+            "@ResponseBody",
+            "@ApiOperation(value = \"获取全部数据\")",
+            "public Result<List<E>> getAll() {",
+            "List<E> list = getService().getAll();",
+            "return new ResultUtil<List<E>>().setData(list);",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.GET)",
+            "@ResponseBody",
+            "@ApiOperation(value = \"分页获取\")",
+            "public Result<Page<E>> getByPage(PageVo page) {",
+            "Page<E> data = getService().findAll(PageUtil.initPage(page));",
+            "return new ResultUtil<Page<E>>().setData(data);",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.POST)",
+            "@ResponseBody",
+            "@ApiOperation(value = \"保存数据\")",
+            "public Result<E> save(E entity) {",
+            "E e = getService().save(entity);",
+            "return new ResultUtil<E>().setData(e);",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.PUT)",
+            "@ResponseBody",
+            "@ApiOperation(value = \"更新数据\")",
+            "public Result<E> update(E entity) {",
+            "E e = getService().update(entity);",
+            "return new ResultUtil<E>().setData(e);",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.POST)",
+            "@ResponseBody",
+            "@ApiOperation(value = \"批量通过id删除\")",
+            "public Result<Object> delByIds(ID[] ids) {",
+            "for (ID id : ids) {",
+            "getService().delete(id);",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "xboot-fast/src/main/java/cn/exrick/xboot/base/XbootBaseEntity.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 13,
+          "lines": [
+            "@Data",
+            "@MappedSuperclass",
+            "@EntityListeners(AuditingEntityListener.class)",
+            "@JsonIgnoreProperties(value = {\"hibernateLazyInitializer\", \"handler\", \"fieldHandler\"})",
+            "public abstract class XbootBaseEntity implements Serializable {",
+            "private static final long serialVersionUID = 1L;",
+            "@Id",
+            "@TableId",
+            "@ApiModelProperty(value = \"唯一标识\")",
+            "private String id = SnowFlakeUtil.nextId().toString();",
+            "@ApiModelProperty(value = \"创建者\")",
+            "@CreatedBy",
+            "@TableField(fill = FieldFill.INSERT)"
+          ]
+        }
+      ]
+    }
+  ]
+}

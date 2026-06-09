@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "yizhiwazi/springboot-socks",
+  "htmlUrl": "https://github.com/yizhiwazi/springboot-socks",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "springboot-cross-orgin/origin-web/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 21,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.1.0.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.webjars</groupId>",
+            "<artifactId>jquery</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "</dependencies>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "springboot-cross-orgin/origin-web/src/main/java/com/hehe/OriginWebApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "public class OriginWebApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(OriginWebApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "springboot-cross-orgin/target-web/src/main/java/com/hehe/TargetWebApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "public class TargetWebApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(TargetWebApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "springboot-cross-orgin/target-web/src/main/java/com/hehe/web/UserController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 14,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController;",
+            "@RestController",
+            "public class UserController {",
+            "@PostMapping(\"/__path__\")",
+            "public User findByObject(User user) {",
+            "user.setUsername(\"admin\");",
+            "return user;",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "public User findByJson(@RequestBody User user) {",
+            "user.setUsername(\"jack\");",
+            "return user;",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

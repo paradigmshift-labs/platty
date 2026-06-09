@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "leandrocgsi/rest-with-spring-boot-and-kotlin-erudio",
+  "htmlUrl": "https://github.com/leandrocgsi/rest-with-spring-boot-and-kotlin-erudio",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "05_FirstStepsInKotlinwithSpringBoot/rest-with-spring-boot-and-kotlin-erudio/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 43,
+          "lines": [
+            "<modelVersion>4.0.0</modelVersion>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>3.0.0-M1</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<groupId>br.com.erudio</groupId>",
+            "<artifactId>rest-with-spring-boot-and-kotlin-erudio</artifactId>",
+            "<version>0.0.1-SNAPSHOT</version>",
+            "<name>rest-with-spring-boot-and-kotlin-erudio</name>",
+            "<description>Demo project for Spring Boot</description>",
+            "<properties>",
+            "<java.version>17</java.version>",
+            "<kotlin.version>1.6.10</kotlin.version>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.fasterxml.jackson.module</groupId>",
+            "<artifactId>jackson-module-kotlin</artifactId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-devtools</artifactId>",
+            "<scope>runtime</scope>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "</dependencies>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "<plugin>",
+            "<groupId>org.jetbrains.kotlin</groupId>",
+            "<artifactId>kotlin-maven-plugin</artifactId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "05_FirstStepsInKotlinwithSpringBoot/rest-with-spring-boot-and-kotlin-erudio/src/main/kotlin/br/com/erudio/GreetingController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import java.util.concurrent.atomic.AtomicLong",
+            "@RestController",
+            "class GreetingController {",
+            "val counter: AtomicLong = AtomicLong()",
+            "@RequestMapping(\"/__path__\")",
+            "fun greeting(@RequestParam(value=\"name\", defaultValue = \"World\") name: String?): Greeting {",
+            "return Greeting(counter.incrementAndGet(), \"Hello, $name!\")",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "06_ParametersAndExceptionHandler/rest-with-spring-boot-and-kotlin-erudio/src/main/kotlin/br/com/erudio/controller/MathController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 46,
+          "lines": [
+            "import java.util.concurrent.atomic.AtomicLong",
+            "@RestController",
+            "class MathController {",
+            "val counter: AtomicLong = AtomicLong()",
+            "private val math: SimpleMath = SimpleMath()",
+            "@RequestMapping(value = [\"/__path__\"])",
+            "fun sum(@PathVariable(value=\"numberOne\") numberOne: String?,",
+            "@PathVariable(value=\"numberTwo\") numberTwo: String?",
+            "): Double {",
+            "if (!NumberConverter.isNumeric(numberOne) || !NumberConverter.isNumeric(numberTwo))",
+            "throw UnsupportedMathOperationException(\"Please set a numeric value!\")",
+            "}",
+            "@RequestMapping(value = [\"/__path__\"])",
+            "fun subtraction(@PathVariable(value=\"numberOne\") numberOne: String?,",
+            "@PathVariable(value=\"numberTwo\") numberTwo: String?",
+            "): Double {",
+            "if (!NumberConverter.isNumeric(numberOne) || !NumberConverter.isNumeric(numberTwo))",
+            "throw UnsupportedMathOperationException(\"Please set a numeric value!\")",
+            "}",
+            "@RequestMapping(value = [\"/__path__\"])",
+            "fun multiplication(@PathVariable(value=\"numberOne\") numberOne: String?,",
+            "@PathVariable(value=\"numberTwo\") numberTwo: String?",
+            "): Double {",
+            "if (!NumberConverter.isNumeric(numberOne) || !NumberConverter.isNumeric(numberTwo))",
+            "throw UnsupportedMathOperationException(\"Please set a numeric value!\")",
+            "}",
+            "@RequestMapping(value = [\"/__path__\"])",
+            "fun division(@PathVariable(value=\"numberOne\") numberOne: String?,",
+            "@PathVariable(value=\"numberTwo\") numberTwo: String?",
+            "): Double {",
+            "if (!NumberConverter.isNumeric(numberOne) || !NumberConverter.isNumeric(numberTwo))",
+            "throw UnsupportedMathOperationException(\"Please set a numeric value!\")",
+            "}",
+            "@RequestMapping(value = [\"/__path__\"])",
+            "fun mean(@PathVariable(value=\"numberOne\") numberOne: String?,",
+            "@PathVariable(value=\"numberTwo\") numberTwo: String?",
+            "): Double {",
+            "if (!NumberConverter.isNumeric(numberOne) || !NumberConverter.isNumeric(numberTwo))",
+            "throw UnsupportedMathOperationException(\"Please set a numeric value!\")",
+            "}",
+            "@RequestMapping(value = [\"/__path__\"])",
+            "fun squareRoot(@PathVariable(value=\"number\") number: String?",
+            "): Double {",
+            "if (!NumberConverter.isNumeric(number))",
+            "throw UnsupportedMathOperationException(\"Please set a numeric value!\")",
+            "return math.squareRoot(NumberConverter.convertToDouble(number))"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "06_ParametersAndExceptionHandler/rest-with-spring-boot-and-kotlin-erudio/src/main/kotlin/br/com/erudio/exceptions/CustomizedResponseEntityExceptionHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 15,
+          "lines": [
+            "@ControllerAdvice",
+            "@RestController",
+            "class CustomizedResponseEntityExceptionHandler : ResponseEntityExceptionHandler(){",
+            "@ExceptionHandler(Exception::class)",
+            "fun handleAllExceptions(ex: Exception, request: WebRequest) :",
+            "ResponseEntity<ExceptionResponse> {",
+            "val exceptioResponse = ExceptionResponse(",
+            "Date(),",
+            "ex.message,",
+            "@ExceptionHandler(UnsupportedMathOperationException::class)",
+            "fun handleBadRequestExceptions(ex: Exception, request: WebRequest) :",
+            "ResponseEntity<ExceptionResponse> {",
+            "val exceptioResponse = ExceptionResponse(",
+            "Date(),",
+            "ex.message,"
+          ]
+        }
+      ]
+    }
+  ]
+}

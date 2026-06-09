@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "wxiaoqi/Spring-Cloud-Platform",
+  "htmlUrl": "https://github.com/wxiaoqi/Spring-Cloud-Platform",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "ace-api/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 7,
+          "lines": [
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-openfeign</artifactId>",
+            "</dependency>",
+            "</dependencies>",
+            "</project>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "ace-dev-base/ace-common/src/main/java/com/github/wxiaoqi/security/common/context/BaseContextHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 44,
+          "lines": [
+            "public class BaseContextHandler {",
+            "public static ThreadLocal<Map<String, Object>> threadLocal = new ThreadLocal<Map<String, Object>>();",
+            "public static void set(String key, Object value) {",
+            "Map<String, Object> map = threadLocal.get();",
+            "if (map == null) {",
+            "map = new HashMap<String, Object>();",
+            "threadLocal.set(map);",
+            "}",
+            "public static Object get(String key){",
+            "Map<String, Object> map = threadLocal.get();",
+            "if (map == null) {",
+            "map = new HashMap<String, Object>();",
+            "threadLocal.set(map);",
+            "}",
+            "public static String getUserID(){",
+            "Object value = get(CommonConstants.CONTEXT_KEY_USER_ID);",
+            "return returnObjectValue(value);",
+            "}",
+            "public static String getUsername(){",
+            "Object value = get(CommonConstants.CONTEXT_KEY_USERNAME);",
+            "return returnObjectValue(value);",
+            "}",
+            "public static String getName(){",
+            "Object value = get(CommonConstants.CONTEXT_KEY_USER_NAME);",
+            "return StringHelper.getObjectValue(value);",
+            "}",
+            "public static String getToken(){",
+            "Object value = get(CommonConstants.CONTEXT_KEY_USER_TOKEN);",
+            "return StringHelper.getObjectValue(value);",
+            "}",
+            "public static void setToken(String token){set(CommonConstants.CONTEXT_KEY_USER_TOKEN,token);}",
+            "public static void setName(String name){set(CommonConstants.CONTEXT_KEY_USER_NAME,name);}",
+            "public static void setUserID(String userID){",
+            "set(CommonConstants.CONTEXT_KEY_USER_ID,userID);",
+            "}",
+            "public static void setUsername(String username){",
+            "set(CommonConstants.CONTEXT_KEY_USERNAME,username);",
+            "}",
+            "private static String returnObjectValue(Object value) {",
+            "return value==null?null:value.toString();",
+            "}",
+            "public static void remove(){",
+            "threadLocal.remove();",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "ace-dev-base/ace-common/src/main/java/com/github/wxiaoqi/security/common/handler/GlobalExceptionHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 34,
+          "lines": [
+            "@ControllerAdvice(\"com.github.wxiaoqi.security\")",
+            "@ResponseBody",
+            "public class GlobalExceptionHandler {",
+            "private Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);",
+            "@ExceptionHandler(ClientTokenException.class)",
+            "public BaseResponse clientTokenExceptionHandler(HttpServletResponse response, ClientTokenException ex) {",
+            "response.setStatus(403);",
+            "logger.error(ex.getMessage(),ex);",
+            "return new BaseResponse(ex.getStatus(), ex.getMessage());",
+            "}",
+            "@ExceptionHandler(UserTokenException.class)",
+            "public BaseResponse userTokenExceptionHandler(HttpServletResponse response, UserTokenException ex) {",
+            "response.setStatus(401);",
+            "logger.error(ex.getMessage(),ex);",
+            "return new BaseResponse(ex.getStatus(), ex.getMessage());",
+            "}",
+            "@ExceptionHandler(UserInvalidException.class)",
+            "public BaseResponse userInvalidExceptionHandler(HttpServletResponse response, UserInvalidException ex) {",
+            "response.setStatus(200);",
+            "logger.error(ex.getMessage(),ex);",
+            "return new BaseResponse(ex.getStatus(), ex.getMessage());",
+            "}",
+            "@ExceptionHandler(BaseException.class)",
+            "public BaseResponse baseExceptionHandler(HttpServletResponse response, BaseException ex) {",
+            "logger.error(ex.getMessage(),ex);",
+            "response.setStatus(500);",
+            "return new BaseResponse(ex.getStatus(), ex.getMessage());",
+            "}",
+            "@ExceptionHandler(Exception.class)",
+            "public BaseResponse otherExceptionHandler(HttpServletResponse response, Exception ex) {",
+            "response.setStatus(500);",
+            "logger.error(ex.getMessage(),ex);",
+            "return new BaseResponse(CommonConstants.EX_OTHER_CODE, ex.getMessage());",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "ace-dev-base/ace-common/src/main/java/com/github/wxiaoqi/security/common/rest/BaseController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 47,
+          "lines": [
+            "@Slf4j",
+            "public class BaseController<Biz extends BaseBiz,Entity> {",
+            "@Autowired",
+            "protected HttpServletRequest request;",
+            "@Autowired",
+            "protected Biz baseBiz;",
+            "@RequestMapping(value = \"\",method = RequestMethod.POST)",
+            "@ResponseBody",
+            "public ObjectRestResponse<Entity> add(@RequestBody Entity entity){",
+            "baseBiz.insertSelective(entity);",
+            "return new ObjectRestResponse<Entity>();",
+            "}",
+            "@RequestMapping(value = \"/__path__\",method = RequestMethod.GET)",
+            "@ResponseBody",
+            "public ObjectRestResponse<Entity> get(@PathVariable int id){",
+            "ObjectRestResponse<Entity> entityObjectRestResponse = new ObjectRestResponse<>();",
+            "Object o = baseBiz.selectById(id);",
+            "entityObjectRestResponse.data((Entity)o);",
+            "return entityObjectRestResponse;",
+            "}",
+            "@RequestMapping(value = \"/__path__\",method = RequestMethod.PUT)",
+            "@ResponseBody",
+            "public ObjectRestResponse<Entity> update(@RequestBody Entity entity){",
+            "baseBiz.updateSelectiveById(entity);",
+            "return new ObjectRestResponse<Entity>();",
+            "}",
+            "@RequestMapping(value = \"/__path__\",method = RequestMethod.DELETE)",
+            "@ResponseBody",
+            "public ObjectRestResponse<Entity> remove(@PathVariable int id){",
+            "baseBiz.deleteById(id);",
+            "return new ObjectRestResponse<Entity>();",
+            "}",
+            "@RequestMapping(value = \"/__path__\",method = RequestMethod.GET)",
+            "@ResponseBody",
+            "public ObjectRestResponse<List<Entity>> all(){",
+            "return new ObjectRestResponse<>().data(baseBiz.selectListAll());",
+            "}",
+            "@RequestMapping(value = \"/__path__\",method = RequestMethod.GET)",
+            "@ResponseBody",
+            "public TableResultResponse<Entity> list(@RequestParam Map<String, Object> params){",
+            "Query query = new Query(params);",
+            "return baseBiz.selectByQuery(query);",
+            "}",
+            "public String getCurrentUserName(){",
+            "return BaseContextHandler.getUsername();",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

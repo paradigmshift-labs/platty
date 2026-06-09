@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "zlt2000/microservices-platform",
+  "htmlUrl": "https://github.com/zlt2000/microservices-platform",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 80,
+          "lines": [
+            "<java.version>17</java.version>",
+            "<spring-cloud-alibaba-dependencies.version>2022.0.0.0</spring-cloud-alibaba-dependencies.version>",
+            "<spring-boot-dependencies.version>3.1.6</spring-boot-dependencies.version>",
+            "<spring-cloud-dependencies.version>2022.0.4</spring-cloud-dependencies.version>",
+            "<commons-collections4.version>4.4</commons-collections4.version>",
+            "<jjwt.version>0.9.1</jjwt.version>",
+            "<druid-starter>1.2.18</druid-starter>",
+            "<easypoi.version>4.1.3</easypoi.version>",
+            "<poi.version>4.1.1</poi.version>",
+            "<spring-boot-admin.version>3.1.8</spring-boot-admin.version>",
+            "<velocity.version>1.7</velocity.version>",
+            "<commons-configuration2.version>2.7</commons-configuration2.version>",
+            "<fastdfs-client.version>1.27.2</fastdfs-client.version>",
+            "<userAgent.version>1.21</userAgent.version>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-bootstrap</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>javax.annotation</groupId>",
+            "<dependency>",
+            "<groupId>com.zlt</groupId>",
+            "<artifactId>zlt-common-spring-boot-starter</artifactId>",
+            "<version>${project.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.zlt</groupId>",
+            "<artifactId>zlt-db-spring-boot-starter</artifactId>",
+            "<version>${project.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.zlt</groupId>",
+            "<artifactId>zlt-log-spring-boot-starter</artifactId>",
+            "<version>${project.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.zlt</groupId>",
+            "<artifactId>zlt-redis-spring-boot-starter</artifactId>",
+            "<version>${project.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.zlt</groupId>",
+            "<artifactId>zlt-loadbalancer-spring-boot-starter</artifactId>",
+            "<version>${project.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.zlt</groupId>",
+            "<artifactId>zlt-auth-client-spring-boot-starter</artifactId>",
+            "<version>${project.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.zlt</groupId>",
+            "<artifactId>zlt-sentinel-spring-boot-starter</artifactId>",
+            "<version>${project.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.zlt</groupId>",
+            "<dependency>",
+            "<groupId>com.zlt</groupId>",
+            "<artifactId>zlt-elasticsearch-spring-boot-starter</artifactId>",
+            "<version>${project.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>io.jsonwebtoken</groupId>",
+            "<dependency>",
+            "<groupId>com.alibaba</groupId>",
+            "<artifactId>druid-spring-boot-starter</artifactId>",
+            "<version>${druid-starter}</version>",
+            "</dependency>",
+            "<dependency>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.security</groupId>",
+            "<artifactId>spring-security-jwt</artifactId>",
+            "<version>${security-jwt.version}</version>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "zlt-business/file-center/src/main/java/com/central/file/controller/FileController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 19,
+          "lines": [
+            "@RestController",
+            "public class FileController {",
+            "@Resource",
+            "private IFileService fileService;",
+            "@PostMapping(\"/__path__\")",
+            "public FileInfo upload(@RequestParam(\"file\") MultipartFile file) throws Exception {",
+            "return fileService.upload(file);",
+            "}",
+            "@DeleteMapping(\"/__path__\")",
+            "public Result delete(@PathVariable String id) {",
+            "try {",
+            "fileService.delete(id);",
+            "return Result.succeed(\"操作成功\");",
+            "} catch (Exception ex) {",
+            "@GetMapping(\"/__path__\")",
+            "public PageResult<FileInfo> findFiles(@RequestParam Map<String, Object> params) {",
+            "return fileService.findList(params);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "zlt-business/search-center/search-server/src/main/java/com/central/admin/controller/IndexController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 30,
+          "lines": [
+            "@Slf4j",
+            "@RestController",
+            "@Tag(name = \"索引管理api\")",
+            "@RequestMapping(\"/__path__\")",
+            "public class IndexController {",
+            "@Autowired",
+            "private IIndexService indexService;",
+            "@Autowired",
+            "private IndexProperties indexProperties;",
+            "@PostMapping(\"/__path__\")",
+            "public Result createIndex(@RequestBody IndexDto indexDto) throws IOException {",
+            "if (indexDto.getNumberOfShards() == null) {",
+            "indexDto.setNumberOfShards(1);",
+            "}",
+            "if (indexDto.getNumberOfReplicas() == null) {",
+            "@GetMapping(\"/__path__\")",
+            "public PageResult<Map<String, String>> list(@RequestParam(required = false) String queryStr) throws IOException {",
+            "return indexService.list(queryStr, indexProperties.getShow());",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public Result<Map<String, Object>> showIndex(String indexName) throws IOException {",
+            "Map<String, Object> result = indexService.show(indexName);",
+            "return Result.succeed(result);",
+            "}",
+            "@DeleteMapping(\"/__path__\")",
+            "public Result deleteIndex(String indexName) throws IOException {",
+            "indexService.delete(indexName);",
+            "return Result.succeed(\"操作成功\");",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "zlt-business/search-center/search-server/src/main/java/com/central/search/controller/AggregationController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 14,
+          "lines": [
+            "@Slf4j",
+            "@RestController",
+            "@Tag(name = \"搜索模块api\")",
+            "@RequestMapping(\"/__path__\")",
+            "public class AggregationController {",
+            "private final IAggregationService aggregationService;",
+            "public AggregationController(IAggregationService aggregationService) {",
+            "this.aggregationService = aggregationService;",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public Map<String, Object> requestStatAgg(@PathVariable String indexName, @PathVariable String routing) throws IOException {",
+            "return aggregationService.requestStatAgg(indexName, routing);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "asyncapi/kotlin-asyncapi",
+  "htmlUrl": "https://github.com/asyncapi/kotlin-asyncapi",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "kotlin-asyncapi-examples/kotlin-asyncapi-ktor-example/src/main/kotlin/com/asyncapi/kotlinasyncapi/example/ktor/ExampleApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import com.asyncapi.kotlinasyncapi.ktor.AsyncApiPlugin",
+            "fun main() {",
+            "embeddedServer(Netty, port = 8000) {",
+            "install(AsyncApiPlugin) {",
+            "extension = asyncApiExtension",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "kotlin-asyncapi-examples/kotlin-asyncapi-spring-boot-example/src/main/kotlin/com/asyncapi/kotlinasyncapi/example/spring/ExampleApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "@EnableAsyncApi",
+            "class ExampleApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<ExampleApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "kotlin-asyncapi-spring-web/src/main/kotlin/com/asyncapi/kotlinasyncapi/springweb/AsyncApiController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 12,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "@RequestMapping(\"\\${asyncapi.path:/docs/asyncapi}\")",
+            "internal class AsyncApiController(",
+            "private val service: AsyncApiService,",
+            "private val serializer: AsyncApiSerializer",
+            ") {",
+            "@GetMapping(produces = [MediaType.APPLICATION_JSON_VALUE])",
+            "fun asyncApi() = with(serializer) {",
+            "service.asyncApi().serialize()",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

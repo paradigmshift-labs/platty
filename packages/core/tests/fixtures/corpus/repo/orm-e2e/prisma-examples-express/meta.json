@@ -1,0 +1,7 @@
+{
+  "source": "https://github.com/prisma/prisma-examples/blob/latest/orm/express/prisma/schema.prisma",
+  "description": "Prisma 공식 예제 — Express REST API (초소형: ~2 모델)",
+  "downloadedAt": "2026-05-08T09:03:18.359Z",
+  "expectedModelCount": 2,
+  "expectedEnumCount": null
+}

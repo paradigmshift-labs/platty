@@ -221,10 +221,56 @@ function assertCorePhaseOneInfrastructure() {
   assert.equal(coreEntrypointSource.includes('createPipelineRuntime'), true, 'core must export Phase 1 pipeline runtime base')
 }
 
+function assertCorePhaseTwoStaticPipeline() {
+  const requiredStaticModules = [
+    'analyze_repo',
+    'build_graph',
+    'build_pattern_profile',
+    'build_models',
+    'build_route',
+    'build_relations',
+    'build_service_map',
+  ]
+
+  for (const moduleName of requiredStaticModules) {
+    assert.equal(
+      existsSync(join(root, 'packages/core/src/pipeline_modules', moduleName)),
+      true,
+      `core static pipeline must include ${moduleName}`,
+    )
+  }
+
+  const forbiddenPaths = [
+    'packages/core/src/server',
+    'packages/core/src/artifacts',
+    'packages/core/src/legacy',
+    'packages/core/src/pipeline_modules/legacy_generation',
+    'packages/core/src/pipeline_modules/sync',
+  ]
+
+  for (const path of forbiddenPaths) {
+    assert.equal(existsSync(join(root, path)), false, `core must not include excluded legacy/PoC path: ${path}`)
+  }
+
+  const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
+  for (const symbol of [
+    'runAnalyzeRepo',
+    'runBuildGraph',
+    'runBuildPatternProfile',
+    'runBuildModels',
+    'runBuildRoute',
+    'runBuildRelations',
+    'runBuildServiceMap',
+  ]) {
+    assert.equal(coreEntrypointSource.includes(symbol), true, `core must export ${symbol}`)
+  }
+}
+
 assertRootManifest()
 assertTsconfigReferences()
 assertEntrypointsExist()
 assertCorePhaseOneInfrastructure()
+assertCorePhaseTwoStaticPipeline()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)

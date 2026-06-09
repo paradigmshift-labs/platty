@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "dustinsand/hex-arch-kotlin-spring-boot",
+  "htmlUrl": "https://github.com/dustinsand/hex-arch-kotlin-spring-boot",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "adapter-output/persistence/h2/build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 37,
+          "lines": [
+            "plugins {",
+            "id 'java'",
+            "id 'kotlin'",
+            "id 'kotlin-spring'",
+            "id 'nu.studer.jooq' version '4.1'",
+            "id 'org.springframework.boot'",
+            "id 'io.spring.dependency-management'",
+            "id \"org.flywaydb.flyway\" version \"6.2.3\"",
+            "id \"org.jetbrains.kotlin.jvm\"",
+            "id \"org.jetbrains.kotlin.plugin.spring\"",
+            "dependencyManagement {",
+            "imports {",
+            "mavenBom(\"<literal>\")",
+            "}",
+            "}",
+            "dependencies {",
+            "implementation project(':voter-application-core')",
+            "implementation 'org.flywaydb:flyway-core:6.2.4'",
+            "implementation 'io.r2dbc:r2dbc-h2'",
+            "implementation 'org.jooq:jooq'",
+            "implementation 'org.jooq:jooq-meta'",
+            "implementation 'org.jooq:jooq-codegen'",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation ('<literal>') {",
+            "exclude group: \"jakarta.xml.bind\", module: \"jakarta.xml.bind-api\"",
+            "}",
+            "implementation ('<literal>') {",
+            "exclude group: \"jakarta.xml.bind\", module: \"jakarta.xml.bind-api\"",
+            "}",
+            "jooqRuntime 'com.h2database:h2:1.4.200'",
+            "testImplementation '<literal>'",
+            "testImplementation '<literal>'",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"io.projectreactor:reactor-test\")",
+            "}",
+            "ext {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "adapter-output/persistence/memory/src/main/java/com/hexarchbootdemo/adapter/output/persistence/h2/internal/VoterRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 25,
+          "lines": [
+            "@Repository(\"VoterPersistenceMemoryAdapter\")",
+            "internal class VoterRepository : FindVoterPort, RegisterVoterPort {",
+            "private final val databaseMap = mutableMapOf<UUID, Voter>()",
+            "init {",
+            "val voter1 = Voter(id = UUID.randomUUID(),",
+            "}",
+            "override fun findVotersByLastName(query: FindVoterUseCase.FindByLastNameQuery): List<Voter> {",
+            "return findAll().filter { it.lastName.contains(query.lastNameContains, true) }",
+            "}",
+            "override suspend fun findVotersByLastNameReactive(query: FindVoterUseCase.FindByLastNameQuery): Flow<Voter> {",
+            "TODO(\"Not yet implemented\")",
+            "}",
+            "override fun save(command: RegisterVoterUseCase.RegisterVoterCommand): UUID {",
+            "val id = UUID.randomUUID()",
+            "save(Voter(id, command.socialSecurityNumber, command.firstName, command.lastName))",
+            "}",
+            "override suspend fun saveReactive(command: RegisterVoterUseCase.RegisterVoterCommand): UUID {",
+            "TODO(\"Not yet implemented\")",
+            "}",
+            "private fun findAll(): List<Voter> {",
+            "return databaseMap.values.toList()",
+            "}",
+            "private fun save(voter: Voter) {",
+            "databaseMap[voter.id] = voter",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "adapter-output/rpc/eligibility/src/main/java/com/hexarchbootdemo/adapter/output/rpc/eligibility/internal/VoterEligibilityRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "import org.springframework.web.reactive.function.client.awaitExchange",
+            "@Repository",
+            "internal class VoterEligibilityRepository : VoterEligibilityPort {",
+            "override suspend fun isEligible(query: VoterEligibilityQuery): Boolean = coroutineScope {",
+            "var callCountGoogle = 0",
+            "val circuitBreakerGoogle = CircuitBreaker.ofDefaults(\"google\")",
+            "circuitBreakerGoogle.eventPublisher.onSuccess {",
+            "println(\"Successfully called Google.\")"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "voter-ms/src/main/java/com/hexarchbootdemo/HexArchBootDemoApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 10,
+          "lines": [
+            "import org.springframework.context.annotation.Configuration",
+            "@SpringBootApplication",
+            "private class HexArchBootDemoApplication",
+            "fun main(args: Array<String>) {",
+            "@Suppress(\"SpreadOperator\")",
+            "runApplication<HexArchBootDemoApplication>(*args)",
+            "}",
+            "@ComponentScan",
+            "@Suppress(\"UnusedPrivateClass\")",
+            "private class MainConfig"
+          ]
+        }
+      ]
+    }
+  ]
+}

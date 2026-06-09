@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "xuchengsheng/spring-reading",
+  "htmlUrl": "https://github.com/xuchengsheng/spring-reading",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 17,
+          "lines": [
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "<version>${spring.boot.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-aop</artifactId>",
+            "<version>${spring.boot.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-jdbc</artifactId>",
+            "<version>${spring.boot.version}</version>",
+            "</dependency>",
+            "</dependencies>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-annotation/spring-annotation-autowired/src/main/java/com/xcs/spring/AutowiredApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "public class AutowiredApplication {",
+            "public static void main(String[] args) {",
+            "AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MyConfiguration.class);",
+            "MyController controller = context.getBean(MyController.class);",
+            "controller.showService();",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-annotation/spring-annotation-autowired/src/main/java/com/xcs/spring/controller/MyController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.springframework.stereotype.Controller;",
+            "@Controller",
+            "public class MyController {",
+            "@Autowired",
+            "private MyService myService;",
+            "public void showService(){",
+            "System.out.println(\"myService = \" + myService);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-annotation/spring-annotation-bean/src/main/java/com/xcs/spring/BeanApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "public class BeanApplication {",
+            "public static void main(String[] args) {",
+            "AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MyConfiguration.class);",
+            "System.out.println(context.getBean(MyBean.class));",
+            "context.close();",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

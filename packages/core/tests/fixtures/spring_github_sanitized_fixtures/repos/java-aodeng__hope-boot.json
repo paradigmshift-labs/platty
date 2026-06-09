@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "java-aodeng/hope-boot",
+  "htmlUrl": "https://github.com/java-aodeng/hope-boot",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "hope-admin/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 8,
+          "lines": [
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>",
+            "</project>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "hope-admin/src/main/java/com/hope/HopeAdminApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "public class HopeAdminApplication {",
+            "private static final Logger LOGGER = LoggerFactory.getLogger(HopeAdminApplication.class);",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(HopeAdminApplication.class, args);",
+            "LOGGER.info(\"hope-admin服务启动成功！温馨提示：代码千万行，注释第一行，命名不规范，同事泪两行\");",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "hope-admin/src/main/java/com/hope/controller/ErrorController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 11,
+          "lines": [
+            "@Api(value = \"错误页面\", description = \"错误页面管理api\", position = 6, produces = \"http\")",
+            "@Controller",
+            "@Slf4j",
+            "public class ErrorController {",
+            "@ApiOperation(value = \"错误页面\", notes = \"错误页面010\",produces=\"application/json, application/xml\", consumes=\"application/json, application/xml\")",
+            "@PostMapping(\"/__path__\")",
+            "public ModelAndView error1(Model model, HttpServletResponse response, HttpServletRequest request) {",
+            "log.info(\"[hope-error1-page]-[{}]\", \"错误页面\");",
+            "response.setStatus(HttpStatus.FORBIDDEN.value());",
+            "return ResultHopeUtil.view(\"common/error/010\");",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "hope-admin/src/main/java/com/hope/controller/HopeController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 49,
+          "lines": [
+            "@Api(value = \"页面跳转\", description = \"页面跳转管理api\", position = 5, produces = \"http\")",
+            "@Controller",
+            "@Slf4j",
+            "public class HopeController {",
+            "@ApiOperation(value = \"首页\", notes = \"首页\")",
+            "@GetMapping(value = {\"/__path__\", \"/__path__\", \"/__path__\"})",
+            "public String index() {",
+            "return \"common/index\";",
+            "}",
+            "@ApiOperation(value = \"登录\", notes = \"登录\")",
+            "@GetMapping(\"/__path__\")",
+            "public String login() {",
+            "return \"common/login\";",
+            "}",
+            "@ApiOperation(value = \"hope-boot\", notes = \"hope-boot\")",
+            "@GetMapping(\"/__path__\")",
+            "public ModelAndView index_v1(Model model) {",
+            "return ResultHopeUtil.view(\"common/hope-boot\");",
+            "}",
+            "@ApiOperation(value = \"资源列表\", notes = \"资源列表\")",
+            "@RequiresPermissions(\"resources\")",
+            "@GetMapping(\"/__path__\")",
+            "public ModelAndView resource() {",
+            "return ResultHopeUtil.view(\"admin/resource/resource\");",
+            "}",
+            "@ApiOperation(value = \"角色列表\", notes = \"角色列表\")",
+            "@RequiresPermissions(\"roles\")",
+            "@GetMapping(\"/__path__\")",
+            "public ModelAndView role() {",
+            "return ResultHopeUtil.view(\"admin/role/role\");",
+            "}",
+            "@ApiOperation(value = \"打开添加角色\", notes = \"打开添加角色\")",
+            "@GetMapping(\"/__path__\")",
+            "public ModelAndView add() {",
+            "log.info(\"[role-add-page]-[{}]\", \"测试210\");",
+            "return ResultHopeUtil.view(\"admin/role/add\");",
+            "}",
+            "@ApiOperation(value = \"用户列表\", notes = \"用户列表\")",
+            "@RequiresPermissions(\"user:user:view\")",
+            "@GetMapping(\"/__path__\")",
+            "public ModelAndView user() {",
+            "return ResultHopeUtil.view(\"admin/user/user\");",
+            "}",
+            "@ApiOperation(value = \"添加用户\", notes = \"添加用户\")",
+            "@GetMapping(\"/__path__\")",
+            "public ModelAndView userAdd() {",
+            "return ResultHopeUtil.view(\"admin/user/add\");",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

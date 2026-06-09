@@ -1,0 +1,7 @@
+{
+  "source": "https://github.com/hoppscotch/hoppscotch/blob/main/packages/hoppscotch-backend/prisma/schema.prisma",
+  "description": "Hoppscotch — API 테스트 도구 (중형: ~20 모델)",
+  "downloadedAt": "2026-05-08T09:03:18.161Z",
+  "expectedModelCount": 23,
+  "expectedEnumCount": null
+}

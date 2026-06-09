@@ -1,0 +1,906 @@
+{
+  "query": "language:Java spring-boot stars:>=200 size:200..200000",
+  "count": 200,
+  "repos": [
+    {
+      "full_name": "macrozheng/mall",
+      "html_url": "https://github.com/macrozheng/mall",
+      "default_branch": "master",
+      "stargazers_count": 83675,
+      "size_kb": 58736,
+      "language": "Java",
+      "description": "mall项目是一套电商系统，包括前台商城系统及后台管理系统，基于Spring Boot+MyBatis实现，采用Docker容器化部署。 前台商城系统包含首页门户、商品推荐、商品搜索、商品展示、购物车、订单流程、会员中心、客户服务、帮助中心等模块。 后台管理系统包含商品管理、订单管理、会员管理、促销管理、运营管理、内容管理、统计报表、财务管理、权限管理、设置等模块。"
+    },
+    {
+      "full_name": "eugenp/tutorials",
+      "html_url": "https://github.com/eugenp/tutorials",
+      "default_branch": "master",
+      "stargazers_count": 37348,
+      "size_kb": 119120,
+      "language": "Java",
+      "description": "Getting Started with Spring Boot 3: "
+    },
+    {
+      "full_name": "YunaiV/ruoyi-vue-pro",
+      "html_url": "https://github.com/YunaiV/ruoyi-vue-pro",
+      "default_branch": "master",
+      "stargazers_count": 37236,
+      "size_kb": 192323,
+      "language": "Java",
+      "description": "🔥 官方推荐 🔥 RuoYi-Vue 全新 Pro 版本，优化重构所有功能。基于 Spring Boot + MyBatis Plus + Vue & Element 实现的后台管理系统 + 微信小程序，支持 RBAC 动态权限、数据权限、SaaS 多租户、Flowable 工作流、三方登录、支付、短信、商城、CRM、ERP、MES、IM、AI 大模型、IoT 物联网等功能。你的 ⭐️ Star ⭐️，是作者生发的动力！"
+    },
+    {
+      "full_name": "xkcoding/spring-boot-demo",
+      "html_url": "https://github.com/xkcoding/spring-boot-demo",
+      "default_branch": "master",
+      "stargazers_count": 34111,
+      "size_kb": 14194,
+      "language": "Java",
+      "description": "🚀一个用来深入学习并实战 Spring Boot 的项目。"
+    },
+    {
+      "full_name": "conductor-oss/conductor",
+      "html_url": "https://github.com/conductor-oss/conductor",
+      "default_branch": "main",
+      "stargazers_count": 31836,
+      "size_kb": 38972,
+      "language": "Java",
+      "description": "Conductor is an event driven agentic workflow engine providing durable and highly resilient execution engine for applications and AI Agents"
+    },
+    {
+      "full_name": "ityouknow/spring-boot-examples",
+      "html_url": "https://github.com/ityouknow/spring-boot-examples",
+      "default_branch": "master",
+      "stargazers_count": 30589,
+      "size_kb": 1074,
+      "language": "Java",
+      "description": "about learning Spring Boot via examples. Spring Boot 教程、技术栈示例代码，快速简单上手教程。 "
+    },
+    {
+      "full_name": "apolloconfig/apollo",
+      "html_url": "https://github.com/apolloconfig/apollo",
+      "default_branch": "master",
+      "stargazers_count": 29767,
+      "size_kb": 57514,
+      "language": "Java",
+      "description": "Apollo is a reliable configuration management system suitable for microservice configuration management scenarios."
+    },
+    {
+      "full_name": "wuyouzhuguli/SpringAll",
+      "html_url": "https://github.com/wuyouzhuguli/SpringAll",
+      "default_branch": "master",
+      "stargazers_count": 28983,
+      "size_kb": 1069,
+      "language": "Java",
+      "description": "循序渐进，学习Spring Boot、Spring Boot & Shiro、Spring Batch、Spring Cloud、Spring Cloud Alibaba、Spring Security & Spring Security OAuth2，博客Spring系列源码：https://mrbird.cc"
+    },
+    {
+      "full_name": "elunez/eladmin",
+      "html_url": "https://github.com/elunez/eladmin",
+      "default_branch": "master",
+      "stargazers_count": 21926,
+      "size_kb": 7523,
+      "language": "Java",
+      "description": "eladmin jpa 版本：项目基于 Spring Boot 2.7.18、 Jpa、 Spring Security、Redis、Vue的前后端分离的后台管理系统，项目采用分模块开发方式， 权限控制采用 RBAC，支持数据字典与数据权限管理，支持一键生成前后端代码，支持动态路由"
+    },
+    {
+      "full_name": "linlinjava/litemall",
+      "html_url": "https://github.com/linlinjava/litemall",
+      "default_branch": "master",
+      "stargazers_count": 20255,
+      "size_kb": 24614,
+      "language": "Java",
+      "description": "又一个小商城。litemall = Spring Boot后端 + Vue管理员前端 + 微信小程序用户前端 + Vue用户移动端"
+    },
+    {
+      "full_name": "yudaocode/SpringBoot-Labs",
+      "html_url": "https://github.com/yudaocode/SpringBoot-Labs",
+      "default_branch": "master",
+      "stargazers_count": 20098,
+      "size_kb": 1813,
+      "language": "Java",
+      "description": "一个涵盖六个专栏：Spring Boot 2.X、Spring Cloud、Spring Cloud Alibaba、Dubbo、分布式消息队列、分布式事务的仓库。希望胖友小手一抖，右上角来个 Star，感恩 1024"
+    },
+    {
+      "full_name": "forezp/SpringCloudLearning",
+      "html_url": "https://github.com/forezp/SpringCloudLearning",
+      "default_branch": "master",
+      "stargazers_count": 17952,
+      "size_kb": 582,
+      "language": "Java",
+      "description": "《史上最简单的Spring Cloud教程源码》"
+    },
+    {
+      "full_name": "JeffLi1993/springboot-learning-example",
+      "html_url": "https://github.com/JeffLi1993/springboot-learning-example",
+      "default_branch": "master",
+      "stargazers_count": 16576,
+      "size_kb": 407,
+      "language": "Java",
+      "description": "spring boot 实践学习案例，是 spring boot 初学者及核心技术巩固的最佳实践。"
+    },
+    {
+      "full_name": "dyc87112/SpringBoot-Learning",
+      "html_url": "https://github.com/dyc87112/SpringBoot-Learning",
+      "default_branch": "master",
+      "stargazers_count": 15745,
+      "size_kb": 34384,
+      "language": "Java",
+      "description": "《Spring Boot基础教程》，2.x版本持续连载中！点击下方链接直达教程目录！"
+    },
+    {
+      "full_name": "sqshq/piggymetrics",
+      "html_url": "https://github.com/sqshq/piggymetrics",
+      "default_branch": "master",
+      "stargazers_count": 13917,
+      "size_kb": 1512,
+      "language": "Java",
+      "description": "Microservice Architecture with Spring Boot, Spring Cloud and Docker"
+    },
+    {
+      "full_name": "macrozheng/mall-swarm",
+      "html_url": "https://github.com/macrozheng/mall-swarm",
+      "default_branch": "master",
+      "stargazers_count": 12956,
+      "size_kb": 54617,
+      "language": "Java",
+      "description": "mall-swarm是一套微服务商城系统，采用了 Spring Cloud Alibaba、Spring Boot 3.5、Sa-Token、MyBatis、Elasticsearch、Docker、Kubernetes等核心技术，同时提供了基于Vue的管理后台方便快速搭建系统。mall-swarm在电商业务的基础集成了注册中心、配置中心、监控中心、网关等系统功能。"
+    },
+    {
+      "full_name": "codecentric/spring-boot-admin",
+      "html_url": "https://github.com/codecentric/spring-boot-admin",
+      "default_branch": "master",
+      "stargazers_count": 12831,
+      "size_kb": 97813,
+      "language": "Java",
+      "description": "Admin UI for administration of spring boot applications"
+    },
+    {
+      "full_name": "Netflix/conductor",
+      "html_url": "https://github.com/Netflix/conductor",
+      "default_branch": "main",
+      "stargazers_count": 12775,
+      "size_kb": 29469,
+      "language": "Java",
+      "description": "Conductor is a microservices orchestration engine."
+    },
+    {
+      "full_name": "langchain4j/langchain4j",
+      "html_url": "https://github.com/langchain4j/langchain4j",
+      "default_branch": "main",
+      "stargazers_count": 12064,
+      "size_kb": 31794,
+      "language": "Java",
+      "description": "LangChain4j is an idiomatic, open-source Java library for building LLM-powered applications on the JVM. It offers a unified API over popular LLM providers and vector stores, and makes implementing tool calling (including MCP support), agents and RAG easy. It integrates seamlessly with enterprise Java frameworks like Quarkus and Spring Boot."
+    },
+    {
+      "full_name": "newbee-ltd/newbee-mall",
+      "html_url": "https://github.com/newbee-ltd/newbee-mall",
+      "default_branch": "master",
+      "stargazers_count": 11566,
+      "size_kb": 36245,
+      "language": "Java",
+      "description": "🔥 🎉newbee-mall是一套电商系统，包括基础版本(Spring Boot+Thymeleaf)、前后端分离版本(Spring Boot+Vue 3+Element-Plus+Vue-Router 4+Pinia+Vant 4) 、秒杀版本、Go语言版本、微服务版本(Spring Cloud Alibaba+Nacos+Sentinel+Seata+Spring Cloud Gateway+OpenFeign+ELK)。 前台商城系统包含首页门户、商品分类、新品上线、首页轮播、商品推荐、商品搜索、商品展示、购物车、订单结算、订单流程、个人订单管理、会员中心、帮助中心等模块。 后台管理系统包含数据面板、轮播图管理、商品管理、订单管理、会员管理、分类管理、设置等模块。"
+    },
+    {
+      "full_name": "zfile-dev/zfile",
+      "html_url": "https://github.com/zfile-dev/zfile",
+      "default_branch": "main",
+      "stargazers_count": 10746,
+      "size_kb": 40800,
+      "language": "Java",
+      "description": "在线云盘、网盘、OneDrive、云存储、私有云、对象存储、h5ai、上传、下载"
+    },
+    {
+      "full_name": "xuchengsheng/spring-reading",
+      "html_url": "https://github.com/xuchengsheng/spring-reading",
+      "default_branch": "master",
+      "stargazers_count": 9923,
+      "size_kb": 2808,
+      "language": "Java",
+      "description": "涵盖了 Spring 框架的核心概念和关键功能，包括控制反转（IOC）容器的使用，面向切面编程（AOP）的原理与实践，事务管理的方式与实现，Spring MVC 的流程与控制器工作机制，以及 Spring 中数据访问、安全、Boot 自动配置等方面的深入研究。此外，它还包含了 Spring 事件机制的应用、高级主题如缓存抽象和响应式编程，以及对 Spring 源码的编程风格与设计模式的深入探讨。"
+    },
+    {
+      "full_name": "hs-web/hsweb-framework",
+      "html_url": "https://github.com/hs-web/hsweb-framework",
+      "default_branch": "5.0.x",
+      "stargazers_count": 8399,
+      "size_kb": 34400,
+      "language": "Java",
+      "description": "hsweb (haʊs wɛb) 是一个基于spring-boot 2.x开发 ,首个使用全响应式编程的企业级后台管理系统基础项目。"
+    },
+    {
+      "full_name": "dyc87112/SpringCloud-Learning",
+      "html_url": "https://github.com/dyc87112/SpringCloud-Learning",
+      "default_branch": "master",
+      "stargazers_count": 7386,
+      "size_kb": 1265,
+      "language": "Java",
+      "description": "Spring Cloud基础教程，持续连载更新中"
+    },
+    {
+      "full_name": "macrozheng/springcloud-learning",
+      "html_url": "https://github.com/macrozheng/springcloud-learning",
+      "default_branch": "master",
+      "stargazers_count": 6927,
+      "size_kb": 261,
+      "language": "Java",
+      "description": "2024最新微服务实战教程，Spring Cloud组件、微服务项目实战、Kubernetes容器化部署全方位解析。技术栈：Spring Cloud Alibaba + Spring Boot 3.2 + JDK 17。"
+    },
+    {
+      "full_name": "527515025/springBoot",
+      "html_url": "https://github.com/527515025/springBoot",
+      "default_branch": "master",
+      "stargazers_count": 6778,
+      "size_kb": 868,
+      "language": "Java",
+      "description": "springboot 框架与其它组件结合如 jpa、mybatis、websocket、security、shiro、cache等"
+    },
+    {
+      "full_name": "pig-mesh/pig",
+      "html_url": "https://github.com/pig-mesh/pig",
+      "default_branch": "master",
+      "stargazers_count": 6629,
+      "size_kb": 39753,
+      "language": "Java",
+      "description": "↥ ↥ ↥ Follow for updates An RBAC permission management system based on Spring Cloud 2025, Spring Boot 4, and OAuth2."
+    },
+    {
+      "full_name": "jetlinks/jetlinks-community",
+      "html_url": "https://github.com/jetlinks/jetlinks-community",
+      "default_branch": "2.11",
+      "stargazers_count": 6494,
+      "size_kb": 72559,
+      "language": "Java",
+      "description": "JetLinks  基于Java,Spring Boot ,WebFlux,Netty,Vert.x,Reactor等开发, 是一个全响应式的企业级物联网平台。支持统一物模型管理,多种设备,多种厂家,统一管理。统一设备连接管理,多协议适配(TCP,MQTT,UDP,CoAP,HTTP等),屏蔽网络编程复杂性,灵活接入不同厂家不同协议等设备。实时数据处理,设备告警,消息通知,数据转发。地理位置,数据可视化等。能帮助你快速建立物联网相关业务系统。"
+    },
+    {
+      "full_name": "DerekYRC/mini-spring",
+      "html_url": "https://github.com/DerekYRC/mini-spring",
+      "default_branch": "main",
+      "stargazers_count": 6358,
+      "size_kb": 1103,
+      "language": "Java",
+      "description": "mini-spring is a simplified version of the Spring framework that helps you quickly familiarize yourself with Spring source code and master Spring's core principles. It extracts Spring's core logic with extremely simplified code while preserving Spring's core functionality."
+    },
+    {
+      "full_name": "springfox/springfox",
+      "html_url": "https://github.com/springfox/springfox",
+      "default_branch": "master",
+      "stargazers_count": 5935,
+      "size_kb": 186279,
+      "language": "Java",
+      "description": "Automated JSON API documentation for API's built with Spring"
+    },
+    {
+      "full_name": "ZHENFENG13/spring-boot-projects",
+      "html_url": "https://github.com/ZHENFENG13/spring-boot-projects",
+      "default_branch": "main",
+      "stargazers_count": 5728,
+      "size_kb": 14626,
+      "language": "Java",
+      "description": ":fire: 该仓库中主要是 Spring Boot 的入门学习教程以及一些常用的 Spring Boot 实战项目教程，包括 Spring Boot 使用的各种示例代码，同时也包括一些实战项目的项目源码和效果展示，实战项目包括基本的 web 开发以及目前大家普遍使用的线上博客项目/企业大型商城系统/前后端分离实践项目等，摆脱各种 hello world 入门案例的束缚，真正的掌握 Spring Boot 开发。"
+    },
+    {
+      "full_name": "201206030/novel",
+      "html_url": "https://github.com/201206030/novel",
+      "default_branch": "master",
+      "stargazers_count": 5724,
+      "size_kb": 99486,
+      "language": "Java",
+      "description": "novel 是一套基于时下最新 Java 技术栈 Spring Boot 3 + Vue 3 开发的前后端分离学习型小说项目，配备保姆级教程手把手教你从零开始开发上线一套生产级别的 Java 系统，由小说门户系统、作家后台管理系统、平台后台管理系统等多个子系统构成。包括小说推荐、作品检索、小说排行榜、小说阅读、小说评论、会员中心、作家专区、充值订阅、新闻发布等功能。"
+    },
+    {
+      "full_name": "rubenlagus/TelegramBots",
+      "html_url": "https://github.com/rubenlagus/TelegramBots",
+      "default_branch": "master",
+      "stargazers_count": 5445,
+      "size_kb": 4124,
+      "language": "Java",
+      "description": "Java library to create bots using Telegram Bots API"
+    },
+    {
+      "full_name": "apache/dubbo-spring-boot-project",
+      "html_url": "https://github.com/apache/dubbo-spring-boot-project",
+      "default_branch": "master",
+      "stargazers_count": 5392,
+      "size_kb": 1555,
+      "language": "Java",
+      "description": "Spring Boot Project for Apache Dubbo"
+    },
+    {
+      "full_name": "baomidou/dynamic-datasource",
+      "html_url": "https://github.com/baomidou/dynamic-datasource",
+      "default_branch": "master",
+      "stargazers_count": 5169,
+      "size_kb": 1404,
+      "language": "Java",
+      "description": "dynamic datasource for springboot 多数据源 动态数据源 主从分离 读写分离 分布式事务 "
+    },
+    {
+      "full_name": "sofastack/sofa-boot",
+      "html_url": "https://github.com/sofastack/sofa-boot",
+      "default_branch": "master",
+      "stargazers_count": 5075,
+      "size_kb": 4868,
+      "language": "Java",
+      "description": "SOFABoot is a framework that enhances Spring Boot and fully compatible with it, provides readiness check, class isolation, etc."
+    },
+    {
+      "full_name": "javastacks/spring-boot-best-practice",
+      "html_url": "https://github.com/javastacks/spring-boot-best-practice",
+      "default_branch": "master",
+      "stargazers_count": 5062,
+      "size_kb": 440,
+      "language": "Java",
+      "description": "Spring Boot 最佳实践，已适配 Spring Boot 4.x，包括自动配置、核心原理、源码分析、国际化支持、调试、日志集成、热部署等。"
+    },
+    {
+      "full_name": "spring-cloud/spring-cloud-netflix",
+      "html_url": "https://github.com/spring-cloud/spring-cloud-netflix",
+      "default_branch": "main",
+      "stargazers_count": 4967,
+      "size_kb": 21151,
+      "language": "Java",
+      "description": "Integration with Netflix OSS components"
+    },
+    {
+      "full_name": "spring-cloud/spring-cloud-gateway",
+      "html_url": "https://github.com/spring-cloud/spring-cloud-gateway",
+      "default_branch": "main",
+      "stargazers_count": 4874,
+      "size_kb": 15421,
+      "language": "Java",
+      "description": "An API Gateway built on Spring Framework and Spring Boot providing routing and more."
+    },
+    {
+      "full_name": "hansonwang99/Spring-Boot-In-Action",
+      "html_url": "https://github.com/hansonwang99/Spring-Boot-In-Action",
+      "default_branch": "master",
+      "stargazers_count": 4680,
+      "size_kb": 15827,
+      "language": "Java",
+      "description": "Spring Boot 系列实战合集"
+    },
+    {
+      "full_name": "Heeexy/SpringBoot-Shiro-Vue",
+      "html_url": "https://github.com/Heeexy/SpringBoot-Shiro-Vue",
+      "default_branch": "master",
+      "stargazers_count": 4671,
+      "size_kb": 423,
+      "language": "Java",
+      "description": "提供一套基于Spring Boot-Shiro-Vue的权限管理思路.前后端都加以控制,做到按钮/接口级别的权限。（当前新版本已移除shiro依赖，简化了配置）"
+    },
+    {
+      "full_name": "s4kibs4mi/java-developer-roadmap",
+      "html_url": "https://github.com/s4kibs4mi/java-developer-roadmap",
+      "default_branch": "main",
+      "stargazers_count": 4479,
+      "size_kb": 9029,
+      "language": "Java",
+      "description": "Roadmap to becoming a Java developer in 2026"
+    },
+    {
+      "full_name": "mybatis/spring-boot-starter",
+      "html_url": "https://github.com/mybatis/spring-boot-starter",
+      "default_branch": "master",
+      "stargazers_count": 4251,
+      "size_kb": 16538,
+      "language": "Java",
+      "description": "MyBatis integration with Spring Boot"
+    },
+    {
+      "full_name": "lilishop/lilishop",
+      "html_url": "https://github.com/lilishop/lilishop",
+      "default_branch": "master",
+      "stargazers_count": 4196,
+      "size_kb": 49934,
+      "language": "Java",
+      "description": "Java 开源商城系统，基于 Spring Boot / Spring Cloud / Vue / Uniapp 的 B2B2C 多商户商城源码，支持小程序商城、微服务、分销、直播、秒杀、Docker 私有化部署。"
+    },
+    {
+      "full_name": "ZHENFENG13/My-Blog",
+      "html_url": "https://github.com/ZHENFENG13/My-Blog",
+      "default_branch": "master",
+      "stargazers_count": 3894,
+      "size_kb": 30373,
+      "language": "Java",
+      "description": ":palm_tree::octocat:A simple & beautiful blogging system implemented with spring-boot & thymeleaf & mybatis My Blog 是由 SpringBoot + Mybatis + Thymeleaf 等技术实现的 Java 博客系统，页面美观、功能齐全、部署简单及完善的代码，一定会给使用者无与伦比的体验"
+    },
+    {
+      "full_name": "Exrick/xboot",
+      "html_url": "https://github.com/Exrick/xboot",
+      "default_branch": "master",
+      "stargazers_count": 3893,
+      "size_kb": 5309,
+      "language": "Java",
+      "description": "基于Spring Boot 2.x的一站式前后端分离快速开发平台XBoot 微信小程序+Uniapp 前端：Vue+iView Admin 后端：Spring Boot 2.x/Spring Security/JWT/JPA+Mybatis-Plus/Redis/Elasticsearch/Activiti 分布式限流/同步锁/验证码/SnowFlake雪花算法ID 动态权限 数据权限 工作流 代码生成 定时任务 社交账号 短信登录 单点登录 OAuth2开放平台 客服机器人 数据大屏 暗黑模式"
+    },
+    {
+      "full_name": "Atmosphere/atmosphere",
+      "html_url": "https://github.com/Atmosphere/atmosphere",
+      "default_branch": "main",
+      "stargazers_count": 3766,
+      "size_kb": 185071,
+      "language": "Java",
+      "description": "Real-time transport layer for Java AI agents. Build once with @Agent — deliver over WebSocket, SSE, gRPC, and WebTransport/HTTP3. Talk MCP, A2A and AG-UI. "
+    },
+    {
+      "full_name": "1024-lab/smart-admin",
+      "html_url": "https://github.com/1024-lab/smart-admin",
+      "default_branch": "master",
+      "stargazers_count": 3718,
+      "size_kb": 36447,
+      "language": "Java",
+      "description": "SmartAdmin国内首个以「高质量代码」为核心，「简洁、高效、安全」快速开发平台；基于SpringBoot2/3 + Sa-Token + Mybatis-Plus 和 Vue3 + Vite5 + Ant Design Vue 4.x (同时支持JavaScript和TypeScript双版本)；满足国家三级等保要求、支持登录限制、接口数据国产加解密、高防SQL注入等一系列安全体系。"
+    },
+    {
+      "full_name": "springdoc/springdoc-openapi",
+      "html_url": "https://github.com/springdoc/springdoc-openapi",
+      "default_branch": "main",
+      "stargazers_count": 3709,
+      "size_kb": 17080,
+      "language": "Java",
+      "description": "Library for OpenAPI 3 with spring-boot"
+    },
+    {
+      "full_name": "grpc-ecosystem/grpc-spring",
+      "html_url": "https://github.com/grpc-ecosystem/grpc-spring",
+      "default_branch": "master",
+      "stargazers_count": 3708,
+      "size_kb": 3937,
+      "language": "Java",
+      "description": "Spring Boot starter module for gRPC framework."
+    },
+    {
+      "full_name": "spring-cloud/spring-cloud-kubernetes",
+      "html_url": "https://github.com/spring-cloud/spring-cloud-kubernetes",
+      "default_branch": "main",
+      "stargazers_count": 3531,
+      "size_kb": 61813,
+      "language": "Java",
+      "description": "Kubernetes integration with Spring Cloud Discovery Client, Configuration, etc..."
+    },
+    {
+      "full_name": "lenve/JavaEETest",
+      "html_url": "https://github.com/lenve/JavaEETest",
+      "default_branch": "master",
+      "stargazers_count": 3505,
+      "size_kb": 27714,
+      "language": "Java",
+      "description": "Spring、SpringMVC、MyBatis、Spring Boot案例"
+    },
+    {
+      "full_name": "java-aodeng/hope-boot",
+      "html_url": "https://github.com/java-aodeng/hope-boot",
+      "default_branch": "master",
+      "stargazers_count": 3245,
+      "size_kb": 13976,
+      "language": "Java",
+      "description": "🌱 一款现代化的脚手架项目"
+    },
+    {
+      "full_name": "grimmory-tools/grimmory",
+      "html_url": "https://github.com/grimmory-tools/grimmory",
+      "default_branch": "develop",
+      "stargazers_count": 3212,
+      "size_kb": 58253,
+      "language": "Java",
+      "description": "Grimmory is an independent community fork of Booklore."
+    },
+    {
+      "full_name": "szerhusenBC/jwt-spring-security-demo",
+      "html_url": "https://github.com/szerhusenBC/jwt-spring-security-demo",
+      "default_branch": "master",
+      "stargazers_count": 3106,
+      "size_kb": 328,
+      "language": "Java",
+      "description": "A demo for using JWT (Json Web Token) with Spring Security and Spring Boot 2"
+    },
+    {
+      "full_name": "itwanger/paicoding",
+      "html_url": "https://github.com/itwanger/paicoding",
+      "default_branch": "main",
+      "stargazers_count": 3096,
+      "size_kb": 39952,
+      "language": "Java",
+      "description": "⭐️一款好用又强大的开源社区，基于 Spring Boot、MyBatis-Plus、MySQL、Redis、ElasticSearch、MongoDB、Docker、RabbitMQ 等主流技术栈，附详细教程，包括Java、Spring、MySQL、Redis、微服务&分布式、消息队列等核心知识点。学编程，就上技术派😁。"
+    },
+    {
+      "full_name": "ulisesbocchio/jasypt-spring-boot",
+      "html_url": "https://github.com/ulisesbocchio/jasypt-spring-boot",
+      "default_branch": "master",
+      "stargazers_count": 3077,
+      "size_kb": 597,
+      "language": "Java",
+      "description": "Jasypt integration for Spring boot"
+    },
+    {
+      "full_name": "yizhiwazi/springboot-socks",
+      "html_url": "https://github.com/yizhiwazi/springboot-socks",
+      "default_branch": "master",
+      "stargazers_count": 2838,
+      "size_kb": 3038,
+      "language": "Java",
+      "description": "SpringBoot 使用教程 | 从入门到上瘾 |  基于2.0版本制作 "
+    },
+    {
+      "full_name": "codedrinker/community",
+      "html_url": "https://github.com/codedrinker/community",
+      "default_branch": "master",
+      "stargazers_count": 2783,
+      "size_kb": 4671,
+      "language": "Java",
+      "description": "开源论坛、问答系统，现有功能提问、回复、通知、最新、最热、消除零回复功能。功能持续更新中…… 技术栈 Spring、Spring Boot、MyBatis、MySQL/H2、Bootstrap"
+    },
+    {
+      "full_name": "vector4wang/spring-boot-quick",
+      "html_url": "https://github.com/vector4wang/spring-boot-quick",
+      "default_branch": "master",
+      "stargazers_count": 2769,
+      "size_kb": 5438,
+      "language": "Java",
+      "description": ":herb: 基于springboot的快速学习示例,整合自己遇到的开源框架,如：rabbitmq(延迟队列)、Kafka、jpa、redies、oauth2、swagger、jsp、docker、k3s、k3d、k8s、mybatis加解密插件、异常处理、日志输出、多模块开发、多环境打包、缓存cache、爬虫、jwt、GraphQL、dubbo、zookeeper和Async等等:pushpin:"
+    },
+    {
+      "full_name": "spring-attic/spring-native",
+      "html_url": "https://github.com/spring-attic/spring-native",
+      "default_branch": "main",
+      "stargazers_count": 2702,
+      "size_kb": 11685,
+      "language": "Java",
+      "description": "Spring Native is now superseded by Spring Boot 3 official native support"
+    },
+    {
+      "full_name": "Naccl/NBlog",
+      "html_url": "https://github.com/Naccl/NBlog",
+      "default_branch": "master",
+      "stargazers_count": 2695,
+      "size_kb": 13542,
+      "language": "Java",
+      "description": "🍓 Spring Boot + Vue 前后端分离博客系统 https://naccl.top"
+    },
+    {
+      "full_name": "yzcheng90/x-springboot",
+      "html_url": "https://github.com/yzcheng90/x-springboot",
+      "default_branch": "master",
+      "stargazers_count": 2691,
+      "size_kb": 4662,
+      "language": "Java",
+      "description": "X-SpringBoot是一个轻量级的Java快速开发平台，基于springboot3和jdk21，使用虚拟线程，可配置的SaaS功能具备RBAC功能、自动代码生成、多种存储系统，多种短信平台，可开放api授权。代码简洁，架构清晰，能快速开发项目并交付【接私活利器】"
+    },
+    {
+      "full_name": "lxy-go/SpringBoot",
+      "html_url": "https://github.com/lxy-go/SpringBoot",
+      "default_branch": "master",
+      "stargazers_count": 2686,
+      "size_kb": 39579,
+      "language": "Java",
+      "description": "这是一个SpringBoot的从入门程序集锦"
+    },
+    {
+      "full_name": "vladmihalcea/hypersistence-utils",
+      "html_url": "https://github.com/vladmihalcea/hypersistence-utils",
+      "default_branch": "master",
+      "stargazers_count": 2651,
+      "size_kb": 2723,
+      "language": "Java",
+      "description": "The Hypersistence Utils library (previously known as Hibernate Types) gives you Spring and Hibernate utilities that can help you get the most out of your data access layer."
+    },
+    {
+      "full_name": "prontera/spring-cloud-rest-tcc",
+      "html_url": "https://github.com/prontera/spring-cloud-rest-tcc",
+      "default_branch": "master",
+      "stargazers_count": 2545,
+      "size_kb": 7004,
+      "language": "Java",
+      "description": "以Spring Cloud Netflix作为服务治理基础, 展示基于tcc思想所实现的分布式事务解决方案"
+    },
+    {
+      "full_name": "geekidea/spring-boot-plus",
+      "html_url": "https://github.com/geekidea/spring-boot-plus",
+      "default_branch": "master",
+      "stargazers_count": 2525,
+      "size_kb": 8477,
+      "language": "Java",
+      "description": ":fire: Spring-Boot-Plus is an easy-to-use, high-speed, high-efficient,feature-rich, open source spring boot scaffolding. :rocket:"
+    },
+    {
+      "full_name": "techa03/goodsKill",
+      "html_url": "https://github.com/techa03/goodsKill",
+      "default_branch": "main",
+      "stargazers_count": 2376,
+      "size_kb": 18391,
+      "language": "Java",
+      "description": "🐎基于SpringCloud 2023.x + Dubbo 3.x + AI构建的模拟秒杀微服务项目，集成了Elasticsearch🔍、Gateway、Mybatis-Plus、Sharding-JDBC等常用开源组件"
+    },
+    {
+      "full_name": "youlaitech/youlai-mall",
+      "html_url": "https://github.com/youlaitech/youlai-mall",
+      "default_branch": "master",
+      "stargazers_count": 2340,
+      "size_kb": 146763,
+      "language": "Java",
+      "description": "🚀基于 Spring Boot 3、Spring Cloud & Alibaba 2022、SAS OAuth2 、Vue3、Element-Plus、uni-app 构建的开源全栈商城。"
+    },
+    {
+      "full_name": "forezp/SpringBootLearning",
+      "html_url": "https://github.com/forezp/SpringBootLearning",
+      "default_branch": "master",
+      "stargazers_count": 2326,
+      "size_kb": 299,
+      "language": "Java",
+      "description": "《Spring Boot教程》源码"
+    },
+    {
+      "full_name": "liyupi/yu-ai-agent",
+      "html_url": "https://github.com/liyupi/yu-ai-agent",
+      "default_branch": "master",
+      "stargazers_count": 2290,
+      "size_kb": 287,
+      "language": "Java",
+      "description": "编程导航 2025 年 AI 开发实战新项目，基于 Spring Boot 3 + Java 21 + Spring AI 构建 AI 恋爱大师应用和 ReAct 模式自主规划智能体YuManus，覆盖 AI 大模型接入、Spring AI 核心特性、Prompt 工程和优化、RAG 检索增强、向量数据库、Tool Calling 工具调用、MCP 模型上下文协议、AI Agent 开发（Manas Java 实现）、Cursor AI 工具等核心知识。用一套教程将程序员必知必会的 AI 技术一网打尽，帮你成为 AI 时代企业的香饽饽，给你的简历和求职大幅增加竞争力。"
+    },
+    {
+      "full_name": "LogNet/grpc-spring-boot-starter",
+      "html_url": "https://github.com/LogNet/grpc-spring-boot-starter",
+      "default_branch": "master",
+      "stargazers_count": 2264,
+      "size_kb": 17137,
+      "language": "Java",
+      "description": "Spring Boot starter module for gRPC  framework. "
+    },
+    {
+      "full_name": "bz51/SpringBoot-Dubbo-Docker-Jenkins",
+      "html_url": "https://github.com/bz51/SpringBoot-Dubbo-Docker-Jenkins",
+      "default_branch": "master",
+      "stargazers_count": 2244,
+      "size_kb": 457,
+      "language": "Java",
+      "description": "基于SpringBoot+Dubbo的微服务框架（借助Docker+Jenkins实现自动化、容器化部署）"
+    },
+    {
+      "full_name": "lets-mica/mica",
+      "html_url": "https://github.com/lets-mica/mica",
+      "default_branch": "master",
+      "stargazers_count": 2237,
+      "size_kb": 55685,
+      "language": "Java",
+      "description": "Spring Cloud 微服务开发核心工具集。工具类、验证码、http、redis、ip2region、xss 等，开箱即用。 🔝 🔝 记得右上角点个star 关注更新！"
+    },
+    {
+      "full_name": "hncboy/ai-beehive",
+      "html_url": "https://github.com/hncboy/ai-beehive",
+      "default_branch": "main",
+      "stargazers_count": 2218,
+      "size_kb": 3913,
+      "language": "Java",
+      "description": "AI 蜂巢，基于 Java 使用 Spring Boot 3 和 JDK 17，支持的功能有 ChatGPT、OpenAi Image、Midjourney、NewBing、文心一言等等"
+    },
+    {
+      "full_name": "moshowgame/SpringBootCodeGenerator",
+      "html_url": "https://github.com/moshowgame/SpringBootCodeGenerator",
+      "default_branch": "master",
+      "stargazers_count": 2213,
+      "size_kb": 10499,
+      "language": "Java",
+      "description": "又名大狼狗代码生成器，基于SpringBoot2+Freemarker的JAVA代码生成器，以释放双手为目的，支持mysql/oracle/pgsql三大数据库， 用DDL-SQL语句生成JPA/JdbcTemplate/Mybatis/MybatisPlus/BeetlSQL等相关代码."
+    },
+    {
+      "full_name": "Snailclimb/interview-guide",
+      "html_url": "https://github.com/Snailclimb/interview-guide",
+      "default_branch": "master",
+      "stargazers_count": 2183,
+      "size_kb": 7267,
+      "language": "Java",
+      "description": "基于 Spring Boot 4.0 + Java 21 + Spring AI + PostgreSQL + pgvector + RustFS + Redis，实现简历智能分析、AI模拟面试、知识库RAG检索等核心功能。非常适合作为学习和简历项目，学习门槛低。"
+    },
+    {
+      "full_name": "xubinux/xbin-store",
+      "html_url": "https://github.com/xubinux/xbin-store",
+      "default_branch": "master",
+      "stargazers_count": 2137,
+      "size_kb": 22036,
+      "language": "Java",
+      "description": "模仿国内知名B2C网站,实现的一个分布式B2C商城 使用Spring Boot 自动配置 Dubbox / MVC / MyBatis / Druid / Solr / Redis 等。使用Spring Cloud版本请查看"
+    },
+    {
+      "full_name": "zhangxd1989/spring-boot-cloud",
+      "html_url": "https://github.com/zhangxd1989/spring-boot-cloud",
+      "default_branch": "master",
+      "stargazers_count": 2125,
+      "size_kb": 1295,
+      "language": "Java",
+      "description": "基于 Spring Boot、Spring Cloud、Spring Oauth2 和 Spring Cloud Netflix 等框架构建的微服务项目"
+    },
+    {
+      "full_name": "jonashackt/spring-boot-vuejs",
+      "html_url": "https://github.com/jonashackt/spring-boot-vuejs",
+      "default_branch": "master",
+      "stargazers_count": 2125,
+      "size_kb": 27247,
+      "language": "Java",
+      "description": "Example project showing how to build a Spring Boot App providing a GUI with Vue.js"
+    },
+    {
+      "full_name": "SpringForAll/spring-boot-starter-swagger",
+      "html_url": "https://github.com/SpringForAll/spring-boot-starter-swagger",
+      "default_branch": "master",
+      "stargazers_count": 2108,
+      "size_kb": 224,
+      "language": "Java",
+      "description": "自制spring boot starter for swagger 2.x，来试试吧，很好用哦~"
+    },
+    {
+      "full_name": "ityouknow/spring-boot-leaning",
+      "html_url": "https://github.com/ityouknow/spring-boot-leaning",
+      "default_branch": "master",
+      "stargazers_count": 2096,
+      "size_kb": 528,
+      "language": "Java",
+      "description": "Spring Boot 2.X 最全课程代码"
+    },
+    {
+      "full_name": "speedment/speedment",
+      "html_url": "https://github.com/speedment/speedment",
+      "default_branch": "master",
+      "stargazers_count": 2094,
+      "size_kb": 26439,
+      "language": "Java",
+      "description": "Speedment is a Stream ORM Java Toolkit and Runtime"
+    },
+    {
+      "full_name": "zalando/logbook",
+      "html_url": "https://github.com/zalando/logbook",
+      "default_branch": "main",
+      "stargazers_count": 2042,
+      "size_kb": 7349,
+      "language": "Java",
+      "description": "An extensible Java library for HTTP request and response logging"
+    },
+    {
+      "full_name": "spring-cloud/spring-cloud-config",
+      "html_url": "https://github.com/spring-cloud/spring-cloud-config",
+      "default_branch": "main",
+      "stargazers_count": 2035,
+      "size_kb": 41036,
+      "language": "Java",
+      "description": "External configuration (server and client) for Spring Cloud"
+    },
+    {
+      "full_name": "loda-kun/spring-boot-learning",
+      "html_url": "https://github.com/loda-kun/spring-boot-learning",
+      "default_branch": "master",
+      "stargazers_count": 2031,
+      "size_kb": 1072,
+      "language": "Java",
+      "description": "🍀 Hướng dẫn tất tần tật về Spring Boot, Spring Cloud ☘️ Code mẫu tiếng việt, có bài viết hướng dẫn đi kèm hình ảnh dễ hiểu 🍄"
+    },
+    {
+      "full_name": "RameshMF/spring-boot-tutorial",
+      "html_url": "https://github.com/RameshMF/spring-boot-tutorial",
+      "default_branch": "master",
+      "stargazers_count": 2016,
+      "size_kb": 1697,
+      "language": "Java",
+      "description": "100+ Spring Boot Articles, Tutorials, Video tutorials,  Projects, Guides, Source code examples etc"
+    },
+    {
+      "full_name": "binarywang/weixin-java-mp-demo",
+      "html_url": "https://github.com/binarywang/weixin-java-mp-demo",
+      "default_branch": "master",
+      "stargazers_count": 2015,
+      "size_kb": 3149,
+      "language": "Java",
+      "description": "基于Spring Boot 和 WxJava 实现的微信公众号Java后端Demo，支持多公众号"
+    },
+    {
+      "full_name": "xuxueli/xxl-sso",
+      "html_url": "https://github.com/xuxueli/xxl-sso",
+      "default_branch": "master",
+      "stargazers_count": 2010,
+      "size_kb": 4600,
+      "language": "Java",
+      "description": "A distributed single-sign-on framework.（单点登录框架XXL-SSO）"
+    },
+    {
+      "full_name": "boylegu/SpringBoot-vue",
+      "html_url": "https://github.com/boylegu/SpringBoot-vue",
+      "default_branch": "master",
+      "stargazers_count": 1990,
+      "size_kb": 33858,
+      "language": "Java",
+      "description": "A example demo base SpringBooot with vueJS2.x + webpack2.x as Java full stack web practice"
+    },
+    {
+      "full_name": "davidfantasy/mybatis-plus-generator-ui",
+      "html_url": "https://github.com/davidfantasy/mybatis-plus-generator-ui",
+      "default_branch": "master",
+      "stargazers_count": 1982,
+      "size_kb": 2411,
+      "language": "Java",
+      "description": "对mybatis-plus-generator进行封装，通过Web UI快速生成兼容Spring boot，mybatis-plus框架的各类业务代码"
+    },
+    {
+      "full_name": "shzlw/poli",
+      "html_url": "https://github.com/shzlw/poli",
+      "default_branch": "master",
+      "stargazers_count": 1978,
+      "size_kb": 22745,
+      "language": "Java",
+      "description": "An easy-to-use BI server built for SQL lovers. Power data analysis in SQL and gain faster business insights."
+    },
+    {
+      "full_name": "nashtech-garage/yas",
+      "html_url": "https://github.com/nashtech-garage/yas",
+      "default_branch": "main",
+      "stargazers_count": 1965,
+      "size_kb": 92397,
+      "language": "Java",
+      "description": "YAS: Yet Another Shop, a sample microservices project in Java"
+    },
+    {
+      "full_name": "javahongxi/whatsmars",
+      "html_url": "https://github.com/javahongxi/whatsmars",
+      "default_branch": "master",
+      "stargazers_count": 1960,
+      "size_kb": 13063,
+      "language": "Java",
+      "description": "Java生态研究(Spring Boot + Redis + Dubbo + RocketMQ + Elasticsearch)🔥🔥🔥🔥🔥"
+    },
+    {
+      "full_name": "atjiu/pybbs",
+      "html_url": "https://github.com/atjiu/pybbs",
+      "default_branch": "master",
+      "stargazers_count": 1955,
+      "size_kb": 57342,
+      "language": "Java",
+      "description": "更实用的Java开发的社区(论坛)，Better use of Java development community (forum)"
+    },
+    {
+      "full_name": "mercyblitz/thinking-in-spring-boot-samples",
+      "html_url": "https://github.com/mercyblitz/thinking-in-spring-boot-samples",
+      "default_branch": "master",
+      "stargazers_count": 1915,
+      "size_kb": 350,
+      "language": "Java",
+      "description": "小马哥书籍《Spring Boot 编程思想》示例工程"
+    },
+    {
+      "full_name": "LianjiaTech/retrofit-spring-boot-starter",
+      "html_url": "https://github.com/LianjiaTech/retrofit-spring-boot-starter",
+      "default_branch": "master",
+      "stargazers_count": 1910,
+      "size_kb": 1375,
+      "language": "Java",
+      "description": "A spring-boot starter for retrofit, supports rapid integration and feature enhancements.（适用于retrofit的spring-boot-starter，支持快速集成和功能增强）"
+    },
+    {
+      "full_name": "spring2go/staffjoy",
+      "html_url": "https://github.com/spring2go/staffjoy",
+      "default_branch": "master",
+      "stargazers_count": 1903,
+      "size_kb": 52659,
+      "language": "Java",
+      "description": "微服务(Microservices)和云原生架构教学案例项目，基于Spring Boot和Kubernetes技术栈"
+    },
+    {
+      "full_name": "DerekYRC/mini-spring-cloud",
+      "html_url": "https://github.com/DerekYRC/mini-spring-cloud",
+      "default_branch": "main",
+      "stargazers_count": 1900,
+      "size_kb": 1277,
+      "language": "Java",
+      "description": "mini-spring-cloud is a simplified version of the Spring Cloud framework that helps you quickly familiarize yourself with Spring Cloud source code and master its core principles. While preserving Spring Cloud's core functionality, the code is streamlined as much as possible. "
+    },
+    {
+      "full_name": "in28minutes/spring-microservices",
+      "html_url": "https://github.com/in28minutes/spring-microservices",
+      "default_branch": "master",
+      "stargazers_count": 1865,
+      "size_kb": 93130,
+      "language": "Java",
+      "description": "OLD - Microservices using Spring Boot, Spring Cloud, Docker and Kubernetes. Replaced by https://github.com/in28minutes/spring-microservices-v3"
+    }
+  ]
+}

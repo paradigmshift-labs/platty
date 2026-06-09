@@ -1,0 +1,9 @@
+{
+  "name": "react-tanstack-router-api",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@prisma/client": "^5.0.0",
+    "typescript": "^5.0.0"
+  }
+}

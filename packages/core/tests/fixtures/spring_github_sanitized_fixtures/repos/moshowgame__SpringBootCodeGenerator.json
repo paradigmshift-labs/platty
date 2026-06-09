@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "moshowgame/SpringBootCodeGenerator",
+  "htmlUrl": "https://github.com/moshowgame/SpringBootCodeGenerator",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 46,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>3.5.8</version>",
+            "</parent>",
+            "<repositories>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "<exclusions>",
+            "<exclusion>",
+            "<groupId>org.junit.vintage</groupId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-autoconfigure</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "<exclusions>",
+            "<exclusion>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-tomcat</artifactId>",
+            "</exclusion>",
+            "</exclusions>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-undertow</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-configuration-processor</artifactId>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-freemarker</artifactId>",
+            "</dependency>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "<plugin>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/softdev/system/generator/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "@SpringBootApplication(scanBasePackages = \"com.softdev.system.generator\")",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(Application.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/softdev/system/generator/config/GlobalDefaultExceptionHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@ControllerAdvice",
+            "public class GlobalDefaultExceptionHandler {",
+            "@ExceptionHandler(Exception.class)",
+            "@ResponseBody",
+            "public ResultVo defaultExceptionHandler(HttpServletRequest req, Exception e) {",
+            "e.printStackTrace();",
+            "return ResultVo.error(\"代码生成失败:\"+e.getMessage());",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/softdev/system/generator/controller/CodeGenController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 11,
+          "lines": [
+            "@Slf4j",
+            "@RequiredArgsConstructor",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "public class CodeGenController {",
+            "private final CodeGenService codeGenService;",
+            "@PostMapping(\"/__path__\")",
+            "public ResultVo generateCode(@RequestBody ParamInfo paramInfo) throws Exception {",
+            "return codeGenService.generateCode(paramInfo);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

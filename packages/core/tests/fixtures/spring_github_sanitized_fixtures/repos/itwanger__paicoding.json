@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "itwanger/paicoding",
+  "htmlUrl": "https://github.com/itwanger/paicoding",
+  "defaultBranch": "main",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "paicoding-api/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 7,
+          "lines": [
+            "<dependency>",
+            "<groupId>com.github.xiaoymin</groupId>",
+            "<artifactId>knife4j-openapi2-spring-boot-starter</artifactId>",
+            "<scope>provided</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.alibaba</groupId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "paicoding-service/src/main/java/com/github/paicoding/forum/service/pay/service/ThirdPayHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 23,
+          "lines": [
+            "@Service",
+            "public class ThirdPayHandler {",
+            "@Autowired",
+            "private List<ThirdPayIntegrationApi> payServiceList;",
+            "private ThirdPayIntegrationApi getPayService(ThirdPayWayEnum payWay) {",
+            "return payServiceList.stream().filter(s -> s.support(payWay)).findFirst()",
+            ".orElse(SpringUtil.getBean(EmailPayIntegration.class));",
+            "}",
+            "public PrePayInfoResBo createPayOrder(ThirdPayOrderReqBo payReq) {",
+            "return getPayService(payReq.getPayWay()).createOrder(payReq);",
+            "}",
+            "public PayCallbackBo queryOrder(String outTradeNo, ThirdPayWayEnum payWay) {",
+            "return getPayService(payWay).queryOrder(outTradeNo);",
+            "}",
+            "@Transactional",
+            "public PayCallbackBo payCallback(HttpServletRequest request, ThirdPayWayEnum payWay) {",
+            "return getPayService(payWay).payCallback(request);",
+            "}",
+            "@Transactional",
+            "public <T> ResponseEntity<?> refundCallback(HttpServletRequest request, ThirdPayWayEnum payWay, Function<T, Boolean> refundCallback) {",
+            "return getPayService(payWay).refundCallback(request, refundCallback);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "paicoding-web/src/main/java/com/github/paicoding/forum/web/QuickForumApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 40,
+          "lines": [
+            "@EnableCaching",
+            "@ServletComponentScan",
+            "@SpringBootApplication",
+            "public class QuickForumApplication implements WebMvcConfigurer, ApplicationRunner {",
+            "@Value(\"${server.port:8080}\")",
+            "private Integer webPort;",
+            "@Resource",
+            "@Override",
+            "public void addInterceptors(InterceptorRegistry registry) {",
+            "registry.addInterceptor(globalViewInterceptor).addPathPatterns(\"",
+            "@Override",
+            "public void addResourceHandlers(ResourceHandlerRegistry registry) {",
+            "registry.addResourceHandler(\"doc.html\").addResourceLocations(\"classpath:/META-INF/resources/\");",
+            "registry.addResourceHandler(\"/webjars",
+            "@Bean",
+            "@ConditionalOnExpression(value = \"#{'dev'.equals(environment.getProperty('env.name'))}\")",
+            "public TomcatConnectorCustomizer customServerPortTomcatConnectorCustomizer() {",
+            "int port = SocketUtil.findAvailableTcpPort(8000, 10000, webPort);",
+            "if (port != webPort) {",
+            "log.info(\"默认端口号{}被占用，随机启用新端口号: {}\", webPort, port);",
+            "@PostConstruct",
+            "public void registerLocalHostRefresh() {",
+            "dynamicConfigContainer.registerRefreshCallback(globalViewConfig, this::syncLocalHost);",
+            "}",
+            "@Override",
+            "public void run(ApplicationArguments args) {",
+            "JacksonTypeHandler.setObjectMapper(new ObjectMapper());",
+            "syncLocalHost();",
+            "}",
+            "private void syncLocalHost() {",
+            "if (!shouldSyncLocalHost()) {",
+            "return;",
+            "}",
+            "Integer actualPort = environment.getProperty(\"local.server.port\", Integer.class);",
+            "}",
+            "private boolean shouldSyncLocalHost() {",
+            "String configuredHost = globalViewConfig.getHost();",
+            "if (configuredHost == null || configuredHost.trim().isEmpty()) {",
+            "return true;",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "paicoding-web/src/main/java/com/github/paicoding/forum/web/admin/rest/AdminLoginController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 44,
+          "lines": [
+            "@RestController",
+            "@Api(value = \"后台登录登出管理控制器\", tags = \"后台登录\")",
+            "@RequestMapping(path = {\"/__path__\", \"/__path__\"})",
+            "public class AdminLoginController {",
+            "@Autowired",
+            "private UserService userService;",
+            "@RequestMapping(path = {\"login\"})",
+            "public ResVo<BaseUserInfoDTO> login(HttpServletRequest request,",
+            "HttpServletResponse response) {",
+            "String username = request.getParameter(\"username\");",
+            "String pwd = request.getParameter(\"password\");",
+            "String session = loginOutService.loginByUserPwd(username, pwd);",
+            "@RequestMapping(path = \"isLogined\")",
+            "public ResVo<Boolean> isLogined() {",
+            "return ResVo.ok(ReqInfoContext.getReqInfo().getUserId() != null);",
+            "}",
+            "@ApiOperation(\"后台服务探测接口\")",
+            "@GetMapping(\"probe\")",
+            "public ResVo<AdminProbeRes> probe(HttpServletRequest request) {",
+            "AdminProbeRes result = new AdminProbeRes();",
+            "result.setApp(\"paicoding\");",
+            "result.setModule(\"admin\");",
+            "result.setSignature(\"paicoding-port-for-admin\");",
+            "@ApiOperation(\"获取当前登录用户信息\")",
+            "@GetMapping(\"info\")",
+            "public ResVo<BaseUserInfoDTO> info() {",
+            "BaseUserInfoDTO user = ReqInfoContext.getReqInfo().getUser();",
+            "return ResVo.ok(user);",
+            "}",
+            "@Permission(role = UserRole.LOGIN)",
+            "@GetMapping(\"logout\")",
+            "public ResVo<Boolean> logOut(HttpServletResponse response) {",
+            "Optional.ofNullable(ReqInfoContext.getReqInfo()).ifPresent(s -> loginOutService.logout(s.getSession()));",
+            "}",
+            "private String buildRequestOrigin(HttpServletRequest request) {",
+            "String scheme = request.getScheme();",
+            "String serverName = request.getServerName();",
+            "int serverPort = request.getServerPort();",
+            "@Data",
+            "private static class AdminProbeRes {",
+            "private String app;",
+            "private String module;",
+            "private String signature;",
+            "private String apiPrefix;"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "ruslanys/telegraff",
+  "htmlUrl": "https://github.com/ruslanys/telegraff",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 30,
+          "lines": [
+            "plugins {",
+            "id 'java'",
+            "id 'idea'",
+            "id 'jacoco'",
+            "id 'org.jetbrains.kotlin.jvm' version '1.3.21'",
+            "id 'org.jetbrains.kotlin.kapt' version '1.3.21'",
+            "id 'org.jetbrains.kotlin.plugin.spring' version '1.3.21'",
+            "id 'org.springframework.boot' version '2.1.3.RELEASE'",
+            "id 'com.jfrog.bintray' version '1.8.4'",
+            "}",
+            "ext {",
+            "apply plugin: 'kotlin'",
+            "apply plugin: 'kotlin-spring'",
+            "apply plugin: 'org.springframework.boot'",
+            "apply plugin: 'io.spring.dependency-management'",
+            "apply plugin: 'com.jfrog.bintray'",
+            "sourceCompatibility = JavaVersion.VERSION_1_8",
+            "dependencies {",
+            "compile(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "compile(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "compile(\"org.jetbrains.kotlin:kotlin-script-util\")",
+            "compile(\"<literal>\")",
+            "testCompile(\"<literal>\")",
+            "testCompile(\"org.jetbrains.kotlin:kotlin-test\")",
+            "}",
+            "dependencyManagement {",
+            "imports { mavenBom(\"<literal>\") }",
+            "}",
+            "sourceSets {",
+            "main.java.srcDirs += 'src/main/kotlin'"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "telegraff-core/src/main/kotlin/me/ruslanys/telegraff/core/dsl/Handler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 17,
+          "lines": [
+            "package me.ruslanys.telegraff.core.dsl",
+            "class Handler(",
+            "val commands: List<String>,",
+            "private val steps: Map<String, Step<*>>,",
+            "private val initialStepKey: String?,",
+            "val process: ProcessBlock",
+            ") {",
+            "fun getInitialStep(): Step<*>? {",
+            "return if (initialStepKey != null) {",
+            "steps[initialStepKey]!!",
+            "} else {",
+            "null",
+            "}",
+            "fun getStepByKey(key: String): Step<*>? {",
+            "return steps[key]",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "telegraff-sample/src/main/kotlin/me/ruslanys/telegraff/sample/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "@SpringBootApplication",
+            "class Application",
+            "fun main(args: Array<String>) {",
+            "runApplication<Application>(*args)",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

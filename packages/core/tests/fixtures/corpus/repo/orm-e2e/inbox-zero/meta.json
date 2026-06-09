@@ -1,0 +1,7 @@
+{
+  "source": "https://github.com/elie222/inbox-zero/blob/main/apps/web/prisma/schema.prisma",
+  "description": "Inbox Zero — AI 이메일 클라이언트 (중형: ~15 모델)",
+  "downloadedAt": "2026-05-08T09:03:18.163Z",
+  "expectedModelCount": 60,
+  "expectedEnumCount": null
+}

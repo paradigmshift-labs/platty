@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "EasyKotlin/kotlin-with-webflux",
+  "htmlUrl": "https://github.com/EasyKotlin/kotlin-with-webflux",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 21,
+          "lines": [
+            "maven { url \"https://repo.spring.io/milestone\" }",
+            "}",
+            "dependencies {",
+            "classpath(\"<literal>\")",
+            "classpath(\"<literal>\")",
+            "classpath(\"<literal>\")",
+            "}",
+            "}",
+            "apply plugin: 'kotlin-spring'",
+            "apply plugin: 'eclipse'",
+            "apply plugin: 'org.springframework.boot'",
+            "apply plugin: 'io.spring.dependency-management'",
+            "group = 'com.easy.kotlin'",
+            "version = '0.0.1-SNAPSHOT'",
+            "dependencies {",
+            "compile('<literal>')",
+            "compile(\"org.jetbrains.kotlin:kotlin-stdlib-jre8\")",
+            "compile(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "testCompile('<literal>')",
+            "testCompile('io.projectreactor:reactor-test')",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/easy/kotlin/webflux/WebfluxApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class WebfluxApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<WebfluxApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/easy/kotlin/webflux/dao/PersonRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "interface PersonRepository {",
+            "fun getPerson(id: Int): Mono<Person>",
+            "fun allPeople(): Flux<Person>",
+            "fun savePerson(person: Mono<Person>): Mono<Void>",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/easy/kotlin/webflux/handler/PersonHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 16,
+          "lines": [
+            "@Service",
+            "class PersonHandler {",
+            "@Autowired lateinit var repository: PersonRepository",
+            "fun getPerson(request: ServerRequest): Mono<ServerResponse> {",
+            "val personId = Integer.valueOf(request.pathVariable(\"id\"))!!",
+            "val notFound = ServerResponse.notFound().build()",
+            "val personMono = this.repository.getPerson(personId)",
+            "return personMono",
+            "fun createPerson(request: ServerRequest): Mono<ServerResponse> {",
+            "val person = request.bodyToMono(Person::class.java)",
+            "return ServerResponse.ok().build(this.repository.savePerson(person))",
+            "}",
+            "fun listPeople(request: ServerRequest): Mono<ServerResponse> {",
+            "val people = this.repository.allPeople()",
+            "return ServerResponse.ok().contentType(APPLICATION_JSON).body(people, Person::class.java)",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

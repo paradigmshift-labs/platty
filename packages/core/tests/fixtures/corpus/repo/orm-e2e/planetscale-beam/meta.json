@@ -1,0 +1,7 @@
+{
+  "source": "https://github.com/planetscale/beam/blob/main/prisma/schema.prisma",
+  "description": "PlanetScale Beam — 커뮤니티 채팅 앱 (소형: ~8 모델, relation 다양)",
+  "downloadedAt": "2026-05-08T09:03:18.157Z",
+  "expectedModelCount": 7,
+  "expectedEnumCount": null
+}

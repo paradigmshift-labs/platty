@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "liyupi/yu-ai-agent",
+  "htmlUrl": "https://github.com/liyupi/yu-ai-agent",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 73,
+          "lines": [
+            "<modelVersion>4.0.0</modelVersion>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>3.4.4</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<groupId>com.yupi</groupId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.ai</groupId>",
+            "<artifactId>spring-ai-bom</artifactId>",
+            "<version>1.0.0</version>",
+            "<type>pom</type>",
+            "<scope>import</scope>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.alibaba</groupId>",
+            "<dependency>",
+            "<groupId>org.springframework.ai</groupId>",
+            "<artifactId>spring-ai-starter-model-ollama</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.ai</groupId>",
+            "<artifactId>spring-ai-markdown-document-reader</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-jdbc</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.postgresql</groupId>",
+            "<artifactId>postgresql</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.ai</groupId>",
+            "<artifactId>spring-ai-pgvector-store</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.ai</groupId>",
+            "<artifactId>spring-ai-starter-mcp-client</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.ai</groupId>",
+            "<artifactId>spring-ai-advisors-vector-store</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>",
+            "<groupId>com.github.xiaoymin</groupId>",
+            "<artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>",
+            "<version>4.4.0</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.projectlombok</groupId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "</dependencies>",
+            "</plugin>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "<configuration>",
+            "<excludes>",
+            "<exclude>",
+            "<groupId>org.projectlombok</groupId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/yupi/yuaiagent/YuAiAgentApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;",
+            "@SpringBootApplication(exclude = {",
+            "DataSourceAutoConfiguration.class",
+            "})",
+            "public class YuAiAgentApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(YuAiAgentApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/yupi/yuaiagent/controller/AiController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 30,
+          "lines": [
+            "import java.io.IOException;",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "public class AiController {",
+            "@Resource",
+            "private LoveApp loveApp;",
+            "@GetMapping(\"/__path__\")",
+            "public String doChatWithLoveAppSync(String message, String chatId) {",
+            "return loveApp.doChat(message, chatId);",
+            "}",
+            "@GetMapping(value = \"/__path__\", produces = MediaType.TEXT_EVENT_STREAM_VALUE)",
+            "public Flux<String> doChatWithLoveAppSSE(String message, String chatId) {",
+            "return loveApp.doChatByStream(message, chatId);",
+            "}",
+            "@GetMapping(value = \"/__path__\")",
+            "public Flux<ServerSentEvent<String>> doChatWithLoveAppServerSentEvent(String message, String chatId) {",
+            "return loveApp.doChatByStream(message, chatId)",
+            ".map(chunk -> ServerSentEvent.<String>builder()",
+            ".data(chunk)",
+            ".build());",
+            "@GetMapping(value = \"/__path__\")",
+            "public SseEmitter doChatWithLoveAppServerSseEmitter(String message, String chatId) {",
+            "SseEmitter sseEmitter = new SseEmitter(180000L); // 3 分钟超时",
+            "loveApp.doChatByStream(message, chatId)",
+            "@GetMapping(\"/__path__\")",
+            "public SseEmitter doChatWithManus(String message) {",
+            "YuManus yuManus = new YuManus(allTools, dashscopeChatModel);",
+            "return yuManus.runStream(message);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/yupi/yuaiagent/controller/HealthController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController;",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "public class HealthController {",
+            "@GetMapping",
+            "public String healthCheck() {",
+            "return \"ok\";",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

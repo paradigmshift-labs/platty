@@ -35,3 +35,41 @@ export {
   type RecordPipelineEventInput,
   type StartPipelineRunInput,
 } from './pipeline_infra/index.js'
+export {
+  AnalyzeRepoError,
+  runAnalyzeRepo,
+  type AnalyzeRepoOptions,
+  type AnalyzeRepoStartResult,
+} from './pipeline_modules/analyze_repo/index.js'
+export {
+  BuildGraphError,
+  runBuildGraph,
+  type BuildGraphOptions,
+  type BuildGraphResult,
+  type BuildGraphStartResult,
+} from './pipeline_modules/build_graph/index.js'
+export {
+  BuildPatternProfileError,
+  runBuildPatternProfile,
+  type RunBuildPatternProfileResult,
+} from './pipeline_modules/build_pattern_profile/index.js'
+export {
+  runBuildModels,
+} from './pipeline_modules/build_models/index.js'
+export {
+  type BuildModelsResult,
+} from './pipeline_modules/build_models/types.js'
+export {
+  runBuildRoute,
+  type RunBuildRouteInput,
+  type RunBuildRouteResult,
+} from './pipeline_modules/build_route/index.js'
+export {
+  runBuildRelations,
+  type BuildRelationsResult,
+} from './pipeline_modules/build_relations/index.js'
+export {
+  runBuildServiceMap,
+  type RunBuildServiceMapInput,
+  type RunBuildServiceMapResult,
+} from './pipeline_modules/build_service_map/index.js'

@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "kukume/tgbot",
+  "htmlUrl": "https://github.com/kukume/tgbot",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 41,
+          "lines": [
+            "@file:Suppress(\"VulnerableLibrariesLocal\")",
+            "plugins {",
+            "val kotlinVersion = \"2.1.0\"",
+            "val ktorVersion = \"3.0.1\"",
+            "kotlin(\"jvm\") version kotlinVersion",
+            "kotlin(\"plugin.spring\") version kotlinVersion",
+            "id(\"org.springframework.boot\") version \"3.4.0\"",
+            "id(\"io.spring.dependency-management\") version \"1.1.6\"",
+            "id(\"io.ktor.plugin\") version ktorVersion",
+            "}",
+            "fun DependencyHandlerScope.ktor() {",
+            "implementation(\"io.ktor:ktor-server-core\")",
+            "implementation(\"io.ktor:ktor-server-status-pages\")",
+            "implementation(\"io.ktor:ktor-server-call-logging\")",
+            "implementation(\"io.ktor:ktor-server-content-negotiation\")",
+            "implementation(\"io.ktor:ktor-server-netty\")",
+            "implementation(\"io.ktor:ktor-serialization-jackson\")",
+            "implementation(\"io.ktor:ktor-client-core\")",
+            "implementation(\"io.ktor:ktor-client-okhttp\")",
+            "implementation(\"io.ktor:ktor-client-content-negotiation\")",
+            "implementation(\"io.ktor:ktor-client-logging\")",
+            "}",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"com.github.pengrad:java-telegram-bot-api:7.11.0\")",
+            "implementation(\"org.jsoup:jsoup:1.17.2\")",
+            "val ociVersion = \"3.48.0\"",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\") {",
+            "exclude(\"commons-logging\", \"commons-logging\")",
+            "}",
+            "annotationProcessor(\"<literal>\")",
+            "implementation(\"com.google.zxing:javase:3.5.3\")",
+            "implementation(\"com.aallam.openai:openai-client:3.8.2\")",
+            "ktor()",
+            "testImplementation(\"<literal>\")",
+            "}",
+            "java {",
+            "toolchain.languageVersion.set(JavaLanguageVersion.of(21))"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/me/kuku/telegram/TelegramApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.springframework.scheduling.annotation.EnableScheduling",
+            "@SpringBootApplication",
+            "@EnableReactiveMongoAuditing",
+            "@EnableScheduling",
+            "class TelegramApplication",
+            "fun main(args: Array<String>) {",
+            "SpringApplication(TelegramApplication::class.java)",
+            ".also { it.addListeners(ApplicationPidFileWriter()) }.run(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/me/kuku/telegram/context/ExceptionHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 44,
+          "lines": [
+            "import kotlin.reflect.full.superclasses",
+            "private val superClassCache: MutableMap<KClass<*>, Set<KClass<*>>> = mutableMapOf()",
+            "class TelegramExceptionContext<R: Throwable> (",
+            "val throwable: R,",
+            "val telegramContext: TelegramContext",
+            ")",
+            "class AbilityExceptionContext<R: Throwable> (",
+            "val throwable: R,",
+            "val abilityContext: AbilityContext",
+            ")",
+            "private typealias AbilityBody = suspend AbilityExceptionContext<out Throwable>.() -> Unit",
+            "private typealias TelegramBody = suspend TelegramExceptionContext<out Throwable>.() -> Unit",
+            "class TelegramExceptionHandler {",
+            "val abilityExceptions = mutableMapOf<KClass<out Throwable>, MutableList<AbilityBody>>()",
+            "val telegramExceptions = mutableMapOf<KClass<out Throwable>, MutableList<TelegramBody>>()",
+            "@Suppress(\"UNCHECKED_CAST\")",
+            "inline fun <reified T: Throwable> handler(noinline block: suspend TelegramExceptionContext<T>.() -> Unit) {",
+            "val key = T::class",
+            "telegramExceptions[key] = (telegramExceptions[key] ?: mutableListOf()).also { it.add(block as TelegramBody) }",
+            "}",
+            "@Suppress(\"UNCHECKED_CAST\")",
+            "inline fun <reified T: Throwable> abilityHandler(noinline block: suspend AbilityExceptionContext<T>.() -> Unit) {",
+            "val key = T::class",
+            "abilityExceptions[key] = (abilityExceptions[key] ?: mutableListOf()).also { it.add(block as AbilityBody) }",
+            "}",
+            "}",
+            "private val logger = LoggerFactory.getLogger(TelegramExceptionHandler::class.java)",
+            "suspend fun TelegramExceptionHandler.invokeHandler(telegramContext: TelegramContext, block: suspend () -> Unit) {",
+            "kotlin.runCatching {",
+            "block()",
+            "}.onFailure {",
+            "val nowThrowableClass = it::class",
+            "}",
+            "suspend fun TelegramExceptionHandler.invokeHandler(abilityContext: AbilityContext, block: suspend () -> Unit) {",
+            "kotlin.runCatching {",
+            "block()",
+            "}.onFailure {",
+            "val nowThrowableClass = it::class",
+            "}",
+            "fun superclasses(kClass: KClass<*>?, set: MutableSet<KClass<*>> = mutableSetOf()): Set<KClass<*>> {",
+            "kClass?.let { set.add(it) }",
+            "val superclasses = kClass?.superclasses ?: return set",
+            "set.addAll(superclasses)",
+            "for (superclass in superclasses) {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/me/kuku/telegram/entity/BaiduEntity.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 30,
+          "lines": [
+            "@Document(\"baidu\")",
+            "class BaiduEntity: BaseEntity() {",
+            "@Id",
+            "var id: String? = null",
+            "var cookie: String = \"\"",
+            "var tieBaSToken: String = \"\"",
+            "var sign: Status = Status.OFF",
+            "private fun otherCookie(sToken: String): String {",
+            "return \"BDUSS=.*?;\".toRegex().find(cookie)!!.value + \"STOKEN=$sToken; \"",
+            "}",
+            "fun teiBaCookie(): String {",
+            "return otherCookie(tieBaSToken)",
+            "}",
+            "}",
+            "interface BaiduRepository: CoroutineCrudRepository<BaiduEntity, String> {",
+            "suspend fun findByTgIdAndTgName(tgId: Long, tgName: String?): BaiduEntity?",
+            "suspend fun findBySign(sign: Status): List<BaiduEntity>",
+            "suspend fun deleteByTgIdAndTgName(tgId: Long, tgName: String?)",
+            "}",
+            "@Service",
+            "class BaiduService(",
+            "private val baiduRepository: BaiduRepository",
+            ") {",
+            "suspend fun findByTgId(tgId: Long) = baiduRepository.findEnableEntityByTgId(tgId) as? BaiduEntity",
+            "suspend fun save(baiduEntity: BaiduEntity) = baiduRepository.save(baiduEntity)",
+            "suspend fun findBySign(sign: Status): List<BaiduEntity> = baiduRepository.findBySign(sign)",
+            "suspend fun findAll(): List<BaiduEntity> = baiduRepository.findAll().toList()",
+            "@Transactional",
+            "suspend fun deleteByTgId(tgId: Long) = baiduRepository.deleteEnableEntityByTgId(tgId)",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "a-mountain/realworld-spring-webflux-kt",
+  "htmlUrl": "https://github.com/a-mountain/realworld-spring-webflux-kt",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 29,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "id(\"org.springframework.boot\") version \"2.5.4\"",
+            "id(\"io.spring.dependency-management\") version \"1.0.11.RELEASE\"",
+            "kotlin(\"jvm\") version \"1.5.21\"",
+            "kotlin(\"plugin.spring\") version \"1.5.21\"",
+            "}",
+            "}",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"de.flapdoodle.embed:de.flapdoodle.embed.mongo\")",
+            "implementation(\"io.jsonwebtoken:jjwt-api:0.11.2\")",
+            "runtimeOnly(\"io.jsonwebtoken:jjwt-impl:0.11.2\")",
+            "runtimeOnly(\"io.jsonwebtoken:jjwt-jackson:0.11.2\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "implementation(\"<literal>\")",
+            "testImplementation(\"io.mockk:mockk:1.12.0\")",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"io.projectreactor:reactor-test\")",
+            "testImplementation(\"<literal>\")",
+            "}",
+            "tasks.withType<KotlinCompile> {",
+            "kotlinOptions {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/realworld/springmongo/SpringWebfluxKtApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class SpringWebfluxKtApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<SpringWebfluxKtApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/realworld/springmongo/api/ArticleController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 73,
+          "lines": [
+            "import org.springframework.web.bind.annotation.*",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class ArticleController(private val articleFacade: ArticleFacade, private val userProvider: UserSessionProvider) {",
+            "@PostMapping(\"/__path__\")",
+            "@ResponseStatus(HttpStatus.CREATED)",
+            "suspend fun createArticle(@RequestBody request: ArticleWrapper<CreateArticleRequest>): ArticleWrapper<ArticleView> {",
+            "val currentUser = userProvider.getCurrentUserOrFail()",
+            "return articleFacade.createArticle(request.content, currentUser).toArticleWrapper()",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun getArticles(",
+            "@RequestParam(value = \"offset\", defaultValue = \"0\") offset: Long = 0,",
+            "@RequestParam(value = \"limit\", defaultValue = \"20\") limit: Int = 20,",
+            "@RequestParam(value = \"tag\", required = false) tag: String? = null,",
+            "@RequestParam(value = \"favorited\", required = false) favoritedByUser: String? = null,",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun feed(",
+            "@RequestParam(value = \"offset\", defaultValue = \"0\") offset: Long = 0,",
+            "@RequestParam(value = \"limit\", defaultValue = \"20\") limit: Int = 20,",
+            "): MultipleArticlesView {",
+            "val currentUser = userProvider.getCurrentUserOrFail()",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun getArticle(@PathVariable slug: String): ArticleWrapper<ArticleView> {",
+            "val currentUser = userProvider.getCurrentUserOrNull()",
+            "return articleFacade.getArticle(slug, currentUser).toArticleWrapper()",
+            "}",
+            "@PutMapping(\"/__path__\")",
+            "suspend fun updateArticle(",
+            "@RequestBody request: ArticleWrapper<UpdateArticleRequest>,",
+            "@PathVariable slug: String,",
+            "): ArticleWrapper<ArticleView> {",
+            "val currentUser = userProvider.getCurrentUserOrFail()",
+            "}",
+            "@DeleteMapping(\"/__path__\")",
+            "suspend fun deleteArticle(@PathVariable slug: String) {",
+            "val currentUser = userProvider.getCurrentUserOrFail()",
+            "articleFacade.deleteArticle(slug, currentUser)",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "@ResponseStatus(HttpStatus.CREATED)",
+            "suspend fun favoriteArticle(@PathVariable slug: String): ArticleWrapper<ArticleView> {",
+            "val currentUser = userProvider.getCurrentUserOrFail()",
+            "return articleFacade.favoriteArticle(slug, currentUser).toArticleWrapper()",
+            "}",
+            "@DeleteMapping(\"/__path__\")",
+            "suspend fun unfavoriteArticle(@PathVariable slug: String): ArticleWrapper<ArticleView> {",
+            "val currentUser = userProvider.getCurrentUserOrFail()",
+            "return articleFacade.unfavoriteArticle(slug, currentUser).toArticleWrapper()",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun getComments(@PathVariable slug: String): MultipleCommentsView {",
+            "val currentUser = userProvider.getCurrentUserOrNull()",
+            "return articleFacade.getComments(slug, currentUser)",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "@ResponseStatus(HttpStatus.CREATED)",
+            "suspend fun addComment(",
+            "@PathVariable slug: String,",
+            "@RequestBody request: CommentWrapper<CreateCommentRequest>,",
+            "): CommentWrapper<CommentView> {",
+            "val currentUser = userProvider.getCurrentUserOrFail()",
+            "}",
+            "@DeleteMapping(\"/__path__\")",
+            "suspend fun deleteComment(@PathVariable slug: String, @PathVariable commentId: String) {",
+            "val currentUser = userProvider.getCurrentUserOrFail()",
+            "articleFacade.deleteComment(slug, commentId, currentUser)",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun getTags(): TagListView = articleFacade.getTags()",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/realworld/springmongo/api/UserController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 40,
+          "lines": [
+            "import javax.validation.Valid",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class UserController(private val userFacade: UserFacade, private val userSessionProvider: UserSessionProvider) {",
+            "@PostMapping(\"/__path__\")",
+            "@ResponseStatus(HttpStatus.CREATED)",
+            "suspend fun signup(@RequestBody @Valid request: UserWrapper<UserRegistrationRequest>): UserWrapper<UserView> {",
+            "return userFacade.signup(request.content).toUserWrapper()",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "@ResponseStatus(HttpStatus.CREATED)",
+            "suspend fun login(@RequestBody @Valid request: UserWrapper<UserAuthenticationRequest>): UserWrapper<UserView> {",
+            "return userFacade.login(request.content).toUserWrapper()",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun getCurrentUser(): UserWrapper<UserView> {",
+            "val (user, token) = userSessionProvider.getCurrentUserSessionOrFail()",
+            "return user.toUserView(token).toUserWrapper()",
+            "}",
+            "@PutMapping(\"/__path__\")",
+            "suspend fun updateUser(@RequestBody @Valid request: UserWrapper<UpdateUserRequest>): UserWrapper<UserView> {",
+            "val userContext = userSessionProvider.getCurrentUserSessionOrFail()",
+            "return userFacade.updateUser(request.content, userContext).toUserWrapper()",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "suspend fun getProfile(@PathVariable username: String): ProfileWrapper {",
+            "val currentUser = userSessionProvider.getCurrentUserOrNull()",
+            "return userFacade.getProfile(username, currentUser).toProfileWrapper()",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "suspend fun follow(@PathVariable username: String): ProfileWrapper {",
+            "val currentUser = userSessionProvider.getCurrentUserOrFail()",
+            "return userFacade.follow(username, currentUser).toProfileWrapper()",
+            "}",
+            "@DeleteMapping(\"/__path__\")",
+            "suspend fun unfollow(@PathVariable username: String): ProfileWrapper {",
+            "val currentUser = userSessionProvider.getCurrentUserOrFail()",
+            "return userFacade.unfollow(username, currentUser).toProfileWrapper()",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

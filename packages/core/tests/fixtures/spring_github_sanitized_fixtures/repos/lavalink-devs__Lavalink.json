@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "lavalink-devs/Lavalink",
+  "htmlUrl": "https://github.com/lavalink-devs/Lavalink",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "LavalinkServer/build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 47,
+          "lines": [
+            "import com.vanniktech.maven.publish.KotlinJvm",
+            "import org.apache.tools.ant.filters.ReplaceTokens",
+            "import org.springframework.boot.gradle.tasks.bundling.BootJar",
+            "import org.springframework.boot.gradle.tasks.run.BootRun",
+            "plugins {",
+            "application",
+            "kotlin(\"jvm\")",
+            "id(\"org.jetbrains.dokka\")",
+            "kotlin(\"plugin.serialization\")",
+            "}",
+            "apply(plugin = \"org.springframework.boot\")",
+            "apply(plugin = \"com.gorylenko.gradle-git-properties\")",
+            "apply(plugin = \"org.ajoberstar.grgit\")",
+            "apply(plugin = \"com.adarshr.test-logger\")",
+            "apply(plugin = \"kotlin\")",
+            "}",
+            "dependencies {",
+            "implementation(projects.protocol)",
+            "implementation(projects.pluginApi) {",
+            "exclude(group = \"org.springframework.boot\", module = \"spring-boot-starter-tomcat\")",
+            "}",
+            "implementation(libs.xmlutil.jdk)",
+            "implementation(libs.xmlutil.serialization)",
+            "implementation(libs.bundles.metrics)",
+            "implementation(libs.spring.cloud.config)",
+            "implementation(libs.bundles.spring) {",
+            "exclude(group = \"org.springframework.boot\", module = \"spring-boot-starter-tomcat\")",
+            "}",
+            "implementation(libs.koe) {",
+            "exclude(group = \"org.slf4j\", module = \"slf4j-api\")",
+            "}",
+            "implementation(libs.koe.udpqueue) {",
+            "exclude(module=\"udp-queue\")",
+            "}",
+            "implementation(libs.bundles.libdave.natives)",
+            "implementation(libs.bundles.udpqueue.natives) {",
+            "exclude(group = \"com.sedmelluq\", module = \"lava-common\")",
+            "}",
+            "implementation(libs.lavaplayer)",
+            "implementation(libs.lavaplayer.ip.rotator)",
+            "implementation(libs.lavadsp)",
+            "implementation(libs.kotlin.reflect)",
+            "implementation(libs.logback)",
+            "implementation(libs.sentry.logback)",
+            "implementation(libs.oshi) {",
+            "exclude(group = \"org.slf4j\", module = \"slf4j-api\")",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "LavalinkServer/src/main/java/lavalink/server/info/InfoRestHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 24,
+          "lines": [
+            "@RestController",
+            "class InfoRestHandler(",
+            "appInfo: AppInfo,",
+            "gitRepoState: GitRepoState,",
+            "audioPlayerManager: AudioPlayerManager,",
+            "pluginManager: PluginManager,",
+            ") {",
+            "private val enabledFilers = (listOf(",
+            "\"volume\",",
+            "\"equalizer\",",
+            "\"karaoke\",",
+            "\"timescale\",",
+            "}",
+            "private val info = Info(",
+            "Version.fromSemver(appInfo.versionBuild),",
+            "appInfo.buildTime,",
+            "Git(gitRepoState.branch, gitRepoState.commitIdAbbrev, gitRepoState.commitTime * 1000),",
+            "System.getProperty(\"java.version\"),",
+            "private val version = appInfo.versionBuild",
+            "@GetMapping(\"/__path__\")",
+            "fun info() = info",
+            "@GetMapping(\"/__path__\")",
+            "fun version() = version",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "LavalinkServer/src/main/java/lavalink/server/io/RoutePlannerRestHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 30,
+          "lines": [
+            "import java.util.*",
+            "@RestController",
+            "class RoutePlannerRestHandler(private val routePlanner: AbstractRoutePlanner?) {",
+            "@GetMapping(value = [\"/__path__\"])",
+            "fun getStatus(request: HttpServletRequest): ResponseEntity<RoutePlannerStatus> {",
+            "val status = when (routePlanner) {",
+            "null -> return ResponseEntity.status(HttpStatus.NO_CONTENT).build()",
+            "else -> getDetailBlock(routePlanner)",
+            "}",
+            "@PostMapping(value = [\"/__path__\"])",
+            "fun freeSingleAddress(",
+            "request: HttpServletRequest,",
+            "@RequestBody body: RoutePlannerFreeAddress",
+            "): ResponseEntity<Unit> {",
+            "routePlanner ?: throw RoutePlannerDisabledException()",
+            "@PostMapping(value = [\"/__path__\"])",
+            "fun freeAllAddresses(request: HttpServletRequest): ResponseEntity<Unit> {",
+            "routePlanner ?: throw RoutePlannerDisabledException()",
+            "routePlanner.freeAllAddresses()",
+            "return ResponseEntity.noContent().build()",
+            "}",
+            "private fun getDetailBlock(planner: AbstractRoutePlanner): RoutePlannerStatus {",
+            "val ipBlock = planner.ipBlock",
+            "val ipBlockStatus = RoutePlannerStatus.IpBlockStatus(",
+            "RoutePlannerStatus.IpBlockStatus.Type.fromName(ipBlock.type.simpleName),",
+            "ipBlock.size.toString()",
+            "}",
+            "class RoutePlannerDisabledException :",
+            "ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, \"Can't access disabled route planner\")",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "LavalinkServer/src/main/java/lavalink/server/io/SessionRestHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "class SessionRestHandler(private val socketServer: SocketServer) {",
+            "@PatchMapping(\"/__path__\")",
+            "private fun patchSession(",
+            "@RequestBody sessionUpdate: SessionUpdate,",
+            "@PathVariable sessionId: String",
+            "): ResponseEntity<Session> {",
+            "val context = socketContext(socketServer, sessionId)"
+          ]
+        }
+      ]
+    }
+  ]
+}

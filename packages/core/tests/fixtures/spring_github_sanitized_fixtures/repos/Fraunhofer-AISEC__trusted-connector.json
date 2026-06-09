@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "Fraunhofer-AISEC/trusted-connector",
+  "htmlUrl": "https://github.com/Fraunhofer-AISEC/trusted-connector",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 17,
+          "lines": [
+            "}",
+            "plugins {",
+            "java",
+            "alias(libs.plugins.springboot) apply false",
+            "alias(libs.plugins.spring.dependencyManagement)",
+            "alias(libs.plugins.swagger) apply false",
+            "imports {",
+            "mavenBom(\"<literal>\")",
+            "}",
+            "imports {",
+            "mavenBom(\"<literal>\")",
+            "}",
+            "}",
+            "dependencies {",
+            "val versions = rootProject.libs.versions",
+            "val groupPins = mapOf(",
+            "\"org.jetbrains.kotlin\" to mapOf("
+          ]
+        }
+      ]
+    },
+    {
+      "path": "ids-container-manager/src/main/kotlin/de/fhg/aisec/ids/comm/unixsocket/TrustmeUnixSocketResponseHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 20,
+          "lines": [
+            "import kotlin.concurrent.withLock",
+            "class TrustmeUnixSocketResponseHandler {",
+            "private val lock = ReentrantLock()",
+            "private val condition = lock.newCondition()",
+            "private var rsp: ByteArray? = null",
+            "fun handleResponse(rsp: ByteArray): Boolean {",
+            "lock.withLock {",
+            "this.rsp = rsp.clone()",
+            "condition.signal()",
+            "return true",
+            "}",
+            "fun waitForResponse(): ByteArray {",
+            "lock.withLock {",
+            "while (rsp == null) {",
+            "try {",
+            "condition.await()",
+            "companion object {",
+            "private val LOG = LoggerFactory.getLogger(TrustmeUnixSocketResponseHandler::class.java)",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "ids-webconsole/src/main/kotlin/de/fhg/aisec/ids/webconsole/ApiController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "@Target(AnnotationTarget.TYPE, AnnotationTarget.CLASS)",
+            "@Retention(AnnotationRetention.RUNTIME)",
+            "annotation class ApiController"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "ids-webconsole/src/main/kotlin/de/fhg/aisec/ids/webconsole/api/data/Identity.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "package de.fhg.aisec.ids.webconsole.api.data",
+            "class Identity {",
+            "@JvmField",
+            "var cn: String? = null",
+            "var ou: String? = null",
+            "var o: String? = null"
+          ]
+        }
+      ]
+    }
+  ]
+}

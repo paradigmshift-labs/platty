@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "adessoSE/junit-insights",
+  "htmlUrl": "https://github.com/adessoSE/junit-insights",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 14,
+          "lines": [
+            "mavenCentral()",
+            "}",
+            "dependencies {",
+            "classpath(\"<literal>\")",
+            "classpath(\"<literal>\")",
+            "classpath(\"<literal>\")",
+            "}",
+            "}",
+            "apply plugin: 'kotlin'",
+            "apply plugin: 'kotlin-spring'",
+            "apply plugin: 'org.springframework.boot'",
+            "apply plugin: 'io.spring.dependency-management'",
+            "compileKotlin {",
+            "kotlinOptions {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "tester/src/main/kotlin/de/adesso/junitinsightstester/HelloController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@RestController",
+            "class HelloController {",
+            "@RequestMapping(\"/__path__\")",
+            "fun index(): String {",
+            "return \"Greetings from Spring Boot!\"",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

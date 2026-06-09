@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "JayAhn2/kotlin-spring-boot-ddd",
+  "htmlUrl": "https://github.com/JayAhn2/kotlin-spring-boot-ddd",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 28,
+          "lines": [
+            "import org.jooq.meta.jaxb.ForcedType",
+            "plugins {",
+            "id(\"nu.studer.jooq\") version \"6.0.1\"",
+            "id(\"org.flywaydb.flyway\") version \"7.15.0\"",
+            "id(\"org.springframework.boot\") version \"2.5.4\"",
+            "id(\"io.spring.dependency-management\") version \"1.0.11.RELEASE\"",
+            "kotlin(\"jvm\") version \"1.4.32\"",
+            "kotlin(\"plugin.spring\") version \"1.4.32\"",
+            "}",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "developmentOnly(\"org.springframework.boot:spring-boot-devtools\")",
+            "testImplementation(\"<literal>\")",
+            "implementation(\"org.valiktor:valiktor-core:0.12.0\")",
+            "implementation(\"org.valiktor:valiktor-spring:0.12.0\")",
+            "implementation(\"mysql:mysql-connector-java:8.0.26\")",
+            "implementation(\"io.springfox:springfox-boot-starter:3.0.0\")",
+            "implementation(\"io.springfox:springfox-swagger-ui:3.0.0\")",
+            "jooqGenerator(\"mysql:mysql-connector-java:8.0.26\")",
+            "jooqGenerator(\"org.jooq:jooq:3.15.4\")",
+            "implementation(\"org.flywaydb:flyway-core:7.15.0\")",
+            "testImplementation(\"<literal>\")",
+            "}",
+            "tasks.withType<KotlinCompile> {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/example/kotlinspringboot/KotlinSpringBootApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "@SpringBootApplication",
+            "class KotlinSpringBootApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<KotlinSpringBootApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/example/kotlinspringboot/common/base/BaseEntity.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 2,
+          "lines": [
+            "package com.example.kotlinspringboot.common.base",
+            "abstract class BaseEntity {}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/example/kotlinspringboot/common/base/BasePersistenceEntity.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 3,
+          "lines": [
+            "package com.example.kotlinspringboot.common.base",
+            "abstract class BasePersistenceEntity {",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

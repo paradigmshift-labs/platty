@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "vector4wang/spring-boot-quick",
+  "htmlUrl": "https://github.com/vector4wang/spring-boot-quick",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "mybatis-crypt-plugin-test/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 23,
+          "lines": [
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.mybatis.spring.boot</groupId>",
+            "<artifactId>mybatis-spring-boot-starter</artifactId>",
+            "<version>2.0.1</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>mysql</groupId>",
+            "<dependency>",
+            "<groupId>tk.mybatis</groupId>",
+            "<artifactId>mapper-spring-boot-starter</artifactId>",
+            "<version>2.1.2</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.github.pagehelper</groupId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "mybatis-crypt-plugin-test/src/main/java/com/quick/crypt/test/CryptApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 14,
+          "lines": [
+            "import javax.annotation.PostConstruct;",
+            "@SpringBootApplication",
+            "@MapperScan(basePackages = \"com.quick.crypt.test.dao\")",
+            "@Slf4j",
+            "@EnableEncrypt(value = \"123\", encryptIml = CustomerCryptor.class)",
+            "public class CryptApplication {",
+            "@PostConstruct",
+            "public void test() {",
+            "log.info(\"after start !\");",
+            "}",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(CryptApplication.class);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "mybatis-crypt-plugin/src/main/java/com/quick/db/crypt/annotation/CryptEntity.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 4,
+          "lines": [
+            "@Documented",
+            "@Retention(RetentionPolicy.RUNTIME)",
+            "public @interface CryptEntity {",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "quick-abstract-template/src/main/java/com/quick/abs/AbstractTemplateApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.context.ConfigurableApplicationContext;",
+            "@SpringBootApplication",
+            "public class AbstractTemplateApplication {",
+            "public static void main(String[] args) {",
+            "ConfigurableApplicationContext applicationContext = SpringApplication.run(AbstractTemplateApplication.class);",
+            "CreatureLifeService creatureLifeService = applicationContext.getBean(\"creatureLifeService\",CreatureLifeService.class);",
+            "creatureLifeService.birth2die(\"Duck\");"
+          ]
+        }
+      ]
+    }
+  ]
+}

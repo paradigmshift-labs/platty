@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "KotlinSpringBoot/saber",
+  "htmlUrl": "https://github.com/KotlinSpringBoot/saber",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 29,
+          "lines": [
+            "mavenCentral()",
+            "}",
+            "dependencies {",
+            "classpath(\"<literal>\")",
+            "classpath(\"<literal>\")",
+            "classpath(\"<literal>\")",
+            "}",
+            "}",
+            "apply plugin: 'kotlin-spring'",
+            "apply plugin: 'eclipse'",
+            "apply plugin: 'org.springframework.boot'",
+            "apply plugin: 'io.spring.dependency-management'",
+            "group = 'com.light'",
+            "version = '0.0.1-SNAPSHOT'",
+            "dependencies {",
+            "compile('<literal>')",
+            "compile('<literal>')",
+            "compile('<literal>')",
+            "compile('<literal>')",
+            "compile('<literal>')",
+            "compile('<literal>')",
+            "compile(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "compile(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "runtime('org.springframework.boot:spring-boot-devtools')",
+            "runtime('mysql:mysql-connector-java')",
+            "testCompile('<literal>')",
+            "compile 'com.squareup.okhttp3:okhttp:3.8.1'",
+            "compile group: 'net.sourceforge.htmlunit', name: 'htmlunit', version: '2.27'",
+            "compile group: 'org.jsoup', name: 'jsoup', version: '1.10.3'"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/light/saber/SaberApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "open class SaberApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<SaberApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/light/saber/controller/CrawImageController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 18,
+          "lines": [
+            "@Controller",
+            "class CrawImageController {",
+            "@Autowired",
+            "lateinit var crawGankImageService: CrawImageServiceGankImpl",
+            "@Autowired",
+            "lateinit var crawSinaImageService: CrawImageServiceSinaImpl",
+            "@RequestMapping(value = [\"crawGankImageService\"], method = [(RequestMethod.GET)])",
+            "@ResponseBody",
+            "fun crawGankImageService(): String {",
+            "crawGankImageService.doCrawJob()",
+            "return \"crawGankImageService JOB Started\"",
+            "}",
+            "@RequestMapping(value = [\"crawSinaImageService\"], method = [(RequestMethod.GET)])",
+            "@ResponseBody",
+            "fun crawSinaImageService(): String {",
+            "crawSinaImageService.doCrawJob()",
+            "return \"crawSinaImageService JOB Started\"",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/light/saber/controller/ImageController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 63,
+          "lines": [
+            "@RestController",
+            "class ImageController {",
+            "@Autowired",
+            "lateinit var imageRepository: ImageRepository",
+            "@GetMapping(\"sotuJson\")",
+            "fun sotuJson(@RequestParam(value = \"page\", defaultValue = \"0\") page: Int,",
+            "@RequestParam(value = \"size\", defaultValue = \"10\") size: Int): Page<Image> {",
+            "return getPageResult(page, size)",
+            "}",
+            "@GetMapping(\"sotuSearchFavoriteJson\")",
+            "fun sotuSearchJson(@RequestParam(value = \"page\", defaultValue = \"0\") page: Int,",
+            "@RequestParam(value = \"size\", defaultValue = \"10\") size: Int,",
+            "@RequestParam(value = \"searchText\", defaultValue = \"\") searchText: String): Page<Image> {",
+            "return getFavoritePageResult(page, size, searchText)",
+            "}",
+            "@GetMapping(\"sotuGankSearchJson\")",
+            "fun sotuGankSearchJson(@RequestParam(value = \"page\", defaultValue = \"0\") page: Int,",
+            "@RequestParam(value = \"size\", defaultValue = \"10\") size: Int,",
+            "@RequestParam(value = \"searchText\", defaultValue = \"\") searchText: String): Page<Image> {",
+            "return getGankPageResult(page, size, searchText)",
+            "}",
+            "@PostMapping(value = \"addFavorite\")",
+            "fun addFavorite(@RequestParam(value = \"id\") id: Long): Boolean {",
+            "imageRepository.addFavorite(id)",
+            "return true",
+            "}",
+            "@PostMapping(value = \"delete\")",
+            "fun delete(@RequestParam(value = \"id\") id: Long): Boolean {",
+            "imageRepository.delete(id)",
+            "return true",
+            "}",
+            "private fun getPageResult(page: Int, size: Int): Page<Image> {",
+            "val sort = Sort(Sort.Direction.DESC, \"id\")",
+            "val pageable = PageRequest.of(page, size, sort)",
+            "return imageRepository.findAll(pageable)",
+            "}",
+            "private fun getPageResult(page: Int, size: Int, searchText: String): Page<Image> {",
+            "val sort = Sort(Sort.Direction.DESC, \"id\")",
+            "val pageable = PageRequest.of(page, size, sort)",
+            "if (searchText == \"\") {",
+            "}",
+            "private fun getGankPageResult(page: Int, size: Int, searchText: String): Page<Image> {",
+            "val sort = Sort(Sort.Direction.DESC, \"id\")",
+            "val pageable = PageRequest.of(page, size, sort)",
+            "if (searchText == \"\") {",
+            "}",
+            "private fun getFavoritePageResult(page: Int, size: Int, searchText: String): Page<Image> {",
+            "val sort = Sort(Sort.Direction.DESC, \"id\")",
+            "val pageable = PageRequest.of(page, size, sort)",
+            "if (searchText == \"\") {",
+            "val allFavorite = imageRepository.findAllFavorite(pageable)",
+            "@GetMapping(\"sotuSearchByTypeJson\")",
+            "fun sotuSearchByTypeJson(@RequestParam(value = \"page\", defaultValue = \"0\") page: Int,",
+            "@RequestParam(value = \"size\", defaultValue = \"10\") size: Int,",
+            "@RequestParam(value = \"searchText\", defaultValue = \"\") searchText: String,",
+            "@RequestParam(value = \"sourceType\", defaultValue = \"2\") sourceType: Int",
+            "): Page<Image> {",
+            "}",
+            "private fun getPageResultByType(page: Int, size: Int, searchText: String, sourceType: Int): Page<Image> {",
+            "val sort = Sort(Sort.Direction.DESC, \"id\")",
+            "val pageable = PageRequest.of(page, size, sort)",
+            "if (searchText == \"\") {",
+            "return imageRepository.findAllImageByType(sourceType, pageable)"
+          ]
+        }
+      ]
+    }
+  ]
+}

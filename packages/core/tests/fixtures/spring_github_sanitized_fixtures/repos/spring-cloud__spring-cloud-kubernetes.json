@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "spring-cloud/spring-cloud-kubernetes",
+  "htmlUrl": "https://github.com/spring-cloud/spring-cloud-kubernetes",
+  "defaultBranch": "main",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "docs/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 10,
+          "lines": [
+            "xsi:schemaLocation=\"<literal>\">",
+            "<modelVersion>4.0.0</modelVersion>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-kubernetes-docs</artifactId>",
+            "<parent>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-kubernetes</artifactId>",
+            "<version>5.0.2-SNAPSHOT</version>",
+            "<relativePath>..</relativePath>",
+            "</parent>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-cloud-kubernetes-commons/src/main/java/org/springframework/cloud/kubernetes/commons/configdata/KubernetesConfigDataResource.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 3,
+          "lines": [
+            "public final class KubernetesConfigDataResource extends ConfigDataResource {",
+            "private final Profiles profiles;",
+            "private final Environment environment;"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-cloud-kubernetes-commons/src/main/java/org/springframework/cloud/kubernetes/commons/leader/LeadershipController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 58,
+          "lines": [
+            "public abstract class LeadershipController {",
+            "private static final LogAccessor LOGGER = new LogAccessor(LeadershipController.class);",
+            "protected static final String PROVIDER_KEY = \"provider\";",
+            "protected static final String PROVIDER = \"spring-cloud-kubernetes\";",
+            "protected PodReadinessWatcher leaderReadinessWatcher;",
+            "public LeadershipController(Candidate candidate, LeaderProperties leaderProperties,",
+            "LeaderEventPublisher leaderEventPublisher) {",
+            "this.candidate = candidate;",
+            "this.leaderProperties = leaderProperties;",
+            "this.leaderEventPublisher = leaderEventPublisher;",
+            "}",
+            "public Optional<Leader> getLocalLeader() {",
+            "return Optional.ofNullable(localLeader);",
+            "}",
+            "public abstract void update();",
+            "public abstract void revoke();",
+            "protected String getLeaderKey() {",
+            "return leaderProperties.getLeaderIdPrefix() + candidate.getRole();",
+            "}",
+            "protected Map<String, String> getLeaderData(Candidate candidate) {",
+            "String leaderKey = getLeaderKey();",
+            "return Collections.singletonMap(leaderKey, candidate.getId());",
+            "}",
+            "protected Leader extractLeader(Map<String, String> data) {",
+            "if (data == null) {",
+            "return null;",
+            "}",
+            "}",
+            "protected void handleLeaderChange(Leader newLeader) {",
+            "if (Objects.equals(localLeader, newLeader)) {",
+            "LOGGER.debug(() -> \"Leader is still : \" + localLeader);",
+            "return;",
+            "}",
+            "}",
+            "protected void notifyOnGranted() {",
+            "LOGGER.debug(() -> \"Leadership has been granted to : \" + candidate);",
+            "Context context = new LeaderContext(candidate, this);",
+            "leaderEventPublisher.publishOnGranted(this, context, candidate.getRole());",
+            "}",
+            "protected void notifyOnRevoked() {",
+            "LOGGER.debug(() -> \"Leadership has been revoked from :\" + candidate);",
+            "Context context = new LeaderContext(candidate, this);",
+            "leaderEventPublisher.publishOnRevoked(this, context, candidate.getRole());",
+            "}",
+            "protected void notifyOnFailedToAcquire() {",
+            "if (leaderProperties.isPublishFailedEvents()) {",
+            "Context context = new LeaderContext(candidate, this);",
+            "leaderEventPublisher.publishOnFailedToAcquire(this, context, candidate.getRole());",
+            "}",
+            "}",
+            "protected void restartLeaderReadinessWatcher() {",
+            "if (leaderReadinessWatcher != null) {",
+            "leaderReadinessWatcher.stop();",
+            "leaderReadinessWatcher = null;",
+            "}",
+            "}",
+            "protected abstract PodReadinessWatcher createPodReadinessWatcher(String localLeaderId);",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-cloud-kubernetes-controllers/spring-cloud-kubernetes-configserver/src/main/java/org/springframework/cloud/kubernetes/configserver/KubernetesConfigServerApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@SpringBootApplication",
+            "@EnableConfigServer",
+            "public class KubernetesConfigServerApplication {",
+            "public static void main(String[] args) {",
+            "new SpringApplicationBuilder(KubernetesConfigServerApplication.class)",
+            ".properties(\"spring.config.name=configserver\")",
+            ".run(args);",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

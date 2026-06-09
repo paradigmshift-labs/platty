@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "OrdinaryRoad-Project/ordinaryroad-barrage-fly",
+  "htmlUrl": "https://github.com/OrdinaryRoad-Project/ordinaryroad-barrage-fly",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "barrage-fly/build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 66,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "import org.springframework.boot.gradle.tasks.bundling.BootJar",
+            "import java.nio.charset.StandardCharsets",
+            "plugins {",
+            "alias(libs.plugins.springframeworkBoot)",
+            "id(\"io.spring.dependency-management\") version \"1.0.15.RELEASE\"",
+            "kotlin(\"jvm\") version \"1.6.21\"",
+            "kotlin(\"plugin.spring\") version \"1.6.21\"",
+            "}",
+            "dependencies {",
+            "val liveChatClientBrotliVersion = \"1.16.0\"",
+            "val ordinaryroadVersion = \"1.6.0\"",
+            "val saTokenVersion = \"1.36.0\"",
+            "val qLExpressVersion = \"3.3.2\"",
+            "implementation(\"org.apache.commons:commons-lang3:3.14.0\")",
+            "implementation(\"de.codecentric:spring-boot-admin-starter-client\")",
+            "implementation(\"de.codecentric:spring-boot-admin-starter-server\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(libs.liveChatClientBilibili)",
+            "implementation(libs.liveChatClientDouyu)",
+            "implementation(libs.liveChatClientHuya)",
+            "implementation(libs.liveChatClientDouyin)",
+            "implementation(libs.liveChatClientKuaishou)",
+            "implementation(\"<literal>\") {",
+            "exclude(\"org.springframework\")",
+            "exclude(\"org.springframework.cloud\")",
+            "exclude(\"org.springframework.boot\")",
+            "exclude(\"com.alibaba.fastjson2\")",
+            "exclude(\"org.mapstruct\")",
+            "exclude(\"org.apache.commons\")",
+            "}",
+            "implementation(\"<literal>\") {",
+            "exclude(\"tech.ordinaryroad\", \"ordinaryroad-commons-satoken\")",
+            "exclude(\"tech.ordinaryroad\", \"ordinaryroad-push-api\")",
+            "}",
+            "implementation(\"<literal>\")",
+            "implementation(\"com.alibaba:QLExpress:$qLExpressVersion\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "developmentOnly(\"org.springframework.boot:spring-boot-devtools\")",
+            "annotationProcessor(\"<literal>\")",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"io.projectreactor:reactor-test\")",
+            "}",
+            "dependencyManagement {",
+            "imports {",
+            "mavenBom(\"<literal>\"springBootAdminVersion\")}\")",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "barrage-fly/src/main/java/tech/ordinaryroad/barrage/fly/OrdinaryroadBarrageFlyApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 18,
+          "lines": [
+            "@EnableAdminServer",
+            "@SpringBootApplication(",
+            "exclude = [PasswordEncoderConfig::class, RedisTemplateConfiguration::class, RedisService::class],",
+            ")",
+            "@MapperScan(\"tech.ordinaryroad.barrage.fly.dal.dao\")",
+            "class OrdinaryroadBarrageFlyApplication {",
+            "companion object {",
+            "@JvmStatic",
+            "fun main(args: Array<String>) {",
+            "runApplication<OrdinaryroadBarrageFlyApplication>(*args)",
+            "val properties = PropertiesLoaderUtils.loadAllProperties(\"properties/generated/version.properties\")",
+            "println(StrUtil.format(\"LiveChatClient Version: {}\", properties.getProperty(\"liveChatClientVersion\")))",
+            "}",
+            "@PreDestroy",
+            "fun preDestroy() {",
+            "BarrageFlyTaskContext.destroy()",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "barrage-fly/src/main/java/tech/ordinaryroad/barrage/fly/handler/BarrageFlyAppHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@Component",
+            "class BarrageFlyAppHandler(val adminProperties: AdminProperties) {",
+            "private val log = LoggerFactory.getLogger(BarrageFlyAppHandler::class.java)",
+            "fun configurations(request: ServerRequest): Mono<ServerResponse> {",
+            "return ServerResponse.ok().bodyValue(",
+            "OrJacksonUtil.getInstance().createObjectNode().apply {",
+            "put(\"rsaPublicKey\", adminProperties.rsaPublicKey)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "barrage-fly/src/main/java/tech/ordinaryroad/barrage/fly/handler/BarrageFlyStatsHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@Component",
+            "class BarrageFlyStatsHandler(private val barrageFlyTaskService: BarrageFlyTaskService) {",
+            "private val log = LoggerFactory.getLogger(BarrageFlyStatsHandler::class.java)",
+            "fun counts(request: ServerRequest): Mono<ServerResponse> {",
+            "val ids = barrageFlyTaskService.findAllIds()",
+            "val taskContexts = BarrageFlyTaskContext.taskContexts",
+            "val clientHashIdSet = HashSet<Int>()"
+          ]
+        }
+      ]
+    }
+  ]
+}

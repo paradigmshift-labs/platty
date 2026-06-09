@@ -1,0 +1,176 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "527515025/springBoot",
+  "htmlUrl": "https://github.com/527515025/springBoot",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "asyncEntrypoint",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "abel-parent/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 23,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.0.4.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependency>",
+            "<groupId>org.mybatis.spring.boot</groupId>",
+            "<artifactId>mybatis-spring-boot-starter</artifactId>",
+            "<version>1.3.2</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.github.pagehelper</groupId>",
+            "<artifactId>pagehelper-spring-boot-starter</artifactId>",
+            "<version>1.2.5</version>",
+            "</dependency>",
+            "<dependency>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "<configuration>",
+            "<includeSystemScope>true</includeSystemScope>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "abel-util/src/main/java/cn/abel/response/ResponseEntity.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 45,
+          "lines": [
+            "public class ResponseEntity {",
+            "int status = 200;",
+            "String message = \"ok\";",
+            "private ResponseEntity() {",
+            "}",
+            "public static ResponseEntity ok(Object data) {",
+            "ResponseEntity ResponseEntity = new ResponseEntity();",
+            "ResponseEntity.setData(data);",
+            "return ResponseEntity;",
+            "}",
+            "public static ResponseEntity error(InfoCode infoCode) {",
+            "ResponseEntity ResponseEntity = new ResponseEntity();",
+            "ResponseEntity.setStatus(infoCode.getStatus());",
+            "ResponseEntity.setMessage(infoCode.getMsg());",
+            "return ResponseEntity;",
+            "}",
+            "public static ResponseEntity ok() {",
+            "ResponseEntity ResponseEntity = new ResponseEntity();",
+            "return ResponseEntity;",
+            "}",
+            "public static ResponseEntity error(int code, String msg) {",
+            "ResponseEntity ResponseEntity = new ResponseEntity();",
+            "ResponseEntity.setStatus(code);",
+            "ResponseEntity.setMessage(msg);",
+            "return ResponseEntity;",
+            "}",
+            "public int getStatus() {",
+            "return status;",
+            "}",
+            "public void setStatus(int status) {",
+            "this.status = status;",
+            "}",
+            "public String getMessage() {",
+            "return message;",
+            "}",
+            "public void setMessage(String message) {",
+            "this.message = message;",
+            "}",
+            "public Object getData() {",
+            "return data == null ? new HashMap() : data;",
+            "}",
+            "public void setData(Object data) {",
+            "this.data = data;",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "springWebSocket/src/main/java/com/us/example/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@ComponentScan(basePackages =\"com.us.example\")",
+            "@SpringBootApplication",
+            "@EnableScheduling",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "ConfigurableApplicationContext run = run(Application.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "springWebSocket/src/main/java/com/us/example/controller/WebSocketController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 35,
+          "lines": [
+            "@CrossOrigin",
+            "@Controller",
+            "public class WebSocketController {",
+            "@Autowired",
+            "private WebSocketService ws;",
+            "@Autowired",
+            "private SimpMessagingTemplate messagingTemplate;",
+            "@RequestMapping(value = \"/__path__\")",
+            "public String login(){",
+            "return  \"login\";",
+            "}",
+            "@RequestMapping(value = \"/__path__\")",
+            "public String ws(){",
+            "return  \"ws\";",
+            "}",
+            "@RequestMapping(value = \"/__path__\")",
+            "public String chat(){",
+            "return  \"chat\";",
+            "}",
+            "@MessageMapping(\"/__path__\")//浏览器发送请求通过@messageMapping 映射/welcome 这个地址。",
+            "@SendTo(\"/__path__\")//服务器端有消息时,会订阅@SendTo 中的路径的浏览器发送消息。",
+            "public Response say(Message message) throws Exception {",
+            "Thread.sleep(1000);",
+            "return new Response(\"Welcome, \" + message.getName() + \"!\");",
+            "}",
+            "@RequestMapping(\"/__path__\")",
+            "@ResponseBody",
+            "public String say2()throws Exception",
+            "{",
+            "ws.sendMessage();",
+            "return \"is ok\";",
+            "}",
+            "@MessageMapping(\"/__path__\")",
+            "public void handleChat(Principal principal, Message message) {",
+            "if (principal.getName().equals(\"admin\")) {"
+          ]
+        }
+      ]
+    }
+  ]
+}

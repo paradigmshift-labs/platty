@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "yudaocode/SpringBoot-Labs",
+  "htmlUrl": "https://github.com/yudaocode/SpringBoot-Labs",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "lab-01-spring-security/lab-01-springsecurity-demo-role/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 18,
+          "lines": [
+            "xsi:schemaLocation=\"<literal>\">",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.1.10.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<modelVersion>4.0.0</modelVersion>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-security</artifactId>",
+            "</dependency>",
+            "</dependencies>",
+            "</project>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "lab-01-spring-security/lab-01-springsecurity-demo-role/src/main/java/cn/iocoder/springboot/lab01/springsecurity/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(Application.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "lab-01-spring-security/lab-01-springsecurity-demo-role/src/main/java/cn/iocoder/springboot/lab01/springsecurity/controller/DemoController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 24,
+          "lines": [
+            "import javax.annotation.security.PermitAll;",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "public class DemoController {",
+            "@PermitAll",
+            "@GetMapping(\"/__path__\")",
+            "public String demo() {",
+            "return \"示例返回\";",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public String home() {",
+            "return \"我是首页\";",
+            "}",
+            "@PreAuthorize(\"hasRole('ROLE_ADMIN')\")",
+            "@GetMapping(\"/__path__\")",
+            "public String admin() {",
+            "return \"我是管理员\";",
+            "}",
+            "@PreAuthorize(\"hasRole('ROLE_NORMAL')\")",
+            "@GetMapping(\"/__path__\")",
+            "public String normal() {",
+            "return \"我是普通用户\";",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "lab-01-spring-security/lab-01-springsecurity-demo-role/src/main/java/cn/iocoder/springboot/lab01/springsecurity/controller/TestController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 21,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController;",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "public class TestController {",
+            "@GetMapping(\"/__path__\")",
+            "public String demo() {",
+            "return \"示例返回\";",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public String home() {",
+            "return \"我是首页\";",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public String admin() {",
+            "return \"我是管理员\";",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public String normal() {",
+            "return \"我是普通用户\";",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

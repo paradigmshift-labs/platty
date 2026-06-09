@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "Hyung1Jung/commerce",
+  "htmlUrl": "https://github.com/Hyung1Jung/commerce",
+  "defaultBranch": "develop",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "auth/src/main/kotlin/me/hyungil/auth/AuthApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@EnableFeignClients",
+            "@EnableDiscoveryClient",
+            "@SpringBootApplication",
+            "@ConfigurationPropertiesScan(\"me.hyungil.auth.commom.property\")",
+            "class AuthApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<AuthApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "auth/src/main/kotlin/me/hyungil/auth/adapter/in/presentation/AuthExceptionHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 2,
+          "lines": [
+            "@RestControllerAdvice",
+            "class AuthExceptionHandler: GlobalExceptionHandler"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "auth/src/main/kotlin/me/hyungil/auth/adapter/in/presentation/v1/AuthController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 11,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "@RequestMapping(\"v1/auth\")",
+            "class AuthController(",
+            "private val authUseCase: AuthUseCase",
+            ") {",
+            "@PostMapping(\"login\")",
+            "fun login(@RequestBody loginRequest: LoginRequest) = authUseCase.login(loginRequest)",
+            "@PostMapping(\"reissue\")",
+            "fun reissue(@RequestBody tokenRequest: TokenRequest) = authUseCase.reissue(tokenRequest)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "core/src/main/kotlin/me/hyungil/core/CoreApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class CoreApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<CoreApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "hncboy/ai-beehive",
+  "htmlUrl": "https://github.com/hncboy/ai-beehive",
+  "defaultBranch": "main",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation"
+  ],
+  "files": [
+    {
+      "path": "beehive-base/src/main/java/com/hncboy/beehive/base/annotation/ApiAdminRestController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@Retention(RetentionPolicy.RUNTIME)",
+            "@Documented",
+            "@RestController",
+            "@RequestMapping",
+            "public @interface ApiAdminRestController {",
+            "@AliasFor(annotation = RequestMapping.class)",
+            "String name() default \"\";"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "beehive-base/src/main/java/com/hncboy/beehive/base/handler/SensitiveWordHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 20,
+          "lines": [
+            "@Slf4j",
+            "public class SensitiveWordHandler {",
+            "private static final String CACHE_KEY = \"wordTree\";",
+            "private static final LoadingCache<String, WordTree> CACHE = CacheBuilder.newBuilder()",
+            ".concurrencyLevel(Runtime.getRuntime().availableProcessors())",
+            ".initialCapacity(1)",
+            "@Override",
+            "public @NotNull WordTree load(@NotNull String s) {",
+            "log.warn(\"开始构建敏感词树\");",
+            "WordTree wordTree = new WordTree();",
+            "SensitiveWordMapper sensitiveWordMapper = SpringUtil.getBean(SensitiveWordMapper.class);",
+            "List<SensitiveWordDO> sensitiveWords = sensitiveWordMapper.selectList(new LambdaQueryWrapper<SensitiveWordDO>()",
+            "public static void clearWordTree() {",
+            "CACHE.invalidateAll();",
+            "}",
+            "public static List<String> checkWord(String content) {",
+            "WordTree wordTree = null;",
+            "try {",
+            "wordTree = CACHE.get(CACHE_KEY);",
+            "} catch (Exception e) {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "beehive-base/src/main/java/com/hncboy/beehive/base/resource/aip/BaiduAipHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 10,
+          "lines": [
+            "@Slf4j",
+            "public class BaiduAipHandler {",
+            "public static Pair<Boolean, String> isCheckTextPass(String identify, String text) {",
+            "if (!BaiduAipUtil.getBaiduAipProperties().getEnabled()) {",
+            "return new Pair<>(true, null);",
+            "}",
+            "private static boolean handleReturnResult(Map<String, Object> checkTestResult) {",
+            "AipContentResult aipContentResult = ObjectMapperUtil.fromJson(ObjectMapperUtil.toJson(checkTestResult), AipContentResult.class);",
+            "if (StrUtil.isNotBlank(aipContentResult.getErrorMsg())) {",
+            "return false;"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "beehive-bootstrap/src/main/java/com/hncboy/beehive/BeehiveApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@EnableScheduling",
+            "@MapperScan(value = {\"com.hncboy.beehive.**.mapper\"})",
+            "@SpringBootApplication(nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class)",
+            "public class BeehiveApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(BeehiveApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

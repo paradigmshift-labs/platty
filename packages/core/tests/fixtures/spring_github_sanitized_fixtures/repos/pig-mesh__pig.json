@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "pig-mesh/pig",
+  "htmlUrl": "https://github.com/pig-mesh/pig",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pig-auth/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 23,
+          "lines": [
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-security</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-freemarker</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-undertow</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.pig4cloud</groupId>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "<plugin>",
+            "<groupId>io.fabric8</groupId>",
+            "<artifactId>docker-maven-plugin</artifactId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "pig-auth/src/main/java/com/pig4cloud/pig/auth/PigAuthApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@EnablePigFeignClients",
+            "@EnableDiscoveryClient",
+            "@SpringBootApplication",
+            "public class PigAuthApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(PigAuthApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "pig-auth/src/main/java/com/pig4cloud/pig/auth/support/handler/FormAuthenticationFailureHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@Slf4j",
+            "public class FormAuthenticationFailureHandler implements AuthenticationFailureHandler {",
+            "@Override",
+            "@SneakyThrows",
+            "public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,",
+            "AuthenticationException exception) {",
+            "log.debug(\"表单登录失败:{}\", exception.getLocalizedMessage());",
+            "String contextPath = request.getContextPath();"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "pig-auth/src/main/java/com/pig4cloud/pig/auth/support/handler/PigAuthenticationFailureEventHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 14,
+          "lines": [
+            "@Slf4j",
+            "public class PigAuthenticationFailureEventHandler implements AuthenticationFailureHandler {",
+            "private final MappingJackson2HttpMessageConverter errorHttpResponseConverter = new MappingJackson2HttpMessageConverter();",
+            "@Override",
+            "@SneakyThrows",
+            "public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,",
+            "AuthenticationException exception) {",
+            "String username = request.getParameter(OAuth2ParameterNames.USERNAME);",
+            "log.info(\"用户：{} 登录失败，异常：{}\", username, exception.getLocalizedMessage());",
+            "private void sendErrorResponse(HttpServletRequest request, HttpServletResponse response,",
+            "AuthenticationException exception) throws IOException {",
+            "ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);",
+            "httpResponse.setStatusCode(HttpStatus.UNAUTHORIZED);",
+            "String errorMessage;"
+          ]
+        }
+      ]
+    }
+  ]
+}

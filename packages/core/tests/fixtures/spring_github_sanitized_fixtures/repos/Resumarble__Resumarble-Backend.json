@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "Resumarble/Resumarble-Backend",
+  "htmlUrl": "https://github.com/Resumarble/Resumarble-Backend",
+  "defaultBranch": "develop",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 39,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "id(\"org.springframework.boot\") version \"3.1.6\" apply false",
+            "id(\"io.spring.dependency-management\") version \"1.1.4\" apply false",
+            "kotlin(\"jvm\") version \"1.9.20\"",
+            "kotlin(\"plugin.spring\") version \"1.9.20\" apply false",
+            "kotlin(\"plugin.jpa\") version \"1.9.20\" apply false",
+            "apply(plugin = \"org.jetbrains.kotlin.jvm\")",
+            "apply(plugin = \"org.jetbrains.kotlin.kapt\")",
+            "apply(plugin = \"org.springframework.boot\")",
+            "apply(plugin = \"io.spring.dependency-management\")",
+            "apply(plugin = \"org.jetbrains.kotlin.plugin.spring\")",
+            "apply(plugin = \"org.jetbrains.kotlin.plugin.jpa\")",
+            "apply(plugin = \"kotlin-kapt\")",
+            "java.sourceCompatibility = JavaVersion.VERSION_17",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlinx:kotlinx-coroutines-core\")",
+            "testImplementation(\"org.jetbrains.kotlinx:kotlinx-coroutines-test\")",
+            "testImplementation(\"io.kotest:kotest-assertions-core-jvm:5.6.2\")",
+            "testImplementation(\"io.kotest:kotest-runner-junit5-jvm:5.6.2\")",
+            "testImplementation(\"io.mockk:mockk:1.13.5\")",
+            "implementation(\"<literal>\")",
+            "testImplementation(\"it.ozimov:embedded-redis:0.7.2\")",
+            "implementation(\"com.auth0:java-jwt:3.18.3\")",
+            "implementation(\"io.jsonwebtoken:jjwt:0.9.1\")",
+            "implementation(\"com.nimbusds:nimbus-jose-jwt:9.31\")",
+            "implementation(\"<literal>\")",
+            "runtimeOnly(\"io.micrometer:micrometer-registry-prometheus\")",
+            "runtimeOnly(\"com.h2database:h2\")",
+            "runtimeOnly(\"com.mysql:mysql-connector-j\")",
+            "testImplementation(\"<literal>\")",
+            "}",
+            "tasks.withType<KotlinCompile> {",
+            "kotlinOptions {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "resumarble-api/src/main/kotlin/resumarble/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication(",
+            "scanBasePackages = [\"resumarble.core\", \"resumarble.api\", \"resumarble.infrastructure\"]",
+            ")",
+            "class Application",
+            "fun main(args: Array<String>) {",
+            "runApplication<Application>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "resumarble-api/src/main/kotlin/resumarble/api/global/advice/GlobalExceptionHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 41,
+          "lines": [
+            "@RestControllerAdvice",
+            "class GlobalExceptionHandler {",
+            "@ExceptionHandler(BusinessException::class)",
+            "fun handleBusinessException(e: BusinessException): Response<Any?> {",
+            "return Response.fail(e.errorCode)",
+            "}",
+            "@ExceptionHandler(PromptNotFoundException::class)",
+            "fun handlePromptNotFoundException(e: PromptNotFoundException): Response<Any?> {",
+            "return Response.fail(e.errorCode)",
+            "}",
+            "@ExceptionHandler(CompletionFailedException::class)",
+            "fun handleCompletionFailedException(e: CompletionFailedException): Response<Any?> {",
+            "return Response.fail(e.errorCode)",
+            "}",
+            "@ExceptionHandler(UserNotFoundException::class)",
+            "fun handleUserNotFoundException(e: UserNotFoundException): Response<Any?> {",
+            "return Response.fail(e.errorCode)",
+            "}",
+            "@ExceptionHandler(DuplicateUserException::class)",
+            "fun handleDuplicateUserException(e: DuplicateUserException): Response<Any> {",
+            "return Response.fail(e.errorCode, e.account)",
+            "}",
+            "@ExceptionHandler(UnidentifiedUserException::class)",
+            "fun handleUnidentifiedUserException(e: UnidentifiedUserException): Response<Any?> {",
+            "return Response.fail(e.errorCode)",
+            "}",
+            "@ExceptionHandler(TokenVerifyException::class)",
+            "fun handleTokenVerifyException(e: TokenVerifyException): Response<Any?> {",
+            "return Response.fail(e.errorCode)",
+            "}",
+            "@ExceptionHandler(JsonProcessingException::class)",
+            "fun handleJsonProcessingException(e: JsonProcessingException): Response<Any?> {",
+            "logger.error(e.message, e)",
+            "return Response.fail(ErrorCode.TOKEN_VERIFY_FAIL)",
+            "}",
+            "@ExceptionHandler(Exception::class)",
+            "fun handleException(e: Exception): Response<Any?> {",
+            "logger.error(e.message, e)",
+            "return Response.fail(ErrorCode.INTERNAL_SERVER_ERROR)",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "resumarble-api/src/main/kotlin/resumarble/api/user/LoginController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 27,
+          "lines": [
+            "import resumarble.core.global.jwt.LoginToken",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class LoginController(",
+            "private val loginUserUseCase: LoginUserUseCase,",
+            "private val logoutUserUseCase: LogoutUserUseCase",
+            ") {",
+            "@Operation(summary = \"로그인\", description = \"이메일, 패스워드를 입력받아 로그인을 진행한다.\")",
+            "@PostMapping(\"/__path__\")",
+            "fun login(",
+            "@Valid",
+            "@RequestBody",
+            "loginUserRequest: LoginUserRequest",
+            "): Response<LoginToken> {",
+            "@Operation(summary = \"로그아웃\", description = \"헤더의 엑세스 토큰으로 로그아웃을 진행한다.\")",
+            "@PostMapping(\"/__path__\")",
+            "fun logout(@AuthenticationPrincipal user: JwtUserDetails): Response<Unit> {",
+            "logoutUserUseCase.logout(LogoutUserCommand.of(user.userId))",
+            "return Response.ok()",
+            "}",
+            "@Operation(summary = \"액세스 토큰 재발급\", description = \"리프레시 토큰을 이용하여 액세스 토큰을 재발급한다.\")",
+            "@PostMapping(\"/__path__\")",
+            "fun reissue(@RequestBody request: ReissueTokenRequest): Response<LoginToken> {",
+            "val loginToken = loginUserUseCase.reissueToken(request.toCommand())",
+            "return Response.ok(loginToken)",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

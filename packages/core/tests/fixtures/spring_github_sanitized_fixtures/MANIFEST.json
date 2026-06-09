@@ -1,0 +1,1706 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "target": 100,
+  "count": 100,
+  "sourcePolicy": {
+    "source": "GitHub repository catalog plus GitHub contents API",
+    "safety": [
+      "No repository is copied wholesale.",
+      "Only Spring-relevant manifest/source excerpts are stored.",
+      "Comments are stripped and method bodies are not retained as executable source.",
+      "Saved files are JSON evidence documents, not buildable project files.",
+      "Prompt-injection-like text causes the repo fixture to be rejected."
+    ],
+    "adapterPolicy": "Use this corpus to derive general Spring/JVM patterns only; do not add repo-specific rules."
+  },
+  "aggregateSignals": {
+    "springEvidence": 100,
+    "httpAnnotation": 71,
+    "manifest": 99,
+    "asyncEntrypoint": 1,
+    "jpaModel": 16
+  },
+  "fixtures": [
+    {
+      "repo": "macrozheng/mall",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/macrozheng__mall.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "mall-admin/pom.xml",
+        "mall-admin/src/main/java/com/macro/mall/MallAdminApplication.java",
+        "mall-admin/src/main/java/com/macro/mall/controller/CmsPrefrenceAreaController.java",
+        "mall-admin/src/main/java/com/macro/mall/controller/CmsSubjectController.java"
+      ]
+    },
+    {
+      "repo": "conductor-oss/conductor",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/conductor-oss__conductor.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "ai/build.gradle",
+        "common/src/main/java/com/netflix/conductor/common/metadata/events/EventHandler.java",
+        "mysql-persistence/src/main/java/com/netflix/conductor/mysql/util/ResultSetHandler.java",
+        "postgres-external-storage/src/main/java/com/netflix/conductor/postgres/controller/ExternalPostgresPayloadResource.java"
+      ]
+    },
+    {
+      "repo": "apolloconfig/apollo",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/apolloconfig__apollo.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "apollo-adminservice/pom.xml",
+        "apollo-adminservice/src/main/java/com/ctrip/framework/apollo/adminservice/AdminServiceApplication.java",
+        "apollo-adminservice/src/main/java/com/ctrip/framework/apollo/adminservice/controller/AccessKeyController.java",
+        "apollo-adminservice/src/main/java/com/ctrip/framework/apollo/adminservice/controller/AppController.java"
+      ]
+    },
+    {
+      "repo": "wuyouzhuguli/SpringAll",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/wuyouzhuguli__SpringAll.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "01.Start-Spring-Boot/pom.xml",
+        "01.Start-Spring-Boot/src/main/java/com/springboot/demo/DemoApplication.java",
+        "02.Spring-Boot-Config/src/main/java/com/springboot/Application.java",
+        "02.Spring-Boot-Config/src/main/java/com/springboot/controller/IndexController.java"
+      ]
+    },
+    {
+      "repo": "linlinjava/litemall",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/linlinjava__litemall.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "litemall-admin-api/pom.xml",
+        "litemall-admin-api/src/main/java/org/linlinjava/litemall/admin/Application.java",
+        "litemall-admin-api/src/main/java/org/linlinjava/litemall/admin/config/ShiroExceptionHandler.java",
+        "litemall-admin-api/src/main/java/org/linlinjava/litemall/admin/web/AdminAdController.java"
+      ]
+    },
+    {
+      "repo": "yudaocode/SpringBoot-Labs",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/yudaocode__SpringBoot-Labs.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "lab-01-spring-security/lab-01-springsecurity-demo-role/pom.xml",
+        "lab-01-spring-security/lab-01-springsecurity-demo-role/src/main/java/cn/iocoder/springboot/lab01/springsecurity/Application.java",
+        "lab-01-spring-security/lab-01-springsecurity-demo-role/src/main/java/cn/iocoder/springboot/lab01/springsecurity/controller/DemoController.java",
+        "lab-01-spring-security/lab-01-springsecurity-demo-role/src/main/java/cn/iocoder/springboot/lab01/springsecurity/controller/TestController.java"
+      ]
+    },
+    {
+      "repo": "forezp/SpringCloudLearning",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/forezp__SpringCloudLearning.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "chapter-sleuth-mysql/eureka-server/pom.xml",
+        "chapter-sleuth-mysql/eureka-server/src/main/java/com/forezp/EurekaServerApplication.java",
+        "chapter-sleuth-mysql/gateway-service/src/main/java/com/forezp/GatewayServiceApplication.java",
+        "chapter-sleuth-mysql/user-service/src/main/java/com/forezp/UserServiceApplication.java"
+      ]
+    },
+    {
+      "repo": "sqshq/piggymetrics",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/sqshq__piggymetrics.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "account-service/pom.xml",
+        "account-service/src/main/java/com/piggymetrics/account/AccountApplication.java",
+        "account-service/src/main/java/com/piggymetrics/account/controller/AccountController.java",
+        "account-service/src/main/java/com/piggymetrics/account/controller/ErrorHandler.java"
+      ]
+    },
+    {
+      "repo": "macrozheng/mall-swarm",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/macrozheng__mall-swarm.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "mall-admin/pom.xml",
+        "mall-admin/src/main/java/com/macro/mall/MallAdminApplication.java",
+        "mall-admin/src/main/java/com/macro/mall/controller/CmsPrefrenceAreaController.java",
+        "mall-admin/src/main/java/com/macro/mall/controller/CmsSubjectController.java"
+      ]
+    },
+    {
+      "repo": "codecentric/spring-boot-admin",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/codecentric__spring-boot-admin.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "spring-boot-admin-client/src/main/java/de/codecentric/boot/admin/client/registration/Application.java",
+        "spring-boot-admin-samples/spring-boot-admin-sample-consul/src/main/java/de/codecentric/boot/admin/sample/SpringBootAdminConsulApplication.java",
+        "spring-boot-admin-samples/spring-boot-admin-sample-eureka/src/main/java/de/codecentric/boot/admin/SpringBootAdminEurekaApplication.java"
+      ]
+    },
+    {
+      "repo": "newbee-ltd/newbee-mall",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/newbee-ltd__newbee-mall.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/ltd/newbee/mall/NewBeeMallApplication.java",
+        "src/main/java/ltd/newbee/mall/controller/admin/AdminController.java",
+        "src/main/java/ltd/newbee/mall/controller/admin/NewBeeMallCarouselController.java"
+      ]
+    },
+    {
+      "repo": "zfile-dev/zfile",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/zfile-dev__zfile.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/im/zhaojun/zfile/ZfileApplication.java",
+        "src/main/java/im/zhaojun/zfile/core/config/mybatis/CollectionIntegerTypeHandler.java",
+        "src/main/java/im/zhaojun/zfile/core/config/mybatis/CollectionStrTypeHandler.java"
+      ]
+    },
+    {
+      "repo": "xuchengsheng/spring-reading",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/xuchengsheng__spring-reading.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "spring-annotation/spring-annotation-autowired/src/main/java/com/xcs/spring/AutowiredApplication.java",
+        "spring-annotation/spring-annotation-autowired/src/main/java/com/xcs/spring/controller/MyController.java",
+        "spring-annotation/spring-annotation-bean/src/main/java/com/xcs/spring/BeanApplication.java"
+      ]
+    },
+    {
+      "repo": "527515025/springBoot",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/527515025__springBoot.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "asyncEntrypoint",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "abel-parent/pom.xml",
+        "abel-util/src/main/java/cn/abel/response/ResponseEntity.java",
+        "springWebSocket/src/main/java/com/us/example/Application.java",
+        "springWebSocket/src/main/java/com/us/example/controller/WebSocketController.java"
+      ]
+    },
+    {
+      "repo": "pig-mesh/pig",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/pig-mesh__pig.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pig-auth/pom.xml",
+        "pig-auth/src/main/java/com/pig4cloud/pig/auth/PigAuthApplication.java",
+        "pig-auth/src/main/java/com/pig4cloud/pig/auth/support/handler/FormAuthenticationFailureHandler.java",
+        "pig-auth/src/main/java/com/pig4cloud/pig/auth/support/handler/PigAuthenticationFailureEventHandler.java"
+      ]
+    },
+    {
+      "repo": "wxiaoqi/Spring-Cloud-Platform",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/wxiaoqi__Spring-Cloud-Platform.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "ace-api/pom.xml",
+        "ace-dev-base/ace-common/src/main/java/com/github/wxiaoqi/security/common/context/BaseContextHandler.java",
+        "ace-dev-base/ace-common/src/main/java/com/github/wxiaoqi/security/common/handler/GlobalExceptionHandler.java",
+        "ace-dev-base/ace-common/src/main/java/com/github/wxiaoqi/security/common/rest/BaseController.java"
+      ]
+    },
+    {
+      "repo": "LandGrey/SpringBootVulExploit",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/LandGrey__SpringBootVulExploit.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "repository/springboot-eureka-xstream-rce/pom.xml",
+        "repository/springboot-eureka-xstream-rce/src/main/java/code/landgrey/Application.java",
+        "repository/springboot-h2-database-rce/src/main/java/code/landgrey/Application.java",
+        "repository/springboot-jolokia-logback-rce/src/main/java/code/landgrey/Application.java"
+      ]
+    },
+    {
+      "repo": "springfox/springfox",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/springfox__springfox.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "oas-contract-tests/src/main/java/springfox/test/contract/oas/OpenApiApplication.java",
+        "oas-contract-tests/src/main/java/springfox/test/contract/oas/api/HomeController.java",
+        "oas-contract-tests/src/main/java/springfox/test/contract/oas/api/PetApiController.java"
+      ]
+    },
+    {
+      "repo": "ZHENFENG13/spring-boot-projects",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/ZHENFENG13__spring-boot-projects.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "SpringBoot入门案例源码/spring-boot-RESTful-api/pom.xml",
+        "SpringBoot入门案例源码/spring-boot-RESTful-api/src/main/java/cn/lanqiao/springboot3/Application.java",
+        "SpringBoot入门案例源码/spring-boot-RESTful-api/src/main/java/cn/lanqiao/springboot3/controller/ApiController.java",
+        "SpringBoot入门案例源码/spring-boot-ajax/src/main/java/cn/lanqiao/springboot3/Application.java"
+      ]
+    },
+    {
+      "repo": "201206030/novel",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/201206030__novel.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/io/github/xxyopen/novel/NovelApplication.java",
+        "src/main/java/io/github/xxyopen/novel/controller/author/AuthorAiController.java",
+        "src/main/java/io/github/xxyopen/novel/controller/author/AuthorController.java"
+      ]
+    },
+    {
+      "repo": "javastacks/spring-boot-best-practice",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/javastacks__spring-boot-best-practice.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "javastack-spring-boot-starter-sample/pom.xml",
+        "javastack-spring-boot-starter-sample/src/main/java/cn/javastack/springboot/starter/sample/Application.java",
+        "javastack-spring-boot-starter/src/main/java/cn/javastack/springboot/starter/Application.java",
+        "spring-boot-activemq/src/main/java/cn/javastack/springboot/activemq/Application.java"
+      ]
+    },
+    {
+      "repo": "spring-cloud/spring-cloud-gateway",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/spring-cloud__spring-cloud-gateway.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "docs/pom.xml",
+        "spring-cloud-gateway-integration-tests/grpc/src/main/java/org/springframework/cloud/gateway/tests/grpc/GRPCApplication.java",
+        "spring-cloud-gateway-integration-tests/http2/src/main/java/org/springframework/cloud/gateway/tests/http2/Http2Application.java",
+        "spring-cloud-gateway-integration-tests/httpclient/src/main/java/org/springframework/cloud/gateway/tests/httpclient/HttpClientApplication.java"
+      ]
+    },
+    {
+      "repo": "zlt2000/microservices-platform",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/zlt2000__microservices-platform.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "zlt-business/file-center/src/main/java/com/central/file/controller/FileController.java",
+        "zlt-business/search-center/search-server/src/main/java/com/central/admin/controller/IndexController.java",
+        "zlt-business/search-center/search-server/src/main/java/com/central/search/controller/AggregationController.java"
+      ]
+    },
+    {
+      "repo": "hansonwang99/Spring-Boot-In-Action",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/hansonwang99__Spring-Boot-In-Action.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "id-spring-boot-starter/pom.xml",
+        "id-spring-boot-starter/src/main/java/com/baidu/fsg/uid/buffer/RejectedPutBufferHandler.java",
+        "id-spring-boot-starter/src/main/java/com/baidu/fsg/uid/buffer/RejectedTakeBufferHandler.java",
+        "id-spring-boot-starter/src/main/java/com/baidu/fsg/uid/worker/entity/WorkerNodeEntity.java"
+      ]
+    },
+    {
+      "repo": "Heeexy/SpringBoot-Shiro-Vue",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/Heeexy__SpringBoot-Shiro-Vue.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "back/pom.xml",
+        "back/src/main/java/com/heeexy/example/MyApplication.java",
+        "back/src/main/java/com/heeexy/example/config/exception/GlobalExceptionHandler.java",
+        "back/src/main/java/com/heeexy/example/config/exception/MainsiteErrorController.java"
+      ]
+    },
+    {
+      "repo": "lilishop/lilishop",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/lilishop__lilishop.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "buyer-api/pom.xml",
+        "buyer-api/src/main/java/cn/lili/BuyerApiApplication.java",
+        "buyer-api/src/main/java/cn/lili/controller/distribution/DistributionBuyerController.java",
+        "buyer-api/src/main/java/cn/lili/controller/distribution/DistributionCashBuyerController.java"
+      ]
+    },
+    {
+      "repo": "ZHENFENG13/My-Blog",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/ZHENFENG13__My-Blog.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/com/site/blog/my/core/MyBlogApplication.java",
+        "src/main/java/com/site/blog/my/core/controller/admin/AdminController.java",
+        "src/main/java/com/site/blog/my/core/controller/admin/BlogController.java"
+      ]
+    },
+    {
+      "repo": "Exrick/xboot",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/Exrick__xboot.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "xboot-fast/pom.xml",
+        "xboot-fast/src/main/java/cn/exrick/xboot/XbootApplication.java",
+        "xboot-fast/src/main/java/cn/exrick/xboot/base/XbootBaseController.java",
+        "xboot-fast/src/main/java/cn/exrick/xboot/base/XbootBaseEntity.java"
+      ]
+    },
+    {
+      "repo": "spring-cloud/spring-cloud-kubernetes",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/spring-cloud__spring-cloud-kubernetes.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "docs/pom.xml",
+        "spring-cloud-kubernetes-commons/src/main/java/org/springframework/cloud/kubernetes/commons/configdata/KubernetesConfigDataResource.java",
+        "spring-cloud-kubernetes-commons/src/main/java/org/springframework/cloud/kubernetes/commons/leader/LeadershipController.java",
+        "spring-cloud-kubernetes-controllers/spring-cloud-kubernetes-configserver/src/main/java/org/springframework/cloud/kubernetes/configserver/KubernetesConfigServerApplication.java"
+      ]
+    },
+    {
+      "repo": "lenve/JavaEETest",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/lenve__JavaEETest.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "MyBlog/pom.xml",
+        "MyBlog/src/main/java/org/sang/controller/ArticleController.java",
+        "Test18-FileUpload/src/main/java/org/sang/UploadController.java",
+        "Test18-SpringMVC1/src/main/java/org/sang/HelloController.java"
+      ]
+    },
+    {
+      "repo": "abel533/MyBatis-Spring-Boot",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/abel533__MyBatis-Spring-Boot.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/tk/mybatis/springboot/Application.java",
+        "src/main/java/tk/mybatis/springboot/controller/CityController.java",
+        "src/main/java/tk/mybatis/springboot/controller/CountryController.java"
+      ]
+    },
+    {
+      "repo": "java-aodeng/hope-boot",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/java-aodeng__hope-boot.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "hope-admin/pom.xml",
+        "hope-admin/src/main/java/com/hope/HopeAdminApplication.java",
+        "hope-admin/src/main/java/com/hope/controller/ErrorController.java",
+        "hope-admin/src/main/java/com/hope/controller/HopeController.java"
+      ]
+    },
+    {
+      "repo": "grimmory-tools/grimmory",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/grimmory-tools__grimmory.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "backend/build.gradle.kts",
+        "backend/src/main/java/org/booklore/BookloreApplication.java",
+        "backend/src/main/java/org/booklore/app/controller/AppAuthorController.java",
+        "backend/src/main/java/org/booklore/app/controller/AppBookController.java"
+      ]
+    },
+    {
+      "repo": "itwanger/paicoding",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/itwanger__paicoding.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "paicoding-api/pom.xml",
+        "paicoding-service/src/main/java/com/github/paicoding/forum/service/pay/service/ThirdPayHandler.java",
+        "paicoding-web/src/main/java/com/github/paicoding/forum/web/QuickForumApplication.java",
+        "paicoding-web/src/main/java/com/github/paicoding/forum/web/admin/rest/AdminLoginController.java"
+      ]
+    },
+    {
+      "repo": "yizhiwazi/springboot-socks",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/yizhiwazi__springboot-socks.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "springboot-cross-orgin/origin-web/pom.xml",
+        "springboot-cross-orgin/origin-web/src/main/java/com/hehe/OriginWebApplication.java",
+        "springboot-cross-orgin/target-web/src/main/java/com/hehe/TargetWebApplication.java",
+        "springboot-cross-orgin/target-web/src/main/java/com/hehe/web/UserController.java"
+      ]
+    },
+    {
+      "repo": "codedrinker/community",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/codedrinker__community.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/life/majiang/community/CommunityApplication.java",
+        "src/main/java/life/majiang/community/advice/CustomizeExceptionHandler.java",
+        "src/main/java/life/majiang/community/controller/AuthorizeController.java"
+      ]
+    },
+    {
+      "repo": "vector4wang/spring-boot-quick",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/vector4wang__spring-boot-quick.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "mybatis-crypt-plugin-test/pom.xml",
+        "mybatis-crypt-plugin-test/src/main/java/com/quick/crypt/test/CryptApplication.java",
+        "mybatis-crypt-plugin/src/main/java/com/quick/db/crypt/annotation/CryptEntity.java",
+        "quick-abstract-template/src/main/java/com/quick/abs/AbstractTemplateApplication.java"
+      ]
+    },
+    {
+      "repo": "Naccl/NBlog",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/Naccl__NBlog.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "blog-api/pom.xml",
+        "blog-api/src/main/java/top/naccl/BlogApiApplication.java",
+        "blog-api/src/main/java/top/naccl/controller/AboutController.java",
+        "blog-api/src/main/java/top/naccl/controller/ArchiveController.java"
+      ]
+    },
+    {
+      "repo": "yzcheng90/x-springboot",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/yzcheng90__x-springboot.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/com/suke/czx/Application.java",
+        "src/main/java/com/suke/czx/authentication/handler/CustomAccessDeniedHandler.java",
+        "src/main/java/com/suke/czx/authentication/handler/CustomAuthenticationFailHandler.java"
+      ]
+    },
+    {
+      "repo": "lxy-go/SpringBoot",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/lxy-go__SpringBoot.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "SpringBoot/spring-boot-01-hello-quick/pom.xml",
+        "SpringBoot/spring-boot-01-hello-quick/src/main/java/com/wdjr/springbootquick/SpringBoot01HelloQuickApplication.java",
+        "SpringBoot/spring-boot-01-hello-quick/src/main/java/com/wdjr/springbootquick/controller/HelloController.java",
+        "SpringBoot/spring-boot-02-config/src/main/java/com/wdjr/springboot/SpringBoot02ConfigApplication.java"
+      ]
+    },
+    {
+      "repo": "prontera/spring-cloud-rest-tcc",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/prontera__spring-cloud-rest-tcc.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "rest-tcc-commons/src/main/java/com/github/prontera/ChainHandler.java",
+        "rest-tcc-commons/src/main/java/com/github/prontera/GenericChainHandler.java",
+        "rest-tcc-commons/src/main/java/com/github/prontera/annotation/MyBatisRepository.java"
+      ]
+    },
+    {
+      "repo": "Antabot/White-Jotter",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/Antabot__White-Jotter.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "wj/pom.xml",
+        "wj/src/main/java/com/gm/wj/WjApplication.java",
+        "wj/src/main/java/com/gm/wj/controller/JotterController.java",
+        "wj/src/main/java/com/gm/wj/controller/LibraryController.java"
+      ]
+    },
+    {
+      "repo": "geekidea/spring-boot-plus",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/geekidea__spring-boot-plus.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/io/geekidea/boot/SpringBootPlusApplication.java",
+        "src/main/java/io/geekidea/boot/auth/controller/AppLoginController.java",
+        "src/main/java/io/geekidea/boot/auth/controller/LoginController.java"
+      ]
+    },
+    {
+      "repo": "techa03/goodsKill",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/techa03__goodsKill.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "goodskill-admin/pom.xml",
+        "goodskill-admin/src/main/java/com/goodskill/admin/GoodskillAdminApplication.java",
+        "goodskill-ai/src/main/java/com/goodskill/ai/AiBotApplication.java",
+        "goodskill-ai/src/main/java/com/goodskill/ai/controller/AssistantController.java"
+      ]
+    },
+    {
+      "repo": "forezp/SpringBootLearning",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/forezp__SpringBootLearning.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "firstspringboot-2h/pom.xml",
+        "firstspringboot-2h/src/main/java/com/forezp/FirstspringbootApplication.java",
+        "firstspringboot-2h/src/main/java/com/forezp/GirlController.java",
+        "firstspringboot-2h/src/main/java/com/forezp/HelloController.java"
+      ]
+    },
+    {
+      "repo": "liyupi/yu-ai-agent",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/liyupi__yu-ai-agent.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/com/yupi/yuaiagent/YuAiAgentApplication.java",
+        "src/main/java/com/yupi/yuaiagent/controller/AiController.java",
+        "src/main/java/com/yupi/yuaiagent/controller/HealthController.java"
+      ]
+    },
+    {
+      "repo": "bz51/SpringBoot-Dubbo-Docker-Jenkins",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/bz51__SpringBoot-Dubbo-Docker-Jenkins.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "Gaoxi-Analysis/src/main/java/com/gaoxi/analysis/GaoxiAnalysisApplication.java",
+        "Gaoxi-Common-Service-Facade/src/main/java/com/gaoxi/entity/order/OrderStateTimeEntity.java",
+        "Gaoxi-Common-Service-Facade/src/main/java/com/gaoxi/entity/order/OrdersEntity.java",
+        "Gaoxi-Common-Service-Facade/src/main/java/com/gaoxi/entity/order/ProductOrderEntity.java"
+      ]
+    },
+    {
+      "repo": "hncboy/ai-beehive",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/hncboy__ai-beehive.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation"
+      ],
+      "sourcePaths": [
+        "beehive-base/src/main/java/com/hncboy/beehive/base/annotation/ApiAdminRestController.java",
+        "beehive-base/src/main/java/com/hncboy/beehive/base/handler/SensitiveWordHandler.java",
+        "beehive-base/src/main/java/com/hncboy/beehive/base/resource/aip/BaiduAipHandler.java",
+        "beehive-bootstrap/src/main/java/com/hncboy/beehive/BeehiveApplication.java"
+      ]
+    },
+    {
+      "repo": "moshowgame/SpringBootCodeGenerator",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/moshowgame__SpringBootCodeGenerator.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/java/com/softdev/system/generator/Application.java",
+        "src/main/java/com/softdev/system/generator/config/GlobalDefaultExceptionHandler.java",
+        "src/main/java/com/softdev/system/generator/controller/CodeGenController.java"
+      ]
+    },
+    {
+      "repo": "Snailclimb/interview-guide",
+      "language": "java",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/Snailclimb__interview-guide.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "app/build.gradle",
+        "app/src/main/java/interview/guide/common/exception/GlobalExceptionHandler.java",
+        "app/src/main/java/interview/guide/modules/interview/InterviewController.java",
+        "app/src/main/java/interview/guide/modules/interview/model/InterviewAnswerEntity.java"
+      ]
+    },
+    {
+      "repo": "hectorqin/reader",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/hectorqin__reader.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/java/com/htmake/reader/ReaderApplication.kt",
+        "src/main/java/com/htmake/reader/ReaderUIApplication.kt",
+        "src/main/java/com/htmake/reader/api/controller/BaseController.kt"
+      ]
+    },
+    {
+      "repo": "gotson/komga",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/gotson__komga.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "komga-tray/src/main/kotlin/org/gotson/komga/DesktopApplication.kt",
+        "komga/src/main/kotlin/org/gotson/komga/Application.kt",
+        "komga/src/main/kotlin/org/gotson/komga/application/tasks/TaskHandler.kt"
+      ]
+    },
+    {
+      "repo": "lavalink-devs/Lavalink",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/lavalink-devs__Lavalink.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "LavalinkServer/build.gradle.kts",
+        "LavalinkServer/src/main/java/lavalink/server/info/InfoRestHandler.kt",
+        "LavalinkServer/src/main/java/lavalink/server/io/RoutePlannerRestHandler.kt",
+        "LavalinkServer/src/main/java/lavalink/server/io/SessionRestHandler.kt"
+      ]
+    },
+    {
+      "repo": "zalando/zally",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/zalando__zally.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "server/build.gradle.kts",
+        "server/zally-server/src/main/kotlin/org/zalando/zally/Application.kt",
+        "server/zally-server/src/main/kotlin/org/zalando/zally/apireview/ApiReviewRepository.kt",
+        "server/zally-server/src/main/kotlin/org/zalando/zally/apireview/ApiViolationsController.kt"
+      ]
+    },
+    {
+      "repo": "spring-petclinic/spring-petclinic-kotlin",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/spring-petclinic__spring-petclinic-kotlin.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/org/springframework/samples/petclinic/PetClinicApplication.kt",
+        "src/main/kotlin/org/springframework/samples/petclinic/model/BaseEntity.kt",
+        "src/main/kotlin/org/springframework/samples/petclinic/model/NamedEntity.kt"
+      ]
+    },
+    {
+      "repo": "idugalic/digital-restaurant",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/idugalic__digital-restaurant.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "drestaurant-apps/drestaurant-microservices-rest-2/drestaurant-microservices-rest-2-command-courier/pom.xml",
+        "drestaurant-apps/drestaurant-microservices-rest-2/drestaurant-microservices-rest-2-command-courier/src/main/kotlin/com/drestaurant/MicroservicesRest2CourierApplication.kt",
+        "drestaurant-apps/drestaurant-microservices-rest-2/drestaurant-microservices-rest-2-command-courier/src/main/kotlin/com/drestaurant/web/CommandController.kt",
+        "drestaurant-apps/drestaurant-microservices-rest-2/drestaurant-microservices-rest-2-command-customer/src/main/kotlin/com/drestaurant/MicroservicesRest2CustomerApplication.kt"
+      ]
+    },
+    {
+      "repo": "JetBrains/kotlin-compiler-server",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/JetBrains__kotlin-compiler-server.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build-settings-logic/build.gradle.kts",
+        "completions/src/main/kotlin/completions/CompletionsApplication.kt",
+        "completions/src/main/kotlin/completions/controllers/rest/CompletionsRestController.kt",
+        "completions/src/main/kotlin/completions/controllers/ws/LspCompletionWebSocketHandler.kt"
+      ]
+    },
+    {
+      "repo": "tschuehly/spring-view-component",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/tschuehly__spring-view-component.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "core/build.gradle.kts",
+        "core/src/main/kotlin/de/tschuehly/spring/viewcomponent/core/component/ViewContextMethodReturnValueHandler.kt",
+        "examples/kte-example/src/main/kotlin/de/tschuehly/kteviewcomponentexample/web/TestController.kt",
+        "examples/thymeleaf-kotlin-example/src/main/kotlin/de/tschuehly/example/thymeleafkotlin/web/TestController.kt"
+      ]
+    },
+    {
+      "repo": "sdeleuze/geospatial-messenger",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/sdeleuze__geospatial-messenger.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/io/spring/messenger/Application.kt",
+        "src/main/kotlin/io/spring/messenger/repository/CrudRepository.kt",
+        "src/main/kotlin/io/spring/messenger/repository/DefaultMessageRepository.kt"
+      ]
+    },
+    {
+      "repo": "dustinsand/hex-arch-kotlin-spring-boot",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/dustinsand__hex-arch-kotlin-spring-boot.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "adapter-output/persistence/h2/build.gradle",
+        "adapter-output/persistence/memory/src/main/java/com/hexarchbootdemo/adapter/output/persistence/h2/internal/VoterRepository.kt",
+        "adapter-output/rpc/eligibility/src/main/java/com/hexarchbootdemo/adapter/output/rpc/eligibility/internal/VoterEligibilityRepository.kt",
+        "voter-ms/src/main/java/com/hexarchbootdemo/HexArchBootDemoApplication.kt"
+      ]
+    },
+    {
+      "repo": "fractalwrench/json-2-kotlin",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/fractalwrench__json-2-kotlin.json",
+      "fileCount": 2,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "spring/src/main/kotlin/com/fractalwrench/json2kotlin/ConversionController.kt"
+      ]
+    },
+    {
+      "repo": "adessoSE/junit-insights",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/adessoSE__junit-insights.json",
+      "fileCount": 2,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "tester/src/main/kotlin/de/adesso/junitinsightstester/HelloController.kt"
+      ]
+    },
+    {
+      "repo": "ruslanys/telegraff",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/ruslanys__telegraff.json",
+      "fileCount": 3,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "telegraff-core/src/main/kotlin/me/ruslanys/telegraff/core/dsl/Handler.kt",
+        "telegraff-sample/src/main/kotlin/me/ruslanys/telegraff/sample/Application.kt"
+      ]
+    },
+    {
+      "repo": "kukume/tgbot",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/kukume__tgbot.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/me/kuku/telegram/TelegramApplication.kt",
+        "src/main/kotlin/me/kuku/telegram/context/ExceptionHandler.kt",
+        "src/main/kotlin/me/kuku/telegram/entity/BaiduEntity.kt"
+      ]
+    },
+    {
+      "repo": "opexdev/core",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/opexdev__core.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "accountant/accountant-app/pom.xml",
+        "accountant/accountant-app/src/main/kotlin/co/nilin/opex/accountant/app/controller/AccountantController.kt",
+        "accountant/accountant-app/src/main/kotlin/co/nilin/opex/accountant/app/controller/PairConfigController.kt",
+        "accountant/accountant-ports/accountant-persister-postgres/src/main/kotlin/co/nilin/opex/accountant/ports/postgres/dao/FinancialActionErrorRepository.kt"
+      ]
+    },
+    {
+      "repo": "cami-la/credit-application-system",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/cami-la__credit-application-system.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "src/main/kotlin/me/dio/credit/application/system/CreditApplicationSystemApplication.kt",
+        "src/main/kotlin/me/dio/credit/application/system/controller/CreditResource.kt",
+        "src/main/kotlin/me/dio/credit/application/system/controller/CustomerResource.kt"
+      ]
+    },
+    {
+      "repo": "OrdinaryRoad-Project/ordinaryroad-barrage-fly",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/OrdinaryRoad-Project__ordinaryroad-barrage-fly.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "barrage-fly/build.gradle.kts",
+        "barrage-fly/src/main/java/tech/ordinaryroad/barrage/fly/OrdinaryroadBarrageFlyApplication.kt",
+        "barrage-fly/src/main/java/tech/ordinaryroad/barrage/fly/handler/BarrageFlyAppHandler.kt",
+        "barrage-fly/src/main/java/tech/ordinaryroad/barrage/fly/handler/BarrageFlyStatsHandler.kt"
+      ]
+    },
+    {
+      "repo": "dniel/traefik-forward-auth0",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/dniel__traefik-forward-auth0.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/kotlin/dniel/forwardauth/AuthApplication.kt",
+        "src/main/kotlin/dniel/forwardauth/application/CommandHandler.kt",
+        "src/main/kotlin/dniel/forwardauth/application/EventHandler.kt"
+      ]
+    },
+    {
+      "repo": "ZOOT-Plus/ZootPlusBackend",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/ZOOT-Plus__ZootPlusBackend.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/plus/maa/backend/MainApplication.kt",
+        "src/main/kotlin/plus/maa/backend/controller/ArkLevelController.kt",
+        "src/main/kotlin/plus/maa/backend/controller/CommentsAreaController.kt"
+      ]
+    },
+    {
+      "repo": "TencentBlueKing/bk-repo",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/TencentBlueKing__bk-repo.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "src/backend/analysis-executor/api-analysis-executor/build.gradle.kts",
+        "src/backend/analysis-executor/biz-analysis-executor/src/main/kotlin/com/tencent/bkrepo/analysis/executor/controller/ExecutorController.kt",
+        "src/backend/analysis-executor/boot-analysis-executor/src/main/kotlin/com/tencent/bkrepo/analysis/executor/AnalysisExecutorApplication.kt",
+        "src/backend/analyst/biz-analyst/src/main/kotlin/com/tencent/bkrepo/analyst/component/ScannerPermissionCheckHandler.kt"
+      ]
+    },
+    {
+      "repo": "sorra/sage-system",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/sorra__sage-system.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "src/main/kotlin/sage/Application.kt",
+        "src/main/kotlin/sage/web/ajax/BlogLikesAjaxController.kt",
+        "src/main/kotlin/sage/web/ajax/CommentAjaxController.kt"
+      ]
+    },
+    {
+      "repo": "nedphae/contact-center",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/nedphae__contact-center.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "GraphQLBFF/build.gradle.kts",
+        "GraphQLBFF/src/main/kotlin/com/qinghzu/graphqlbff/GraphQlbffApplication.kt",
+        "GraphQLBFF/src/main/kotlin/com/qinghzu/graphqlbff/exceptions/CustomDataFetcherExceptionHandler.kt",
+        "bot/src/main/kotlin/com/qingzhu/bot/BotApplication.kt"
+      ]
+    },
+    {
+      "repo": "sinkyoungdeok/order-and-gift-project",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/sinkyoungdeok__order-and-gift-project.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "gift/build.gradle.kts",
+        "gift/src/main/kotlin/msa/gift/GiftApplication.kt",
+        "gift/src/main/kotlin/msa/gift/HelloController.kt",
+        "gift/src/main/kotlin/msa/gift/common/jwt/SecurityContextRepository.kt"
+      ]
+    },
+    {
+      "repo": "thiagobarbosa/quorum-api",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/thiagobarbosa__quorum-api.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "src/main/kotlin/com/quorum/api/ApiApplication.kt",
+        "src/main/kotlin/com/quorum/api/authentication/controllers/AdminAuthController.kt",
+        "src/main/kotlin/com/quorum/api/authentication/controllers/AuthenticationController.kt"
+      ]
+    },
+    {
+      "repo": "arcuri82/testing_security_development_enterprise_systems",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/arcuri82__testing_security_development_enterprise_systems.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "advanced/amqp/amqp-rest/e2e-tests/pom.xml",
+        "advanced/amqp/amqp-rest/receiver/src/main/kotlin/org/tsdes/advanced/amqp/rest/receiver/ReceiverApplication.kt",
+        "advanced/amqp/amqp-rest/sender/src/main/kotlin/org/tsdes/advanced/amqp/rest/sender/SenderApplication.kt",
+        "advanced/amqp/direct-exchange/src/main/kotlin/org/tsdes/advanced/amqp/directexchange/Application.kt"
+      ]
+    },
+    {
+      "repo": "philipplackner/SpringBootCrashCourse",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/philipplackner__SpringBootCrashCourse.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/com/plcoding/spring_boot_crash_course/GlobalValidationHandler.kt",
+        "src/main/kotlin/com/plcoding/spring_boot_crash_course/SpringBootCrashCourseApplication.kt",
+        "src/main/kotlin/com/plcoding/spring_boot_crash_course/controllers/AuthController.kt"
+      ]
+    },
+    {
+      "repo": "Hyung1Jung/commerce",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/Hyung1Jung__commerce.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "auth/src/main/kotlin/me/hyungil/auth/AuthApplication.kt",
+        "auth/src/main/kotlin/me/hyungil/auth/adapter/in/presentation/AuthExceptionHandler.kt",
+        "auth/src/main/kotlin/me/hyungil/auth/adapter/in/presentation/v1/AuthController.kt",
+        "core/src/main/kotlin/me/hyungil/core/CoreApplication.kt"
+      ]
+    },
+    {
+      "repo": "Fraunhofer-AISEC/trusted-connector",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/Fraunhofer-AISEC__trusted-connector.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "ids-container-manager/src/main/kotlin/de/fhg/aisec/ids/comm/unixsocket/TrustmeUnixSocketResponseHandler.kt",
+        "ids-webconsole/src/main/kotlin/de/fhg/aisec/ids/webconsole/ApiController.kt",
+        "ids-webconsole/src/main/kotlin/de/fhg/aisec/ids/webconsole/api/data/Identity.kt"
+      ]
+    },
+    {
+      "repo": "sdeleuze/webflux-kotlin-web-tests",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/sdeleuze__webflux-kotlin-web-tests.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/kotlin/com/example/Application.kt",
+        "src/main/kotlin/com/example/FooController.kt",
+        "src/main/kotlin/com/example/FooRepository.kt"
+      ]
+    },
+    {
+      "repo": "asyncapi/kotlin-asyncapi",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/asyncapi__kotlin-asyncapi.json",
+      "fileCount": 3,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "kotlin-asyncapi-examples/kotlin-asyncapi-ktor-example/src/main/kotlin/com/asyncapi/kotlinasyncapi/example/ktor/ExampleApplication.kt",
+        "kotlin-asyncapi-examples/kotlin-asyncapi-spring-boot-example/src/main/kotlin/com/asyncapi/kotlinasyncapi/example/spring/ExampleApplication.kt",
+        "kotlin-asyncapi-spring-web/src/main/kotlin/com/asyncapi/kotlinasyncapi/springweb/AsyncApiController.kt"
+      ]
+    },
+    {
+      "repo": "razvn/webflux-r2dbc-kotlin",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/razvn__webflux-r2dbc-kotlin.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/net/razvan/poc/springboot/webfluxr2dbckotlin/WebfluxR2dbcKotlinApplication.kt",
+        "src/main/kotlin/net/razvan/poc/springboot/webfluxr2dbckotlin/user/UserHandler.kt",
+        "src/main/kotlin/net/razvan/poc/springboot/webfluxr2dbckotlin/user/UserRepository.kt"
+      ]
+    },
+    {
+      "repo": "xmlking/microservices-observability",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/xmlking__microservices-observability.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "cassandra-data-service/src/main/kotlin/com/example/DataApplication.kt",
+        "cassandra-data-service/src/main/kotlin/com/example/repository/GuestBookRepository.kt",
+        "cassandra-data-service/src/main/kotlin/com/example/repository/UserRepository.kt"
+      ]
+    },
+    {
+      "repo": "EasyKotlin/kotlin-with-webflux",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/EasyKotlin__kotlin-with-webflux.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "src/main/kotlin/com/easy/kotlin/webflux/WebfluxApplication.kt",
+        "src/main/kotlin/com/easy/kotlin/webflux/dao/PersonRepository.kt",
+        "src/main/kotlin/com/easy/kotlin/webflux/handler/PersonHandler.kt"
+      ]
+    },
+    {
+      "repo": "mikaelhg/kotlin-spring-boot-data-rest",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/mikaelhg__kotlin-spring-boot-data-rest.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/kotlin/io/mikael/app/Application.kt",
+        "src/main/kotlin/io/mikael/app/HelloController.kt",
+        "src/main/kotlin/io/mikael/app/MenuRepository.kt"
+      ]
+    },
+    {
+      "repo": "mscheong01/interfAIce",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/mscheong01__interfAIce.json",
+      "fileCount": 3,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "core/src/main/kotlin/io/github/mscheong01/interfaice/openai/OpenAiInvocationHandler.kt",
+        "examples/kotlin-spring/src/main/kotlin/io/github/mscheong01/interfaice/examples/ExampleApplication.kt"
+      ]
+    },
+    {
+      "repo": "ruslanys/vkmusic",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/ruslanys__vkmusic.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "src/main/kotlin/me/ruslanys/vkmusic/Application.kt",
+        "src/main/kotlin/me/ruslanys/vkmusic/annotation/FxmlController.kt",
+        "src/main/kotlin/me/ruslanys/vkmusic/controller/BaseController.kt"
+      ]
+    },
+    {
+      "repo": "AleksK1NG/Transactional_Outbox_with_Spring_and_Kotlin",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/AleksK1NG__Transactional_Outbox_with_Spring_and_Kotlin.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/com/alexbryksin/ordersmicroservice/OrdersMicroserviceApplication.kt",
+        "src/main/kotlin/com/alexbryksin/ordersmicroservice/order/controllers/OrderController.kt",
+        "src/main/kotlin/com/alexbryksin/ordersmicroservice/order/domain/OrderEntity.kt"
+      ]
+    },
+    {
+      "repo": "JayAhn2/kotlin-spring-boot-ddd",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/JayAhn2__kotlin-spring-boot-ddd.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/com/example/kotlinspringboot/KotlinSpringBootApplication.kt",
+        "src/main/kotlin/com/example/kotlinspringboot/common/base/BaseEntity.kt",
+        "src/main/kotlin/com/example/kotlinspringboot/common/base/BasePersistenceEntity.kt"
+      ]
+    },
+    {
+      "repo": "putuprema/spring-vs-aspnetcore",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/putuprema__spring-vs-aspnetcore.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "EaterSpring/build.gradle.kts",
+        "EaterSpring/src/main/kotlin/xyz/purema/eater/EaterApplication.kt",
+        "EaterSpring/src/main/kotlin/xyz/purema/eater/advice/ControllerExceptionHandler.kt",
+        "EaterSpring/src/main/kotlin/xyz/purema/eater/config/security/ApiAccessDeniedHandler.kt"
+      ]
+    },
+    {
+      "repo": "cvillaseca/mobileAPI",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/cvillaseca__mobileAPI.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/com/cvillaseca/mobileapi/MobileApiApplication.kt",
+        "src/main/kotlin/com/cvillaseca/mobileapi/controller/admin/UserController.kt",
+        "src/main/kotlin/com/cvillaseca/mobileapi/controller/user/ChangePasswordController.kt"
+      ]
+    },
+    {
+      "repo": "leandrocgsi/rest-with-spring-boot-and-kotlin-erudio",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/leandrocgsi__rest-with-spring-boot-and-kotlin-erudio.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "05_FirstStepsInKotlinwithSpringBoot/rest-with-spring-boot-and-kotlin-erudio/pom.xml",
+        "05_FirstStepsInKotlinwithSpringBoot/rest-with-spring-boot-and-kotlin-erudio/src/main/kotlin/br/com/erudio/GreetingController.kt",
+        "06_ParametersAndExceptionHandler/rest-with-spring-boot-and-kotlin-erudio/src/main/kotlin/br/com/erudio/controller/MathController.kt",
+        "06_ParametersAndExceptionHandler/rest-with-spring-boot-and-kotlin-erudio/src/main/kotlin/br/com/erudio/exceptions/CustomizedResponseEntityExceptionHandler.kt"
+      ]
+    },
+    {
+      "repo": "livk-cloud/spring-cloud-kotlin",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/livk-cloud__spring-cloud-kotlin.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "spring-cloud-bus/provider-bus/src/main/kotlin/com/livk/provider/BusController.kt",
+        "spring-cloud-gateway/gateway-starter/src/main/kotlin/com/livk/dynamic/support/RedisHashRouteDefinitionRepository.kt",
+        "spring-cloud-openfeign/feign-consumer/src/main/kotlin/com/livk/consumer/biz/controller/UserController.kt"
+      ]
+    },
+    {
+      "repo": "Resumarble/Resumarble-Backend",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/Resumarble__Resumarble-Backend.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "resumarble-api/src/main/kotlin/resumarble/Application.kt",
+        "resumarble-api/src/main/kotlin/resumarble/api/global/advice/GlobalExceptionHandler.kt",
+        "resumarble-api/src/main/kotlin/resumarble/api/user/LoginController.kt"
+      ]
+    },
+    {
+      "repo": "drop-project-edu/drop-project",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/drop-project-edu__drop-project.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/kotlin/org/dropProject/DropProjectApplication.kt",
+        "src/main/kotlin/org/dropProject/controllers/AdminController.kt",
+        "src/main/kotlin/org/dropProject/controllers/AppErrorController.kt"
+      ]
+    },
+    {
+      "repo": "a-mountain/realworld-spring-webflux-kt",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/a-mountain__realworld-spring-webflux-kt.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/com/realworld/springmongo/SpringWebfluxKtApplication.kt",
+        "src/main/kotlin/com/realworld/springmongo/api/ArticleController.kt",
+        "src/main/kotlin/com/realworld/springmongo/api/UserController.kt"
+      ]
+    },
+    {
+      "repo": "KotlinSpringBoot/saber",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/KotlinSpringBoot__saber.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle",
+        "src/main/kotlin/com/light/saber/SaberApplication.kt",
+        "src/main/kotlin/com/light/saber/controller/CrawImageController.kt",
+        "src/main/kotlin/com/light/saber/controller/ImageController.kt"
+      ]
+    },
+    {
+      "repo": "jhhong0509/Kopring-Project",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/jhhong0509__Kopring-Project.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "v1/build.gradle.kts",
+        "v1/src/main/kotlin/com/example/forsubmit/ForSubmitApplication.kt",
+        "v1/src/main/kotlin/com/example/forsubmit/domain/auth/controller/AuthController.kt",
+        "v1/src/main/kotlin/com/example/forsubmit/domain/auth/entity/RefreshTokenRepository.kt"
+      ]
+    },
+    {
+      "repo": "AleksK1NG/Kotlin-ES-CQRS-Microservice",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/AleksK1NG__Kotlin-ES-CQRS-Microservice.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/kotlin/com/example/microservice/MicroserviceApplication.kt",
+        "src/main/kotlin/com/example/microservice/controllers/BankAccountController.kt",
+        "src/main/kotlin/com/example/microservice/repository/BankAccountCoroutineMongoRepository.kt"
+      ]
+    },
+    {
+      "repo": "ask-resume/ask-resume-backend",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/ask-resume__ask-resume-backend.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "build.gradle.kts",
+        "src/main/kotlin/app/askresume/AskResumeApplication.kt",
+        "src/main/kotlin/app/askresume/api/access/controller/AccessController.kt",
+        "src/main/kotlin/app/askresume/api/access/controller/OauthController.kt"
+      ]
+    },
+    {
+      "repo": "AleksK1NG/Kotlin-Spring-Postgres-Redis-Microservice",
+      "language": "kotlin",
+      "saved": "tests/fixtures/spring_github_sanitized_fixtures/repos/AleksK1NG__Kotlin-Spring-Postgres-Redis-Microservice.json",
+      "fileCount": 4,
+      "signals": [
+        "springEvidence",
+        "httpAnnotation",
+        "jpaModel",
+        "manifest"
+      ],
+      "sourcePaths": [
+        "pom.xml",
+        "src/main/kotlin/com/alexbryksin/microservice/KotlinSpringMicroserviceApplication.kt",
+        "src/main/kotlin/com/alexbryksin/microservice/controllers/BankAccountController.kt",
+        "src/main/kotlin/com/alexbryksin/microservice/repositories/BankAccountPostgresRepository.kt"
+      ]
+    }
+  ]
+}

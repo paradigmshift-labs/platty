@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "xmlking/microservices-observability",
+  "htmlUrl": "https://github.com/xmlking/microservices-observability",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 44,
+          "lines": [
+            "import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension",
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "import org.springframework.boot.gradle.dsl.SpringBootExtension",
+            "import org.springframework.boot.gradle.tasks.run.BootRun",
+            "val logbackKafkaAppenderVersion by project",
+            "val logstashLogbackEncoderVersion by project",
+            "val kafkaVersion by project",
+            "val springCloudStreamVersion by project",
+            "plugins {",
+            "val kotlinVersion = \"1.1.61\"",
+            "val springDependencyManagement = \"1.0.4.RELEASE\"",
+            "val springBootVersion = \"2.0.0.M7\" //TODO: \"2.0.0.RELEASE\"",
+            "val junitGradleVersion = \"1.0.2\"",
+            "id(\"org.jetbrains.kotlin.plugin.spring\") version kotlinVersion apply false",
+            "id(\"org.jetbrains.kotlin.plugin.noarg\") version kotlinVersion // apply false",
+            "id(\"org.springframework.boot\") version springBootVersion apply false",
+            "id(\"org.junit.platform.gradle.plugin\") version junitGradleVersion apply false",
+            "id(\"io.spring.dependency-management\") version springDependencyManagement apply false",
+            "id(\"com.palantir.docker\") version dockerPluginVersion apply false",
+            "}",
+            "plugin(\"org.junit.platform.gradle.plugin\")",
+            "plugin(\"io.spring.dependency-management\")",
+            "plugin(\"org.springframework.boot\")",
+            "}",
+            "repositories {",
+            "mavenCentral()",
+            "dependencies {",
+            "compile(\"org.jetbrains.kotlin:kotlin-stdlib-jre8\")",
+            "compile(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "compile(\"<literal>\")",
+            "compile(\"<literal>\")",
+            "compile(\"<literal>\")",
+            "testCompile(\"<literal>\") {",
+            "exclude(module = \"junit\")",
+            "}",
+            "testCompile(\"org.junit.jupiter:junit-jupiter-api\")",
+            "testCompile(\"io.projectreactor:reactor-test\")",
+            "runtime(\"<literal>\")",
+            "compileOnly(\"org.springframework:spring-context-indexer\")",
+            "compile(\"org.springframework.boot:spring-boot-devtools\")",
+            "compile(\"<literal>\")",
+            "compile(\"io.micrometer:micrometer-registry-prometheus\")",
+            "}",
+            "configurations.all {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "cassandra-data-service/src/main/kotlin/com/example/DataApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class DataApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<DataApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "cassandra-data-service/src/main/kotlin/com/example/repository/GuestBookRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import java.util.*",
+            "@Repository",
+            "public interface GuestBookRepository : ReactiveCassandraRepository<GuestBookEntry, String> {",
+            "fun findByName(name: String): Flux<GuestBookEntry>",
+            "fun findByNameAndTime(name: String, time: LocalDateTime): Flux<GuestBookEntry>",
+            "fun findByNameAndTimeAfter(name: String, time: LocalDateTime): Flux<GuestBookEntry>",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "cassandra-data-service/src/main/kotlin/com/example/repository/UserRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 12,
+          "lines": [
+            "import reactor.core.publisher.Flux",
+            "@Repository",
+            "interface UserRepository : ReactiveCassandraRepository<User, String> {",
+            "fun findByLogin(login: String): Flux<User>",
+            "@Query(\"<literal>\")",
+            "fun findByLoginAndEmail(login: String, email: String): Mono<User>",
+            "fun findByLoginAndRoleAndCompany(login: String, role: Role, company: String): Mono<User>",
+            "@Query(\"<literal>\")",
+            "fun findAllByRole(role: Role, company: String = \"Microsoft\" ): Flux<User>",
+            "@Query(\"<literal>\")",
+            "fun findAllByCompany(company: String): Flux<User>",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

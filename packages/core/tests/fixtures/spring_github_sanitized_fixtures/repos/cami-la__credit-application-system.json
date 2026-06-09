@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "cami-la/credit-application-system",
+  "htmlUrl": "https://github.com/cami-la/credit-application-system",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 21,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "id 'org.springframework.boot' version '3.0.4'",
+            "id 'io.spring.dependency-management' version '1.1.0'",
+            "id 'org.jetbrains.kotlin.jvm' version '1.7.22'",
+            "id 'org.jetbrains.kotlin.plugin.spring' version '1.7.22'",
+            "id 'org.jetbrains.kotlin.plugin.jpa' version '1.7.22'",
+            "}",
+            "dependencies {",
+            "implementation '<literal>'",
+            "implementation '<literal>'",
+            "implementation '<literal>'",
+            "implementation '<literal>'",
+            "implementation '<literal>'",
+            "implementation 'org.flywaydb:flyway-core'",
+            "implementation 'org.jetbrains.kotlin:kotlin-reflect'",
+            "runtimeOnly 'com.h2database:h2'",
+            "testImplementation '<literal>'",
+            "testImplementation 'io.mockk:mockk:1.13.4'",
+            "}",
+            "tasks.withType(KotlinCompile).configureEach {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/me/dio/credit/application/system/CreditApplicationSystemApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class CreditApplicationSystemApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<CreditApplicationSystemApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/me/dio/credit/application/system/controller/CreditResource.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 25,
+          "lines": [
+            "import java.util.stream.Collectors",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class CreditResource(",
+            "private val creditService: CreditService",
+            ") {",
+            "@PostMapping",
+            "fun saveCredit(@RequestBody @Valid creditDto: CreditDto): ResponseEntity<String> {",
+            "val credit: Credit = this.creditService.save(creditDto.toEntity())",
+            "return ResponseEntity.status(HttpStatus.CREATED)",
+            ".body(\"<literal>\")",
+            "}",
+            "@GetMapping",
+            "fun findAllByCustomerId(@RequestParam(value = \"customerId\") customerId: Long):",
+            "ResponseEntity<List<CreditViewList>> {",
+            "val creditViewList: List<CreditViewList> = this.creditService.findAllByCustomer(customerId)",
+            ".stream()",
+            ".map { credit: Credit -> CreditViewList(credit) }",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "fun findByCreditCode(",
+            "@RequestParam(value = \"customerId\") customerId: Long,",
+            "@PathVariable creditCode: UUID",
+            "): ResponseEntity<CreditView> {",
+            "val credit: Credit = this.creditService.findByCreditCode(customerId, creditCode)"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/me/dio/credit/application/system/controller/CustomerResource.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 25,
+          "lines": [
+            "import org.springframework.web.bind.annotation.*",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class CustomerResource(",
+            "private val customerService: CustomerService",
+            ") {",
+            "@PostMapping",
+            "fun saveCustomer(@RequestBody @Valid customerDto: CustomerDto): ResponseEntity<CustomerView> {",
+            "val savedCustomer: Customer = this.customerService.save(customerDto.toEntity())",
+            "return ResponseEntity.status(HttpStatus.CREATED).body(CustomerView(savedCustomer))",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "fun findById(@PathVariable id: Long): ResponseEntity<CustomerView> {",
+            "val customer: Customer = this.customerService.findById(id)",
+            "return ResponseEntity.status(HttpStatus.OK).body(CustomerView(customer))",
+            "}",
+            "@DeleteMapping(\"/__path__\")",
+            "@ResponseStatus(HttpStatus.NO_CONTENT)",
+            "fun deleteCustomer(@PathVariable id: Long) = this.customerService.delete(id)",
+            "@PatchMapping",
+            "fun upadateCustomer(",
+            "@RequestParam(value = \"customerId\") id: Long,",
+            "@RequestBody @Valid customerUpdateDto: CustomerUpdateDto",
+            "): ResponseEntity<CustomerView> {",
+            "val customer: Customer = this.customerService.findById(id)"
+          ]
+        }
+      ]
+    }
+  ]
+}

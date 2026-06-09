@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "conductor-oss/conductor",
+  "htmlUrl": "https://github.com/conductor-oss/conductor",
+  "defaultBranch": "main",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "ai/build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 21,
+          "lines": [
+            "plugins {",
+            "id 'java'",
+            "}",
+            "repositories {",
+            "}",
+            "dependencies {",
+            "compileOnly 'org.springframework.boot:spring-boot-starter'",
+            "implementation project(':conductor-common')",
+            "implementation project(':conductor-core')",
+            "api \"<literal>\"",
+            "api \"<literal>\"",
+            "api \"<literal>\"",
+            "api \"<literal>\"",
+            "api \"<literal>\"",
+            "api \"<literal>\"",
+            "api \"<literal>\"",
+            "api \"io.pinecone:pinecone-client:${pinecone}\"",
+            "api \"com.pgvector:pgvector:${pgVector}\"",
+            "api \"<literal>\"",
+            "testImplementation \"com.squareup.okhttp3:mockwebserver:4.12.0\"",
+            "testImplementation \"org.testcontainers:mongodb:${revTestContainer}\""
+          ]
+        }
+      ]
+    },
+    {
+      "path": "common/src/main/java/com/netflix/conductor/common/metadata/events/EventHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 80,
+          "lines": [
+            "@ProtoMessage",
+            "public class EventHandler {",
+            "@ProtoField(id = 1)",
+            "@NotEmpty(message = \"Missing event handler name\")",
+            "private String name;",
+            "@NotNull",
+            "@NotEmpty(message = \"<literal>\")",
+            "private List<@Valid Action> actions = new LinkedList<>();",
+            "@ProtoField(id = 5)",
+            "private boolean active;",
+            "private String evaluatorType;",
+            "public EventHandler() {}",
+            "public String getName() {",
+            "return name;",
+            "}",
+            "public void setName(String name) {",
+            "this.name = name;",
+            "}",
+            "public String getEvent() {",
+            "return event;",
+            "}",
+            "public void setEvent(String event) {",
+            "this.event = event;",
+            "}",
+            "public String getCondition() {",
+            "return condition;",
+            "}",
+            "public void setCondition(String condition) {",
+            "this.condition = condition;",
+            "}",
+            "public List<Action> getActions() {",
+            "return actions;",
+            "}",
+            "public void setActions(List<Action> actions) {",
+            "this.actions = actions;",
+            "}",
+            "public boolean isActive() {",
+            "return active;",
+            "}",
+            "public void setActive(boolean active) {",
+            "this.active = active;",
+            "}",
+            "public String getEvaluatorType() {",
+            "return evaluatorType;",
+            "}",
+            "public void setEvaluatorType(String evaluatorType) {",
+            "this.evaluatorType = evaluatorType;",
+            "}",
+            "@ProtoMessage",
+            "public static class Action {",
+            "@ProtoEnum",
+            "public enum Type {",
+            "start_workflow,",
+            "complete_task,",
+            "fail_task,",
+            "terminate_workflow,",
+            "public Type getAction() {",
+            "return action;",
+            "}",
+            "public void setAction(Type action) {",
+            "this.action = action;",
+            "}",
+            "public StartWorkflow getStart_workflow() {",
+            "return start_workflow;",
+            "}",
+            "public void setStart_workflow(StartWorkflow start_workflow) {",
+            "this.start_workflow = start_workflow;",
+            "}",
+            "public TaskDetails getComplete_task() {",
+            "return complete_task;",
+            "}",
+            "public void setComplete_task(TaskDetails complete_task) {",
+            "this.complete_task = complete_task;",
+            "}",
+            "public TaskDetails getFail_task() {",
+            "return fail_task;",
+            "}",
+            "public void setFail_task(TaskDetails fail_task) {",
+            "this.fail_task = fail_task;",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "mysql-persistence/src/main/java/com/netflix/conductor/mysql/util/ResultSetHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 4,
+          "lines": [
+            "@FunctionalInterface",
+            "public interface ResultSetHandler<R> {",
+            "R apply(ResultSet resultSet) throws SQLException;",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "postgres-external-storage/src/main/java/com/netflix/conductor/postgres/controller/ExternalPostgresPayloadResource.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 18,
+          "lines": [
+            "@RestController",
+            "@RequestMapping(value = \"/__path__\")",
+            "@ConditionalOnProperty(name = \"conductor.external-payload-storage.type\", havingValue = \"postgres\")",
+            "public class ExternalPostgresPayloadResource {",
+            "private final ExternalPayloadStorage postgresService;",
+            "public ExternalPostgresPayloadResource(",
+            "@Qualifier(\"postgresExternalPayloadStorage\") ExternalPayloadStorage postgresService) {",
+            "this.postgresService = postgresService;",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "@Operation(",
+            "summary =",
+            "\"<literal>\")",
+            "public ResponseEntity<InputStreamResource> getExternalStorageData(",
+            "@PathVariable(\"externalPayloadPath\") String externalPayloadPath) {",
+            "InputStream inputStream = postgresService.download(externalPayloadPath);",
+            "InputStreamResource outputStreamBody = new InputStreamResource(inputStream);",
+            "return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(outputStreamBody);"
+          ]
+        }
+      ]
+    }
+  ]
+}

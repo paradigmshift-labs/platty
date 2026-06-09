@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "mikaelhg/kotlin-spring-boot-data-rest",
+  "htmlUrl": "https://github.com/mikaelhg/kotlin-spring-boot-data-rest",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 34,
+          "lines": [
+            "<groupId>io.mikael</groupId>",
+            "<artifactId>kotlin-spring-boot-data-rest</artifactId>",
+            "<version>1.0-SNAPSHOT</version>",
+            "<packaging>jar</packaging>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>3.5.0</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-jpa</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-rest</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.fasterxml.jackson.module</groupId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "</dependencies>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "<plugin>",
+            "<groupId>org.jetbrains.kotlin</groupId>",
+            "<artifactId>kotlin-maven-plugin</artifactId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/io/mikael/app/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication",
+            "@SpringBootApplication",
+            "class Application",
+            "fun main(args: Array<String>) {",
+            "SpringApplication.run(Application::class.java, *args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/io/mikael/app/HelloController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "class HelloController(val helloService: HelloService) {",
+            "@GetMapping(\"/__path__\")",
+            "fun hello() = helloService.hello()",
+            "@GetMapping(\"/__path__\")",
+            "fun count() = helloService.count()",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/io/mikael/app/MenuRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 2,
+          "lines": [
+            "@RepositoryRestResource",
+            "interface MenuRepository : JpaRepository<Menu, Long>"
+          ]
+        }
+      ]
+    }
+  ]
+}

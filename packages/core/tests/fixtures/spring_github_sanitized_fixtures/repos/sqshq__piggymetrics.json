@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "sqshq/piggymetrics",
+  "htmlUrl": "https://github.com/sqshq/piggymetrics",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "account-service/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 64,
+          "lines": [
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-oauth2</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-security</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-config</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-openfeign</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-sleuth</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-mongodb</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-actuator</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-bus-amqp</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-starter-netflix-hystrix</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-netflix-hystrix-stream</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>de.flapdoodle.embed</groupId>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "<configuration>",
+            "<finalName>account-service</finalName>",
+            "</configuration>",
+            "</plugin>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "account-service/src/main/java/com/piggymetrics/account/AccountApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 12,
+          "lines": [
+            "import org.springframework.security.oauth2.config.annotation.web.configuration.EnableOAuth2Client;",
+            "@SpringBootApplication",
+            "@EnableDiscoveryClient",
+            "@EnableOAuth2Client",
+            "@EnableFeignClients",
+            "@EnableCircuitBreaker",
+            "@EnableGlobalMethodSecurity(prePostEnabled = true)",
+            "public class AccountApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(AccountApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "account-service/src/main/java/com/piggymetrics/account/controller/AccountController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 23,
+          "lines": [
+            "import java.security.Principal;",
+            "@RestController",
+            "public class AccountController {",
+            "@Autowired",
+            "private AccountService accountService;",
+            "@PreAuthorize(\"#oauth2.hasScope('server') or #name.equals('demo')\")",
+            "@RequestMapping(path = \"/__path__\", method = RequestMethod.GET)",
+            "public Account getAccountByName(@PathVariable String name) {",
+            "return accountService.findByName(name);",
+            "}",
+            "@RequestMapping(path = \"/__path__\", method = RequestMethod.GET)",
+            "public Account getCurrentAccount(Principal principal) {",
+            "return accountService.findByName(principal.getName());",
+            "}",
+            "@RequestMapping(path = \"/__path__\", method = RequestMethod.PUT)",
+            "public void saveCurrentAccount(Principal principal, @Valid @RequestBody Account account) {",
+            "accountService.saveChanges(principal.getName(), account);",
+            "}",
+            "@RequestMapping(path = \"/__path__\", method = RequestMethod.POST)",
+            "public Account createNewAccount(@Valid @RequestBody User user) {",
+            "return accountService.create(user);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "account-service/src/main/java/com/piggymetrics/account/controller/ErrorHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "@ControllerAdvice",
+            "public class ErrorHandler {",
+            "private final Logger log = LoggerFactory.getLogger(getClass());",
+            "@ExceptionHandler(IllegalArgumentException.class)",
+            "@ResponseStatus(HttpStatus.BAD_REQUEST)",
+            "public void processValidationError(IllegalArgumentException e) {",
+            "log.info(\"Returning HTTP 400 Bad Request\", e);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

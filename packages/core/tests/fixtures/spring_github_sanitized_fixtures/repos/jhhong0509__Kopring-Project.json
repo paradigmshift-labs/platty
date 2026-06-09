@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "jhhong0509/Kopring-Project",
+  "htmlUrl": "https://github.com/jhhong0509/Kopring-Project",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "v1/build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 36,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "id(\"org.springframework.boot\") version \"2.6.0\"",
+            "id(\"io.spring.dependency-management\") version \"1.0.11.RELEASE\"",
+            "kotlin(\"jvm\") version \"1.6.0\"",
+            "kotlin(\"plugin.spring\") version \"1.6.0\"",
+            "kotlin(\"plugin.jpa\") version \"1.6.0\"",
+            "extra[\"snippetsDir\"] = file(\"$buildDir/generated-snippets\")",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "implementation(\"<literal>\")",
+            "runtimeOnly(\"mysql:mysql-connector-java\")",
+            "annotationProcessor(\"<literal>\")",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"<literal>\")",
+            "implementation(\"io.jsonwebtoken:jjwt:0.9.0\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "testImplementation(\"org.spockframework:spock-core:2.0-groovy-3.0\")",
+            "testImplementation(\"org.spockframework:spock-spring:2.0-groovy-3.0\")",
+            "testRuntimeOnly(\"org.codehaus.groovy:groovy:3.0.8\")",
+            "implementation(\"it.ozimov:embedded-redis:0.7.2\")",
+            "testImplementation(\"com.h2database:h2\")",
+            "kapt(group = \"com.querydsl\", name = \"querydsl-apt\", classifier = \"jpa\")",
+            "implementation(\"com.querydsl:querydsl-jpa\")",
+            "implementation(\"io.github.microutils:kotlin-logging-jvm:2.1.21\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"io.github.openfeign:feign-httpclient:11.8\")",
+            "}",
+            "tasks.withType<KotlinCompile> {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "v1/src/main/kotlin/com/example/forsubmit/ForSubmitApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "const val BASE_PACKAGE = \"com.example.forsubmit\"",
+            "@SpringBootApplication",
+            "class ForSubmitApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<ForSubmitApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "v1/src/main/kotlin/com/example/forsubmit/domain/auth/controller/AuthController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 16,
+          "lines": [
+            "import javax.validation.Valid",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class AuthController(",
+            "private val authService: AuthService",
+            ") {",
+            "@PostMapping",
+            "@ResponseStatus(HttpStatus.CREATED)",
+            "fun signIn(@RequestBody @Valid authRequest: AuthRequest): BaseResponse<TokenResponse> {",
+            "return authService.signIn(authRequest)",
+            "}",
+            "@PutMapping",
+            "fun refreshToken(@RequestHeader(\"Refresh-Token\") refreshToken: String): BaseResponse<AccessTokenResponse> {",
+            "return authService.tokenRefresh(refreshToken)",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "v1/src/main/kotlin/com/example/forsubmit/domain/auth/entity/RefreshTokenRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "import org.springframework.stereotype.Repository",
+            "@Repository",
+            "interface RefreshTokenRepository : CrudRepository<RefreshToken, String> {",
+            "fun findByToken(token: String): RefreshToken?",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "spring-petclinic/spring-petclinic-kotlin",
+  "htmlUrl": "https://github.com/spring-petclinic/spring-petclinic-kotlin",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 36,
+          "lines": [
+            "description = \"<literal>\"",
+            "group = \"org.springframework.samples\"",
+            "version = \"4.0.2\"",
+            "plugins {",
+            "val kotlinVersion = \"2.3.21\"",
+            "id(\"org.springframework.boot\") version \"4.0.6\"",
+            "id(\"io.spring.dependency-management\") version \"1.1.7\"",
+            "id(\"com.google.cloud.tools.jib\") version \"3.5.3\"",
+            "kotlin(\"jvm\") version kotlinVersion",
+            "kotlin(\"plugin.spring\") version kotlinVersion",
+            "}",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"tools.jackson.module:jackson-module-kotlin\")",
+            "implementation(\"org.glassfish.jaxb:jaxb-runtime\")",
+            "implementation(\"javax.cache:cache-api\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.webjars.npm:bootstrap:$boostrapVersion\")",
+            "implementation(\"<literal>\")",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"org.junit.jupiter:junit-jupiter-api\")",
+            "testRuntimeOnly(\"org.junit.jupiter:junit-jupiter-engine\")",
+            "runtimeOnly(\"com.h2database:h2\")",
+            "runtimeOnly(\"<literal>\")",
+            "developmentOnly(\"org.springframework.boot:spring-boot-devtools\")",
+            "}",
+            "jib {",
+            "to {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/org/springframework/samples/petclinic/PetClinicApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "@SpringBootApplication(proxyBeanMethods = false)",
+            "class PetClinicApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<PetClinicApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/org/springframework/samples/petclinic/model/BaseEntity.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "@MappedSuperclass",
+            "open class BaseEntity : Serializable {",
+            "@Id",
+            "@GeneratedValue(strategy = GenerationType.IDENTITY)",
+            "open var id: Int? = null"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/org/springframework/samples/petclinic/model/NamedEntity.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@MappedSuperclass",
+            "open class NamedEntity : BaseEntity() {",
+            "@Column(name = \"name\")",
+            "open var name: String? = null",
+            "override fun toString(): String =",
+            "this.name ?: \"\"",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

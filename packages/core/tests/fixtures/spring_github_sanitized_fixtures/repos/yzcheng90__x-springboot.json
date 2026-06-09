@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "yzcheng90/x-springboot",
+  "htmlUrl": "https://github.com/yzcheng90/x-springboot",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 48,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>3.5.4</version>",
+            "</parent>",
+            "<properties>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-redis</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-aop</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-validation</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-security</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>",
+            "<groupId>com.baomidou</groupId>",
+            "<artifactId>mybatis-plus-spring-boot3-starter</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.baomidou</groupId>",
+            "<artifactId>mybatis-plus-jsqlparser</artifactId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "</dependencies>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/suke/czx/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "@Slf4j",
+            "@EnableScheduling",
+            "@SpringBootApplication",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(Application.class, args);",
+            "log.info(\"<literal>\");",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/suke/czx/authentication/handler/CustomAccessDeniedHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "public class CustomAccessDeniedHandler implements AccessDeniedHandler {",
+            "@Override",
+            "public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {",
+            "response.setStatus(HttpStatus.OK.value());",
+            "response.setContentType(MediaType.APPLICATION_JSON_VALUE);",
+            "PrintWriter writer = response.getWriter();",
+            "writer.write(JSONUtil.toJsonStr(R.error(HttpStatus.FORBIDDEN.value(), accessDeniedException.getMessage())));"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/com/suke/czx/authentication/handler/CustomAuthenticationFailHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "@Slf4j",
+            "@Component",
+            "public class CustomAuthenticationFailHandler implements AuthenticationFailureHandler {",
+            "@SneakyThrows",
+            "@Override",
+            "public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception){",
+            "final String username = request.getParameter(\"username\");",
+            "SysLoginLog loginLog = new SysLoginLog();",
+            "loginLog.setOptionIp(IPUtils.getIpAddr(request));"
+          ]
+        }
+      ]
+    }
+  ]
+}

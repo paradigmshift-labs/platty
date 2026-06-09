@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "TencentBlueKing/bk-repo",
+  "htmlUrl": "https://github.com/TencentBlueKing/bk-repo",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "src/backend/analysis-executor/api-analysis-executor/build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 5,
+          "lines": [
+            "dependencies {",
+            "api(project(\":common:common-analysis\"))",
+            "implementation(project(\":analyst:api-analyst\"))",
+            "compileOnly(\"<literal>\")",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/backend/analysis-executor/biz-analysis-executor/src/main/kotlin/com/tencent/bkrepo/analysis/executor/controller/ExecutorController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 13,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "class ExecutorController(private val executorScheduler: ExecutorScheduler): ExecutorClient {",
+            "override fun execute(subtask: SubScanTask): Boolean {",
+            "return executorScheduler.scan(subtask)",
+            "}",
+            "override fun dispatch(subtaskId: String, token: String): Boolean {",
+            "throw UnsupportedOperationException()",
+            "}",
+            "override fun stop(subtaskId: String): Boolean {",
+            "return executorScheduler.stop(subtaskId)",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/backend/analysis-executor/boot-analysis-executor/src/main/kotlin/com/tencent/bkrepo/analysis/executor/AnalysisExecutorApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "@MicroService",
+            "class AnalysisExecutorApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<AnalysisExecutorApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/backend/analyst/biz-analyst/src/main/kotlin/com/tencent/bkrepo/analyst/component/ScannerPermissionCheckHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 67,
+          "lines": [
+            "@Primary",
+            "@Component",
+            "class ScannerPermissionCheckHandler(",
+            "val permissionManager: PermissionManager",
+            ") : PermissionCheckHandler {",
+            "override fun onPermissionCheck(userId: String, permission: Permission) {",
+            "when (permission.type) {",
+            "ResourceType.PROJECT -> checkProjectPermission(permission)",
+            "ResourceType.REPO -> checkRepoPermission(permission)",
+            "ResourceType.NODE -> checkNodePermission(permission)",
+            "}",
+            "override fun onPrincipalCheck(userId: String, principal: Principal) {",
+            "permissionManager.checkPrincipal(userId, principal.type)",
+            "}",
+            "fun checkPrincipal(userId: String, principal: PrincipalType) {",
+            "permissionManager.checkPrincipal(userId, principal)",
+            "}",
+            "fun checkProjectPermission(",
+            "projectId: String,",
+            "action: PermissionAction,",
+            "userId: String = SecurityUtils.getUserId()",
+            ") {",
+            "}",
+            "fun checkRepoPermission(",
+            "projectId: String,",
+            "repoName: String,",
+            "action: PermissionAction,",
+            "userId: String = SecurityUtils.getUserId()",
+            "}",
+            "fun checkReposPermission(",
+            "projectId: String,",
+            "repoNames: List<String>,",
+            "action: PermissionAction,",
+            "userId: String = SecurityUtils.getUserId()",
+            "}",
+            "fun checkNodePermission(",
+            "projectId: String,",
+            "repoName: String,",
+            "fullPath: String,",
+            "action: PermissionAction,",
+            "}",
+            "fun checkSubtaskPermission(subtask: SubScanTaskDefinition, action: PermissionAction) {",
+            "with(subtask) {",
+            "checkNodePermission(projectId, repoName, fullPath, action)",
+            "}",
+            "}",
+            "private fun checkProjectPermission(permission: Permission) {",
+            "val uriAttribute = HttpContextHolder",
+            ".getRequest()",
+            ".getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)",
+            "require(uriAttribute is Map<*, *>)",
+            "}",
+            "private fun checkRepoPermission(permission: Permission) {",
+            "with(ArtifactContextHolder.getRepoDetail()!!) {",
+            "permissionManager.checkRepoPermission(",
+            "action = permission.action,",
+            "projectId = projectId,",
+            "}",
+            "private fun checkNodePermission(permission: Permission) {",
+            "val path = ArtifactContextHolder.getArtifactInfo()!!.getArtifactFullPath()",
+            "with(ArtifactContextHolder.getRepoDetail()!!) {",
+            "permissionManager.checkNodePermission(",
+            "permission.action,",
+            "}",
+            "private fun repoDetail(projectId: String, repoName: String) =",
+            "ArtifactContextHolder.getRepoDetail(RepositoryId(projectId, repoName))",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "forezp/SpringBootLearning",
+  "htmlUrl": "https://github.com/forezp/SpringBootLearning",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "firstspringboot-2h/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 34,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>1.5.2.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-configuration-processor</artifactId>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-jpa</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>mysql</groupId>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "firstspringboot-2h/src/main/java/com/forezp/FirstspringbootApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "public class FirstspringbootApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(FirstspringbootApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "firstspringboot-2h/src/main/java/com/forezp/GirlController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 33,
+          "lines": [
+            "@RestController",
+            "public class GirlController {",
+            "@Autowired",
+            "private GirlRep girlRep;",
+            "@RequestMapping(value = \"/__path__\",method = RequestMethod.GET)",
+            "public List<Girl> getGirlList(){",
+            "return girlRep.findAll();",
+            "}",
+            "@RequestMapping(value = \"/__path__\",method = RequestMethod.POST)",
+            "public Girl addGirl(@RequestParam(\"cupSize\") String cupSize,",
+            "@RequestParam(\"age\") Integer age){",
+            "Girl girl = new Girl();",
+            "girl.setAge(age);",
+            "girl.setCupSize(cupSize);",
+            "@RequestMapping(value = \"/__path__\",method = RequestMethod.POST)",
+            "public Girl getGirl(@PathVariable(\"id\") Integer id){",
+            "return girlRep.findOne(id);",
+            "}",
+            "@RequestMapping(value = \"/__path__\",method = RequestMethod.PUT)",
+            "public Girl updateGirl(@PathVariable(\"id\") Integer id,",
+            "@RequestParam(\"cupSize\") String cupSize,",
+            "@RequestParam(\"age\") Integer age){",
+            "Girl girl = new Girl();",
+            "girl.setId(id);",
+            "@DeleteMapping(value = \"/__path__\")",
+            "public void updateGirl(@PathVariable(\"id\") Integer id){",
+            "girlRep.delete(id);",
+            "}",
+            "@RequestMapping(value = \"girls/age/{age}\",method = RequestMethod.GET)",
+            "public List<Girl> getGirls(@PathVariable(\"age\") Integer age){",
+            "return girlRep.findByAge(age);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "firstspringboot-2h/src/main/java/com/forezp/HelloController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@RestController     //等同于同时加上了@Controller和@ResponseBody",
+            "public class HelloController {",
+            "private GirlProperties girlProperties;",
+            "@RequestMapping(value = {\"/__path__\",\"/__path__\"},method = RequestMethod.GET)",
+            "public String say(){",
+            "return girlProperties.getCupSize();",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

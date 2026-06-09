@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "Naccl/NBlog",
+  "htmlUrl": "https://github.com/Naccl/NBlog",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "blog-api/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 79,
+          "lines": [
+            "<modelVersion>4.0.0</modelVersion>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.2.7.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<groupId>top.naccl</groupId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-security</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-aop</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.retry</groupId>",
+            "<artifactId>spring-retry</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.mybatis.spring.boot</groupId>",
+            "<artifactId>mybatis-spring-boot-starter</artifactId>",
+            "<version>2.1.3</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.github.pagehelper</groupId>",
+            "<artifactId>pagehelper-spring-boot-starter</artifactId>",
+            "<version>1.2.12</version>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-redis</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-mail</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-thymeleaf</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-quartz</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.lionsoul</groupId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-configuration-processor</artifactId>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-devtools</artifactId>",
+            "<scope>runtime</scope>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "<exclusions>",
+            "<exclusion>",
+            "<groupId>org.junit.vintage</groupId>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "blog-api/src/main/java/top/naccl/BlogApiApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "public class BlogApiApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(BlogApiApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "blog-api/src/main/java/top/naccl/controller/AboutController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 10,
+          "lines": [
+            "@RestController",
+            "public class AboutController {",
+            "@Autowired",
+            "AboutService aboutService;",
+            "@VisitLogger(VisitBehavior.ABOUT)",
+            "@GetMapping(\"/__path__\")",
+            "public Result about() {",
+            "return Result.ok(\"获取成功\", aboutService.getAboutInfo());",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "blog-api/src/main/java/top/naccl/controller/ArchiveController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 11,
+          "lines": [
+            "@RestController",
+            "public class ArchiveController {",
+            "@Autowired",
+            "BlogService blogService;",
+            "@VisitLogger(VisitBehavior.ARCHIVE)",
+            "@GetMapping(\"/__path__\")",
+            "public Result archives() {",
+            "Map<String, Object> archiveBlogMap = blogService.getArchiveBlogAndCountByIsPublished();",
+            "return Result.ok(\"请求成功\", archiveBlogMap);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

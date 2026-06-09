@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "idugalic/digital-restaurant",
+  "htmlUrl": "https://github.com/idugalic/digital-restaurant",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "drestaurant-apps/drestaurant-microservices-rest-2/drestaurant-microservices-rest-2-command-courier/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 30,
+          "lines": [
+            "<dependency>",
+            "<groupId>org.axonframework</groupId>",
+            "<artifactId>axon-spring-boot-starter</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-security</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-rest</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework</groupId>",
+            "<artifactId>spring-tx</artifactId>",
+            "</dependency>",
+            "<dependency>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "drestaurant-apps/drestaurant-microservices-rest-2/drestaurant-microservices-rest-2-command-courier/src/main/kotlin/com/drestaurant/MicroservicesRest2CourierApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication(exclude = [SecurityAutoConfiguration::class])",
+            "class MicroservicesRest2CourierApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<MicroservicesRest2CourierApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "drestaurant-apps/drestaurant-microservices-rest-2/drestaurant-microservices-rest-2-command-courier/src/main/kotlin/com/drestaurant/web/CommandController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 26,
+          "lines": [
+            "@RestController",
+            "class CommandController(private val commandGateway: CommandGateway, private val queryGateway: QueryGateway) {",
+            "private val currentUser: String",
+            "get() = if (SecurityContextHolder.getContext().authentication != null) {",
+            "SecurityContextHolder.getContext().authentication.name",
+            "@RequestMapping(value = [\"/__path__\"], method = [RequestMethod.POST], consumes = [MediaType.APPLICATION_JSON_VALUE])",
+            "fun createCourier(@RequestBody request: CreateCourierRequest, response: HttpServletResponse): ResponseEntity<Any> {",
+            "val command = CreateCourierCommand(PersonName(request.firstName, request.lastName), request.maxNumberOfActiveOrders, auditEntry)",
+            "queryGateway.subscriptionQuery(FindCourierQuery(command.targetAggregateIdentifier), ResponseTypes.instanceOf<CourierModel>(CourierModel::class.java), ResponseTypes.instanceOf<CourierModel>(CourierModel::class.java))",
+            ".use {",
+            "val commandResult: CourierId? = commandGateway.sendAndWait(command)",
+            "}",
+            "@RequestMapping(value = [\"/__path__\"], method = [RequestMethod.PUT], consumes = [MediaType.APPLICATION_JSON_VALUE])",
+            "fun assignOrderToCourier(@PathVariable cid: String, @PathVariable coid: String, response: HttpServletResponse): ResponseEntity<CourierOrderModel> {",
+            "val command = AssignCourierOrderToCourierCommand(CourierOrderId(coid), CourierId(cid), auditEntry)",
+            "queryGateway.subscriptionQuery(FindCourierOrderQuery(command.targetAggregateIdentifier), ResponseTypes.instanceOf<CourierOrderModel>(CourierOrderModel::class.java), ResponseTypes.instanceOf<CourierOrderModel>(CourierOrderModel::class.java))",
+            ".use {",
+            "val commandResult: CourierOrderId? = commandGateway.sendAndWait(command)",
+            "}",
+            "@RequestMapping(value = [\"/__path__\"], method = [RequestMethod.PUT], consumes = [MediaType.APPLICATION_JSON_VALUE])",
+            "fun markCourierOrderAsDelivered(@PathVariable cid: String, @PathVariable coid: String, response: HttpServletResponse): ResponseEntity<CourierOrderModel> {",
+            "val command = MarkCourierOrderAsDeliveredCommand(CourierOrderId(coid), auditEntry)",
+            "queryGateway.subscriptionQuery(FindCourierOrderQuery(command.targetAggregateIdentifier), ResponseTypes.instanceOf<CourierOrderModel>(CourierOrderModel::class.java), ResponseTypes.instanceOf<CourierOrderModel>(CourierOrderModel::class.java))",
+            ".use {",
+            "val commandResult: CourierOrderId? = commandGateway.sendAndWait(command)",
+            "data class CreateCourierRequest(val firstName: String, val lastName: String, val maxNumberOfActiveOrders: Int)"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "drestaurant-apps/drestaurant-microservices-rest-2/drestaurant-microservices-rest-2-command-customer/src/main/kotlin/com/drestaurant/MicroservicesRest2CustomerApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication(exclude = [SecurityAutoConfiguration::class])",
+            "class MicroservicesRest2CustomerApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<MicroservicesRest2CustomerApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

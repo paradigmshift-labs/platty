@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "philipplackner/SpringBootCrashCourse",
+  "htmlUrl": "https://github.com/philipplackner/SpringBootCrashCourse",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 29,
+          "lines": [
+            "plugins {",
+            "kotlin(\"jvm\") version \"1.9.25\"",
+            "kotlin(\"plugin.spring\") version \"1.9.25\"",
+            "id(\"org.springframework.boot\") version \"3.4.3\"",
+            "id(\"io.spring.dependency-management\") version \"1.1.7\"",
+            "}",
+            "group = \"com.plcoding\"",
+            "}",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"<literal>\")",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"io.projectreactor:reactor-test\")",
+            "testImplementation(\"org.jetbrains.kotlin:kotlin-test-junit5\")",
+            "testImplementation(\"org.jetbrains.kotlinx:kotlinx-coroutines-test\")",
+            "testImplementation(\"<literal>\")",
+            "testRuntimeOnly(\"org.junit.platform:junit-platform-launcher\")",
+            "compileOnly(\"jakarta.servlet:jakarta.servlet-api:6.1.0\")",
+            "implementation(\"io.jsonwebtoken:jjwt-api:0.12.6\")",
+            "runtimeOnly(\"io.jsonwebtoken:jjwt-impl:0.12.6\")",
+            "runtimeOnly(\"io.jsonwebtoken:jjwt-jackson:0.12.6\")",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/plcoding/spring_boot_crash_course/GlobalValidationHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "@RestControllerAdvice",
+            "class GlobalValidationHandler {",
+            "@ExceptionHandler(MethodArgumentNotValidException::class)",
+            "fun handleValidationError(e: MethodArgumentNotValidException): ResponseEntity<Map<String, Any>> {",
+            "val errors = e.bindingResult.allErrors.map {",
+            "it.defaultMessage ?: \"Invalid value\"",
+            "}",
+            "return ResponseEntity"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/plcoding/spring_boot_crash_course/SpringBootCrashCourseApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class SpringBootCrashCourseApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<SpringBootCrashCourseApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/plcoding/spring_boot_crash_course/controllers/AuthController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 33,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class AuthController(",
+            "private val authService: AuthService",
+            ") {",
+            "data class AuthRequest(",
+            "@field:Email(message = \"Invalid email format.\")",
+            "val email: String,",
+            "@field:Pattern(",
+            "regexp = \"^(?=.*[a-z])(?=.*[A-Z])(?=.*\\\\d).{9,}\\$\",",
+            ")",
+            "data class RefreshRequest(",
+            "val refreshToken: String",
+            ")",
+            "@PostMapping(\"/__path__\")",
+            "fun register(",
+            "@Valid @RequestBody body: AuthRequest",
+            ") {",
+            "authService.register(body.email, body.password)",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "fun login(",
+            "@RequestBody body: AuthRequest",
+            "): AuthService.TokenPair {",
+            "return authService.login(body.email, body.password)",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "fun refresh(",
+            "@RequestBody body: RefreshRequest",
+            "): AuthService.TokenPair {",
+            "return authService.refresh(body.refreshToken)",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

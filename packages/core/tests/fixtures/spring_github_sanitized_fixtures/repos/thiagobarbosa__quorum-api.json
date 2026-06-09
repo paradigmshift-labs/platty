@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "thiagobarbosa/quorum-api",
+  "htmlUrl": "https://github.com/thiagobarbosa/quorum-api",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 33,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "id 'org.springframework.boot' version '2.7.16'",
+            "id 'io.spring.dependency-management' version '1.1.4'",
+            "id 'org.jetbrains.kotlin.jvm' version '1.9.20'",
+            "id 'org.jetbrains.kotlin.plugin.spring' version '1.9.20'",
+            "id \"org.jlleitschuh.gradle.ktlint\" version \"11.5.1\"",
+            "}",
+            "dependencies {",
+            "implementation '<literal>'",
+            "implementation 'org.jetbrains.kotlin:kotlin-reflect'",
+            "implementation \"<literal>\"",
+            "implementation 'com.squareup.okhttp3:okhttp:4.9.0'",
+            "implementation '<literal>'",
+            "implementation '<literal>'",
+            "testImplementation '<literal>'",
+            "implementation \"<literal>\"",
+            "implementation platform('com.google.cloud:libraries-bom:20.2.0')",
+            "implementation 'com.google.cloud:google-cloud-secretmanager'",
+            "implementation 'com.github.ben-manes.caffeine:caffeine:2.8.8'",
+            "implementation 'com.resend:resend-java:2.2.1'",
+            "implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'",
+            "implementation '<literal>'",
+            "testImplementation 'com.h2database:h2:2.2.220'",
+            "implementation 'org.hibernate:hibernate-core:5.6.15.Final'",
+            "implementation \"org.liquibase:liquibase-core:4.23.2\"",
+            "implementation 'mysql:mysql-connector-java:8.0.21'",
+            "dependencyManagement {",
+            "imports {",
+            "mavenBom \"<literal>\"",
+            "}",
+            "}",
+            "tasks.withType(KotlinCompile) {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/quorum/api/ApiApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity",
+            "@SpringBootApplication",
+            "@EnableGlobalMethodSecurity(jsr250Enabled = true)",
+            "class ApiApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<ApiApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/quorum/api/authentication/controllers/AdminAuthController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 37,
+          "lines": [
+            "@RolesAllowed(\"ROLE_ADMIN\")",
+            "@RestController",
+            "@Tag(name = \"0. Administrador\", description = \"Endpoints restritos para administradores\")",
+            "@RequestMapping(\"/__path__\")",
+            "class AdminAuthController(",
+            "private val servicoAutenticacao: ServicoAutenticacao",
+            ") {",
+            "@Operation(",
+            "]",
+            ")",
+            "@GetMapping(\"/__path__\")",
+            "fun obterTodasAutenticacoes(): List<Autenticacao> {",
+            "return servicoAutenticacao.obterTodasAutenticacoes()",
+            "}",
+            "@Operation(",
+            "]",
+            ")",
+            "@PostMapping(\"/__path__\")",
+            "fun criarTokenAdmin(): Autenticacao {",
+            "return servicoAutenticacao.criarTokenAdmin()",
+            "}",
+            "@Operation(",
+            "]",
+            ")",
+            "@DeleteMapping(\"/__path__\")",
+            "fun apagarTodasAutenticacoesAdmin(): List<Autenticacao> {",
+            "return servicoAutenticacao.apagarTodasAutenticacoesAdmin()",
+            "}",
+            "@Operation(",
+            "]",
+            ")",
+            "@DeleteMapping(\"/__path__\")",
+            "fun apagarToken(",
+            "@Parameter(description = \"Token a ser apagado\") @PathVariable token: String",
+            "): Autenticacao {",
+            "return servicoAutenticacao.apagarToken(token)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/com/quorum/api/authentication/controllers/AuthenticationController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 24,
+          "lines": [
+            "import org.springframework.web.bind.annotation.RestController",
+            "@RestController",
+            "@Tag(name = \"1. Autenticação\", description = \"<literal>\")",
+            "@RequestMapping(\"/__path__\")",
+            "class AuthenticationController(",
+            "private val servicoAutenticacao: ServicoAutenticacao",
+            ") {",
+            "@Operation(",
+            "summary = \"Criar token publico\",",
+            "]",
+            ")",
+            "@PostMapping(\"/__path__\")",
+            "fun generatePublicToken(): Autenticacao {",
+            "return servicoAutenticacao.criarTokenPublico()",
+            "}",
+            "@Operation(",
+            "]",
+            ")",
+            "@PostMapping(\"/__path__\")",
+            "fun generateUserToken(",
+            "@RequestParam email: String",
+            "): Autenticacao {",
+            "return servicoAutenticacao.criarTokenPrivado(email)",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "razvn/webflux-r2dbc-kotlin",
+  "htmlUrl": "https://github.com/razvn/webflux-r2dbc-kotlin",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 30,
+          "lines": [
+            "import org.jetbrains.kotlin.gradle.tasks.KotlinCompile",
+            "plugins {",
+            "id(\"org.springframework.boot\") version \"2.3.2.RELEASE\"",
+            "id(\"io.spring.dependency-management\") version \"1.0.9.RELEASE\"",
+            "kotlin(\"jvm\") version \"1.3.72\"",
+            "kotlin(\"plugin.spring\") version \"1.3.72\"",
+            "}",
+            "group = \"net.razvan.poc.spring-boot\"",
+            "version = \"0.0.1-SNAPSHOT\"",
+            "java.sourceCompatibility = JavaVersion.VERSION_11",
+            "repositories {",
+            "val mockkVersion = \"1.10.0\"",
+            "dependencies {",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-stdlib-jdk8\")",
+            "implementation(\"<literal>\")",
+            "runtimeOnly(\"com.h2database:h2\")",
+            "runtimeOnly(\"io.r2dbc:r2dbc-h2\")",
+            "runtimeOnly(\"dev.miku:r2dbc-mysql\")",
+            "runtimeOnly(\"org.postgresql:postgresql\")",
+            "testImplementation(\"<literal>\") {",
+            "exclude(group = \"org.junit.vintage\", module = \"junit-vintage-engine\")",
+            "}",
+            "testImplementation(\"io.projectreactor:reactor-test\")",
+            "testImplementation(\"io.mockk:mockk:$mockkVersion\")"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/net/razvan/poc/springboot/webfluxr2dbckotlin/WebfluxR2dbcKotlinApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "import org.springframework.boot.runApplication",
+            "@SpringBootApplication",
+            "class WebfluxR2dbcKotlinApplication",
+            "fun main(args: Array<String>) {",
+            "runApplication<WebfluxR2dbcKotlinApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/net/razvan/poc/springboot/webfluxr2dbckotlin/user/UserHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 36,
+          "lines": [
+            "@Component",
+            "class UserHandler(val service: UserService) {",
+            "private val logger = LoggerFactory.getLogger(UserHandler::class.java)",
+            "suspend fun findAll(request: ServerRequest): ServerResponse {",
+            "val users = service.findAll()",
+            "return ServerResponse.ok().json().bodyAndAwait(users)",
+            "}",
+            "suspend fun search(request: ServerRequest): ServerResponse {",
+            "val criterias = request.queryParams()",
+            "return when {",
+            "criterias.isEmpty() -> ServerResponse.badRequest().json().bodyValueAndAwait(ErrorMessage(\"Search must have query params\"))",
+            "criterias.contains(\"email\") -> {",
+            "}",
+            "suspend fun findUser(request: ServerRequest): ServerResponse {",
+            "val id = request.pathVariable(\"id\").toLongOrNull()",
+            "return if (id == null) {",
+            "ServerResponse.badRequest().json().bodyValueAndAwait(ErrorMessage(\"`id` must be numeric\"))",
+            "} else {",
+            "}",
+            "suspend fun addUser(request: ServerRequest): ServerResponse {",
+            "val newUser = try {",
+            "request.bodyToMono<UserDTO>().awaitFirstOrNull()",
+            "} catch (e: Exception) {",
+            "logger.error(\"Decoding body error\", e)",
+            "}",
+            "suspend fun updateUser(request: ServerRequest): ServerResponse {",
+            "val id = request.pathVariable(\"id\").toLongOrNull()",
+            "return if (id == null) {",
+            "ServerResponse.badRequest().json().bodyValueAndAwait(ErrorMessage(\"`id` must be numeric\"))",
+            "} else {",
+            "}",
+            "suspend fun deleteUser(request: ServerRequest): ServerResponse {",
+            "val id = request.pathVariable(\"id\").toLongOrNull()",
+            "return if (id == null) {",
+            "ServerResponse.badRequest().json().bodyValueAndAwait(ErrorMessage(\"`id` must be numeric\"))",
+            "} else {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/net/razvan/poc/springboot/webfluxr2dbckotlin/user/UserRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "import reactor.core.publisher.Flux",
+            "interface UserRepository : ReactiveCrudRepository<User, Long> {",
+            "@Query(\"SELECT u.* FROM users u WHERE u.email = :email\")",
+            "fun findByEmail(email: String): Flux<User>",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

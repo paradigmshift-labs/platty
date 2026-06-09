@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "newbee-ltd/newbee-mall",
+  "htmlUrl": "https://github.com/newbee-ltd/newbee-mall",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 38,
+          "lines": [
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.7.5</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-thymeleaf</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.session</groupId>",
+            "<artifactId>spring-session-core</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.mybatis.spring.boot</groupId>",
+            "<artifactId>mybatis-spring-boot-starter</artifactId>",
+            "<version>${mybatis.start.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "</dependencies>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/ltd/newbee/mall/NewBeeMallApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@MapperScan(\"ltd.newbee.mall.dao\")",
+            "@SpringBootApplication",
+            "public class NewBeeMallApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(NewBeeMallApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/ltd/newbee/mall/controller/admin/AdminController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 54,
+          "lines": [
+            "@Controller",
+            "@RequestMapping(\"/__path__\")",
+            "public class AdminController {",
+            "@Resource",
+            "private AdminUserService adminUserService;",
+            "@GetMapping({\"/__path__\"})",
+            "public String login() {",
+            "return \"admin/login\";",
+            "}",
+            "@GetMapping({\"/__path__\"})",
+            "public String test() {",
+            "return \"admin/test\";",
+            "}",
+            "@GetMapping({\"\", \"/__path__\", \"/__path__\", \"/__path__\"})",
+            "public String index(HttpServletRequest request) {",
+            "request.setAttribute(\"path\", \"index\");",
+            "return \"admin/index\";",
+            "}",
+            "@PostMapping(value = \"/__path__\")",
+            "public String login(@RequestParam(\"userName\") String userName,",
+            "@RequestParam(\"password\") String password,",
+            "@RequestParam(\"verifyCode\") String verifyCode,",
+            "HttpSession session) {",
+            "if (!StringUtils.hasText(verifyCode)) {",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public String profile(HttpServletRequest request) {",
+            "Integer loginUserId = (int) request.getSession().getAttribute(\"loginUserId\");",
+            "AdminUser adminUser = adminUserService.getUserDetailById(loginUserId);",
+            "if (adminUser == null) {",
+            "return \"admin/login\";",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "@ResponseBody",
+            "public String passwordUpdate(HttpServletRequest request, @RequestParam(\"originalPassword\") String originalPassword,",
+            "@RequestParam(\"newPassword\") String newPassword) {",
+            "if (!StringUtils.hasText(originalPassword) || !StringUtils.hasText(newPassword)) {",
+            "return \"参数不能为空\";",
+            "}",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "@ResponseBody",
+            "public String nameUpdate(HttpServletRequest request, @RequestParam(\"loginUserName\") String loginUserName,",
+            "@RequestParam(\"nickName\") String nickName) {",
+            "if (!StringUtils.hasText(loginUserName) || !StringUtils.hasText(nickName)) {",
+            "return \"参数不能为空\";",
+            "}",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public String logout(HttpServletRequest request) {",
+            "request.getSession().removeAttribute(\"loginUserId\");",
+            "request.getSession().removeAttribute(\"loginUser\");",
+            "request.getSession().removeAttribute(\"errorMsg\");",
+            "return \"admin/login\";"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/ltd/newbee/mall/controller/admin/NewBeeMallCarouselController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 45,
+          "lines": [
+            "@Controller",
+            "@RequestMapping(\"/__path__\")",
+            "public class NewBeeMallCarouselController {",
+            "@Resource",
+            "NewBeeMallCarouselService newBeeMallCarouselService;",
+            "@GetMapping(\"/__path__\")",
+            "public String carouselPage(HttpServletRequest request) {",
+            "request.setAttribute(\"path\", \"newbee_mall_carousel\");",
+            "return \"admin/newbee_mall_carousel\";",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.GET)",
+            "@ResponseBody",
+            "public Result list(@RequestParam Map<String, Object> params) {",
+            "if (ObjectUtils.isEmpty(params.get(\"page\")) || ObjectUtils.isEmpty(params.get(\"limit\"))) {",
+            "return ResultGenerator.genFailResult(\"参数异常！\");",
+            "}",
+            "PageQueryUtil pageUtil = new PageQueryUtil(params);",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.POST)",
+            "@ResponseBody",
+            "public Result save(@RequestBody Carousel carousel) {",
+            "if (!StringUtils.hasText(carousel.getCarouselUrl())",
+            "|| Objects.isNull(carousel.getCarouselRank())) {",
+            "return ResultGenerator.genFailResult(\"参数异常！\");",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.POST)",
+            "@ResponseBody",
+            "public Result update(@RequestBody Carousel carousel) {",
+            "if (Objects.isNull(carousel.getCarouselId())",
+            "|| !StringUtils.hasText(carousel.getCarouselUrl())",
+            "|| Objects.isNull(carousel.getCarouselRank())) {",
+            "return ResultGenerator.genFailResult(\"参数异常！\");",
+            "@GetMapping(\"/__path__\")",
+            "@ResponseBody",
+            "public Result info(@PathVariable(\"id\") Integer id) {",
+            "Carousel carousel = newBeeMallCarouselService.getCarouselById(id);",
+            "if (carousel == null) {",
+            "return ResultGenerator.genFailResult(ServiceResultEnum.DATA_NOT_EXIST.getResult());",
+            "}",
+            "@RequestMapping(value = \"/__path__\", method = RequestMethod.POST)",
+            "@ResponseBody",
+            "public Result delete(@RequestBody Integer[] ids) {",
+            "if (ids.length < 1) {",
+            "return ResultGenerator.genFailResult(\"参数异常！\");",
+            "}",
+            "if (newBeeMallCarouselService.deleteBatch(ids)) {"
+          ]
+        }
+      ]
+    }
+  ]
+}

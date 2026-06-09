@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "zalando/zally",
+  "htmlUrl": "https://github.com/zalando/zally",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "server/build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 18,
+          "lines": [
+            "}",
+            "plugins {",
+            "val kotlinVersion = \"1.8.0\"",
+            "val klintVersion = \"11.0.0\"",
+            "kotlin(\"jvm\") version kotlinVersion",
+            "}",
+            "dependencies {",
+            "implementation(\"org.jetbrains.kotlin:kotlin-stdlib\")",
+            "implementation(\"org.jetbrains.kotlin:kotlin-reflect\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"<literal>\")",
+            "implementation(\"org.yaml:snakeyaml:1.33\")",
+            "testRuntimeOnly(\"org.junit.vintage:junit-vintage-engine:5.9.1\")",
+            "testImplementation(\"com.jayway.jsonpath:json-path-assert:2.7.0\")",
+            "testImplementation(\"org.mockito:mockito-core:4.11.0\")"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "server/zally-server/src/main/kotlin/org/zalando/zally/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "import org.zalando.twintip.spring.SchemaResource",
+            "@SpringBootApplication",
+            "@Import(SchemaResource::class)",
+            "@EnableScheduling",
+            "class Application",
+            "fun main(args: Array<String>) {",
+            "SpringApplication.run(Application::class.java, *args)",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "server/zally-server/src/main/kotlin/org/zalando/zally/apireview/ApiReviewRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 14,
+          "lines": [
+            "import java.util.UUID",
+            "interface ApiReviewRepository : CrudRepository<ApiReview, Long> {",
+            "@Query(",
+            "\"\"\"",
+            "SELECT new org.zalando.zally.statistic.ReviewStatistics(",
+            "\"\"\"",
+            ")",
+            "fun getReviewStatistics(",
+            "@Param(\"from\") from: LocalDate,",
+            "@Param(\"to\") to: LocalDate,",
+            "@Param(\"userAgent\") userAgent: String = \"%\"",
+            "): ReviewStatistics",
+            "fun findByExternalId(externalId: UUID): ApiReview?",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "server/zally-server/src/main/kotlin/org/zalando/zally/apireview/ApiViolationsController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 34,
+          "lines": [
+            "@CrossOrigin",
+            "@RestController",
+            "class ApiViolationsController(",
+            "private val rulesValidator: ApiValidator,",
+            "private val apiDefinitionReader: ApiDefinitionReader,",
+            "private val apiReviewRepository: ApiReviewRepository,",
+            "private val serverMessageService: ServerMessageService,",
+            "@ResponseBody",
+            "@PostMapping(\"/__path__\")",
+            "fun validate(",
+            "@RequestBody(required = true) request: ApiDefinitionRequest,",
+            "@RequestHeader(value = \"User-Agent\", required = false) userAgent: String?,",
+            "@RequestHeader(value = \"Authorization\", required = false) authorization: String?,",
+            "uriBuilder: UriComponentsBuilder",
+            "@ResponseBody",
+            "@GetMapping(\"/__path__\")",
+            "fun getExistingViolationResponse(",
+            "@PathVariable(value = \"externalId\") externalId: UUID",
+            "): ApiDefinitionResponse {",
+            "val review = apiReviewRepository.findByExternalId(externalId) ?: throw ApiReviewNotFoundException()",
+            "}",
+            "private fun retrieveRulesPolicy(request: ApiDefinitionRequest): RulesPolicy = request.ignoreRules",
+            ".let { configPolicy.withMoreIgnores(request.ignoreRules) }",
+            "private fun retrieveApiDefinition(request: ApiDefinitionRequest): String = try {",
+            "apiDefinitionReader.read(request)",
+            "} catch (e: MissingApiDefinitionException) {",
+            "apiReviewRepository.save(ApiReview(request, \"\", \"\"))",
+            "throw e",
+            "}",
+            "private fun buildApiDefinitionResponse(review: ApiReview): ApiDefinitionResponse = ApiDefinitionResponse(",
+            "externalId = review.externalId,",
+            "message = serverMessageService.serverMessage(review.userAgent),",
+            "violations = review.ruleViolations",
+            ".sortedBy(RuleViolation::type)"
+          ]
+        }
+      ]
+    }
+  ]
+}

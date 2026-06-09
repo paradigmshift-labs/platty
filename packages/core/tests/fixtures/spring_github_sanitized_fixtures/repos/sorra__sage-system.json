@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "sorra/sage-system",
+  "htmlUrl": "https://github.com/sorra/sage-system",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 32,
+          "lines": [
+            "mavenCentral()",
+            "}",
+            "dependencies {",
+            "classpath \"<literal>\"",
+            "classpath \"<literal>\"",
+            "classpath \"<literal>\"",
+            "classpath \"<literal>\"",
+            "}",
+            "}",
+            "plugins {",
+            "id \"com.eriwen.gradle.css\" version \"2.14.0\"",
+            "id \"com.eriwen.gradle.js\" version \"2.14.1\"",
+            "}",
+            "apply plugin: 'java'",
+            "apply plugin: 'kotlin'",
+            "apply plugin: 'org.springframework.boot'",
+            "apply plugin: \"kotlin-allopen\"",
+            "apply plugin: \"kotlin-spring\"",
+            "apply plugin: \"kotlin-noarg\"",
+            "}",
+            "dependencies {",
+            "compile \"<literal>\"",
+            "compile \"<literal>\"",
+            "compile \"<literal>\"",
+            "compile 'com.github.httl:httl:1.0.11'",
+            "compile 'com.github.httl:httl-springmvc:1.0.11'",
+            "compile ('org.avaje.ebeanorm:avaje-ebeanorm:7.9.1') {",
+            "runtime 'mysql:mysql-connector-java:5.1.38'",
+            "testCompile \"<literal>\"",
+            "}",
+            "ext {",
+            "staticSrc = 'src/main/webapp/static'"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/sage/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 48,
+          "lines": [
+            "import javax.servlet.ServletContext",
+            "@SpringBootApplication",
+            "class Application : WebMvcConfigurerAdapter() {",
+            "@Bean(autowire = Autowire.BY_TYPE) @Scope(SCOPE_SINGLETON)",
+            "fun getEbeanServer(): EbeanServer {",
+            "val config = ServerConfig()",
+            "config.name = \"db\"",
+            "config.isDefaultServer = true",
+            "}",
+            "override fun configureViewResolvers(registry: ViewResolverRegistry) {",
+            "registry.viewResolver(HttlViewResolver().apply { setContentType(\"text/html; charset=UTF-8\") })",
+            "}",
+            "override fun addResourceHandlers(registry: ResourceHandlerRegistry) {",
+            "super.addResourceHandlers(registry)",
+            "registry.addResourceHandler(\"/__path__\")?.addResourceLocations(\"/__path__\")",
+            "registry.addResourceHandler(\"/__path__\").addResourceLocations(fileUrl(fileService.picDir()))",
+            "registry.addResourceHandler(\"/__path__\").addResourceLocations(fileUrl(fileService.avatarDir()))",
+            "}",
+            "private fun fileUrl(path: String): String {",
+            "return if (path.startsWith(\"/__path__\")) {",
+            "\"file:$path/\"",
+            "}",
+            "else {",
+            "@Bean",
+            "fun json() = MappingJackson2JsonView()",
+            "@Bean",
+            "fun multipartResolver() = CommonsMultipartResolver().apply { setMaxUploadSize(5*1024*1024) }",
+            "@Bean",
+            "fun errorPages() = ErrorPageRegistrar { registry ->",
+            "registry.addErrorPages(ErrorPage(HttpStatus.NOT_FOUND, \"/__path__\"))",
+            "}",
+            "@Bean",
+            "fun accessLoggingFilter() = AccessLoggingFilter()",
+            "@Bean",
+            "fun currentRequestFilter() = CurrentRequestFilter()",
+            "@Bean",
+            "fun staticResourceRefreshFilter() = StaticResourceRefreshFilter()",
+            "@Bean",
+            "fun versionsMapper(servletContext: ServletContext) = VersionsMapper.setup(servletContext)",
+            "override fun addInterceptors(registry: InterceptorRegistry) {",
+            "registry.addInterceptor(PageDefaultModelInterceptor(userService, tagService))",
+            "}",
+            "@Autowired",
+            "}",
+            "fun main(args: Array<String>) {",
+            "if (!AgentLoader.loadAgentFromClasspath(\"avaje-ebeanorm-agent\", \"debug=1;packages=sage.entity.**\")) {",
+            "System.err.println(\"<literal>\")",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/sage/web/ajax/BlogLikesAjaxController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 19,
+          "lines": [
+            "import sage.web.auth.Auth",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class BlogLikesAjaxController {",
+            "@RequestMapping(\"/__path__\")",
+            "fun like(@PathVariable id: Long) {",
+            "val uid = Auth.checkUid()",
+            "BlogStat.like(id, uid)",
+            "TweetStat.like(Blog.get(id).tweetId, uid)",
+            "}",
+            "@RequestMapping(\"/__path__\")",
+            "fun unlike(@PathVariable id: Long) {",
+            "val uid = Auth.checkUid()",
+            "BlogStat.unlike(id, uid)",
+            "TweetStat.unlike(Blog.get(id).tweetId, uid)",
+            "}",
+            "@RequestMapping(\"/__path__\")",
+            "fun likes(@PathVariable id: Long) = BlogStat.get(id).likes",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/kotlin/sage/web/ajax/CommentAjaxController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 17,
+          "lines": [
+            "import sage.web.context.BaseController",
+            "@RestController",
+            "@RequestMapping(\"/__path__\")",
+            "class CommentAjaxController : BaseController() {",
+            "@RequestMapping(\"/__path__\")",
+            "fun create(@RequestParam content: String, @RequestParam sourceType: Short, @RequestParam sourceId: Long,",
+            "@RequestParam(required = false) replyUserId: Long?,",
+            "@RequestParam(required = false) forward: Boolean?) {",
+            "val uid = Auth.checkUid()",
+            "if (sourceType == Comment.TWEET) {",
+            "}",
+            "@RequestMapping",
+            "fun comments(@RequestParam sourceType: Short, @RequestParam sourceId: Long): Map<String, Any> {",
+            "return mapOf(\"count\" to Comment.count(sourceType, sourceId),",
+            "\"list\" to Comment.list(sourceType, sourceId).map(::CommentView))",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

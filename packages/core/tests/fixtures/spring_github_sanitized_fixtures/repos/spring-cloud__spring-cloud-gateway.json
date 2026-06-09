@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "spring-cloud/spring-cloud-gateway",
+  "htmlUrl": "https://github.com/spring-cloud/spring-cloud-gateway",
+  "defaultBranch": "main",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "docs/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 7,
+          "lines": [
+            "<modelVersion>4.0.0</modelVersion>",
+            "<parent>",
+            "<groupId>org.springframework.cloud</groupId>",
+            "<artifactId>spring-cloud-gateway</artifactId>",
+            "<version>5.0.2-SNAPSHOT</version>",
+            "</parent>",
+            "<artifactId>spring-cloud-gateway-docs</artifactId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-cloud-gateway-integration-tests/grpc/src/main/java/org/springframework/cloud/gateway/tests/grpc/GRPCApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 48,
+          "lines": [
+            "@SpringBootConfiguration",
+            "@EnableAutoConfiguration",
+            "public class GRPCApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(GRPCApplication.class, args);",
+            "}",
+            "@Component",
+            "static class GRPCServer implements ApplicationRunner {",
+            "private static final Logger log = LoggerFactory.getLogger(GRPCServer.class);",
+            "private final Environment environment;",
+            "private Server server;",
+            "@Override",
+            "public void run(ApplicationArguments args) throws Exception {",
+            "final GRPCServer server = new GRPCServer(environment);",
+            "server.start();",
+            "}",
+            "private void start() throws IOException {",
+            "Integer serverPort = environment.getProperty(\"local.server.port\", Integer.class);",
+            "int grpcPort = serverPort + 1;",
+            "ServerCredentials creds = createServerCredentials();",
+            "server = Grpc.newServerBuilderForPort(grpcPort, creds)",
+            "}",
+            "private ServerCredentials createServerCredentials() throws IOException {",
+            "File certChain = new ClassPathResource(\"public.cert\").getFile();",
+            "File privateKey = new ClassPathResource(\"private.key\").getFile();",
+            "return TlsServerCredentials.create(certChain, privateKey);",
+            "}",
+            "private void stop() throws InterruptedException {",
+            "if (server != null) {",
+            "server.shutdown().awaitTermination(30, TimeUnit.SECONDS);",
+            "}",
+            "log.info(\"gRPC server stopped\");",
+            "}",
+            "static class StreamService extends StreamServiceGrpc.StreamServiceImplBase {",
+            "@Override",
+            "public void more(HelloRequest request, StreamObserver<HelloResponse> responseObserver) {",
+            "int count = 0;",
+            "while (count < 3) {",
+            "HelloResponse reply = HelloResponse.newBuilder()",
+            ".setGreeting(\"Hello(\" + count + \") ==> \" + request.getFirstName())",
+            "}",
+            "static class HelloService extends HelloServiceGrpc.HelloServiceImplBase {",
+            "@Override",
+            "public void hello(HelloRequest request, StreamObserver<HelloResponse> responseObserver) {",
+            "if (\"failWithRuntimeException!\".equals(request.getFirstName())) {",
+            "StatusRuntimeException exception = Status.FAILED_PRECONDITION.withDescription(\"Invalid firstName\")",
+            ".asRuntimeException();",
+            "responseObserver.onError(exception);"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-cloud-gateway-integration-tests/http2/src/main/java/org/springframework/cloud/gateway/tests/http2/Http2Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 36,
+          "lines": [
+            "@SpringBootConfiguration",
+            "@EnableAutoConfiguration",
+            "@RestController",
+            "@LoadBalancerClients({ @LoadBalancerClient(name = \"myservice\", configuration = Http2Application.MyServiceConf.class),",
+            "@LoadBalancerClient(name = \"nossl\", configuration = Http2Application.NosslServiceConf.class) })",
+            "public class Http2Application {",
+            "private static Log log = LogFactory.getLog(Http2Application.class);",
+            "@GetMapping(\"hello\")",
+            "public String hello() {",
+            "return \"Hello\";",
+            "}",
+            "@Bean",
+            "public RouteLocator myRouteLocator(RouteLocatorBuilder builder) {",
+            "return builder.routes()",
+            ".route(r -> r.path(\"/__path__\").filters(f -> f.stripPrefix(1)).uri(\"lb://myservice\"))",
+            ".route(r -> r.path(\"/__path__\").filters(f -> f.stripPrefix(1)).uri(\"lb://nossl\"))",
+            ".route(r -> r.path(\"/__path__\").filters(f -> f.stripPrefix(1)).uri(\"http://neverssl.com\"))",
+            "}",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(Http2Application.class, args);",
+            "}",
+            "static class MyServiceConf {",
+            "@Bean",
+            "public ServiceInstanceListSupplier staticServiceInstanceListSupplier(Environment env) {",
+            "Integer port = env.getProperty(\"local.server.port\", Integer.class, 8443);",
+            "log.info(\"local.server.port = \" + port);",
+            "return ServiceInstanceListSuppliers.from(\"myservice\",",
+            "new DefaultServiceInstance(\"myservice-1\", \"myservice\", \"localhost\", port, true));",
+            "}",
+            "static class NosslServiceConf {",
+            "@Bean",
+            "public ServiceInstanceListSupplier noSslStaticServiceInstanceListSupplier() {",
+            "int port = Integer.parseInt(System.getProperty(\"nossl.port\", \"8080\"));",
+            "log.info(\"nossl.port = \" + port);",
+            "return ServiceInstanceListSuppliers.from(\"nossl\",",
+            "new DefaultServiceInstance(\"nossl-1\", \"nossl\", \"localhost\", port, false));"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-cloud-gateway-integration-tests/httpclient/src/main/java/org/springframework/cloud/gateway/tests/httpclient/HttpClientApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 51,
+          "lines": [
+            "@EnableAutoConfiguration",
+            "@LoadBalancerClient(name = \"myservice\", configuration = MyServiceConf.class)",
+            "public class HttpClientApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(HttpClientApplication.class, args);",
+            "}",
+            "@Bean",
+            "public HttpComponentsClientHttpRequestFactory httpComponentsClientHttpRequestFactory() {",
+            "PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();",
+            "connectionManager.setMaxTotal(2);",
+            "connectionManager.setDefaultMaxPerRoute(2);",
+            "@Bean",
+            "public RouterFunction<ServerResponse> gatewayRouterFunctionsRetry() {",
+            "return route(\"test-retry\").GET(\"/__path__\", http())",
+            ".filter(lb(\"myservice\"))",
+            ".filter(prefixPath(\"/__path__\"))",
+            ".filter(retry(3))",
+            ".build();",
+            "@Bean",
+            "public RouterFunction<ServerResponse> gatewayRouterFunctionsFrameworkRetry() {",
+            "return route(\"test-retry\").GET(\"/__path__\", http())",
+            ".filter(lb(\"myservice\"))",
+            ".filter(prefixPath(\"/__path__\"))",
+            ".filter(frameworkRetry(3))",
+            ".build();",
+            "}",
+            "@RestController",
+            "protected static class RetryController {",
+            "Log log = LogFactory.getLog(getClass());",
+            "ConcurrentHashMap<String, AtomicInteger> map = new ConcurrentHashMap<>();",
+            "@GetMapping(\"/__path__\")",
+            "public ResponseEntity<String> frameworkRetry(@RequestParam(\"key\") String key,",
+            "@RequestParam(name = \"count\", defaultValue = \"3\") int count,",
+            "@RequestParam(name = \"failStatus\", required = false) Integer failStatus) {",
+            "return retry(key, count, failStatus);",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public ResponseEntity<String> retry(@RequestParam(\"key\") String key,",
+            "@RequestParam(name = \"count\", defaultValue = \"3\") int count,",
+            "@RequestParam(name = \"failStatus\", required = false) Integer failStatus) {",
+            "AtomicInteger num = map.computeIfAbsent(key, s -> new AtomicInteger());",
+            "int i = num.incrementAndGet();",
+            "}",
+            "class MyServiceConf {",
+            "@Value(\"${local.server.port}\")",
+            "private int port = 0;",
+            "@Bean",
+            "public ServiceInstanceListSupplier staticServiceInstanceListSupplier() {",
+            "return ServiceInstanceListSuppliers.from(\"myservice\",",
+            "new DefaultServiceInstance(\"myservice-1\", \"myservice\", \"localhost\", port, false));",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

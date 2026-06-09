@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "lxy-go/SpringBoot",
+  "htmlUrl": "https://github.com/lxy-go/SpringBoot",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "SpringBoot/spring-boot-01-hello-quick/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 30,
+          "lines": [
+            "<groupId>com.wdjr</groupId>",
+            "<artifactId>spring-boot-01-hello-quick</artifactId>",
+            "<version>0.0.1-SNAPSHOT</version>",
+            "<packaging>jar</packaging>",
+            "<name>spring-boot-01-hello-quick</name>",
+            "<description>Demo project for Spring Boot</description>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.0.1.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "</dependencies>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "SpringBoot/spring-boot-01-hello-quick/src/main/java/com/wdjr/springbootquick/SpringBoot01HelloQuickApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "public class SpringBoot01HelloQuickApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(SpringBoot01HelloQuickApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "SpringBoot/spring-boot-01-hello-quick/src/main/java/com/wdjr/springbootquick/controller/HelloController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@RestController",
+            "public class HelloController {",
+            "@RequestMapping(\"/__path__\")",
+            "public  String  hello(){",
+            "return \"hello world\";",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "SpringBoot/spring-boot-02-config/src/main/java/com/wdjr/springboot/SpringBoot02ConfigApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.context.annotation.ImportResource;",
+            "@SpringBootApplication",
+            "public class SpringBoot02ConfigApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(SpringBoot02ConfigApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

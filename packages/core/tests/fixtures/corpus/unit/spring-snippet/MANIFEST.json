@@ -1,0 +1,20 @@
+[
+  {
+    "repo": "spring-guides/tut-spring-boot-kotlin",
+    "path": "build.gradle.kts",
+    "saved": "tests/fixtures/corpus/unit/spring-snippet/spring-guides__tut-spring-boot-kotlin/build.gradle.kts.txt",
+    "safe_prompt_scan": true
+  },
+  {
+    "repo": "spring-guides/tut-spring-boot-kotlin",
+    "path": "src/main/kotlin/com/example/blog/BlogApplication.kt",
+    "saved": "tests/fixtures/corpus/unit/spring-snippet/spring-guides__tut-spring-boot-kotlin/src__main__kotlin__com__example__blog__BlogApplication.kt.txt",
+    "safe_prompt_scan": true
+  },
+  {
+    "repo": "JetBrains/Exposed",
+    "path": "build.gradle.kts",
+    "saved": "tests/fixtures/corpus/unit/spring-snippet/JetBrains__Exposed/build.gradle.kts.txt",
+    "safe_prompt_scan": true
+  }
+]

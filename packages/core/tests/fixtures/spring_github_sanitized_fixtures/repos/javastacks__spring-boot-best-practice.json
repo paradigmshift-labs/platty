@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "javastacks/spring-boot-best-practice",
+  "htmlUrl": "https://github.com/javastacks/spring-boot-best-practice",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "javastack-spring-boot-starter-sample/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 16,
+          "lines": [
+            "xsi:schemaLocation=\"<literal>\">",
+            "<parent>",
+            "<artifactId>spring-boot-best-practice</artifactId>",
+            "<groupId>cn.javastack</groupId>",
+            "<version>1.0</version>",
+            "</parent>",
+            "<modelVersion>4.0.0</modelVersion>",
+            "<artifactId>javastack-spring-boot-starter-sample</artifactId>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>cn.javastack</groupId>",
+            "<artifactId>javastack-spring-boot-starter</artifactId>",
+            "<version>1.0</version>",
+            "<scope>compile</scope>",
+            "</dependency>",
+            "</dependencies>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "javastack-spring-boot-starter-sample/src/main/java/cn/javastack/springboot/starter/sample/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 14,
+          "lines": [
+            "@Slf4j",
+            "@SpringBootApplication",
+            "public class Application {",
+            "@Value(\"${debug}\")",
+            "private boolean debug;",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(Application.class);",
+            "}",
+            "@Bean",
+            "public CommandLineRunner commandLineRunner(TestService testService) {",
+            "return (args) -> {",
+            "log.info(\"debug mode: {}\", debug);",
+            "log.info(testService.getServiceName());",
+            "};"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "javastack-spring-boot-starter/src/main/java/cn/javastack/springboot/starter/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "@SpringBootApplication",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(Application.class);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-boot-activemq/src/main/java/cn/javastack/springboot/activemq/Application.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 5,
+          "lines": [
+            "@SpringBootApplication",
+            "public class Application {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(Application.class, args);",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

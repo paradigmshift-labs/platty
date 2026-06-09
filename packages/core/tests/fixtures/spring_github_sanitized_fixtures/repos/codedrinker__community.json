@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "codedrinker/community",
+  "htmlUrl": "https://github.com/codedrinker/community",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 49,
+          "lines": [
+            "<modelVersion>4.0.0</modelVersion>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.1.4.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<groupId>life.majiang.community</groupId>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-thymeleaf</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-jdbc</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.mybatis.spring.boot</groupId>",
+            "<artifactId>mybatis-spring-boot-starter</artifactId>",
+            "<version>2.0.1</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>com.squareup.okhttp3</groupId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-devtools</artifactId>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.apache.commons</groupId>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "<plugin>",
+            "<groupId>org.flywaydb</groupId>",
+            "<artifactId>flyway-maven-plugin</artifactId>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/life/majiang/community/CommunityApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "import org.springframework.scheduling.annotation.EnableScheduling;",
+            "@SpringBootApplication",
+            "@MapperScan(\"life.majiang.community.mapper\")",
+            "@EnableScheduling",
+            "public class CommunityApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(CommunityApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/life/majiang/community/advice/CustomizeExceptionHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@ControllerAdvice",
+            "@Slf4j",
+            "public class CustomizeExceptionHandler {",
+            "@ExceptionHandler(Exception.class)",
+            "ModelAndView handle(Throwable e, Model model, HttpServletRequest request, HttpServletResponse response) {",
+            "String contentType = request.getContentType();",
+            "if (\"application/json\".equals(contentType)) {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "src/main/java/life/majiang/community/controller/AuthorizeController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 19,
+          "lines": [
+            "@Controller",
+            "@Slf4j",
+            "public class AuthorizeController {",
+            "@Autowired",
+            "private UserStrategyFactory userStrategyFactory;",
+            "private UserService userService;",
+            "@GetMapping(\"/__path__\")",
+            "public String newCallback(@PathVariable(name = \"type\") String type,",
+            "@RequestParam(name = \"code\") String code,",
+            "@RequestParam(name = \"state\", required = false) String state,",
+            "HttpServletRequest request,",
+            "HttpServletResponse response) {",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public String logout(HttpServletRequest request,",
+            "HttpServletResponse response) {",
+            "request.getSession().invalidate();",
+            "Cookie cookie = new Cookie(\"token\", null);",
+            "cookie.setMaxAge(0);"
+          ]
+        }
+      ]
+    }
+  ]
+}

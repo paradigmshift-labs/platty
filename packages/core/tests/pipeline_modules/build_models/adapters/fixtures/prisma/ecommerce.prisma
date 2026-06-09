@@ -1,0 +1,691 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+  SELLER
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  PAYPAL
+  BANK_TRANSFER
+  CRYPTO
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum ShippingStatus {
+  PROCESSING
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  ORDER_UPDATE
+  PAYMENT
+  PROMOTION
+  SYSTEM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  EXPIRED
+}
+
+// ─── Core Models ──────────────────────────────────────────────────────────────
+
+/// User account for the e-commerce platform
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  passwordHash String
+  name         String?
+  phone        String?
+  role         Role           @default(USER)
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  orders       Order[]
+  reviews      Review[]
+  addresses    Address[]
+  wishlist     WishlistItem[]
+  cart         CartItem[]
+  profile      UserProfile?
+  notifications Notification[]
+  subscriptions Subscription[]
+  sellerProfile SellerProfile?
+}
+
+model UserProfile {
+  id        String  @id @default(uuid())
+  bio       String?
+  avatarUrl String?
+  birthDate DateTime?
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SellerProfile {
+  id          String   @id @default(uuid())
+  storeName   String   @unique
+  description String?
+  rating      Float    @default(0)
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  products    Product[]
+}
+
+/// Shipping address for users
+model Address {
+  id         String  @id @default(uuid())
+  street     String
+  city       String
+  state      String?
+  postalCode String
+  country    String
+  isDefault  Boolean @default(false)
+  userId     String
+  user       User    @relation(fields: [userId], references: [id])
+  orders     Order[]
+}
+
+// ─── Product Domain ───────────────────────────────────────────────────────────
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  products    Product[]
+  createdAt   DateTime   @default(now())
+}
+
+/// Product listing in the e-commerce store
+model Product {
+  id           String        @id @default(uuid())
+  name         String
+  slug         String        @unique
+  description  String?
+  price        Decimal
+  comparePrice Decimal?
+  status       ProductStatus @default(DRAFT)
+  tags         String[]
+  images       Json?
+  stock        Int           @default(0)
+  sku          String?       @unique
+  categoryId   String
+  category     Category      @relation(fields: [categoryId], references: [id])
+  sellerId     String?
+  seller       SellerProfile? @relation(fields: [sellerId], references: [id])
+  variants     ProductVariant[]
+  orderItems   OrderItem[]
+  reviews      Review[]
+  wishlistItems WishlistItem[]
+  cartItems    CartItem[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model ProductVariant {
+  id        String   @id @default(uuid())
+  name      String
+  sku       String?  @unique
+  price     Decimal?
+  stock     Int      @default(0)
+  options   Json?
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  orderItems OrderItem[]
+}
+
+// ─── Order Domain ─────────────────────────────────────────────────────────────
+
+/// Order placed by a user
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique
+  status          OrderStatus @default(PENDING)
+  subtotal        Decimal
+  discount        Decimal     @default(0)
+  shippingCost    Decimal     @default(0)
+  taxAmount       Decimal     @default(0)
+  total           Decimal
+  notes           String?
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  addressId       String?
+  address         Address?    @relation(fields: [addressId], references: [id])
+  items           OrderItem[]
+  payment         Payment?
+  shipping        Shipment?
+  couponId        String?
+  coupon          Coupon?     @relation(fields: [couponId], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String          @id @default(uuid())
+  quantity  Int             @default(1)
+  unitPrice Decimal
+  discount  Decimal         @default(0)
+  orderId   String
+  order     Order           @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product         @relation(fields: [productId], references: [id])
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+}
+
+// ─── Payment Domain ───────────────────────────────────────────────────────────
+
+model Payment {
+  id            String        @id @default(uuid())
+  amount        Decimal
+  currency      String        @default("USD")
+  method        PaymentMethod @default(CREDIT_CARD)
+  status        PaymentStatus @default(PENDING)
+  transactionId String?
+  orderId       String        @unique
+  order         Order         @relation(fields: [orderId], references: [id])
+  refunds       Refund[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Refund {
+  id        String   @id @default(uuid())
+  amount    Decimal
+  reason    String?
+  paymentId String
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// ─── Shipping Domain ──────────────────────────────────────────────────────────
+
+model Shipment {
+  id             String         @id @default(uuid())
+  trackingNumber String?        @unique
+  carrier        String?
+  status         ShippingStatus @default(PROCESSING)
+  orderId        String         @unique
+  order          Order          @relation(fields: [orderId], references: [id])
+  events         ShipmentEvent[]
+  estimatedAt    DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime       @default(now())
+}
+
+model ShipmentEvent {
+  id         String   @id @default(uuid())
+  status     String
+  location   String?
+  note       String?
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+// ─── Coupon & Discount Domain ─────────────────────────────────────────────────
+
+model Coupon {
+  id             String       @id @default(uuid())
+  code           String       @unique
+  description    String?
+  discountType   DiscountType @default(PERCENTAGE)
+  discountValue  Decimal
+  minOrderAmount Decimal?
+  maxUses        Int?
+  currentUses    Int          @default(0)
+  isActive       Boolean      @default(true)
+  expiresAt      DateTime?
+  orders         Order[]
+  createdAt      DateTime     @default(now())
+}
+
+// ─── Review Domain ────────────────────────────────────────────────────────────
+
+model Review {
+  id        String       @id @default(uuid())
+  rating    Int
+  title     String?
+  body      String?
+  status    ReviewStatus @default(PENDING)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  productId String
+  product   Product      @relation(fields: [productId], references: [id])
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+// ─── Cart & Wishlist ──────────────────────────────────────────────────────────
+
+model CartItem {
+  id        String   @id @default(uuid())
+  quantity  Int      @default(1)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// ─── Notification Domain ──────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType @default(SYSTEM)
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  createdAt DateTime         @default(now())
+}
+
+// ─── Subscription Domain ──────────────────────────────────────────────────────
+
+model Subscription {
+  id        String             @id @default(uuid())
+  planId    String
+  plan      SubscriptionPlan   @relation(fields: [planId], references: [id])
+  status    SubscriptionStatus @default(ACTIVE)
+  userId    String
+  user      User               @relation(fields: [userId], references: [id])
+  startedAt DateTime           @default(now())
+  expiresAt DateTime?
+}
+
+model SubscriptionPlan {
+  id            String         @id @default(uuid())
+  name          String         @unique
+  description   String?
+  price         Decimal
+  billingCycle  String
+  features      Json?
+  subscriptions Subscription[]
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+}
+
+// ─── Analytics Domain ─────────────────────────────────────────────────────────
+
+model ProductView {
+  id        String   @id @default(uuid())
+  productId String
+  userId    String?
+  sessionId String?
+  viewedAt  DateTime @default(now())
+
+  @@index([productId])
+}
+
+model SearchLog {
+  id        String   @id @default(uuid())
+  query     String
+  userId    String?
+  results   Int      @default(0)
+  searchedAt DateTime @default(now())
+}
+
+// ─── Content Domain ───────────────────────────────────────────────────────────
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  isActive  Boolean  @default(true)
+  position  Int      @default(0)
+  startAt   DateTime?
+  endAt     DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String @unique
+  slug String @unique
+}
+
+// ─── Audit & Logging ──────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String
+  entityType String
+  entityId   String
+  userId     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Support Domain ───────────────────────────────────────────────────────────
+
+model SupportTicket {
+  id          String    @id @default(uuid())
+  subject     String
+  description String
+  status      String    @default("OPEN")
+  priority    String    @default("NORMAL")
+  userId      String?
+  messages    SupportMessage[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model SupportMessage {
+  id        String        @id @default(uuid())
+  body      String
+  isStaff   Boolean       @default(false)
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id])
+  createdAt DateTime      @default(now())
+}
+
+// ─── Inventory Domain ─────────────────────────────────────────────────────────
+
+model Warehouse {
+  id        String              @id @default(uuid())
+  name      String
+  location  String?
+  inventory InventoryItem[]
+  createdAt DateTime            @default(now())
+}
+
+model InventoryItem {
+  id          String    @id @default(uuid())
+  quantity    Int       @default(0)
+  productId   String
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([productId, warehouseId])
+}
+
+// ─── Views ────────────────────────────────────────────────────────────────────
+
+view ActiveProduct {
+  id    String
+  name  String
+  price Decimal
+  stock Int
+}
+
+view MonthlyRevenue {
+  month       DateTime
+  revenue     Decimal
+  orderCount  Int
+}
+
+// ─── Additional Domain Models ─────────────────────────────────────────────────
+
+model LoyaltyPoint {
+  id        String   @id @default(uuid())
+  points    Int      @default(0)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model PromotionCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String?
+  discount    Decimal
+  maxUses     Int?
+  currentUses Int      @default(0)
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model ProductImage {
+  id        String  @id @default(uuid())
+  url       String
+  alt       String?
+  position  Int     @default(0)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  status    OrderStatus
+  note      String?
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id])
+  createdAt DateTime    @default(now())
+}
+
+model ReturnRequest {
+  id        String   @id @default(uuid())
+  reason    String
+  status    String   @default("PENDING")
+  orderId   String
+  userId    String
+  createdAt DateTime @default(now())
+}
+
+model Newsletter {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String?
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("faqs")
+}
+
+model Attribute {
+  id     String           @id @default(uuid())
+  name   String           @unique
+  values AttributeValue[]
+}
+
+model AttributeValue {
+  id          String    @id @default(uuid())
+  value       String
+  attributeId String
+  attribute   Attribute @relation(fields: [attributeId], references: [id])
+}
+
+model ProductAttribute {
+  productId        String
+  attributeValueId String
+  @@id([productId, attributeValueId])
+}
+
+model GiftCard {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  balance    Decimal
+  isUsed     Boolean  @default(false)
+  purchasedBy String?
+  usedBy     String?
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+}
+
+model FlashSale {
+  id          String      @id @default(uuid())
+  name        String
+  discount    Decimal
+  discountType DiscountType @default(PERCENTAGE)
+  startAt     DateTime
+  endAt       DateTime
+  isActive    Boolean     @default(true)
+  products    FlashSaleProduct[]
+  createdAt   DateTime    @default(now())
+}
+
+model FlashSaleProduct {
+  flashSaleId String
+  productId   String
+  @@id([flashSaleId, productId])
+}
+
+model StoreCredit {
+  id        String   @id @default(uuid())
+  amount    Decimal
+  userId    String
+  reason    String?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Vendor {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  email       String   @unique
+  phone       String?
+  address     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model PriceRule {
+  id          String      @id @default(uuid())
+  name        String
+  discountType DiscountType @default(PERCENTAGE)
+  value       Decimal
+  minQuantity Int?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+}
+
+model UserAddress {
+  id         String  @id @default(uuid())
+  alias      String?
+  street     String
+  city       String
+  state      String?
+  postalCode String
+  country    String
+  isDefault  Boolean @default(false)
+  userId     String
+  createdAt  DateTime @default(now())
+}
+
+model ProductBundle {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Supplier {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  contactName String?
+  email       String?
+  phone       String?
+  address     String?
+  notes       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+view TopProduct {
+  id         String
+  name       String
+  totalSales Int
+  revenue    Decimal
+}
+
+view UserOrderSummary {
+  userId     String
+  email      String
+  orderCount Int
+  totalSpent Decimal
+}

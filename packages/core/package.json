@@ -21,7 +21,14 @@
   "dependencies": {
     "better-sqlite3": "11.10.0",
     "drizzle-orm": "0.45.2",
+    "fast-glob": "^3.3.3",
     "nanoid": "5.1.11",
+    "tree-sitter": "^0.25.0",
+    "tree-sitter-dart": "^1.0.0",
+    "tree-sitter-prisma": "^1.6.0",
+    "tree-sitter-typescript": "^0.23.2",
+    "typescript": "^5.9.3",
+    "web-tree-sitter": "^0.26.7",
     "zod": "4.3.6"
   }
 }

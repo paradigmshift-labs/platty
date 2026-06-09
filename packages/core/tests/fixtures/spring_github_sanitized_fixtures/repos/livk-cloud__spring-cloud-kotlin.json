@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "livk-cloud/spring-cloud-kotlin",
+  "htmlUrl": "https://github.com/livk-cloud/spring-cloud-kotlin",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 14,
+          "lines": [
+            "plugins {",
+            "com.livk.root",
+            "}",
+            "val bom = setOf(project(\":dependencies\"))",
+            "apply(plugin = \"com.livk.module\")",
+            "dependencies {",
+            "management(platform(project(\":dependencies\")))",
+            "testImplementation(\"<literal>\")",
+            "testImplementation(\"org.springframework:spring-tx\")",
+            "implementation(kotlin(\"stdlib-jdk8\"))",
+            "implementation(kotlin(\"reflect\"))",
+            "testImplementation(kotlin(\"test\"))",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-cloud-bus/provider-bus/src/main/kotlin/com/livk/provider/BusController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 9,
+          "lines": [
+            "@RestController",
+            "class BusController(private val applicationContext: ApplicationContext, private val busProperties: BusProperties) {",
+            "private val log = LoggerFactory.getLogger(BusController::class.java)",
+            "@GetMapping(\"refresh\")",
+            "fun refresh() {",
+            "val destination = PathDestinationFactory().getDestination(\"consumer-bus:6077\")",
+            "applicationContext.publishEvent(LivkBusEvent(\"livk\", busProperties.id, destination))",
+            "log.info(\"event publish!\")",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-cloud-gateway/gateway-starter/src/main/kotlin/com/livk/dynamic/support/RedisHashRouteDefinitionRepository.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 26,
+          "lines": [
+            "class RedisHashRouteDefinitionRepository(redisTemplate: ReactiveRedisTemplate<String, Any>) : RouteDefinitionRepository {",
+            "private val caffeineCache: Cache<String, RouteDefinition>",
+            "private val reactiveHashOperations: ReactiveHashOperations<String, String, RouteDefinition>",
+            "override fun getRouteDefinitions(): Flux<RouteDefinition> {",
+            "val routeDefinitions = caffeineCache.asMap().values",
+            "if (routeDefinitions.isEmpty()) {",
+            "return reactiveHashOperations.values(ROUTE_KEY)",
+            ".doOnNext { r -> caffeineCache.put(r.id!!, r) }",
+            "override fun save(route: Mono<RouteDefinition>): Mono<Void> = route.flatMap { r ->",
+            "caffeineCache.put(r.id!!, r)",
+            "reactiveHashOperations.put(ROUTE_KEY, r.id!!, r)",
+            ".flatMap { success: Boolean ->",
+            "if (success) Mono.empty() else defer(",
+            "}",
+            "override fun delete(routeId: Mono<String>): Mono<Void> = routeId.flatMap { id ->",
+            "caffeineCache.invalidate(id)",
+            "reactiveHashOperations.remove(ROUTE_KEY, id)",
+            ".flatMap { success: Long ->",
+            "if (success != 0L) Mono.empty() else defer(",
+            "}",
+            "private fun <T: Any> defer(msg: String): Mono<T> = Mono.defer { Mono.error(NotFoundException(msg)) }",
+            "companion object {",
+            "const val ROUTE_KEY: String = \"RouteDefinition\"",
+            "private val log = LoggerFactory.getLogger(RedisHashRouteDefinitionRepository::class.java)",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "spring-cloud-openfeign/feign-consumer/src/main/kotlin/com/livk/consumer/biz/controller/UserController.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 18,
+          "lines": [
+            "@RestController",
+            "@RequestMapping(\"user\")",
+            "class UserController(",
+            "private val userRemoteService: UserRemoteService,",
+            "private val httpUserRemoteService: HttpUserRemoteService",
+            ") {",
+            "@GetMapping",
+            "fun users(): List<Users> {",
+            "log.info(\"consumer\")",
+            "log.info(\"{}\", httpUserRemoteService.users())",
+            "return userRemoteService.users()",
+            "}",
+            "@PostMapping",
+            "fun save(@RequestBody users: Users): Boolean = userRemoteService.save(users)",
+            "companion object {",
+            "private val log: Logger = LoggerFactory.getLogger(UserController::class.java)",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

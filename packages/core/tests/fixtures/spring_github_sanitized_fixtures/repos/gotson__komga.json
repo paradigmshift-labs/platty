@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "gotson/komga",
+  "htmlUrl": "https://github.com/gotson/komga",
+  "defaultBranch": "master",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 6,
+          "lines": [
+            "import kotlin.io.path.exists",
+            "plugins {",
+            "run {",
+            "val kotlinVersion = \"2.2.0\"",
+            "kotlin(\"jvm\") version kotlinVersion",
+            "kotlin(\"plugin.spring\") version kotlinVersion"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "komga-tray/src/main/kotlin/org/gotson/komga/DesktopApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 6,
+          "lines": [
+            "@EnableAsync",
+            "class DesktopApplication : Application()",
+            "fun main(args: Array<String>) {",
+            "checkTempDirectory()",
+            "System.setProperty(\"apple.awt.UIElement\", \"true\")",
+            "System.setProperty(\"org.jooq.no-logo\", \"true\")"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "komga/src/main/kotlin/org/gotson/komga/Application.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 8,
+          "lines": [
+            "import org.springframework.scheduling.annotation.EnableScheduling",
+            "@SpringBootApplication",
+            "@EnableScheduling",
+            "class Application",
+            "fun main(args: Array<String>) {",
+            "checkTempDirectory()",
+            "System.setProperty(\"org.jooq.no-logo\", \"true\")",
+            "System.setProperty(\"org.jooq.no-tips\", \"true\")"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "komga/src/main/kotlin/org/gotson/komga/application/tasks/TaskHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 13,
+          "lines": [
+            "@Service",
+            "class TaskHandler(",
+            "private val taskEmitter: TaskEmitter,",
+            "private val libraryRepository: LibraryRepository,",
+            "private val bookRepository: BookRepository,",
+            "private val seriesRepository: SeriesRepository,",
+            "private val meterRegistry: MeterRegistry,",
+            ") {",
+            "fun handleTask(task: Task) {",
+            "logger.info { \"Executing task: $task\" }",
+            "try {",
+            "measureTime {",
+            "when (task) {"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "Antabot/White-Jotter",
+  "htmlUrl": "https://github.com/Antabot/White-Jotter",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "httpAnnotation",
+    "jpaModel",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "wj/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 67,
+          "lines": [
+            "<packaging>war</packaging>",
+            "<parent>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-parent</artifactId>",
+            "<version>2.1.1.RELEASE</version>",
+            "<relativePath/>",
+            "</parent>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-web</artifactId>",
+            "<exclusions>",
+            "<exclusion>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-tomcat</artifactId>",
+            "</exclusion>",
+            "<exclusion>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-logging</artifactId>",
+            "</exclusion>",
+            "</exclusions>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-tomcat</artifactId>",
+            "<scope>provided</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-log4j2</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-devtools</artifactId>",
+            "<optional>true</optional>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-jpa</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-data-redis</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.apache.commons</groupId>",
+            "<artifactId>commons-pool2</artifactId>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-test</artifactId>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-starter-actuator</artifactId>",
+            "</dependency>",
+            "</dependencies>",
+            "<properties>",
+            "<java.version>1.8</java.version>",
+            "<plugins>",
+            "<plugin>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-maven-plugin</artifactId>",
+            "</plugin>",
+            "</plugins>",
+            "</build>",
+            "</project>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "wj/src/main/java/com/gm/wj/WjApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "@EnableCaching",
+            "@SpringBootApplication",
+            "public class WjApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(WjApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "wj/src/main/java/com/gm/wj/controller/JotterController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 23,
+          "lines": [
+            "@RestController",
+            "public class JotterController {",
+            "@Autowired",
+            "JotterArticleService jotterArticleService;",
+            "@PostMapping(\"api/admin/content/article\")",
+            "public Result saveArticle(@RequestBody @Valid JotterArticle article) {",
+            "jotterArticleService.addOrUpdate(article);",
+            "return ResultFactory.buildSuccessResult(\"保存成功\");",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public Result listArticles(@PathVariable(\"size\") int size, @PathVariable(\"page\") int page) {",
+            "return ResultFactory.buildSuccessResult(jotterArticleService.list(page - 1, size));",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public Result getOneArticle(@PathVariable(\"id\") int id) {",
+            "return ResultFactory.buildSuccessResult(jotterArticleService.findById(id));",
+            "}",
+            "@DeleteMapping(\"/__path__\")",
+            "public Result deleteArticle(@PathVariable(\"id\") int id) {",
+            "jotterArticleService.delete(id);",
+            "return ResultFactory.buildSuccessResult(\"删除成功\");",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "wj/src/main/java/com/gm/wj/controller/LibraryController.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 38,
+          "lines": [
+            "@RestController",
+            "public class LibraryController {",
+            "@Autowired",
+            "BookService bookService;",
+            "@GetMapping(\"/__path__\")",
+            "public Result listBooks() {",
+            "return ResultFactory.buildSuccessResult(bookService.list());",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "public Result addOrUpdateBooks(@RequestBody @Valid Book book) {",
+            "bookService.addOrUpdate(book);",
+            "return ResultFactory.buildSuccessResult(\"修改成功\");",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "public Result deleteBook(@RequestBody @Valid Book book) {",
+            "bookService.deleteById(book.getId());",
+            "return ResultFactory.buildSuccessResult(\"删除成功\");",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public Result searchResult(@RequestParam(\"keywords\") String keywords) {",
+            "if (\"\".equals(keywords)) {",
+            "return ResultFactory.buildSuccessResult(bookService.list());",
+            "} else {",
+            "return ResultFactory.buildSuccessResult(bookService.Search(keywords));",
+            "}",
+            "@GetMapping(\"/__path__\")",
+            "public Result listByCategory(@PathVariable(\"cid\") int cid) {",
+            "if (0 != cid) {",
+            "return ResultFactory.buildSuccessResult(bookService.listByCategory(cid));",
+            "} else {",
+            "return ResultFactory.buildSuccessResult(bookService.list());",
+            "}",
+            "@PostMapping(\"/__path__\")",
+            "public String coversUpload(MultipartFile file) {",
+            "String folder = \"D:/workspace/img\";",
+            "File imageFolder = new File(folder);",
+            "File f = new File(imageFolder, StringUtils.getRandomString(6) + file.getOriginalFilename()",
+            ".substring(file.getOriginalFilename().length() - 4));"
+          ]
+        }
+      ]
+    }
+  ]
+}

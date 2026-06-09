@@ -1,0 +1,90 @@
+import type { StaticAnalysisRoleRegistryEntry } from '../types.js'
+
+export const typescriptRoleRegistryEntries: StaticAnalysisRoleRegistryEntry[] = [
+  {
+    ecosystem: 'typescript',
+    packageName: '@prisma/client',
+    role: 'db_client',
+    curation: 'official',
+    confidence: 'high',
+    defaultRuleIds: [
+      'db.prisma.direct',
+      'db.prisma.this',
+      'db.prisma.service',
+      'db.prisma.this-service',
+    ],
+  },
+  {
+    ecosystem: 'typescript',
+    packageName: 'typeorm',
+    role: 'db_client',
+    curation: 'official',
+    confidence: 'high',
+    defaultRuleIds: [
+      'db.typeorm.getRepository',
+      'db.typeorm.datasource-getRepository',
+      'db.typeorm.this-datasource-getRepository',
+      'db.typeorm.manager-getRepository',
+    ],
+  },
+  {
+    ecosystem: 'typescript',
+    packageName: 'drizzle-orm',
+    role: 'db_client',
+    curation: 'official',
+    confidence: 'high',
+    defaultRuleIds: [
+      'db.drizzle.query-relational',
+    ],
+  },
+  {
+    ecosystem: 'typescript',
+    packageName: 'mongoose',
+    role: 'db_client',
+    curation: 'official',
+    confidence: 'high',
+    defaultRuleIds: [
+      'db.mongoose.this-model',
+    ],
+  },
+  {
+    ecosystem: 'typescript',
+    packageName: 'axios',
+    role: 'api_client',
+    curation: 'official',
+    confidence: 'high',
+    defaultRuleIds: [
+      'api.axios.get',
+      'api.axios.post',
+      'api.axios.put',
+      'api.axios.patch',
+      'api.axios.delete',
+      'api.axios.head',
+      'api.axios.options',
+    ],
+  },
+  {
+    ecosystem: 'typescript',
+    packageName: 'react',
+    role: 'frontend_route',
+    curation: 'official',
+    confidence: 'high',
+    defaultRuleIds: ['route.react.jsx-route'],
+  },
+  {
+    ecosystem: 'typescript',
+    packageName: '@trpc/server',
+    role: 'api_client',
+    curation: 'community',
+    confidence: 'medium',
+    notes: 'Needs project-local router evidence before deterministic rule activation.',
+  },
+  {
+    ecosystem: 'typescript',
+    packageName: 'internal-http-client',
+    role: 'api_client',
+    curation: 'heuristic',
+    confidence: 'low',
+    notes: 'Placeholder for local wrapper examples; never activates defaults.',
+  },
+]

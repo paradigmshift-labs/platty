@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "mscheong01/interfAIce",
+  "htmlUrl": "https://github.com/mscheong01/interfAIce",
+  "defaultBranch": "main",
+  "language": "kotlin",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "build.gradle.kts",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 16,
+          "lines": [
+            "plugins {",
+            "kotlin(\"jvm\") version \"1.8.20\" apply false",
+            "`maven-publish`",
+            "id(\"org.jlleitschuh.gradle.ktlint\") version \"11.3.1\"",
+            "signing",
+            "id(\"org.springframework.boot\") version \"3.0.5\" apply false",
+            "id(\"io.spring.dependency-management\") version \"1.1.0\" apply false",
+            "}",
+            "group = \"io.github.mscheong01\"",
+            "}",
+            "project(\":interfAIce-spring-boot-starter\") {",
+            "apply {",
+            "plugin(\"org.springframework.boot\")",
+            "plugin(\"io.spring.dependency-management\")",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "core/src/main/kotlin/io/github/mscheong01/interfaice/openai/OpenAiInvocationHandler.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 12,
+          "lines": [
+            "import kotlin.coroutines.resumeWithException",
+            "class OpenAiInvocationHandler(",
+            "private val interfaceName: String,",
+            "private val openAiApiAdapter: OpenAiApiAdapter,",
+            "customTranscodingRules: List<TranscodingRules.CustomRule<*>> = listOf()",
+            ") : InvocationHandler {",
+            "val transcoder = TextObjectTranscoder(customTranscodingRules)",
+            "override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {",
+            "val openAiChatAnnotation: OpenAiChat? = method.getAnnotation(OpenAiChat::class.java)",
+            "val model = if (openAiChatAnnotation == null || openAiChatAnnotation.model == OpenAiChat.DEFAULT_MODEL) {",
+            "openAiApiAdapter.getProperties().chat.defaultModel",
+            "} else {"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "examples/kotlin-spring/src/main/kotlin/io/github/mscheong01/interfaice/examples/ExampleApplication.kt",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "basePackages = [\"io.github.mscheong01.interfaice.examples\"]",
+            ")",
+            "@SpringBootApplication",
+            "open class ExampleApplication",
+            "fun main(args: Array<String>) {",
+            "org.springframework.boot.runApplication<ExampleApplication>(*args)",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

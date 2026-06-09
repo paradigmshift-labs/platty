@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "hansonwang99/Spring-Boot-In-Action",
+  "htmlUrl": "https://github.com/hansonwang99/Spring-Boot-In-Action",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "id-spring-boot-starter/pom.xml",
+      "excerpts": [
+        {
+          "kind": "manifest",
+          "lineCount": 43,
+          "lines": [
+            "<groupId>cn.codesheep</groupId>",
+            "<artifactId>id-spring-boot-starter</artifactId>",
+            "<version>1.0.0</version>",
+            "<properties>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-autoconfigure</artifactId>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework</groupId>",
+            "<artifactId>spring-core</artifactId>",
+            "<version>${spring.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework</groupId>",
+            "<artifactId>spring-beans</artifactId>",
+            "<version>${spring.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework</groupId>",
+            "<artifactId>spring-context</artifactId>",
+            "<version>${spring.version}</version>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework</groupId>",
+            "<artifactId>spring-jdbc</artifactId>",
+            "<version>${spring.version}</version>",
+            "</dependency>",
+            "</dependency>",
+            "<dependency>",
+            "<groupId>org.springframework</groupId>",
+            "<artifactId>spring-test</artifactId>",
+            "<version>${spring.version}</version>",
+            "<scope>test</scope>",
+            "</dependency>",
+            "<dependencies>",
+            "<dependency>",
+            "<groupId>org.springframework.boot</groupId>",
+            "<artifactId>spring-boot-dependencies</artifactId>",
+            "<version>2.1.1.RELEASE</version>",
+            "<type>pom</type>",
+            "<scope>import</scope>",
+            "</dependency>"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "id-spring-boot-starter/src/main/java/com/baidu/fsg/uid/buffer/RejectedPutBufferHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 4,
+          "lines": [
+            "@FunctionalInterface",
+            "public interface RejectedPutBufferHandler {",
+            "void rejectPutBuffer(RingBuffer ringBuffer, long uid);",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "id-spring-boot-starter/src/main/java/com/baidu/fsg/uid/buffer/RejectedTakeBufferHandler.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 4,
+          "lines": [
+            "@FunctionalInterface",
+            "public interface RejectedTakeBufferHandler {",
+            "void rejectTakeBuffer(RingBuffer ringBuffer);",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "id-spring-boot-starter/src/main/java/com/baidu/fsg/uid/worker/entity/WorkerNodeEntity.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 51,
+          "lines": [
+            "public class WorkerNodeEntity {",
+            "private long id;",
+            "private Date launchDate = new Date();",
+            "private Date created;",
+            "public long getId() {",
+            "return id;",
+            "}",
+            "public void setId(long id) {",
+            "this.id = id;",
+            "}",
+            "public String getHostName() {",
+            "return hostName;",
+            "}",
+            "public void setHostName(String hostName) {",
+            "this.hostName = hostName;",
+            "}",
+            "public String getPort() {",
+            "return port;",
+            "}",
+            "public void setPort(String port) {",
+            "this.port = port;",
+            "}",
+            "public int getType() {",
+            "return type;",
+            "}",
+            "public void setType(int type) {",
+            "this.type = type;",
+            "}",
+            "public Date getLaunchDate() {",
+            "return launchDate;",
+            "}",
+            "public void setLaunchDateDate(Date launchDate) {",
+            "this.launchDate = launchDate;",
+            "}",
+            "public Date getCreated() {",
+            "return created;",
+            "}",
+            "public void setCreated(Date created) {",
+            "this.created = created;",
+            "}",
+            "public Date getModified() {",
+            "return modified;",
+            "}",
+            "public void setModified(Date modified) {",
+            "this.modified = modified;",
+            "}",
+            "@Override",
+            "public String toString() {",
+            "return ReflectionToStringBuilder.toString(this, ToStringStyle.SHORT_PREFIX_STYLE);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    }
+  ]
+}

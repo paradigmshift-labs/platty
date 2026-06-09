@@ -1,0 +1,204 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-23T05:40:07.965Z",
+  "repo": "bz51/SpringBoot-Dubbo-Docker-Jenkins",
+  "htmlUrl": "https://github.com/bz51/SpringBoot-Dubbo-Docker-Jenkins",
+  "defaultBranch": "master",
+  "language": "java",
+  "safety": {
+    "promptScanPassed": true,
+    "wholeRepoCopied": false,
+    "storedAsExecutableSource": false
+  },
+  "signals": [
+    "springEvidence",
+    "manifest"
+  ],
+  "files": [
+    {
+      "path": "Gaoxi-Analysis/src/main/java/com/gaoxi/analysis/GaoxiAnalysisApplication.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 7,
+          "lines": [
+            "import org.springframework.boot.autoconfigure.SpringBootApplication;",
+            "@SpringBootApplication",
+            "public class GaoxiAnalysisApplication {",
+            "public static void main(String[] args) {",
+            "SpringApplication.run(GaoxiAnalysisApplication.class, args);",
+            "}",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "Gaoxi-Common-Service-Facade/src/main/java/com/gaoxi/entity/order/OrderStateTimeEntity.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 27,
+          "lines": [
+            "public class OrderStateTimeEntity implements Serializable{",
+            "private String orderId;",
+            "private Timestamp time;",
+            "public String getOrderId() {",
+            "return orderId;",
+            "}",
+            "public void setOrderId(String orderId) {",
+            "this.orderId = orderId;",
+            "}",
+            "public OrderStateEnum getOrderStateEnum() {",
+            "return orderStateEnum;",
+            "}",
+            "public void setOrderStateEnum(OrderStateEnum orderStateEnum) {",
+            "this.orderStateEnum = orderStateEnum;",
+            "}",
+            "public Timestamp getTime() {",
+            "return time;",
+            "}",
+            "public void setTime(Timestamp time) {",
+            "this.time = time;",
+            "}",
+            "@Override",
+            "public String toString() {",
+            "return \"OrderStateTimeEntity{\" +",
+            "\"orderId='\" + orderId + '\\'' +",
+            "\", orderStateEnum=\" + orderStateEnum +",
+            "\", time=\" + time +"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "Gaoxi-Common-Service-Facade/src/main/java/com/gaoxi/entity/order/OrdersEntity.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 80,
+          "lines": [
+            "public class OrdersEntity implements Serializable {",
+            "private String id;",
+            "public String getId() {",
+            "return id;",
+            "}",
+            "public void setId(String id) {",
+            "this.id = id;",
+            "}",
+            "public UserEntity getCompany() {",
+            "return company;",
+            "}",
+            "public void setCompany(UserEntity company) {",
+            "this.company = company;",
+            "}",
+            "public List<ProductOrderEntity> getProductOrderList() {",
+            "return productOrderList;",
+            "}",
+            "public void setProductOrderList(List<ProductOrderEntity> productOrderList) {",
+            "this.productOrderList = productOrderList;",
+            "}",
+            "public OrderStateEnum getOrderStateEnum() {",
+            "return orderStateEnum;",
+            "}",
+            "public void setOrderStateEnum(OrderStateEnum orderStateEnum) {",
+            "this.orderStateEnum = orderStateEnum;",
+            "}",
+            "public List<OrderStateTimeEntity> getOrderStateTimeList() {",
+            "return orderStateTimeList;",
+            "}",
+            "public void setOrderStateTimeList(List<OrderStateTimeEntity> orderStateTimeList) {",
+            "this.orderStateTimeList = orderStateTimeList;",
+            "}",
+            "public PayModeEnum getPayModeEnum() {",
+            "return payModeEnum;",
+            "}",
+            "public void setPayModeEnum(PayModeEnum payModeEnum) {",
+            "this.payModeEnum = payModeEnum;",
+            "}",
+            "public String getTotalPrice() {",
+            "return totalPrice;",
+            "}",
+            "public void setTotalPrice(String totalPrice) {",
+            "this.totalPrice = totalPrice;",
+            "}",
+            "public ReceiptEntity getReceiptEntity() {",
+            "return receiptEntity;",
+            "}",
+            "public void setReceiptEntity(ReceiptEntity receiptEntity) {",
+            "this.receiptEntity = receiptEntity;",
+            "}",
+            "public LocationEntity getLocationEntity() {",
+            "return locationEntity;",
+            "}",
+            "public void setLocationEntity(LocationEntity locationEntity) {",
+            "this.locationEntity = locationEntity;",
+            "}",
+            "public String getRemark() {",
+            "return remark;",
+            "}",
+            "public void setRemark(String remark) {",
+            "this.remark = remark;",
+            "}",
+            "public String getExpressNo() {",
+            "return expressNo;",
+            "}",
+            "public void setExpressNo(String expressNo) {",
+            "this.expressNo = expressNo;",
+            "}",
+            "public UserEntity getBuyer() {",
+            "return buyer;",
+            "}",
+            "public void setBuyer(UserEntity buyer) {",
+            "this.buyer = buyer;",
+            "}",
+            "@Override",
+            "public String toString() {",
+            "return \"OrdersEntity{\" +",
+            "\"id='\" + id + '\\'' +",
+            "\", buyer=\" + buyer +",
+            "\", company=\" + company +"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "Gaoxi-Common-Service-Facade/src/main/java/com/gaoxi/entity/order/ProductOrderEntity.java",
+      "excerpts": [
+        {
+          "kind": "source",
+          "lineCount": 27,
+          "lines": [
+            "public class ProductOrderEntity implements Serializable {",
+            "private String orderId;",
+            "private int count;",
+            "public String getOrderId() {",
+            "return orderId;",
+            "}",
+            "public void setOrderId(String orderId) {",
+            "this.orderId = orderId;",
+            "}",
+            "public ProductEntity getProductEntity() {",
+            "return productEntity;",
+            "}",
+            "public void setProductEntity(ProductEntity productEntity) {",
+            "this.productEntity = productEntity;",
+            "}",
+            "public int getCount() {",
+            "return count;",
+            "}",
+            "public void setCount(int count) {",
+            "this.count = count;",
+            "}",
+            "@Override",
+            "public String toString() {",
+            "return \"ProductOrderEntity{\" +",
+            "\"orderId='\" + orderId + '\\'' +",
+            "\", productEntity=\" + productEntity +",
+            "\", count=\" + count +"
+          ]
+        }
+      ]
+    }
+  ]
+}
