@@ -70,6 +70,7 @@ describe('Platty monorepo workspace contract', () => {
 
   // Internal workspace dependencies intentionally use exact 0.1.0 versions for npm
   // compatibility. npm 10.8.2 fails with EUNSUPPORTEDPROTOCOL for workspace protocol specifiers here.
+
   it('has TypeScript source entrypoints for every workspace', () => {
     const entrypoints = [
       'packages/core/src/index.ts',
