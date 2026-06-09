@@ -4,7 +4,7 @@ import { commandArgvAfter, stripGlobalFlags, value } from './argv.js'
 import { failure, success, type PlattyCommandResponse } from './output.js'
 
 const VERSION = '0.1.0'
-const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'corpus', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'version'])
+const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'corpus', 'docs', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'version'])
 
 type DispatchOptions = PlattyCommandRunOptions & { cwd: string }
 type CommandHandler = () => Promise<PlattyCommandResponse>
@@ -156,6 +156,17 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
       openDb: _options.openDb,
       project: value(_argv, '--project'),
       epicsTaskInvoker: _options.epicsTaskInvoker,
+    })
+  }, setResponse)
+
+  setAction(configurePassthrough(program.command('docs').description('Run and inspect technical-document generation workflows.')), async () => {
+    const { runDocsCommand } = await import('./commands/docs.js')
+    return runDocsCommand(commandArgvAfter('docs', stripGlobalFlags(_argv)), {
+      cwd: _options.cwd,
+      db: _options.db,
+      openDb: _options.openDb,
+      project: value(_argv, '--project'),
+      docsTaskInvoker: _options.docsTaskInvoker,
     })
   }, setResponse)
 

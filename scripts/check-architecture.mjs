@@ -269,7 +269,6 @@ function assertCorePhaseTwoStaticPipeline() {
 
 function assertCliPhaseThreeFoundation() {
   const forbiddenCommandFiles = [
-    'packages/cli/src/commands/docs.ts',
     'packages/cli/src/commands/service-map.ts',
     'packages/cli/src/commands/business-map.ts',
     'packages/cli/src/commands/search.ts',
@@ -291,6 +290,21 @@ function assertCliPhaseThreeFoundation() {
       assert.equal(specifier.includes('packages/core/src'), false, `${relPath} must not import packages/core/src directly: ${specifier}`)
     }
   }
+
+  const cliMainSource = readFileSync(join(root, 'packages/cli/src/main.ts'), 'utf8')
+  assert.equal(cliMainSource.includes('docsTaskInvoker'), true, 'CLI run options must expose docsTaskInvoker for testable docs worker execution')
+
+  const cliProgramSource = readFileSync(join(root, 'packages/cli/src/program.ts'), 'utf8')
+  assert.equal(cliProgramSource.includes("'docs'"), true, 'CLI public command roots must include docs')
+  assert.equal(cliProgramSource.includes('./commands/docs.js'), true, 'CLI program must route docs through commands/docs.ts')
+
+  const docsCommandPath = join(root, 'packages/cli/src/commands/docs.ts')
+  assert.equal(existsSync(docsCommandPath), true, 'CLI must expose docs command surface')
+  const docsCommandSource = readFileSync(docsCommandPath, 'utf8')
+  assert.equal(docsCommandSource.includes('@platty/core'), true, 'CLI docs command must use @platty/core public API')
+  assert.equal(docsCommandSource.includes('@/'), false, 'CLI docs command must not import core internals through @/')
+  assert.equal(docsCommandSource.includes('openCliDb'), true, 'CLI docs command must use global Platty DB opener')
+  assert.equal(docsCommandSource.includes('sdd_v2.db'), false, 'CLI docs command must not reference legacy sdd_v2.db')
 }
 
 function assertCorePhaseFourSync() {
