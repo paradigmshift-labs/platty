@@ -4,7 +4,7 @@ import { commandArgvAfter, stripGlobalFlags, value } from './argv.js'
 import { failure, success, type PlattyCommandResponse } from './output.js'
 
 const VERSION = '0.1.0'
-const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'corpus', 'docs', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'version'])
+const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'confirm', 'corpus', 'docs', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'version'])
 
 type DispatchOptions = PlattyCommandRunOptions & { cwd: string }
 type CommandHandler = () => Promise<PlattyCommandResponse>
@@ -137,6 +137,16 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
       })
     }, setResponse)
   }
+
+  setAction(configurePassthrough(program.command('confirm').description('Confirm pending static-analysis gates.')), async () => {
+    const { runConfirmCommand } = await import('./commands/confirm.js')
+    return runConfirmCommand(commandArgvAfter('confirm', stripGlobalFlags(_argv)), {
+      cwd: _options.cwd,
+      db: _options.db,
+      openDb: _options.openDb,
+      project: value(_argv, '--project'),
+    })
+  }, setResponse)
 
   setAction(configurePassthrough(program.command('runs').description('Inspect and manage Platty runs.')), async () => {
     const { runRunsCommand } = await import('./commands/runs.js')

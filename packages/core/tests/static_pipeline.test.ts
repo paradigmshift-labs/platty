@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createTestPlattyDb } from '../src/db/testing.js'
+import { repositoryPhaseStatus } from '../src/db/schema/core.js'
 import { createProject } from '../src/project_service.js'
 import { addRepository } from '../src/repository_service.js'
 import {
@@ -51,7 +52,7 @@ describe('static_pipeline', () => {
     client.close()
   })
 
-  it('runs only one repository when project runner is step-only', async () => {
+  it('runs only one repository stage when project runner is step-only', async () => {
     const client = createTestPlattyDb()
     const project = createProject(client.db, { name: 'Demo' })
     addRepository(client.db, { projectId: project.id, path: gitRepo(), name: 'api' })
@@ -71,7 +72,65 @@ describe('static_pipeline', () => {
 
     expect(result.repositoryCount).toBe(2)
     expect(result.completedRepositoryIds).toHaveLength(1)
-    expect(calls).toHaveLength(STATIC_PIPELINE_STAGES.length)
+    expect(calls).toHaveLength(1)
+    client.close()
+  })
+
+  it('runs only the next missing stage when project runner is step-only', async () => {
+    const client = createTestPlattyDb()
+    const project = createProject(client.db, { name: 'Demo' })
+    const repo = addRepository(client.db, { projectId: project.id, path: gitRepo(), name: 'api' })
+    const calls: string[] = []
+
+    const result = await runStaticPipelineForProject({
+      db: client.db,
+      projectId: project.id,
+      stepOnly: true,
+      stages: Object.fromEntries(
+        STATIC_PIPELINE_STAGES.map((stage) => [stage, async () => {
+          calls.push(stage)
+        }]),
+      ),
+    })
+
+    expect(result.repositoryCount).toBe(1)
+    expect(result.completedRepositoryIds).toEqual([repo.id])
+    expect(calls).toEqual(['analyze_repo'])
+    client.close()
+  })
+
+  it('requires analyze_repo confirmation before build_graph', async () => {
+    const client = createTestPlattyDb()
+    const project = createProject(client.db, { name: 'Demo' })
+    const repo = addRepository(client.db, { projectId: project.id, path: gitRepo(), name: 'api' })
+    const calls: string[] = []
+
+    client.db.insert(repositoryPhaseStatus).values({
+      repositoryId: repo.id,
+      phase: 'analyze_repo',
+      status: 'passed',
+      validity: 'fresh',
+      builtAt: '2026-06-09T00:00:00.000Z',
+      confirmedAt: null,
+    }).run()
+
+    const result = await runStaticPipelineForProject({
+      db: client.db,
+      projectId: project.id,
+      stepOnly: true,
+      stages: Object.fromEntries(
+        STATIC_PIPELINE_STAGES.map((stage) => [stage, async () => {
+          calls.push(stage)
+        }]),
+      ),
+    })
+
+    expect(calls).toEqual([])
+    expect(result.nextAction).toMatchObject({
+      type: 'confirm_required',
+      stage: 'analyze_repo',
+      repoId: repo.id,
+    })
     client.close()
   })
 })
