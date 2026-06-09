@@ -346,46 +346,51 @@ function assertCorePhaseFiveSharedSegments() {
   for (const path of [
     'packages/core/src/db/schema/shared_code_segments.ts',
     'packages/core/src/db/migrations/0034_shared_code_segments.sql',
-    'packages/core/src/pipeline_modules/build_docs_generation/shared_segments.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/shared_segments.test.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/shared_segments.ts',
+    'packages/core/tests/pipeline_modules/build_docs/source/shared_segments.test.ts',
   ]) {
     assert.equal(existsSync(join(root, path)), true, `core shared segment phase must include ${path}`)
   }
 
   const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
   assert.equal(
-    coreEntrypointSource.includes("pipeline_modules/build_docs_generation/shared_segments")
-      || coreEntrypointSource.includes("pipeline_modules/build_docs_generation/index"),
+    coreEntrypointSource.includes("pipeline_modules/build_docs/source/index"),
     true,
     'core must export shared code segment helpers for later docs runtime/CLI use',
   )
 
-  const sharedSegmentsSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/build_docs_generation/shared_segments.ts'), 'utf8')
+  const sharedSegmentsSource = readFileSync(join(root, 'packages/core/src/pipeline_modules/build_docs/source/shared_segments.ts'), 'utf8')
   assert.equal(sharedSegmentsSource.includes('rebuildSharedCodeSegmentsForProject'), true, 'shared segments must expose project rebuild helper')
   assert.equal(sharedSegmentsSource.includes('loadSharedCodeSegmentsForEntryPoints'), true, 'shared segments must expose entry-point context loader')
 }
 
 function assertCorePhaseSixGenerationRuns() {
   for (const path of [
+    'packages/core/src/pipeline_modules/build_docs/runtime/cli_runtime.ts',
+    'packages/core/src/pipeline_modules/build_docs/runtime/draft_contract.ts',
+    'packages/core/src/pipeline_modules/build_docs/runtime/draft_json_repair.ts',
+    'packages/core/src/pipeline_modules/build_docs/runtime/index.ts',
+    'packages/core/src/pipeline_modules/build_docs/runtime/materialize_document_graph.ts',
+    'packages/core/src/pipeline_modules/build_docs/runtime/persist_helpers.ts',
+    'packages/core/src/pipeline_modules/build_docs/runtime/quality_audit.ts',
+    'packages/core/src/pipeline_modules/build_docs/runtime/runtime.ts',
+    'packages/core/src/pipeline_modules/build_docs/runtime/types.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/agent_packet.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/context_builder.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/index.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/pre_llm_context.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/relation_compactor.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/service_map_facts.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/shared_segments.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/source_closure.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/source_links.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/static_envelope.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/system_merge.ts',
+    'packages/core/src/pipeline_modules/build_docs/source/target_selector.ts',
+    'packages/core/src/pipeline_modules/build_docs/worker/index.ts',
+    'packages/core/src/pipeline_modules/build_docs/worker/worker_runner.ts',
     'packages/core/src/pipeline_modules/build_docs_cli_runtime/index.ts',
-    'packages/core/src/pipeline_modules/build_docs_cli_runtime/runtime.ts',
-    'packages/core/src/pipeline_modules/build_docs_cli_runtime/worker_runner.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/agent_packet.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/context_builder.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/draft_contract.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/draft_json_repair.ts',
     'packages/core/src/pipeline_modules/build_docs_generation/index.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/materialize_document_graph.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/persist_helpers.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/pre_llm_context.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/quality_audit.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/relation_compactor.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/runtime.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/service_map_facts.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/source_closure.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/source_links.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/static_envelope.ts',
-    'packages/core/src/pipeline_modules/build_docs_generation/system_merge.ts',
     'packages/core/src/pipeline_modules/generation_runs/build_docs_adapter.ts',
     'packages/core/src/pipeline_modules/generation_runs/index.ts',
     'packages/core/src/pipeline_modules/generation_runs/lease_engine.ts',
@@ -393,17 +398,17 @@ function assertCorePhaseSixGenerationRuns() {
     'packages/core/src/pipeline_modules/generation_runs/shared_generation_adapter.ts',
     'packages/core/src/pipeline_modules/generation_runs/types.ts',
     'packages/core/src/pipeline_modules/cli_agent_runner/codex_cli.ts',
-    'packages/core/tests/pipeline_modules/build_docs_cli_runtime/worker_runner.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/agent_packet.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/context_builder.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/draft_contract.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/draft_json_repair.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/quality_audit.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/runtime.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/source_closure.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/source_links.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/static_envelope.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_generation/system_merge.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/worker/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/source/agent_packet.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/source/context_builder.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/runtime/draft_contract.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/runtime/draft_json_repair.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/runtime/quality_audit.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/runtime/runtime.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/source/source_closure.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/source/source_links.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/source/static_envelope.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/source/system_merge.test.ts',
     'packages/core/tests/pipeline_modules/generation_runs/build_docs_adapter.test.ts',
     'packages/core/tests/pipeline_modules/generation_runs/lease_engine.test.ts',
     'packages/core/tests/pipeline_modules/generation_runs/shared_generation_adapter.test.ts',
@@ -413,12 +418,12 @@ function assertCorePhaseSixGenerationRuns() {
 
   const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
   assert.equal(
-    coreEntrypointSource.includes("pipeline_modules/build_docs_generation/index"),
+    coreEntrypointSource.includes("pipeline_modules/build_docs/runtime/index"),
     true,
     'core must export build docs generation runtime for CLI use',
   )
   assert.equal(
-    coreEntrypointSource.includes("pipeline_modules/build_docs_cli_runtime/index"),
+    coreEntrypointSource.includes("pipeline_modules/build_docs/worker/index"),
     true,
     'core must export build docs CLI runtime for CLI package use',
   )
@@ -429,8 +434,9 @@ function assertCorePhaseSixGenerationRuns() {
   )
 
   for (const sourceDir of [
-    'packages/core/src/pipeline_modules/build_docs_cli_runtime',
-    'packages/core/src/pipeline_modules/build_docs_generation',
+    'packages/core/src/pipeline_modules/build_docs/runtime',
+    'packages/core/src/pipeline_modules/build_docs/source',
+    'packages/core/src/pipeline_modules/build_docs/worker',
   ]) {
     for (const absPath of sourceFiles(sourceDir)) {
       const source = readFileSync(absPath, 'utf8')
@@ -583,7 +589,7 @@ function assertCorePhaseNineCodexWorkerExecution() {
   for (const path of [
     'packages/core/src/pipeline_modules/cli_agent_runner/codex_cli.ts',
     'packages/core/tests/pipeline_modules/cli_agent_runner/codex_cli.test.ts',
-    'packages/core/tests/pipeline_modules/build_docs_cli_runtime/worker_runner.test.ts',
+    'packages/core/tests/pipeline_modules/build_docs/worker/worker_runner.test.ts',
     'packages/core/tests/pipeline_modules/build_epics_cli_runtime/worker_runner.test.ts',
     'packages/core/tests/pipeline_modules/build_business_docs_cli/fake_worker_e2e.test.ts',
   ]) {
@@ -604,7 +610,7 @@ function assertCorePhaseNineCodexWorkerExecution() {
   }
 
   for (const sourceDir of [
-    'packages/core/src/pipeline_modules/build_docs_cli_runtime',
+    'packages/core/src/pipeline_modules/build_docs/worker',
     'packages/core/src/pipeline_modules/build_epics_cli_runtime',
     'packages/core/src/pipeline_modules/build_business_docs_cli',
   ]) {

@@ -633,7 +633,7 @@ git commit -m "refactor(core): move business docs sync under workflow"
 - Modify exports in `packages/core/src/index.ts`
 - Modify docs CLI imports if needed
 
-- [ ] **Step 1: Move runtime files**
+- [x] **Step 1: Move runtime files**
 
 Move lifecycle files to:
 
@@ -653,7 +653,7 @@ materialize_document_graph.ts
 persist_helpers.ts
 ```
 
-- [ ] **Step 2: Move worker files**
+- [x] **Step 2: Move worker files**
 
 Move:
 
@@ -671,7 +671,7 @@ build_docs/runtime/cli_runtime.ts
 
 The class may remain named `BuildDocsCliRuntime` for API compatibility during migration, but the file path should no longer say `cli_runtime`.
 
-- [ ] **Step 3: Move source assembly files**
+- [x] **Step 3: Move source assembly files**
 
 Move context/source files to:
 
@@ -693,7 +693,7 @@ agent_packet.ts
 target_selector.ts
 ```
 
-- [ ] **Step 4: Add temporary shims**
+- [x] **Step 4: Add temporary shims**
 
 `packages/core/src/pipeline_modules/build_docs_generation/index.ts`:
 
@@ -709,10 +709,10 @@ export * from '@/pipeline_modules/build_docs/runtime/cli_runtime.js'
 export * from '@/pipeline_modules/build_docs/worker/index.js'
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 ```bash
-npm run test --workspace packages/core -- tests/pipeline_modules/build_docs_generation
+npm run test --workspace packages/core -- tests/pipeline_modules/build_docs
 npm run test --workspace packages/cli -- tests/docs
 npm run typecheck
 ```
@@ -724,7 +724,7 @@ PASS
 exit code 0
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/core/src/pipeline_modules/build_docs packages/core/src/pipeline_modules/build_docs_generation packages/core/src/pipeline_modules/build_docs_cli_runtime packages/core/src/index.ts packages/core/tests packages/cli/tests packages/cli/src/commands/docs.ts

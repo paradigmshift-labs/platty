@@ -7,7 +7,7 @@ import {
   entryPoints,
   frameworkDetections,
 } from '@/db/schema/build_route.js'
-import { selectDocumentTargets } from '@/pipeline_modules/build_docs_generation/target_selector.js'
+import { selectDocumentTargets } from '@/pipeline_modules/build_docs/source/target_selector.js'
 import { persistResults } from '@/pipeline_modules/build_route/f6_persist_results.js'
 import type {
   EntryPointDraft,

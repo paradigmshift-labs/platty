@@ -13,7 +13,7 @@ import {
   mapEntryPointKindToReviewTarget,
   upsertAnalysisReviewDecision,
 } from '@/pipeline_modules/build_route/review_decisions.js'
-import type { DocumentTarget } from '@/pipeline_modules/build_docs_generation/types.js'
+import type { DocumentTarget } from '@/pipeline_modules/build_docs/runtime/types.js'
 
 let db: DB
 

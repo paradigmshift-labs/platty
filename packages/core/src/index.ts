@@ -73,8 +73,9 @@ export {
   type RunBuildServiceMapInput,
   type RunBuildServiceMapResult,
 } from './pipeline_modules/build_service_map/index.js'
-export * from './pipeline_modules/build_docs_cli_runtime/index.js'
-export * from './pipeline_modules/build_docs_generation/index.js'
+export * from './pipeline_modules/build_docs/runtime/index.js'
+export * from './pipeline_modules/build_docs/source/index.js'
+export * from './pipeline_modules/build_docs/worker/index.js'
 export * from './pipeline_modules/build_business_docs_cli/index.js'
 export * from './pipeline_modules/build_business_docs/sync/index.js'
 export * from './pipeline_modules/build_epics_cli_runtime/index.js'

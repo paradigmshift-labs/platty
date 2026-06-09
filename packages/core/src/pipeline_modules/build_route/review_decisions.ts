@@ -12,7 +12,7 @@ import {
   type AnalysisReviewTargetSource,
   type AnalysisReviewTargetType,
 } from '@/db/schema/project_analysis_v2.js'
-import type { DocumentTarget } from '@/pipeline_modules/build_docs_generation/types.js'
+import type { DocumentTarget } from '@/pipeline_modules/build_docs/runtime/types.js'
 
 export type AnalysisReviewDecisionErrorCode =
   | 'REPOSITORY_NOT_IN_PROJECT'
