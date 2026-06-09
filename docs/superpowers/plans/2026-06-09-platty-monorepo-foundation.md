@@ -185,16 +185,17 @@ function assertWorkspaceDeps(manifestPath, requiredDeps, forbiddenDeps = []) {
 describe('Platty monorepo workspace contract', () => {
   it('declares root npm workspaces for packages and apps', () => {
     const rootPackage = readJson('package.json')
+    const scripts = rootPackage.scripts ?? {}
 
     assert.equal(rootPackage.name, 'platty-monorepo')
     assert.equal(rootPackage.private, true)
     assert.equal(rootPackage.type, 'module')
     assert.deepEqual(rootPackage.workspaces, ['packages/*', 'apps/*'])
     assert.deepEqual(rootPackage.engines, { node: '>=20' })
-    assert.equal(rootPackage.scripts.build, 'npm run build --workspaces --if-present')
-    assert.equal(rootPackage.scripts.test, 'node --test tests && npm run check:architecture')
-    assert.equal(rootPackage.scripts['check:architecture'], 'node scripts/check-architecture.mjs')
-    assert.equal(rootPackage.scripts.typecheck, 'tsc -b')
+    assert.equal(scripts.build, 'npm run build --workspaces --if-present')
+    assert.equal(scripts.test, 'node --test tests && npm run check:architecture')
+    assert.equal(scripts['check:architecture'], 'node scripts/check-architecture.mjs')
+    assert.equal(scripts.typecheck, 'tsc -b')
   })
 
   it('declares TypeScript project references for every workspace', () => {
@@ -222,6 +223,22 @@ describe('Platty monorepo workspace contract', () => {
     for (const tsconfigPath of workspaceTsconfigs) {
       assert.equal(existsSync(join(root, tsconfigPath)), true, `${tsconfigPath} should exist`)
     }
+
+    assert.deepEqual(readJson('packages/core/tsconfig.json').references ?? [], [])
+    assert.deepEqual(readJson('packages/sdk/tsconfig.json').references ?? [], [])
+    assert.deepEqual(readJson('packages/cli/tsconfig.json').references, [
+      { path: '../core' },
+      { path: '../sdk' },
+    ])
+    assert.deepEqual(readJson('apps/backend/tsconfig.json').references, [
+      { path: '../../packages/core' },
+    ])
+    assert.deepEqual(readJson('apps/web/tsconfig.json').references, [
+      { path: '../../packages/sdk' },
+    ])
+    assert.deepEqual(readJson('apps/desktop/tsconfig.json').references, [
+      { path: '../../packages/sdk' },
+    ])
   })
 
   it('defines the expected workspace package manifests', () => {
