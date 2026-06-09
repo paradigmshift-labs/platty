@@ -268,11 +268,40 @@ function assertCorePhaseTwoStaticPipeline() {
   }
 }
 
+function assertCliPhaseThreeFoundation() {
+  const forbiddenCommandFiles = [
+    'packages/cli/src/commands/docs.ts',
+    'packages/cli/src/commands/epics.ts',
+    'packages/cli/src/commands/business-docs.ts',
+    'packages/cli/src/commands/service-map.ts',
+    'packages/cli/src/commands/business-map.ts',
+    'packages/cli/src/commands/search.ts',
+    'packages/cli/src/commands/live-index.ts',
+  ]
+
+  for (const path of forbiddenCommandFiles) {
+    assert.equal(existsSync(join(root, path)), false, `CLI Phase 3 must not include later command surface: ${path}`)
+  }
+
+  for (const absPath of sourceFiles('packages/cli/src')) {
+    const source = readFileSync(absPath, 'utf8')
+    const relPath = relative(root, absPath).split(sep).join('/')
+    assert.equal(source.includes('localDbPath'), false, `${relPath} must not store or read project-local DB paths`)
+    assert.equal(source.includes('sdd_v2.db'), false, `${relPath} must not reference legacy sdd_v2.db`)
+
+    for (const specifier of importedSpecifiers(source)) {
+      assert.equal(specifier.startsWith('@/'), false, `${relPath} must not import core internals through @/: ${specifier}`)
+      assert.equal(specifier.includes('packages/core/src'), false, `${relPath} must not import packages/core/src directly: ${specifier}`)
+    }
+  }
+}
+
 assertRootManifest()
 assertTsconfigReferences()
 assertEntrypointsExist()
 assertCorePhaseOneInfrastructure()
 assertCorePhaseTwoStaticPipeline()
+assertCliPhaseThreeFoundation()
 
 for (const workspace of workspaces) {
   assertWorkspaceManifest(workspace)
