@@ -1,12 +1,23 @@
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { describe, it } from 'node:test'
+import { fileURLToPath } from 'node:url'
 
-const root = process.cwd()
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
 function readJson(relativePath) {
   return JSON.parse(readFileSync(join(root, relativePath), 'utf8'))
+}
+
+function assertWorkspaceDeps(manifestPath, requiredDeps, forbiddenDeps = []) {
+  const dependencies = readJson(manifestPath).dependencies ?? {}
+  for (const [name, version] of Object.entries(requiredDeps)) {
+    assert.equal(dependencies[name], version, `${manifestPath} should depend on ${name}@${version}`)
+  }
+  for (const name of forbiddenDeps) {
+    assert.equal(dependencies[name], undefined, `${manifestPath} should not depend on ${name}`)
+  }
 }
 
 describe('Platty monorepo workspace contract', () => {
@@ -18,6 +29,12 @@ describe('Platty monorepo workspace contract', () => {
     assert.equal(rootPackage.type, 'module')
     assert.deepEqual(rootPackage.workspaces, ['packages/*', 'apps/*'])
     assert.deepEqual(rootPackage.engines, { node: '>=20' })
+    assert.deepEqual(rootPackage.scripts, {
+      build: 'npm run build --workspaces --if-present',
+      test: 'node --test tests && npm run check:architecture',
+      'check:architecture': 'node scripts/check-architecture.mjs',
+      typecheck: 'tsc -b',
+    })
   })
 
   it('defines the expected workspace package manifests', () => {
@@ -51,21 +68,33 @@ describe('Platty monorepo workspace contract', () => {
   })
 
   it('keeps workspace dependency directions explicit', () => {
-    assert.deepEqual(readJson('packages/core/package.json').dependencies ?? {}, {})
-    assert.deepEqual(readJson('packages/sdk/package.json').dependencies ?? {}, {})
-    assert.deepEqual(readJson('packages/cli/package.json').dependencies, {
+    assertWorkspaceDeps('packages/core/package.json', {}, [
+      '@platty/sdk',
+      '@pshift/platty',
+      '@platty/backend',
+      '@platty/web',
+      '@platty/desktop',
+    ])
+    assertWorkspaceDeps('packages/sdk/package.json', {}, [
+      '@platty/core',
+      '@pshift/platty',
+      '@platty/backend',
+      '@platty/web',
+      '@platty/desktop',
+    ])
+    assertWorkspaceDeps('packages/cli/package.json', {
       '@platty/core': '0.1.0',
       '@platty/sdk': '0.1.0',
-    })
-    assert.deepEqual(readJson('apps/backend/package.json').dependencies, {
+    }, ['@platty/backend', '@platty/web', '@platty/desktop'])
+    assertWorkspaceDeps('apps/backend/package.json', {
       '@platty/core': '0.1.0',
-    })
-    assert.deepEqual(readJson('apps/web/package.json').dependencies, {
+    }, ['@platty/sdk', '@pshift/platty', '@platty/web', '@platty/desktop'])
+    assertWorkspaceDeps('apps/web/package.json', {
       '@platty/sdk': '0.1.0',
-    })
-    assert.deepEqual(readJson('apps/desktop/package.json').dependencies, {
+    }, ['@platty/core', '@pshift/platty', '@platty/backend', '@platty/desktop'])
+    assertWorkspaceDeps('apps/desktop/package.json', {
       '@platty/sdk': '0.1.0',
-    })
+    }, ['@platty/core', '@pshift/platty', '@platty/backend', '@platty/web'])
   })
 
   // Internal workspace dependencies intentionally use exact 0.1.0 versions for npm
