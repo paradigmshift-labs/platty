@@ -16,6 +16,21 @@ export interface AddRepositoryInput {
   analysisBranch?: string | null
 }
 
+export interface UpdateRepositoryInput {
+  projectId: string
+  selector: string
+  cwd?: string
+  name?: string
+  path?: string
+  sourceRoot?: string | null
+  analysisBranch?: string | null
+}
+
+export type RepositorySelectorResult =
+  | { kind: 'found'; repository: typeof repositories.$inferSelect }
+  | { kind: 'missing' }
+  | { kind: 'ambiguous'; selector: string; matches: Array<typeof repositories.$inferSelect> }
+
 export function addRepository(db: DB, input: AddRepositoryInput) {
   const project = db.select().from(projects).where(eq(projects.id, input.projectId)).get()
   if (!project) throw new Error(`Project not found: ${input.projectId}`)
@@ -48,6 +63,69 @@ export function listRepositories(db: DB, projectId: string) {
     .from(repositories)
     .where(and(eq(repositories.projectId, projectId), isNull(repositories.deletedAt)))
     .all()
+}
+
+export function resolveRepositorySelector(
+  db: DB,
+  projectId: string,
+  selector: string,
+  cwd = process.cwd(),
+): RepositorySelectorResult {
+  const trimmed = selector.trim()
+  if (!trimmed) return { kind: 'missing' }
+
+  const candidatePath = resolve(cwd, trimmed)
+  const resolvedPath = existsSync(candidatePath) ? realpathSync.native(candidatePath) : candidatePath
+  const matches = listRepositories(db, projectId)
+    .filter((repo) =>
+      repo.id === trimmed ||
+      repo.name === trimmed ||
+      repo.repoPath === resolvedPath ||
+      basename(repo.repoPath) === trimmed)
+
+  const uniqueMatches = Array.from(new Map(matches.map((repo) => [repo.id, repo])).values())
+  if (uniqueMatches.length === 0) return { kind: 'missing' }
+  if (uniqueMatches.length > 1) return { kind: 'ambiguous', selector: trimmed, matches: uniqueMatches }
+  return { kind: 'found', repository: uniqueMatches[0] }
+}
+
+export function updateRepository(db: DB, input: UpdateRepositoryInput) {
+  const resolved = resolveRepositorySelector(db, input.projectId, input.selector, input.cwd)
+  if (resolved.kind !== 'found') return resolved
+
+  const updates: Partial<typeof repositories.$inferInsert> = {
+    updatedAt: new Date().toISOString(),
+  }
+
+  if (input.name !== undefined) updates.name = input.name.trim()
+  if (input.path !== undefined) updates.repoPath = resolveGitRoot(input.cwd ?? process.cwd(), input.path)
+  if (input.sourceRoot !== undefined) updates.sourceRoot = normalizeSourceRoot(input.sourceRoot)
+  if (input.analysisBranch !== undefined) updates.analysisBranch = input.analysisBranch?.trim() || null
+
+  db.update(repositories).set(updates).where(eq(repositories.id, resolved.repository.id)).run()
+  const repository = db.select().from(repositories).where(eq(repositories.id, resolved.repository.id)).get()
+  if (!repository) return { kind: 'missing' } satisfies RepositorySelectorResult
+  return { kind: 'found', repository } satisfies RepositorySelectorResult
+}
+
+export function removeRepository(db: DB, projectId: string, selector: string, cwd = process.cwd()): RepositorySelectorResult {
+  const resolved = resolveRepositorySelector(db, projectId, selector, cwd)
+  if (resolved.kind !== 'found') return resolved
+
+  const deletedAt = new Date().toISOString()
+  db.update(repositories)
+    .set({ deletedAt, updatedAt: deletedAt })
+    .where(eq(repositories.id, resolved.repository.id))
+    .run()
+
+  return {
+    kind: 'found',
+    repository: {
+      ...resolved.repository,
+      deletedAt,
+      updatedAt: deletedAt,
+    },
+  }
 }
 
 function resolveGitRoot(cwd: string, requestedPath: string): string {

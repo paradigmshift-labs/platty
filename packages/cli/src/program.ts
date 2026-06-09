@@ -115,7 +115,17 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
     })
   }, setResponse)
 
-  for (const name of ['repo', 'status', 'run', 'runs'] as const) {
+  setAction(configurePassthrough(program.command('repo').description('Register and manage local Git repositories.')), async () => {
+    const { runRepoCommand } = await import('./commands/repo.js')
+    return runRepoCommand(commandArgvAfter('repo', stripGlobalFlags(_argv)), {
+      cwd: _options.cwd,
+      db: _options.db,
+      openDb: _options.openDb,
+      project: value(_argv, '--project'),
+    })
+  }, setResponse)
+
+  for (const name of ['status', 'run', 'runs'] as const) {
     setAction(configurePassthrough(program.command(name).description(`Run Platty ${name}.`)), async () => notImplementedResponse(name), setResponse)
   }
 
