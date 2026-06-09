@@ -101,7 +101,9 @@ describe('Platty monorepo workspace contract', () => {
       assert.equal(manifest.private, expectedPrivate)
       assert.equal(manifest.type, 'module')
       assert.equal(manifest.scripts.build, 'tsc -b')
-      const expectedTestScript = manifestPath === 'packages/core/package.json' ? 'vitest run' : 'node --test'
+      const expectedTestScript = manifestPath === 'packages/core/package.json' || manifestPath === 'packages/cli/package.json'
+        ? 'vitest run'
+        : 'node --test'
       assert.equal(manifest.scripts.test, expectedTestScript)
     }
   })
@@ -137,8 +139,8 @@ describe('Platty monorepo workspace contract', () => {
     ])
     assertWorkspaceDeps('packages/cli/package.json', {
       '@platty/core': '0.1.0',
-      '@platty/sdk': '0.1.0',
-    }, ['@platty/backend', '@platty/web', '@platty/desktop'])
+      commander: '14.0.3',
+    }, ['@platty/sdk', '@platty/backend', '@platty/web', '@platty/desktop'])
     assertWorkspaceDeps('apps/backend/package.json', {
       '@platty/core': '0.1.0',
     }, ['@platty/sdk', '@pshift/platty', '@platty/web', '@platty/desktop'])

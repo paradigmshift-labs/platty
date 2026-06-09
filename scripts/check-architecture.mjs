@@ -36,8 +36,8 @@ const workspaces = [
     name: '@pshift/platty',
     manifestPath: 'packages/cli/package.json',
     sourceDir: 'packages/cli/src',
-    allowedWorkspaceDeps: ['@platty/core', '@platty/sdk'],
-    forbiddenImports: ['@platty/backend', '@platty/web', '@platty/desktop'],
+    allowedWorkspaceDeps: ['@platty/core'],
+    forbiddenImports: ['@platty/sdk', '@platty/backend', '@platty/web', '@platty/desktop'],
   },
   {
     name: '@platty/backend',
@@ -80,7 +80,9 @@ function assertWorkspaceManifest(workspace) {
   assert.equal(manifest.name, workspace.name, `${workspace.manifestPath} has an unexpected package name`)
   assert.equal(manifest.type, 'module', `${workspace.manifestPath} must use ESM`)
   assert.equal(manifest.scripts?.build, 'tsc -b', `${workspace.manifestPath} must expose a build script`)
-  const expectedTestScript = workspace.manifestPath === 'packages/core/package.json' ? 'vitest run' : 'node --test'
+  const expectedTestScript = workspace.manifestPath === 'packages/core/package.json' || workspace.manifestPath === 'packages/cli/package.json'
+    ? 'vitest run'
+    : 'node --test'
   assert.equal(manifest.scripts?.test, expectedTestScript, `${workspace.manifestPath} must expose a test script`)
 
   const dependencySections = [

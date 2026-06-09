@@ -15,13 +15,13 @@
   ],
   "scripts": {
     "build": "tsc -b",
-    "test": "node --test",
+    "test": "vitest run",
     "release:pack:dry-run": "npm pack --dry-run",
     "release:publish:dry-run": "npm publish --dry-run"
   },
   "dependencies": {
     "@platty/core": "0.1.0",
-    "@platty/sdk": "0.1.0"
+    "commander": "14.0.3"
   },
   "engines": {
     "node": ">=20"
