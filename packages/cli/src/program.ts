@@ -1,6 +1,6 @@
 import { Command, CommanderError } from 'commander'
 import type { PlattyCommandRunOptions } from './main.js'
-import { stripGlobalFlags } from './argv.js'
+import { commandArgvAfter, stripGlobalFlags, value } from './argv.js'
 import { failure, success, type PlattyCommandResponse } from './output.js'
 
 const VERSION = '0.1.0'
@@ -100,10 +100,23 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
     sortOptions: true,
   })
 
-  for (const name of ['init', 'project', 'repo', 'status', 'run', 'runs'] as const) {
-    setAction(configurePassthrough(program.command(name).description(`Run Platty ${name}.`)), async () => {
-      return notImplementedResponse(name)
-    }, setResponse)
+  setAction(configurePassthrough(program.command('init').description('Initialize Platty state for a workspace.')), async () => {
+    const { runInitCommand } = await import('./commands/init.js')
+    return runInitCommand({ cwd: _options.cwd, root: value(_argv, '--root'), project: value(_argv, '--project') })
+  }, setResponse)
+
+  setAction(configurePassthrough(program.command('project').description('Create and manage Platty projects.')), async () => {
+    const { runProjectCommand } = await import('./commands/project.js')
+    return runProjectCommand(commandArgvAfter('project', stripGlobalFlags(_argv)), {
+      cwd: _options.cwd,
+      db: _options.db,
+      openDb: _options.openDb,
+      project: value(_argv, '--project'),
+    })
+  }, setResponse)
+
+  for (const name of ['repo', 'status', 'run', 'runs'] as const) {
+    setAction(configurePassthrough(program.command(name).description(`Run Platty ${name}.`)), async () => notImplementedResponse(name), setResponse)
   }
 
   setAction(configurePassthrough(program.command('version').description('Show Platty CLI version.')), async () => versionResponse(), setResponse)
@@ -115,7 +128,10 @@ export async function runPlattyCommanderDispatch(argv: string[], options: Dispat
   if (isVersionRequest(argv)) return versionResponse()
 
   const routedCommand = commandRoot(argv)
-  if (!routedCommand) return notImplementedResponse('init')
+  if (!routedCommand) {
+    const { runInitCommand } = await import('./commands/init.js')
+    return runInitCommand({ cwd: options.cwd, root: value(argv, '--root'), project: value(argv, '--project') })
+  }
   if (!isTopLevelHelpRequest(argv) && !PUBLIC_COMMAND_ROOTS.has(routedCommand)) return unknownCommandResponse(argv)
 
   const dispatchState: { responseHandler?: CommandHandler } = {}

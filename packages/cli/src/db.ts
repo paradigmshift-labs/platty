@@ -1,5 +1,7 @@
-import { openPlattyDb, type OpenPlattyDbResult } from '@platty/core'
+import { migrateDb, openPlattyDb, type OpenPlattyDbResult } from '@platty/core'
 
 export function openCliDb(): OpenPlattyDbResult {
-  return openPlattyDb()
+  const opened = openPlattyDb()
+  migrateDb(opened.db)
+  return opened
 }
