@@ -13,6 +13,15 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "test": "node --test"
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "test:db": "vitest run tests/db",
+    "test:pipeline-infra": "vitest run tests/pipeline_infra"
+  },
+  "dependencies": {
+    "better-sqlite3": "11.10.0",
+    "drizzle-orm": "0.45.2",
+    "nanoid": "5.1.11",
+    "zod": "4.3.6"
   }
 }

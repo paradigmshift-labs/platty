@@ -1,0 +1,1 @@
+ALTER TABLE `project_llm_settings` ADD COLUMN `credential_env_name` text;

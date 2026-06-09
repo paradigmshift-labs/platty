@@ -35,8 +35,8 @@ describe('Platty monorepo workspace contract', () => {
     assert.equal(rootPackage.type, 'module')
     assert.deepEqual(rootPackage.workspaces, ['packages/*', 'apps/*'])
     assert.deepEqual(rootPackage.engines, { node: '>=20' })
-    assert.equal(scripts.build, 'npm run build --workspaces --if-present')
-    assert.equal(scripts.test, 'node --test tests && npm run check:architecture')
+    assert.equal(scripts.build, 'node "$npm_execpath" run build --workspaces --if-present')
+    assert.equal(scripts.test, 'node --test tests/**/*.test.mjs && node "$npm_execpath" run check:architecture')
     assert.equal(scripts['check:architecture'], 'node scripts/check-architecture.mjs')
     assert.equal(scripts.typecheck, 'tsc -b')
   })
@@ -101,7 +101,8 @@ describe('Platty monorepo workspace contract', () => {
       assert.equal(manifest.private, expectedPrivate)
       assert.equal(manifest.type, 'module')
       assert.equal(manifest.scripts.build, 'tsc -b')
-      assert.equal(manifest.scripts.test, 'node --test')
+      const expectedTestScript = manifestPath === 'packages/core/package.json' ? 'vitest run' : 'node --test'
+      assert.equal(manifest.scripts.test, expectedTestScript)
     }
   })
 
@@ -115,7 +116,12 @@ describe('Platty monorepo workspace contract', () => {
   })
 
   it('keeps workspace dependency directions explicit', () => {
-    assertWorkspaceDeps('packages/core/package.json', {}, [
+    assertWorkspaceDeps('packages/core/package.json', {
+      'better-sqlite3': '11.10.0',
+      'drizzle-orm': '0.45.2',
+      nanoid: '5.1.11',
+      zod: '4.3.6',
+    }, [
       '@platty/sdk',
       '@pshift/platty',
       '@platty/backend',
@@ -160,5 +166,37 @@ describe('Platty monorepo workspace contract', () => {
     for (const entrypoint of entrypoints) {
       assert.equal(existsSync(join(root, entrypoint)), true, `${entrypoint} should exist`)
     }
+  })
+
+  it('exposes package-local core DB infrastructure', () => {
+    const requiredCoreFiles = [
+      'packages/core/src/db/client.ts',
+      'packages/core/src/db/index.ts',
+      'packages/core/src/db/migrate.ts',
+      'packages/core/src/db/paths.ts',
+      'packages/core/src/db/testing.ts',
+      'packages/core/src/db/schema/index.ts',
+      'packages/core/src/db/migrations/meta/_journal.json',
+      'packages/core/src/pipeline_infra/index.ts',
+    ]
+
+    for (const path of requiredCoreFiles) {
+      assert.equal(existsSync(join(root, path)), true, `${path} should exist`)
+    }
+
+    const dbPathsSource = readFileSync(join(root, 'packages/core/src/db/paths.ts'), 'utf8')
+    assert.equal(dbPathsSource.includes('sdd_v2.db'), false, 'core must not default to the legacy sdd_v2.db')
+    assert.equal(dbPathsSource.includes("process.cwd(), 'data"), false, 'core DB path must not default under cwd data/')
+    assert.equal(dbPathsSource.includes('PLATTY_HOME'), true, 'core should support a global Platty home')
+    assert.equal(dbPathsSource.includes("'.platty'"), true, 'core should default to the user-global .platty directory')
+    assert.equal(dbPathsSource.includes("'platty.db'"), true, 'core should create/use the global platty.db')
+
+    const dbClientSource = readFileSync(join(root, 'packages/core/src/db/client.ts'), 'utf8')
+    assert.equal(dbClientSource.includes('export const db ='), false, 'core must not open a DB singleton at import time')
+    assert.equal(dbClientSource.includes('openPlattyDb'), true, 'core should expose an explicit DB open helper')
+
+    const coreEntrypointSource = readFileSync(join(root, 'packages/core/src/index.ts'), 'utf8')
+    assert.equal(coreEntrypointSource.includes('createTestPlattyDb'), true, 'core should export a test DB helper')
+    assert.equal(coreEntrypointSource.includes('createPipelineRuntime'), true, 'core should export the Phase 1 pipeline runtime base')
   })
 })

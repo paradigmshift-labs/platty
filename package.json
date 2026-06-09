@@ -8,13 +8,15 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "test": "node --test tests && npm run check:architecture",
+    "build": "node \"$npm_execpath\" run build --workspaces --if-present",
+    "test": "node --test tests/**/*.test.mjs && node \"$npm_execpath\" run check:architecture",
     "check:architecture": "node scripts/check-architecture.mjs",
     "typecheck": "tsc -b"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "@types/better-sqlite3": "^7.6.13",
+    "typescript": "^5.9.3",
+    "vitest": "^3.0.0"
   },
   "engines": {
     "node": ">=20"
