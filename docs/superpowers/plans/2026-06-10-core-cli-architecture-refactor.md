@@ -521,11 +521,11 @@ git commit -m "refactor(core): move target review under build_route"
 - Modify imports referencing `@/project_analysis_v2/run_links.js`
 - Test: move `packages/core/tests/project_analysis_v2/run_links.test.ts` -> `packages/core/tests/pipeline_infra/run_links.test.ts`
 
-- [ ] **Step 1: Replace re-export with implementation**
+- [x] **Step 1: Replace re-export with implementation**
 
 `packages/core/src/pipeline_infra/execution/run_links.ts` should own the actual implementation currently in `project_analysis_v2/run_links.ts`.
 
-- [ ] **Step 2: Add temporary shim**
+- [x] **Step 2: Add temporary shim**
 
 `packages/core/src/project_analysis_v2/run_links.ts`:
 
@@ -533,7 +533,7 @@ git commit -m "refactor(core): move target review under build_route"
 export * from '@/pipeline_infra/execution/run_links.js'
 ```
 
-- [ ] **Step 3: Run targeted tests**
+- [x] **Step 3: Run targeted tests**
 
 ```bash
 npm run test --workspace packages/core -- tests/pipeline_infra/run_links.test.ts tests/pipeline_infra/pipeline_execution.test.ts
@@ -545,7 +545,7 @@ Expected:
 PASS
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/core/src/pipeline_infra packages/core/src/project_analysis_v2 packages/core/tests/pipeline_infra

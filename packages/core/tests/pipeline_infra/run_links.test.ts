@@ -8,7 +8,7 @@ import {
   linkPipelineRun,
   listChildRunLinks,
   listParentRunLinks,
-} from '@/project_analysis_v2/run_links.js'
+} from '@/pipeline_infra/execution/run_links.js'
 
 let db: DB
 
