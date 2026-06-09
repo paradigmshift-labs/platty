@@ -30,6 +30,8 @@ platty/
 
 `packages/cli` is the npm-published `platty` command package. It can call `@platty/core` for local engine work and `@platty/sdk` for backend/cloud API work.
 
+The CLI package name remains `@pshift/platty` to preserve the current public npm package identity. Internal packages use the `@platty/*` namespace.
+
 `apps/backend` is the HTTP API server. It owns routes, auth/session APIs, analytics forwarding, remote run orchestration, and deployment configuration. It calls `@platty/core` for engine behavior.
 
 `apps/web` is the web dashboard. It calls backend APIs through `@platty/sdk`.

@@ -29,7 +29,7 @@
 
 ## Scope Boundaries
 
-This plan creates the new `/Users/uchangmin/Development/platty` monorepo foundation only. It does not migrate source from `/Users/uchangmin/Development/sdd-agent`, implement real API routes, add Electron, add Flutter, or publish anything. Those are follow-up plans after this foundation passes validation.
+This plan creates this repo's monorepo foundation only. It does not migrate source from the sibling `sdd-agent` repo, implement real API routes, add Electron, add Flutter, or publish anything. Those are follow-up plans after this foundation passes validation.
 
 ### Task 1: Architecture Documentation
 
@@ -72,6 +72,8 @@ platty/
 `packages/sdk` is the TypeScript HTTP API client. It is not the backend API itself. It wraps backend endpoints into typed functions such as `client.projects.list()`, handles base URL composition, authorization headers, JSON parsing, and normalized API errors. It must not import `@platty/core` or backend implementation code.
 
 `packages/cli` is the npm-published `platty` command package. It can call `@platty/core` for local engine work and `@platty/sdk` for backend/cloud API work.
+
+The CLI package name remains `@pshift/platty` to preserve the current public npm package identity. Internal packages use the `@platty/*` namespace.
 
 `apps/backend` is the HTTP API server. It owns routes, auth/session APIs, analytics forwarding, remote run orchestration, and deployment configuration. It calls `@platty/core` for engine behavior.
 
@@ -222,6 +224,9 @@ describe('Platty monorepo workspace contract', () => {
       '@platty/sdk': '0.1.0',
     })
   })
+
+  // Internal workspace dependencies intentionally use exact 0.1.0 versions for npm
+  // compatibility. npm 10.8.2 fails with EUNSUPPORTEDPROTOCOL for workspace protocol specifiers here.
 
   it('has TypeScript source entrypoints for every workspace', () => {
     const entrypoints = [
@@ -377,7 +382,7 @@ Create `packages/core/package.json`:
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
@@ -430,7 +435,7 @@ Create `packages/sdk/package.json`:
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
