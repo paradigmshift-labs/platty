@@ -99,9 +99,15 @@ function isFreshPassed(phase: ReturnType<typeof phaseStatus>) {
   return phase?.status === 'passed' && phase.validity === 'fresh'
 }
 
-export function nextStaticPipelineStage(input: { db: DB; repoId: string }): StaticPipelineStage | StaticPipelineNextAction {
+function isFreshPassedForCommit(phase: ReturnType<typeof phaseStatus>, expectedCommit?: string | null) {
+  if (!isFreshPassed(phase)) return false
+  if (!expectedCommit) return true
+  return (phase?.sourceCommit ?? phase?.builtFromCommit ?? null) === expectedCommit
+}
+
+export function nextStaticPipelineStage(input: { db: DB; repoId: string; expectedCommit?: string | null }): StaticPipelineStage | StaticPipelineNextAction {
   const analyzeRepo = phaseStatus({ ...input, stage: 'analyze_repo' })
-  if (isFreshPassed(analyzeRepo) && !analyzeRepo?.confirmedAt) {
+  if (isFreshPassedForCommit(analyzeRepo, input.expectedCommit) && !analyzeRepo?.confirmedAt) {
     return {
       type: 'confirm_required',
       repoId: input.repoId,
@@ -112,7 +118,7 @@ export function nextStaticPipelineStage(input: { db: DB; repoId: string }): Stat
 
   for (const stage of STATIC_PIPELINE_STAGES) {
     const phase = phaseStatus({ ...input, stage })
-    if (!isFreshPassed(phase)) return stage
+    if (!isFreshPassedForCommit(phase, input.expectedCommit)) return stage
   }
 
   return { type: 'completed' }
@@ -128,7 +134,11 @@ export async function runStaticPipelineForProject(input: RunStaticPipelineForPro
 
   for (const repository of selectedRepositories) {
     if (input.stepOnly) {
-      const nextStage = nextStaticPipelineStage({ db: input.db, repoId: repository.id })
+      const nextStage = nextStaticPipelineStage({
+        db: input.db,
+        repoId: repository.id,
+        expectedCommit: repository.lastSyncedCommit,
+      })
       if (typeof nextStage !== 'string') {
         nextAction = nextStage.type === 'completed'
           ? { type: 'build_docs', command: ['platty', 'docs', 'start', '--project', input.projectId] }

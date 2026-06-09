@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createTestPlattyDb } from '../src/db/testing.js'
-import { repositoryPhaseStatus } from '../src/db/schema/core.js'
+import { repositories, repositoryPhaseStatus } from '../src/db/schema/core.js'
 import { createProject } from '../src/project_service.js'
 import { addRepository } from '../src/repository_service.js'
 import {
@@ -12,6 +12,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { eq } from 'drizzle-orm'
 
 function gitRepo() {
   const dir = mkdtempSync(join(tmpdir(), 'platty-static-project-'))
@@ -129,6 +130,50 @@ describe('static_pipeline', () => {
     expect(result.nextAction).toMatchObject({
       type: 'confirm_required',
       stage: 'analyze_repo',
+      repoId: repo.id,
+    })
+    client.close()
+  })
+
+  it('reruns the first fresh phase whose source commit differs from the repository pin', async () => {
+    const client = createTestPlattyDb()
+    const project = createProject(client.db, { name: 'Demo' })
+    const repo = addRepository(client.db, { projectId: project.id, path: gitRepo(), name: 'api' })
+    const calls: string[] = []
+
+    client.db.update(repositories)
+      .set({ lastSyncedCommit: 'commit:new' })
+      .where(eq(repositories.id, repo.id))
+      .run()
+
+    for (const stage of STATIC_PIPELINE_STAGES) {
+      client.db.insert(repositoryPhaseStatus).values({
+        repositoryId: repo.id,
+        phase: stage,
+        status: 'passed',
+        validity: 'fresh',
+        sourceCommit: stage === 'build_service_map' ? 'commit:old' : 'commit:new',
+        builtFromCommit: stage === 'build_service_map' ? 'commit:old' : 'commit:new',
+        builtAt: '2026-06-09T00:00:00.000Z',
+        confirmedAt: stage === 'analyze_repo' ? '2026-06-09T00:00:00.000Z' : null,
+      }).run()
+    }
+
+    const result = await runStaticPipelineForProject({
+      db: client.db,
+      projectId: project.id,
+      stepOnly: true,
+      stages: Object.fromEntries(
+        STATIC_PIPELINE_STAGES.map((stage) => [stage, async () => {
+          calls.push(stage)
+        }]),
+      ),
+    })
+
+    expect(calls).toEqual(['build_service_map'])
+    expect(result.nextAction).toMatchObject({
+      type: 'run_static_analysis',
+      stage: 'build_service_map',
       repoId: repo.id,
     })
     client.close()

@@ -14,6 +14,7 @@ import { mergeAndDedupeEdges } from './f7_merge_and_dedupe_edges.js'
 import { persistServiceMap } from './f8_persist_service_map.js'
 import { validateServiceMap } from './f9_validate_service_map.js'
 import { getHeadCommit } from '@/pipeline_modules/build_graph/git_helpers.js'
+import { getRepositoryPaths } from '@/repo/repository-paths.js'
 
 export async function runBuildServiceMap(input: RunBuildServiceMapInput): Promise<RunBuildServiceMapResult> {
   const { db, repoId } = input
@@ -112,7 +113,9 @@ export async function runBuildServiceMap(input: RunBuildServiceMapInput): Promis
       throw new PipelineError(`build_service_map validation failed: ${validation.warnings.map((w) => w.message).join('; ')}`, 'VALIDATION_FAILED')
     }
 
-    const sourceCommit = scope.repo ? getHeadCommit(scope.repo.repoPath) ?? scope.repo.lastSyncedCommit ?? 'unknown' : null
+    const sourceCommit = scope.repo
+      ? getHeadCommit(getRepositoryPaths(scope.repo).worktreeRoot) ?? scope.repo.lastSyncedCommit ?? 'unknown'
+      : null
     ctx.commitOutcome(ctx.markPassed({
       sourceCommit,
       phaseMeta: { repoIds: serviceMapInput.repoIds },

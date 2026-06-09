@@ -3,12 +3,16 @@
  * 시나리오 MAP-01~MAP-34, MAP-N01~MAP-N09 커버
  */
 import { describe, it, expect, beforeEach } from 'vitest'
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import * as schema from '@/db/schema/index.js'
-import { projects, repositories } from '@/db/schema/core.js'
+import { projects, repositories, repositoryPhaseStatus } from '@/db/schema/core.js'
 import { codeNodes, codeEdges } from '@/db/schema/code_graph.js'
 import { entryPoints, codeBundles } from '@/db/schema/build_route.js'
 import { codeRelations } from '@/db/schema/build_relations.js'
@@ -41,6 +45,18 @@ beforeEach(() => {
   db.insert(projects).values({ id: projectId, name: 'Test Project' }).run()
   db.insert(repositories).values({ id: repoId, projectId, name: 'repo', repoPath: '/repo', isPublic: false }).run()
 })
+
+function gitRepoWithCommit(label: string) {
+  const dir = mkdtempSync(join(tmpdir(), `platty-service-map-${label}-`))
+  execFileSync('git', ['init', '-q'], { cwd: dir })
+  execFileSync('git', ['config', 'user.email', 't@t.t'], { cwd: dir })
+  execFileSync('git', ['config', 'user.name', 't'], { cwd: dir })
+  writeFileSync(join(dir, 'file.txt'), label)
+  execFileSync('git', ['add', 'file.txt'], { cwd: dir })
+  execFileSync('git', ['commit', '-q', '-m', `init ${label}`], { cwd: dir })
+  const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim()
+  return { dir, commit }
+}
 
 function seedRepo(id: string, name: string) {
   db.insert(repositories).values({ id, projectId, name, repoPath: `/repos/${name}` }).run()
@@ -154,6 +170,35 @@ describe('service_map_edges logical uniqueness', () => {
     expect(() => {
       db.insert(serviceMapEdges).values({ id: 'edge-2', ...row }).run()
     }).toThrow()
+  })
+})
+
+describe('service map phase metadata', () => {
+  it('records the analysis worktree commit instead of the source repo working branch commit', async () => {
+    const sourceRepo = gitRepoWithCommit('source-branch')
+    const analysisWorktree = gitRepoWithCommit('analysis-main')
+
+    db.update(repositories)
+      .set({
+        repoPath: sourceRepo.dir,
+        analysisWorktreePath: analysisWorktree.dir,
+        lastSyncedCommit: analysisWorktree.commit,
+      })
+      .where(eq(repositories.id, repoId))
+      .run()
+
+    await runBuildServiceMap({ db, repoId })
+
+    const phase = db.select().from(repositoryPhaseStatus)
+      .where(and(
+        eq(repositoryPhaseStatus.repositoryId, repoId),
+        eq(repositoryPhaseStatus.phase, 'build_service_map'),
+      ))
+      .get()
+
+    expect(phase?.sourceCommit).toBe(analysisWorktree.commit)
+    expect(phase?.builtFromCommit).toBe(analysisWorktree.commit)
+    expect(phase?.sourceCommit).not.toBe(sourceRepo.commit)
   })
 })
 

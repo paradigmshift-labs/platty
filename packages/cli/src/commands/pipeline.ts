@@ -1,10 +1,12 @@
 import {
   listRepositories,
+  nextStaticPipelineStage,
   projectPointer,
   resolveProjectSelector,
   runStaticPipelineForProject,
   type DB,
   type OpenPlattyDbResult,
+  type StaticPipelineNextAction,
 } from '@platty/core'
 import type { StaticPipelineRunner } from '../main.js'
 import { readProjectConfig } from '../config-store.js'
@@ -60,6 +62,33 @@ function missingProject(): PlattyCommandResponse {
   return { exitCode: 2, result, stdout: '', stderr: '' }
 }
 
+function nextActionForStatus(
+  db: DB,
+  projectId: string,
+  repositories: ReturnType<typeof listRepositories>,
+): StaticPipelineNextAction | { type: 'add_repository'; command: string[] } {
+  if (repositories.length === 0) return { type: 'add_repository', command: ['platty', 'repo', 'add', '.'] }
+
+  for (const repository of repositories) {
+    const next = nextStaticPipelineStage({
+      db,
+      repoId: repository.id,
+      expectedCommit: repository.lastSyncedCommit,
+    })
+    if (typeof next === 'string') {
+      return {
+        type: 'run_static_analysis',
+        repoId: repository.id,
+        stage: next,
+        command: ['platty', 'run', '--project', projectId],
+      }
+    }
+    if (next.type !== 'completed') return next
+  }
+
+  return { type: 'build_docs', command: ['platty', 'docs', 'start', '--project', projectId] }
+}
+
 export async function runPipelineShortcutCommand(
   command: PipelineShortcutCommand,
   argv: string[],
@@ -89,9 +118,7 @@ export async function runPipelineShortcutCommand(
       const result = success({
         project: projectPointer(project),
         repositories,
-        nextAction: repositories.length === 0
-          ? { type: 'add_repository', command: ['platty', 'repo', 'add', '.'] }
-          : { type: 'run_static_analysis', command: ['platty', 'run', '--project', project.id] },
+        nextAction: nextActionForStatus(db, project.id, repositories),
       })
       return { exitCode: 0, result, stdout: '', stderr: '' }
     }
