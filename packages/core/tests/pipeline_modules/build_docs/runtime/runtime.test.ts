@@ -1368,6 +1368,95 @@ describe('BuildDocsGenerationRuntime', () => {
     })
   })
 
+  it('preserves reachable frontend API call facts on screen specs without target API documents', async () => {
+    const db = createTestDb()
+    seedProject(db, { serviceMapReady: true })
+    db.insert(codeNodes).values(
+      node('node:web:kakaoClient', 'repo:web', 'src/lib/kakao-client.ts', 'loginWithKakao', 'async function loginWithKakao(code)'),
+    ).run()
+    db.insert(codeBundles).values([
+      bundle('ep:web:orders', 'node:web:OrdersPage', 0),
+      bundle('ep:web:orders', 'node:web:kakaoClient', 1),
+    ]).run()
+    db.insert(codeEdges).values(
+      edge('repo:web', 'node:web:OrdersPage', 'node:web:kakaoClient'),
+    ).run()
+    db.insert(codeRelations).values({
+      id: 'rel:web:kakao-client:api',
+      repoId: 'repo:web',
+      sourceNodeId: 'node:web:kakaoClient',
+      kind: 'api_call',
+      target: '/api/auth/kakao',
+      operation: 'POST',
+      canonicalTarget: 'api:POST:/api/auth/kakao',
+      payload: { path: '/api/auth/kakao' },
+      evidenceNodeIds: ['node:web:kakaoClient'],
+      confidence: 'high',
+      createdAt: '2026-06-02T00:00:00.000Z',
+    }).run()
+    const runtime = new BuildDocsGenerationRuntime({ db })
+    const task = await leaseFirstTask(runtime, 'screen_spec')
+    const context = await runtime.getContext({
+      taskId: task.task_id,
+      leaseToken: task.lease_token,
+    })
+
+    expect(context.content.code_relation_facts).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        relation_id: 'rel:web:kakao-client:api',
+        source: 'deterministic',
+        kind: 'api_call',
+        operation: 'POST',
+        target: '/api/auth/kakao',
+      }),
+    ]))
+
+    const submit = await runtime.submitTask({
+      taskId: task.task_id,
+      leaseToken: task.lease_token,
+      document: {
+        title: 'Login screen',
+        summary: 'Starts Kakao login through POST /api/auth/kakao.',
+        ascii_ui: '+ OrdersPage\n  + Kakao login button',
+        layout: [{ name: 'Kakao login button', type: 'button', fields: [] }],
+        state: [{ name: 'auth', source: 'mutation' }],
+        actions: [
+          { name: 'Login with Kakao', trigger: 'click', result: 'calls POST /api/auth/kakao' },
+        ],
+        flow: ['Submits a Kakao authorization code to POST /api/auth/kakao.'],
+        rules: [],
+      },
+    })
+
+    expect(submit).toMatchObject({
+      status: 'saved',
+      saved_document_id: context.content.target.document_id,
+    })
+
+    const saved = db.select().from(documents).where(eq(documents.id, context.content.target.document_id)).get()
+    expect(saved?.content).toMatchObject({
+      type: 'screen_spec',
+      relations: {
+        api_calls: [{ method: 'POST', path: '/api/auth/kakao' }],
+      },
+      relation_evidence_checked: true,
+    })
+    expect(db.select().from(docRelationLinks)
+      .where(eq(docRelationLinks.documentId, context.content.target.document_id))
+      .all()).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          relationId: 'rel:web:kakao-client:api',
+          kind: 'api_call',
+          operation: 'POST',
+          target: '/api/auth/kakao',
+          canonicalTarget: 'api:POST:/api/auth/kakao',
+        }),
+      ]))
+    expect(db.select().from(documentLinks)
+      .where(eq(documentLinks.fromDocumentId, context.content.target.document_id))
+      .all()).toEqual([])
+  })
+
   it('requests repair when a draft is submitted before context preparation', async () => {
     const db = createTestDb()
     seedProject(db, { serviceMapReady: true })
