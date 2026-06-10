@@ -65,16 +65,22 @@ export function buildCodeRelationFacts(input: {
   db: DB
   repoId: string
   seedNodeIds: string[]
+  relatedNodeIds?: string[]
   namespace: string
 }): RelationFactContext[] {
-  if (input.seedNodeIds.length === 0) return []
+  const nodeIds = uniqueStrings([...input.seedNodeIds, ...(input.relatedNodeIds ?? [])])
+  if (nodeIds.length === 0) return []
   const rows = input.db.select()
     .from(codeRelations)
-    .where(and(eq(codeRelations.repoId, input.repoId), inArray(codeRelations.sourceNodeId, input.seedNodeIds)))
+    .where(and(eq(codeRelations.repoId, input.repoId), inArray(codeRelations.sourceNodeId, nodeIds)))
     .all()
     .sort((a, b) => a.id.localeCompare(b.id))
 
   return rows.map((relation, index) => toRelationFactContext(relation, `${input.namespace}:code_relation:${index + 1}`))
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values.filter((value) => value.length > 0))]
 }
 
 export function buildSourceContext(input: {

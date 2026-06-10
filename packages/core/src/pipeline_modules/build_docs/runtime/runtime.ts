@@ -928,7 +928,7 @@ export class BuildDocsGenerationRuntime {
       repositoryId: task.repositoryId,
     })
     const namespace = `platty:${run.id}:${task.id}`
-    const codeRelationFacts = buildCodeRelationFacts({
+    const seedCodeRelationFacts = buildCodeRelationFacts({
       db: this.input.db,
       repoId: task.repositoryId,
       seedNodeIds: target.seed_node_ids,
@@ -939,9 +939,19 @@ export class BuildDocsGenerationRuntime {
       repoId: task.repositoryId,
       seedNodeIds: target.seed_node_ids,
       entryPointIds: target.entry_point_ids,
-      codeRelationFacts,
+      codeRelationFacts: seedCodeRelationFacts,
       namespace,
       repoPath: this.repoPathFor(task.repositoryId),
+    })
+    const relatedSourceNodeIds = rawSourceContext
+      .filter((source) => source.dep_type === 'dependency')
+      .map((source) => source.node_id)
+    const codeRelationFacts = buildCodeRelationFacts({
+      db: this.input.db,
+      repoId: task.repositoryId,
+      seedNodeIds: target.seed_node_ids,
+      relatedNodeIds: relatedSourceNodeIds,
+      namespace,
     })
     const { serviceMapFacts, relatedEdges } = buildServiceMapContext({
       db: this.input.db,

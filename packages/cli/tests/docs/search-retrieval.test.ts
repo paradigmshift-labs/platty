@@ -422,6 +422,84 @@ describe('platty docs retrieval commands', () => {
       },
     })
   })
+
+  it('finds and shows unmatched frontend API calls stored on screen specs', async () => {
+    const project = await runPlattyCommand(['project', 'create', 'Commerce', '--json'], { cwd: rootDir, db })
+    const projectId = String(project.result.data?.id)
+    seedDocument(projectId, {
+      id: 'doc:screen:login',
+      type: 'screen_spec',
+      scope: 'route',
+      scopeId: '/login',
+      title: 'Login Screen',
+      summary: 'Kakao login screen',
+      content: {
+        title: 'Login Screen',
+        relations: {
+          api_calls: [
+            { method: 'POST', path: '/api/auth/kakao' },
+          ],
+        },
+      },
+    })
+
+    const search = await runPlattyCommand([
+      'docs',
+      'search',
+      '--project',
+      'Commerce',
+      '/api/auth/kakao',
+      '--json',
+    ], { cwd: rootDir, db })
+    const show = await runPlattyCommand([
+      'docs',
+      'show',
+      '--project',
+      'Commerce',
+      '--document',
+      'doc:screen:login',
+      '--json',
+    ], { cwd: rootDir, db })
+    const related = await runPlattyCommand([
+      'docs',
+      'related',
+      '--project',
+      'Commerce',
+      '--document',
+      'doc:screen:login',
+      '--json',
+    ], { cwd: rootDir, db })
+
+    expect(search.exitCode).toBe(0)
+    expect(search.result.data?.results).toEqual([
+      expect.objectContaining({
+        kind: 'document',
+        documentId: 'doc:screen:login',
+        type: 'screen_spec',
+        title: 'Login Screen',
+      }),
+    ])
+    expect(show.exitCode).toBe(0)
+    expect(show.result.data).toMatchObject({
+      document: {
+        id: 'doc:screen:login',
+        type: 'screen_spec',
+        content: {
+          relations: {
+            api_calls: [
+              { method: 'POST', path: '/api/auth/kakao' },
+            ],
+          },
+        },
+      },
+    })
+    expect(related.exitCode).toBe(0)
+    expect(related.result.data).toMatchObject({
+      outgoingDocumentLinks: [],
+      incomingDocumentLinks: [],
+      itemDocumentLinks: [],
+    })
+  })
 })
 
 function seedDocument(
@@ -437,6 +515,7 @@ function seedDocument(
     sourceCommit?: string
     staticSnapshotId?: string
     documentSourceHash?: string
+    content?: Record<string, unknown>
   },
 ) {
   db.insert(documents).values({
@@ -449,7 +528,7 @@ function seedDocument(
     status: 'active',
     validity: input.validity ?? 'fresh',
     summary: input.summary,
-    content: { title: input.title },
+    content: input.content ?? { title: input.title },
     rawLlmOutput: '',
     contentHash: `hash:${input.id}`,
     staticSnapshotId: input.staticSnapshotId,
