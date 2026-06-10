@@ -4,6 +4,7 @@ import { createTestPlattyDb } from '@/db/testing.js'
 import { codeBundles, entryPoints } from '@/db/schema/build_route.js'
 import { codeNodes } from '@/db/schema/code_graph.js'
 import { projects, repositories } from '@/db/schema/core.js'
+import { analysisReviewDecisions } from '@/db/schema/project_analysis_v2.js'
 import {
   sharedCodeSegmentEntryPoints,
   sharedCodeSegmentNodes,
@@ -22,6 +23,10 @@ describe('shared code segment schema', () => {
     expect(getTableName(sharedCodeSegments)).toBe('shared_code_segments')
     expect(getTableName(sharedCodeSegmentEntryPoints)).toBe('shared_code_segment_entrypoints')
     expect(getTableName(sharedCodeSegmentNodes)).toBe('shared_code_segment_nodes')
+  })
+
+  it('marks detector version v2 for subtree-aware coverage', () => {
+    expect(SHARED_CODE_SEGMENTS_DETECTOR_VERSION).toBe('shared_code_segments_v2')
   })
 })
 
@@ -80,6 +85,180 @@ describe('detectSharedCodeSegments', () => {
     })
 
     expect(result).toEqual([])
+  })
+})
+
+describe('detectSharedCodeSegments subtree coverage', () => {
+  const ROUTES = ['ep:a', 'ep:b', 'ep:c'] as const
+  const routeEntryPoints = ROUTES.map((id) => ({
+    id,
+    targetKey: `api:${id}`,
+    documentType: 'api_spec' as const,
+  }))
+  const handlerRows = ROUTES.flatMap((entryPointId, index) => [
+    { entryPointId, nodeId: `handler:${index}`, depth: 0 },
+  ])
+  const handlerNodes = ROUTES.map((_, index) =>
+    node(`handler:${index}`, `Handler${index}`, `src/handler-${index}.ts`, 'function'))
+
+  it('covers an entire namespace subtree without the per-segment cap and absorbs member candidates', () => {
+    const members = Array.from({ length: 100 }, (_, i) => node(
+      `node:ns-member-${String(i).padStart(3, '0')}`,
+      `MEMBER_${i}`,
+      'src/constants.ts',
+      'variable',
+      { lineStart: 2 + i * 4, lineEnd: 4 + i * 4, parentNodeId: 'node:ns' },
+    ))
+    const result = detectSharedCodeSegments({
+      entryPoints: [...routeEntryPoints],
+      bundles: [
+        ...handlerRows,
+        ...ROUTES.flatMap((entryPointId) => [
+          { entryPointId, nodeId: 'node:ns', depth: 1 },
+          ...members.map((member) => ({ entryPointId, nodeId: member.id, depth: 2 })),
+        ]),
+      ],
+      nodes: [
+        ...handlerNodes,
+        node('node:ns', 'AppConstants', 'src/constants.ts', 'variable', { lineStart: 1, lineEnd: 500 }),
+        ...members,
+      ],
+    })
+
+    expect(result).toHaveLength(1)
+    expect(result[0]!.rootNodeId).toBe('node:ns')
+    expect(result[0]!.coveredNodeIds).toHaveLength(101)
+    for (const member of members) {
+      expect(result[0]!.coveredNodeIds).toContain(member.id)
+    }
+  })
+
+  it('treats parent-chain descendants as subtree even when line ranges do not overlap', () => {
+    const result = detectSharedCodeSegments({
+      maxCoveredNodesPerSegment: 0,
+      entryPoints: [...routeEntryPoints],
+      bundles: [
+        ...handlerRows,
+        ...ROUTES.flatMap((entryPointId) => [
+          { entryPointId, nodeId: 'node:ns', depth: 1 },
+          { entryPointId, nodeId: 'node:ns-group', depth: 2 },
+          { entryPointId, nodeId: 'node:ns-leaf', depth: 3 },
+        ]),
+      ],
+      nodes: [
+        ...handlerNodes,
+        node('node:ns', 'AppConstants', 'src/constants.ts', 'variable', { lineStart: 1, lineEnd: 10 }),
+        node('node:ns-group', 'Push', 'src/constants.ts', 'variable', {
+          lineStart: 100, lineEnd: 110, parentNodeId: 'node:ns',
+        }),
+        node('node:ns-leaf', 'DEFAULT', 'src/constants.ts', 'variable', {
+          lineStart: 102, lineEnd: 103, parentNodeId: 'node:ns-group',
+        }),
+      ],
+    })
+
+    expect(result).toHaveLength(1)
+    expect(result[0]!.coveredNodeIds).toEqual(['node:ns', 'node:ns-group', 'node:ns-leaf'])
+  })
+
+  it('falls back to same-file line containment when parent links are missing', () => {
+    const result = detectSharedCodeSegments({
+      maxCoveredNodesPerSegment: 0,
+      entryPoints: [...routeEntryPoints],
+      bundles: [
+        ...handlerRows,
+        ...ROUTES.flatMap((entryPointId) => [
+          { entryPointId, nodeId: 'node:ns', depth: 1 },
+          { entryPointId, nodeId: 'node:ns-inline', depth: 2 },
+          { entryPointId, nodeId: 'node:ns-sibling', depth: 2 },
+        ]),
+      ],
+      nodes: [
+        ...handlerNodes,
+        node('node:ns', 'AppConstants', 'src/constants.ts', 'variable', { lineStart: 1, lineEnd: 100 }),
+        node('node:ns-inline', 'INLINE', 'src/constants.ts', 'variable', { lineStart: 10, lineEnd: 20 }),
+        node('node:ns-sibling', 'SIBLING', 'src/constants.ts', 'variable', { lineStart: 200, lineEnd: 210 }),
+      ],
+    })
+
+    expect(result[0]!.rootNodeId).toBe('node:ns')
+    expect(result[0]!.coveredNodeIds).toEqual(['node:ns', 'node:ns-inline'])
+  })
+
+  it('still roots a namespace segment when an earlier co-traveler segment covered the root id', () => {
+    // 실환경 재현: depth-1 공통 인터셉터가 먼저 세그먼트가 되고, 그 동행 커버(top-N)에
+    // namespace 루트가 삼켜져도 루트는 자기 서브트리를 흡수하는 세그먼트를 만들어야 한다.
+    // 실데이터처럼 멤버에 parentNodeId가 없고 라인 범위 포함만 있는 모양으로 구성한다.
+    const members = Array.from({ length: 6 }, (_, i) => node(
+      `node:ns-member-${i}`,
+      `MEMBER_${i}`,
+      'src/constants.ts',
+      'variable',
+      { lineStart: 2 + i * 4, lineEnd: 4 + i * 4 },
+    ))
+    const result = detectSharedCodeSegments({
+      maxCoveredNodesPerSegment: 1,
+      entryPoints: [...routeEntryPoints],
+      bundles: [
+        ...handlerRows,
+        ...ROUTES.flatMap((entryPointId) => [
+          { entryPointId, nodeId: 'node:interceptor', depth: 1 },
+          { entryPointId, nodeId: 'node:ns', depth: 2 },
+          ...members.map((member) => ({ entryPointId, nodeId: member.id, depth: 3 })),
+        ]),
+      ],
+      nodes: [
+        ...handlerNodes,
+        node('node:interceptor', 'ErrorInterceptor', 'src/common/interceptor.ts', 'class'),
+        node('node:ns', 'AppConstants', 'src/constants.ts', 'variable', { lineStart: 1, lineEnd: 100 }),
+        ...members,
+      ],
+    })
+
+    // interceptor 세그먼트(동행 캡 1 → 루트만 삼킴) + 루트 세그먼트. 멤버별 세그먼트는 없어야 한다.
+    const roots = result.map((segment) => segment.rootNodeId)
+    expect(roots).toContain('node:interceptor')
+    expect(roots).toContain('node:ns')
+    expect(result).toHaveLength(2)
+    const nsSegment = result.find((segment) => segment.rootNodeId === 'node:ns')!
+    for (const member of members) {
+      expect(nsSegment.coveredNodeIds).toContain(member.id)
+    }
+  })
+
+  it('keeps the cap for cross-file co-travelers', () => {
+    const coTravelers = Array.from({ length: 7 }, (_, i) => node(
+      `node:ct-${i}`,
+      `helper${i}`,
+      `src/helpers/helper-${i}.ts`,
+      'function',
+    ))
+    const result = detectSharedCodeSegments({
+      maxCoveredNodesPerSegment: 5,
+      entryPoints: [...routeEntryPoints],
+      bundles: [
+        ...handlerRows,
+        ...ROUTES.flatMap((entryPointId) => [
+          { entryPointId, nodeId: 'node:ns', depth: 1 },
+          ...coTravelers.map((helper) => ({ entryPointId, nodeId: helper.id, depth: 2 })),
+        ]),
+      ],
+      nodes: [
+        ...handlerNodes,
+        node('node:ns', 'AppConstants', 'src/constants.ts', 'variable', { lineStart: 1, lineEnd: 100 }),
+        ...coTravelers,
+      ],
+    })
+
+    expect(result[0]!.rootNodeId).toBe('node:ns')
+    expect(result[0]!.coveredNodeIds).toEqual([
+      'node:ns',
+      'node:ct-0',
+      'node:ct-1',
+      'node:ct-2',
+      'node:ct-3',
+      'node:ct-4',
+    ])
   })
 })
 
@@ -253,17 +432,257 @@ describe('shared segment persistence API', () => {
       await client.cleanup()
     }
   })
+
+  it('excludes deprecated entry points from usage counting and coverage intersection', async () => {
+    const client = createTestPlattyDb()
+    try {
+      client.db.insert(projects).values({ id: 'p1', name: 'Project' }).run()
+      client.db.insert(repositories).values({
+        id: 'r1',
+        projectId: 'p1',
+        name: 'Repo',
+        repoPath: '/repo',
+        analysisBranch: 'main',
+        analysisWorktreePath: '/analysis/repo',
+      }).run()
+      for (const row of [
+        { id: 'handler:a', name: 'PageA', filePath: 'src/a.tsx', type: 'function' },
+        { id: 'handler:b', name: 'PageB', filePath: 'src/b.tsx', type: 'function' },
+        { id: 'handler:c', name: 'PageC', filePath: 'src/c.tsx', type: 'function' },
+        { id: 'handler:d', name: 'PageD', filePath: 'src/d.tsx', type: 'function' },
+        { id: 'node:button', name: 'Button', filePath: 'src/ui/Button.tsx', type: 'component' },
+        { id: 'node:button-style', name: 'buttonClassName', filePath: 'src/ui/Button.tsx', type: 'constant' },
+      ]) {
+        client.db.insert(codeNodes).values({
+          ...row,
+          repoId: 'r1',
+          lineStart: 1,
+          lineEnd: 5,
+          signature: `${row.name}()`,
+          parseStatus: 'ok',
+        }).run()
+      }
+      for (const route of [
+        { id: 'ep:a', path: '/a', handlerNodeId: 'handler:a' },
+        { id: 'ep:b', path: '/b', handlerNodeId: 'handler:b' },
+        { id: 'ep:c', path: '/c', handlerNodeId: 'handler:c' },
+        { id: 'ep:d', path: '/d', handlerNodeId: 'handler:d' },
+      ]) {
+        client.db.insert(entryPoints).values({
+          id: route.id,
+          repoId: 'r1',
+          framework: 'react',
+          kind: 'page',
+          httpMethod: null,
+          path: route.path,
+          fullPath: route.path,
+          handlerNodeId: route.handlerNodeId,
+          detectionSource: 'rule:react',
+          confidence: 'high',
+        }).run()
+      }
+      for (const [entryPointId, handlerNodeId] of [
+        ['ep:a', 'handler:a'],
+        ['ep:b', 'handler:b'],
+        ['ep:c', 'handler:c'],
+      ] as const) {
+        client.db.insert(codeBundles).values([
+          { entryPointId, nodeId: handlerNodeId, depth: 0, edgePath: [] },
+          { entryPointId, nodeId: 'node:button', depth: 1, edgePath: [handlerNodeId] },
+          { entryPointId, nodeId: 'node:button-style', depth: 2, edgePath: [handlerNodeId, 'node:button'] },
+        ]).run()
+      }
+      // deprecated 라우트: button은 쓰지만 button-style은 안 씀 → 포함되면 교집합이 깨진다.
+      client.db.insert(codeBundles).values([
+        { entryPointId: 'ep:d', nodeId: 'handler:d', depth: 0, edgePath: [] },
+        { entryPointId: 'ep:d', nodeId: 'node:button', depth: 1, edgePath: ['handler:d'] },
+      ]).run()
+      client.db.insert(analysisReviewDecisions).values({
+        id: 'decision:ep-d',
+        projectId: 'p1',
+        repoId: 'r1',
+        targetType: 'route',
+        targetId: 'ep:d',
+        targetSource: 'entry_point',
+        decision: 'deprecated',
+        reason: 'user_manual',
+      }).run()
+
+      await rebuildSharedCodeSegmentsForProject({ db: client.db, projectId: 'p1' })
+
+      const [segment] = client.db.select().from(sharedCodeSegments).where(eq(sharedCodeSegments.projectId, 'p1')).all()
+      expect(segment).toMatchObject({
+        rootNodeId: 'node:button',
+        usedByEntryPointCount: 3,
+      })
+      expect(segment!.coveredNodeIdsJson).toEqual(['node:button', 'node:button-style'])
+      const linkedEntryPointIds = client.db.select().from(sharedCodeSegmentEntryPoints).all()
+        .map((link) => link.entryPointId)
+        .sort()
+      expect(linkedEntryPointIds).toEqual(['ep:a', 'ep:b', 'ep:c'])
+    } finally {
+      await client.cleanup()
+    }
+  })
+
+  it('persists uncapped subtree coverage beyond the insert chunk size', async () => {
+    const client = createTestPlattyDb()
+    try {
+      client.db.insert(projects).values({ id: 'p1', name: 'Project' }).run()
+      client.db.insert(repositories).values({
+        id: 'r1',
+        projectId: 'p1',
+        name: 'Repo',
+        repoPath: '/repo',
+        analysisBranch: 'main',
+        analysisWorktreePath: '/analysis/repo',
+      }).run()
+      const memberIds = Array.from({ length: 250 }, (_, i) => `node:ns-member-${String(i).padStart(3, '0')}`)
+      for (const row of [
+        { id: 'handler:a', name: 'PageA', filePath: 'src/a.tsx', parentNodeId: null, lineStart: 1, lineEnd: 5 },
+        { id: 'handler:b', name: 'PageB', filePath: 'src/b.tsx', parentNodeId: null, lineStart: 1, lineEnd: 5 },
+        { id: 'handler:c', name: 'PageC', filePath: 'src/c.tsx', parentNodeId: null, lineStart: 1, lineEnd: 5 },
+        { id: 'node:ns', name: 'AppConstants', filePath: 'src/constants.ts', parentNodeId: null, lineStart: 1, lineEnd: 2000 },
+        ...memberIds.map((id, i) => ({
+          id,
+          name: `MEMBER_${i}`,
+          filePath: 'src/constants.ts',
+          parentNodeId: 'node:ns',
+          lineStart: 2 + i * 4,
+          lineEnd: 4 + i * 4,
+        })),
+      ]) {
+        client.db.insert(codeNodes).values({
+          ...row,
+          repoId: 'r1',
+          type: 'variable',
+          signature: `${row.name}`,
+          parseStatus: 'ok',
+        }).run()
+      }
+      for (const route of [
+        { id: 'ep:a', path: '/a', handlerNodeId: 'handler:a' },
+        { id: 'ep:b', path: '/b', handlerNodeId: 'handler:b' },
+        { id: 'ep:c', path: '/c', handlerNodeId: 'handler:c' },
+      ]) {
+        client.db.insert(entryPoints).values({
+          id: route.id,
+          repoId: 'r1',
+          framework: 'express',
+          kind: 'api',
+          httpMethod: 'GET',
+          path: route.path,
+          fullPath: route.path,
+          handlerNodeId: route.handlerNodeId,
+          detectionSource: 'rule:express',
+          confidence: 'high',
+        }).run()
+      }
+      for (const [entryPointId, handlerNodeId] of [
+        ['ep:a', 'handler:a'],
+        ['ep:b', 'handler:b'],
+        ['ep:c', 'handler:c'],
+      ] as const) {
+        client.db.insert(codeBundles).values([
+          { entryPointId, nodeId: handlerNodeId, depth: 0, edgePath: [] },
+          { entryPointId, nodeId: 'node:ns', depth: 1, edgePath: [handlerNodeId] },
+        ]).run()
+        for (const memberId of memberIds) {
+          client.db.insert(codeBundles).values({
+            entryPointId,
+            nodeId: memberId,
+            depth: 2,
+            edgePath: [handlerNodeId, 'node:ns'],
+          }).run()
+        }
+      }
+
+      const result = await rebuildSharedCodeSegmentsForProject({ db: client.db, projectId: 'p1' })
+      expect(result.segment_count).toBe(1)
+
+      const [segment] = client.db.select().from(sharedCodeSegments).where(eq(sharedCodeSegments.projectId, 'p1')).all()
+      expect(segment!.rootNodeId).toBe('node:ns')
+      expect(segment!.coveredNodeIdsJson).toHaveLength(251)
+      expect(client.db.select().from(sharedCodeSegmentNodes).all()).toHaveLength(251)
+    } finally {
+      await client.cleanup()
+    }
+  })
+
+  it('clears segments persisted by older detector versions on rebuild', async () => {
+    const client = createTestPlattyDb()
+    try {
+      client.db.insert(projects).values({ id: 'p1', name: 'Project' }).run()
+      client.db.insert(repositories).values({
+        id: 'r1',
+        projectId: 'p1',
+        name: 'Repo',
+        repoPath: '/repo',
+        analysisBranch: 'main',
+        analysisWorktreePath: '/analysis/repo',
+      }).run()
+      client.db.insert(codeNodes).values({
+        id: 'node:old',
+        repoId: 'r1',
+        name: 'Old',
+        filePath: 'src/old.ts',
+        type: 'function',
+        lineStart: 1,
+        lineEnd: 5,
+        signature: 'Old()',
+        parseStatus: 'ok',
+      }).run()
+      client.db.insert(sharedCodeSegments).values({
+        id: 'shared:stale-v1',
+        projectId: 'p1',
+        repoId: 'r1',
+        rootNodeId: 'node:old',
+        rootSymbol: 'Old',
+        rootFilePath: 'src/old.ts',
+        detectorVersion: 'shared_code_segments_v1',
+        summarySchemaVersion: 'shared_code_summary_v1',
+        segmentHash: 'hash:stale',
+        sourceHash: 'hash:source',
+        usedByEntryPointCount: 3,
+        coveredNodeIdsJson: ['node:old'],
+        deterministicSummaryJson: {
+          title: 'Old',
+          natural_language_summary: 'stale',
+          public_contract: [],
+          business_relevance: [],
+          source_refs: [],
+        },
+        llmSummaryJson: null,
+        summaryStatus: 'deterministic',
+        validity: 'fresh',
+        updatedAt: new Date().toISOString(),
+      }).run()
+
+      await rebuildSharedCodeSegmentsForProject({ db: client.db, projectId: 'p1' })
+
+      expect(client.db.select().from(sharedCodeSegments).all()).toEqual([])
+    } finally {
+      await client.cleanup()
+    }
+  })
 })
 
-function node(id: string, name: string, filePath: string, type: string) {
+function node(
+  id: string,
+  name: string,
+  filePath: string,
+  type: string,
+  extra: { lineStart?: number; lineEnd?: number; parentNodeId?: string | null } = {},
+) {
   return {
     id,
     name,
     filePath,
     type,
-    lineStart: 1,
-    lineEnd: 5,
+    lineStart: extra.lineStart ?? 1,
+    lineEnd: extra.lineEnd ?? 5,
     signature: `${name}()`,
+    ...(extra.parentNodeId !== undefined ? { parentNodeId: extra.parentNodeId } : {}),
   }
 }
 
