@@ -1,16 +1,14 @@
-import { getPlattyEngineInfo } from '@platty/core'
+import { NestFactory } from '@nestjs/core';
 
-declare const process: {
-  readonly argv: readonly string[]
-  readonly stdout: {
-    write(output: string): void
-  }
+import { AppModule } from './app.module';
+
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
+
+  const port = process.env.PORT || 3000;
+
+  await app.listen(port);
 }
 
-export function describeBackend(): string {
-  return `platty backend ready: ${getPlattyEngineInfo().name}`
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  process.stdout.write(`${describeBackend()}\n`)
-}
+void bootstrap();

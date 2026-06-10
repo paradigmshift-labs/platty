@@ -99,14 +99,19 @@ describe('Platty monorepo workspace contract', () => {
       const manifest = readJson(manifestPath)
       assert.equal(manifest.name, expectedName)
       assert.equal(manifest.private, expectedPrivate)
-      assert.equal(manifest.type, 'module')
+      const expectedType = manifestPath === 'apps/backend/package.json' ? 'commonjs' : 'module'
+      assert.equal(manifest.type, expectedType)
       const expectedBuildScript = manifestPath === 'packages/core/package.json'
         ? 'tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs dist'
-        : 'tsc -b'
+        : manifestPath === 'apps/backend/package.json'
+          ? 'nest build'
+          : 'tsc -b'
       assert.equal(manifest.scripts.build, expectedBuildScript)
       const expectedTestScript = manifestPath === 'packages/core/package.json' || manifestPath === 'packages/cli/package.json'
         ? 'vitest run'
-        : 'node --test'
+        : manifestPath === 'apps/backend/package.json'
+          ? 'jest'
+          : 'node --test'
       assert.equal(manifest.scripts.test, expectedTestScript)
     }
   })

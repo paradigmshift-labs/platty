@@ -2,16 +2,55 @@
   "name": "@platty/backend",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
+  "type": "commonjs",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "scripts": {
-    "build": "tsc -b",
-    "test": "node --test",
-    "start": "node dist/main.js"
+    "build": "nest build",
+    "test": "jest",
+    "test:integration": "jest --runInBand --testRegex \".*\\\\.integration\\\\.ts$\"",
+    "test:e2e": "jest --runInBand --testRegex \".*\\\\.e2e-spec\\\\.ts$\"",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
-    "@platty/core": "0.1.0"
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@platty/core": "0.1.0",
+    "@prisma/client": "^6.19.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "@types/supertest": "^7.2.0",
+    "jest": "^30.0.0",
+    "prisma": "^6.19.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.2.5"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "passWithNoTests": true,
+    "testEnvironment": "node"
   },
   "engines": {
     "node": ">=20"
