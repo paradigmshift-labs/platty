@@ -83,16 +83,21 @@ function assertRootManifest() {
 function assertWorkspaceManifest(workspace) {
   const manifest = readJson(workspace.manifestPath)
   assert.equal(manifest.name, workspace.name, `${workspace.manifestPath} has an unexpected package name`)
-  assert.equal(manifest.type, 'module', `${workspace.manifestPath} must use ESM`)
+  const expectedType = workspace.manifestPath === 'apps/backend/package.json' ? 'commonjs' : 'module'
+  assert.equal(manifest.type, expectedType, `${workspace.manifestPath} has an unexpected module type`)
   const expectedBuildScript = workspace.manifestPath === 'packages/core/package.json'
     ? 'tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs dist'
     : workspace.manifestPath === 'packages/cli/package.json'
       ? 'tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs ../core/dist'
+    : workspace.manifestPath === 'apps/backend/package.json'
+      ? 'nest build'
       : 'tsc -b'
   assert.equal(manifest.scripts?.build, expectedBuildScript, `${workspace.manifestPath} must expose a build script`)
   const expectedTestScript = workspace.manifestPath === 'packages/core/package.json' || workspace.manifestPath === 'packages/cli/package.json'
     ? 'vitest run'
-    : 'node --test'
+    : workspace.manifestPath === 'apps/backend/package.json'
+      ? 'jest'
+      : 'node --test'
   assert.equal(manifest.scripts?.test, expectedTestScript, `${workspace.manifestPath} must expose a test script`)
 
   const dependencySections = [

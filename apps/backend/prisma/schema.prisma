@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ANONYMOUS
+  REGISTERED
+  MERGED
+  DELETED
+}
+
+enum ClientKind {
+  CLI
+  DASHBOARD
+  DESKTOP
+  FLUTTER
+  API
+  UNKNOWN
+}
+
+enum IdentityAliasKind {
+  ANONYMOUS_USER_ID
+  CLIENT_INSTALLATION_ID
+  ANALYTICS_SESSION_ID
+  AUTH_PROVIDER_SUBJECT
+  EMAIL_HASH
+}
+
+enum ConsentType {
+  ANALYTICS
+  PRODUCT_UPDATES
+  ERROR_REPORTING
+}
+
+model User {
+  id               String              @id @default(cuid())
+  status           UserStatus          @default(ANONYMOUS)
+  registeredAt     DateTime?
+  mergedIntoUserId String?
+  mergedInto       User?               @relation("UserMerge", fields: [mergedIntoUserId], references: [id])
+  mergedUsers      User[]              @relation("UserMerge")
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  clientIdentities ClientIdentity[]
+  anonymousSessions AnonymousSession[]
+  aliases          UserIdentityAlias[] @relation("UserAliases")
+  linkedAliases    UserIdentityAlias[] @relation("LinkedFromUser")
+  settings         UserSetting[]
+  consentRecords   ConsentRecord[]
+  analyticsEvents  AnalyticsEvent[]
+
+  @@index([status])
+  @@index([mergedIntoUserId])
+}
+
+model ClientIdentity {
+  id             String             @id @default(cuid())
+  userId         String?
+  user           User?              @relation(fields: [userId], references: [id])
+  clientKind     ClientKind
+  installationId String             @unique
+  displayName    String?
+  appVersion     String?
+  lastSeenAt     DateTime?
+  metadata       Json?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  anonymousSessions AnonymousSession[]
+  consentRecords    ConsentRecord[]
+  analyticsEvents   AnalyticsEvent[]
+  updatedSettings   UserSetting[]      @relation("UserSettingUpdatedByClientIdentity")
+
+  @@index([userId])
+  @@index([clientKind])
+}
+
+model AnonymousSession {
+  id                  String            @id @default(cuid())
+  userId              String
+  user                User              @relation(fields: [userId], references: [id])
+  clientIdentityId    String?
+  clientIdentity      ClientIdentity?   @relation(fields: [clientIdentityId], references: [id])
+  sessionTokenHash    String            @unique
+  refreshTokenHash    String?           @unique
+  analyticsSessionId  String?           @unique
+  startedAt           DateTime          @default(now())
+  lastSeenAt          DateTime          @default(now())
+  expiresAt           DateTime
+  revokedAt           DateTime?
+
+  analyticsEvents     AnalyticsEvent[]
+
+  @@index([userId])
+  @@index([clientIdentityId])
+  @@index([expiresAt])
+}
+
+model UserIdentityAlias {
+  id               String            @id @default(cuid())
+  userId           String
+  user             User              @relation("UserAliases", fields: [userId], references: [id])
+  aliasKind        IdentityAliasKind
+  aliasValue       String
+  linkedFromUserId String?
+  linkedFromUser   User?             @relation("LinkedFromUser", fields: [linkedFromUserId], references: [id])
+  firstSeenAt      DateTime          @default(now())
+  lastSeenAt       DateTime          @updatedAt
+  metadata         Json?
+
+  @@unique([aliasKind, aliasValue])
+  @@index([userId])
+  @@index([linkedFromUserId])
+}
+
+model UserSetting {
+  id                        String   @id @default(cuid())
+  userId                    String
+  user                      User     @relation(fields: [userId], references: [id])
+  namespace                 String   @default("default")
+  key                       String
+  value                     Json
+  updatedByClientIdentityId String?
+  updatedByClientIdentity   ClientIdentity? @relation("UserSettingUpdatedByClientIdentity", fields: [updatedByClientIdentityId], references: [id])
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@unique([userId, namespace, key])
+  @@index([namespace])
+  @@index([updatedByClientIdentityId])
+}
+
+model ConsentRecord {
+  id               String          @id @default(cuid())
+  userId           String?
+  user             User?           @relation(fields: [userId], references: [id])
+  clientIdentityId String?
+  clientIdentity   ClientIdentity? @relation(fields: [clientIdentityId], references: [id])
+  consentType      ConsentType
+  granted          Boolean
+  policyVersion    String
+  source           String?
+  recordedAt       DateTime        @default(now())
+  metadata         Json?
+
+  @@index([userId])
+  @@index([clientIdentityId])
+  @@index([consentType])
+  @@index([recordedAt])
+  @@index([userId, consentType, recordedAt])
+  @@index([clientIdentityId, consentType, recordedAt])
+}
+
+model AnalyticsEvent {
+  id                 String            @id @default(cuid())
+  eventId            String            @unique
+  eventName          String
+  occurredAt         DateTime
+  receivedAt         DateTime          @default(now())
+  userId             String?
+  user               User?             @relation(fields: [userId], references: [id])
+  clientIdentityId   String?
+  clientIdentity     ClientIdentity?   @relation(fields: [clientIdentityId], references: [id])
+  anonymousSessionId String?
+  anonymousSession   AnonymousSession? @relation(fields: [anonymousSessionId], references: [id])
+  analyticsSessionId String?
+  properties         Json?
+  context            Json?
+
+  @@index([eventName])
+  @@index([occurredAt])
+  @@index([receivedAt])
+  @@index([userId])
+  @@index([clientIdentityId])
+  @@index([anonymousSessionId])
+  @@index([analyticsSessionId])
+}
