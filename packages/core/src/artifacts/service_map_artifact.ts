@@ -1,6 +1,9 @@
-import { eq } from 'drizzle-orm'
+import { createHash } from 'node:crypto'
+import { eq, inArray } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import { repositories } from '@/db/schema/core.js'
+import { entryPoints } from '@/db/schema/build_route.js'
+import { codeNodes } from '@/db/schema/code_graph.js'
 import { serviceMapEdges, serviceMapNodes, type ServiceMapEdge, type ServiceMapNode } from '@/db/schema/build_service_map.js'
 
 export interface ServiceMapGraph {
@@ -65,6 +68,19 @@ export interface BuildServiceMapArtifactInput {
   repoLabels?: Record<string, string>
 }
 
+type ArtifactEntryPointRow = {
+  id: string
+  repoId: string
+  kind: string
+  httpMethod: string | null
+  path: string | null
+  fullPath: string | null
+  handlerNodeId: string
+  metadata: Record<string, unknown> | null
+  filePath: string | null
+  name: string | null
+}
+
 export function buildServiceMapArtifactFromDb(input: {
   db: DB
   projectId: string
@@ -76,6 +92,34 @@ export function buildServiceMapArtifactFromDb(input: {
     nodes: input.db.select().from(serviceMapNodes).where(eq(serviceMapNodes.projectId, input.projectId)).all(),
     edges: input.db.select().from(serviceMapEdges).where(eq(serviceMapEdges.projectId, input.projectId)).all(),
   }
+  const generatedAt = input.generatedAt
+  const repoIds = repoRows.map((repo) => repo.id)
+  if (repoIds.length > 0) {
+    const routeNodes = input.db.select({
+      id: entryPoints.id,
+      repoId: entryPoints.repoId,
+      kind: entryPoints.kind,
+      httpMethod: entryPoints.httpMethod,
+      path: entryPoints.path,
+      fullPath: entryPoints.fullPath,
+      handlerNodeId: entryPoints.handlerNodeId,
+      metadata: entryPoints.metadata,
+      filePath: codeNodes.filePath,
+      name: codeNodes.name,
+    })
+      .from(entryPoints)
+      .leftJoin(codeNodes, eq(entryPoints.handlerNodeId, codeNodes.id))
+      .where(inArray(entryPoints.repoId, repoIds))
+      .all()
+    graph.nodes = mergeServiceMapNodes(
+      graph.nodes,
+      routeNodes.map((entryPoint) => entryPointToServiceMapNode(input.projectId, generatedAt, entryPoint)),
+    )
+    graph.edges = mergeServiceMapEdges(
+      graph.edges,
+      buildSemanticRouteEdges(input.projectId, generatedAt, routeNodes),
+    )
+  }
   const repoLabels = Object.fromEntries(repoRows.map((repo) => [repo.id, displayRepositoryName(repo)]))
   return buildServiceMapArtifact({
     projectId: input.projectId,
@@ -83,6 +127,147 @@ export function buildServiceMapArtifactFromDb(input: {
     graph,
     repoLabels,
   })
+}
+
+function mergeServiceMapNodes(nodes: ServiceMapNode[], routeNodes: ServiceMapNode[]): ServiceMapNode[] {
+  const merged = new Map(nodes.map((node) => [node.id, node]))
+  for (const node of routeNodes) {
+    if (!merged.has(node.id)) merged.set(node.id, node)
+  }
+  return [...merged.values()]
+}
+
+function entryPointToServiceMapNode(
+  projectId: string,
+  generatedAt: string,
+  entryPoint: ArtifactEntryPointRow,
+): ServiceMapNode {
+  const type = entryPointKindToNodeType(entryPoint.kind)
+  const path = entryPoint.fullPath ?? entryPoint.path ?? entryPoint.id
+  const label = type === 'api' && entryPoint.httpMethod
+    ? `${entryPoint.httpMethod} ${path}`
+    : (entryPoint.name ?? path)
+  return {
+    id: stableEntryPointServiceMapNodeId(projectId, type, entryPoint.id),
+    projectId,
+    repoId: entryPoint.repoId,
+    type,
+    nodeId: entryPoint.id,
+    sourceKind: 'entry_point',
+    sourceId: entryPoint.id,
+    canonicalKey: `${type}:${path}`,
+    label,
+    createdAt: generatedAt,
+    updatedAt: generatedAt,
+  }
+}
+
+function mergeServiceMapEdges(edges: ServiceMapEdge[], routeEdges: ServiceMapEdge[]): ServiceMapEdge[] {
+  const merged = new Map(edges.map((edge) => [serviceMapEdgeLogicalKey(edge), edge]))
+  for (const edge of routeEdges) {
+    const key = serviceMapEdgeLogicalKey(edge)
+    if (!merged.has(key)) merged.set(key, edge)
+  }
+  return [...merged.values()]
+}
+
+function buildSemanticRouteEdges(
+  projectId: string,
+  generatedAt: string,
+  entryPointRows: ArtifactEntryPointRow[],
+): ServiceMapEdge[] {
+  const byRepoAndName = new Map<string, typeof entryPointRows>()
+  for (const row of entryPointRows) {
+    if (!row.name) continue
+    const key = `${row.repoId}\0${row.name}`
+    const rows = byRepoAndName.get(key) ?? []
+    rows.push(row)
+    byRepoAndName.set(key, rows)
+  }
+
+  const edges: ServiceMapEdge[] = []
+  for (const target of entryPointRows) {
+    const metadata = target.metadata ?? {}
+    if (metadata.semanticEntry !== true) continue
+    const parentPage = typeof metadata.parentPage === 'string' ? metadata.parentPage.trim() : ''
+    if (!parentPage) continue
+    const source = selectParentEntryPoint(byRepoAndName.get(`${target.repoId}\0${parentPage}`) ?? [])
+    if (!source || source.id === target.id) continue
+
+    const sourceType = entryPointKindToNodeType(source.kind)
+    const targetType = entryPointKindToNodeType(target.kind)
+    const sourceNodeId = stableEntryPointServiceMapNodeId(projectId, sourceType, source.id)
+    const targetNodeId = stableEntryPointServiceMapNodeId(projectId, targetType, target.id)
+    const canonicalTarget = target.fullPath ?? target.path ?? target.id
+    const sourceLabel = source.name ?? source.fullPath ?? source.path ?? source.id
+    const targetLabel = target.name ?? target.fullPath ?? target.path ?? target.id
+    edges.push({
+      id: stableSemanticRouteEdgeId(projectId, source.id, target.id, canonicalTarget),
+      projectId,
+      repoId: source.repoId,
+      sourceRepoId: source.repoId,
+      targetRepoId: target.repoId,
+      runId: 'artifact:semantic-routes',
+      sourceNodeId,
+      sourceType,
+      sourceId: source.id,
+      sourceLabel,
+      targetNodeId,
+      targetType,
+      targetId: target.id,
+      targetLabel,
+      kind: 'navigates',
+      canonicalTarget,
+      confidence: 'high',
+      source: 'deterministic',
+      evidence: {
+        warnings: [`semantic_route:${String(metadata.navigationKind ?? 'internal')}`],
+      },
+      unresolvedReason: null,
+      createdAt: generatedAt,
+    })
+  }
+  return edges
+}
+
+function selectParentEntryPoint(rows: ArtifactEntryPointRow[]): ArtifactEntryPointRow | null {
+  if (rows.length === 0) return null
+  const external = rows.filter((row) => !(row.fullPath ?? row.path ?? '').startsWith('internal://'))
+  return (external[0] ?? rows[0]) ?? null
+}
+
+function serviceMapEdgeLogicalKey(edge: ServiceMapEdge): string {
+  return [
+    edge.repoId,
+    edge.sourceType,
+    edge.sourceId,
+    edge.targetType,
+    edge.targetId,
+    edge.kind,
+    edge.canonicalTarget,
+  ].join('\0')
+}
+
+function stableSemanticRouteEdgeId(
+  projectId: string,
+  sourceEntryPointId: string,
+  targetEntryPointId: string,
+  canonicalTarget: string,
+): string {
+  const seed = [projectId, 'semantic-route', sourceEntryPointId, targetEntryPointId, canonicalTarget].join(':')
+  return createHash('sha256').update(seed).digest('hex').slice(0, 16)
+}
+
+function stableEntryPointServiceMapNodeId(projectId: string, type: string, entryPointId: string): string {
+  const seed = [projectId, type, 'entry_point', entryPointId].join(':')
+  return createHash('sha256').update(seed).digest('hex').slice(0, 16)
+}
+
+function entryPointKindToNodeType(kind: string): ServiceMapNode['type'] {
+  if (kind === 'api') return 'api'
+  if (kind === 'job') return 'job'
+  if (kind === 'event') return 'event'
+  return 'screen'
 }
 
 export function buildServiceMapArtifact(input: BuildServiceMapArtifactInput): ServiceMapArtifact {
@@ -325,6 +510,7 @@ function edgeLabel(edge: ServiceMapGraph['edges'][number], nodeById: Map<string,
 }
 
 function looksLikeOpaqueId(value: string) {
+  if (/^[A-Z][A-Za-z0-9]+$/.test(value) && /[a-z]/.test(value)) return false
   return /^[A-Za-z0-9_-]{16,}$/.test(value)
 }
 

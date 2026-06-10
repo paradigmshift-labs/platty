@@ -51,8 +51,8 @@ describe('service-map CLI', () => {
         },
         artifact: {
           summary: {
-            nodeCount: 2,
-            edgeCount: 1,
+            nodeCount: 4,
+            edgeCount: 2,
           },
           businessSummary: {
             domainCount: 1,
@@ -84,8 +84,14 @@ describe('service-map CLI', () => {
     expect(html).toContain('Document Viewer (1)')
     expect(html).toContain('id="docViewerOverlay"')
     expect(html).toContain('Orders')
+    expect(html).toContain('CatalogPage')
+    expect(html).toContain('CatalogTab')
     const json = JSON.parse(readFileSync(join(outDir, 'service-map.json'), 'utf8')) as Record<string, unknown>
     expect(json).toMatchObject({
+      summary: {
+        nodeCount: 4,
+        edgeCount: 2,
+      },
       businessSummary: {
         domainCount: 1,
         epicCount: 1,
@@ -146,6 +152,50 @@ function seedServiceMapAndBusinessDocs(db: DB, projectId: string) {
     source: 'deterministic',
     evidence: {},
   }).run()
+  db.insert(schema.codeNodes).values([
+    {
+      id: 'repo-api:src/catalog.tsx:CatalogPage',
+      repoId: 'repo-api',
+      type: 'function',
+      filePath: 'src/catalog.tsx',
+      name: 'CatalogPage',
+    },
+    {
+      id: 'repo-api:src/catalog-tab.tsx:CatalogTab',
+      repoId: 'repo-api',
+      type: 'function',
+      filePath: 'src/catalog-tab.tsx',
+      name: 'CatalogTab',
+    },
+  ]).run()
+  db.insert(schema.entryPoints).values([
+    {
+      id: 'repo-api:nextjs:page::/catalog:repo-api:src/catalog.tsx:CatalogPage',
+      repoId: 'repo-api',
+      framework: 'nextjs',
+      kind: 'page',
+      path: '/catalog',
+      fullPath: '/catalog',
+      handlerNodeId: 'repo-api:src/catalog.tsx:CatalogPage',
+      detectionSource: 'test',
+      confidence: 'high',
+    },
+    {
+      id: 'repo-api:react:page::internal://catalog/tab:repo-api:src/catalog-tab.tsx:CatalogTab',
+      repoId: 'repo-api',
+      framework: 'react',
+      kind: 'page',
+      fullPath: 'internal://catalog/tab',
+      handlerNodeId: 'repo-api:src/catalog-tab.tsx:CatalogTab',
+      metadata: {
+        semanticEntry: true,
+        parentPage: 'CatalogPage',
+        navigationKind: 'tab_bar_view',
+      },
+      detectionSource: 'test',
+      confidence: 'high',
+    },
+  ]).run()
   db.insert(schema.epicDomains).values({
     id: 'domain-commerce',
     projectId,
