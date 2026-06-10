@@ -63,10 +63,20 @@ function positional(argv: string[]) {
   for (let index = 0; index < argv.length; index += 1) {
     const part = argv[index]
     if (part === '--json') continue
-    if (part === '--project' || part === '--out' || part === '--format') {
+    if (
+      part === '--project' ||
+      part === '--out' ||
+      part === '--format' ||
+      part === '--type' ||
+      part === '--track' ||
+      part === '--scope' ||
+      part === '--validity' ||
+      part === '--limit'
+    ) {
       index += 1
       continue
     }
+    if (part === '--compact') continue
     values.push(part)
   }
   return values
@@ -308,8 +318,44 @@ function documentView(doc: DocumentRow, itemCount: number) {
     sourceRunId: doc.sourceRunId,
     sourceCommit: doc.sourceCommit,
     updatedAt: doc.updatedAt,
+    freshness: documentFreshness(doc),
     itemCount,
   }
+}
+
+function compactDocumentView(doc: DocumentRow, itemCount: number) {
+  return {
+    id: doc.id,
+    type: doc.type,
+    track: doc.track,
+    scope: doc.scope,
+    scopeId: doc.scopeId,
+    status: doc.status,
+    title: contentTitle(doc.content),
+    summary: doc.summary,
+    itemCount,
+    freshness: documentFreshness(doc),
+  }
+}
+
+function filteredDocuments(docs: DocumentRow[], argv: string[]) {
+  const type = optionValue(argv, '--type')
+  const track = optionValue(argv, '--track')
+  const scope = optionValue(argv, '--scope')
+  const validity = optionValue(argv, '--validity')
+  const limit = optionValue(argv, '--limit')
+  const parsedLimit = limit ? Number(limit) : undefined
+
+  const filtered = docs.filter((doc) => {
+    if (type && doc.type !== type) return false
+    if (track && doc.track !== track) return false
+    if (scope && doc.scope !== scope) return false
+    if (validity && doc.validity !== validity) return false
+    return true
+  })
+
+  if (Number.isInteger(parsedLimit) && parsedLimit! >= 0) return filtered.slice(0, parsedLimit)
+  return filtered
 }
 
 function itemView(item: DocumentItemRow) {
@@ -339,6 +385,18 @@ function contentTitle(content: Record<string, unknown> | null) {
 
 function contentPath(content: Record<string, unknown> | null) {
   return stringField(content?.path)
+}
+
+function documentFreshness(doc: DocumentRow) {
+  return {
+    validity: doc.validity,
+    isStale: doc.validity !== 'fresh',
+    sourceCommit: doc.sourceCommit ?? null,
+    sourceRunId: doc.sourceRunId ?? null,
+    staticSnapshotId: doc.staticSnapshotId ?? null,
+    documentSourceHash: doc.documentSourceHash ?? null,
+    updatedAt: doc.updatedAt,
+  }
 }
 
 function searchableText(values: unknown[]) {
@@ -396,6 +454,7 @@ function searchDocs(db: DB, project: ProjectRow, query: string) {
         type: doc.type,
         path: contentPath(doc.content),
         summary: doc.summary,
+        freshness: documentFreshness(doc),
         evidenceRefs: [{ label: 'document', path: doc.id }],
       })),
     ...items
@@ -410,6 +469,7 @@ function searchDocs(db: DB, project: ProjectRow, query: string) {
           type: item.itemType,
           path: contentPath(item.content) ?? contentPath(doc?.content ?? null),
           summary: item.summary,
+          freshness: doc ? documentFreshness(doc) : null,
           evidenceRefs: [
             { label: 'document', path: item.documentId },
             { label: 'document-item', path: item.id },
@@ -482,6 +542,19 @@ export async function runDocsCommand(argv: string[], options: DocsCommandOptions
 
   try {
     const [subcommand, ...rest] = positional(argv)
+    if (!subcommand) {
+      const result = failure('DOCS_COMMAND_REQUIRED', 'Docs command requires a subcommand.', {
+        nextAction: {
+          type: 'choose_command',
+          commands: [
+            ['platty', 'docs', 'list', '--json'],
+            ['platty', 'docs', 'search', '<query>', '--json'],
+            ['platty', 'docs', 'targets', 'list', '--json'],
+          ],
+        },
+      })
+      return { exitCode: 2, result, stdout: '', stderr: '' }
+    }
     const runtime = new BuildDocsCliRuntime({ db })
 
     if (subcommand === 'shared-segments') {
@@ -744,9 +817,13 @@ export async function runDocsCommand(argv: string[], options: DocsCommandOptions
       for (const item of items) {
         itemCounts.set(item.documentId, (itemCounts.get(item.documentId) ?? 0) + 1)
       }
+      const docs = filteredDocuments(activeDocuments(db, project.id), argv)
+      const compact = hasFlag(argv, '--compact')
       return ok({
         project: projectPointer(project),
-        documents: activeDocuments(db, project.id).map((doc) => documentView(doc, itemCounts.get(doc.id) ?? 0)),
+        documents: docs.map((doc) => compact
+          ? compactDocumentView(doc, itemCounts.get(doc.id) ?? 0)
+          : documentView(doc, itemCounts.get(doc.id) ?? 0)),
       })
     }
 
