@@ -14,6 +14,7 @@ import { projects, repositories } from '../../../src/db/schema/core.js'
 import {
   materializeBusinessDocumentGraph,
   materializeDocumentItemModelLinks,
+  parseEpicIdFromScopeId,
 } from '../../../src/pipeline_modules/build_business_docs_cli/sot/materialize_business_graph.js'
 
 const projectId = 'project:platty'
@@ -235,6 +236,65 @@ describe('build_business_docs_cli sot/materialize_business_graph', () => {
       }),
     ])
   })
+
+  it('does not link stale UCS documents', () => {
+    const db = seeded()
+    seedUseCaseListItem(db)
+    seedUseCaseSpecDocument(db, { validity: 'stale' })
+
+    const result = materializeBusinessDocumentGraph(db, { projectId, epicId: 'epic:orders' })
+
+    const links = db.select().from(documentItemDocumentLinks)
+      .where(eq(documentItemDocumentLinks.fromItemId, 'item:ucl:create-order'))
+      .all()
+    expect(result.createdLinks).toBe(0)
+    expect(links).toHaveLength(0)
+  })
+
+  it('does not match via title containment when stableKey does not match', () => {
+    const db = seeded()
+    seedUseCaseListItem(db, { stableKey: 'uc:cancel-order', useCaseId: 'uc:cancel-order', title: 'Cancel order' })
+    seedUseCaseSpecDocument(db)
+
+    const result = materializeBusinessDocumentGraph(db, { projectId, epicId: 'epic:orders' })
+
+    expect(result.createdLinks).toBe(0)
+  })
+
+  it('preserves existing non-materializer item document links', () => {
+    const db = seeded()
+    seedUseCaseListItem(db)
+    seedUseCaseSpecDocument(db)
+    seedApiSourceDocument(db)
+    db.insert(documentItemDocumentLinks).values({
+      fromItemId: 'item:ucl:create-order',
+      toDocumentId: 'doc:api:store-curation',
+      linkType: 'derives_from',
+      role: 'supporting',
+      createdBy: 'system',
+    }).run()
+
+    materializeBusinessDocumentGraph(db, { projectId, epicId: 'epic:orders' })
+
+    const links = db.select().from(documentItemDocumentLinks)
+      .where(eq(documentItemDocumentLinks.fromItemId, 'item:ucl:create-order'))
+      .all()
+    expect(links).toHaveLength(2)
+    expect(links.map((l) => l.linkType).sort()).toEqual(['derives_from', 'expands_use_case'])
+  })
+
+  describe('parseEpicIdFromScopeId', () => {
+    it('extracts epicId from UCS scopeId', () => {
+      expect(parseEpicIdFromScopeId('epic:1bp3xui3ji7-BWv1cEcFh:use_case:ucl:cluster:store')).toBe('1bp3xui3ji7-BWv1cEcFh')
+    })
+    it('extracts epic:xxx style epicId', () => {
+      expect(parseEpicIdFromScopeId('epic:epic:orders:use_case:uc:create-order')).toBe('epic:orders')
+    })
+    it('returns null for non-UCS scopeId', () => {
+      expect(parseEpicIdFromScopeId('epic:orders')).toBeNull()
+      expect(parseEpicIdFromScopeId(null)).toBeNull()
+    })
+  })
 })
 
 function seeded(): TestDb {
@@ -360,7 +420,13 @@ function seedApiSourceDocument(db: TestDb): void {
   }).run()
 }
 
-function seedUseCaseListItem(db: TestDb): void {
+function seedUseCaseListItem(
+  db: TestDb,
+  item: { stableKey?: string; useCaseId?: string; title?: string } = {},
+): void {
+  const stableKey = item.stableKey ?? 'uc:create-order'
+  const useCaseId = item.useCaseId ?? 'uc:create-order'
+  const title = item.title ?? 'Create order'
   db.insert(documents).values({
     id: 'doc:ucl:orders',
     projectId,
@@ -381,15 +447,12 @@ function seedUseCaseListItem(db: TestDb): void {
     documentId: 'doc:ucl:orders',
     projectId,
     itemType: 'use_case',
-    stableKey: 'uc:create-order',
+    stableKey,
     ordinal: 1,
-    title: 'Create order',
-    summary: 'Create an order.',
-    content: {
-      use_case_id: 'uc:create-order',
-      title: 'Create order',
-    },
-    contentHash: 'hash:uc:create-order',
+    title,
+    summary: `${title}.`,
+    content: { use_case_id: useCaseId, title },
+    contentHash: `hash:${stableKey}`,
     status: 'active',
     createdBy: 'llm',
     updatedBy: 'llm',
@@ -397,7 +460,10 @@ function seedUseCaseListItem(db: TestDb): void {
   }).run()
 }
 
-function seedUseCaseSpecDocument(db: TestDb): void {
+function seedUseCaseSpecDocument(
+  db: TestDb,
+  opts: { validity?: 'fresh' | 'stale' | 'orphaned' } = {},
+): void {
   db.insert(documents).values({
     id: 'doc:ucs:create-order',
     projectId,
@@ -406,7 +472,7 @@ function seedUseCaseSpecDocument(db: TestDb): void {
     scope: 'use_case',
     scopeId: 'epic:epic:orders:use_case:uc:create-order',
     status: 'active',
-    validity: 'fresh',
+    validity: opts.validity ?? 'fresh',
     summary: 'Create order details',
     content: {
       use_case_id: 'uc:create-order',

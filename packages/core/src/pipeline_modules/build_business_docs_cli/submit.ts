@@ -42,7 +42,11 @@ import {
   replaceDocumentItemSatellites,
   replaceDocumentLinks,
 } from './sot/persist_graph.js'
-import { materializeDocumentItemModelLinks } from './sot/materialize_business_graph.js'
+import {
+  materializeBusinessDocumentGraph,
+  materializeDocumentItemModelLinks,
+  parseEpicIdFromScopeId,
+} from './sot/materialize_business_graph.js'
 import { validateBusinessDocumentSotQuality } from './quality.js'
 import {
   readSourceEvidenceTargets,
@@ -1123,6 +1127,12 @@ function persistValidDocument(
       materializeDocumentItemModelLinks(db, {
         projectId: input.context.task.projectId,
         documentId: savedDocumentId,
+      })
+    }
+    if (input.document.documentType === 'ucs') {
+      materializeBusinessDocumentGraph(db, {
+        projectId: input.context.task.projectId,
+        epicId: parseEpicIdFromScopeId(input.document.scopeId) ?? undefined,
       })
     }
   }

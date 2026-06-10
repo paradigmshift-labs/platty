@@ -280,7 +280,14 @@ function loadUseCaseSpecDocuments(db: MaterializeGraphDb, projectId: string): Us
     .all()
 }
 
+export function parseEpicIdFromScopeId(scopeId: string | null): string | null {
+  if (!scopeId) return null
+  const match = /^epic:(.+?):use_case:/.exec(scopeId)
+  return match?.[1] ?? null
+}
+
 function findMatchingUseCaseSpec(item: UseCaseListItem, docs: UseCaseSpecDocument[]): UseCaseSpecDocument | null {
+  const stableKeyNormalized = normalize(item.stableKey)
   const itemKeys = normalizedSet([
     item.stableKey,
     item.title,
@@ -290,18 +297,25 @@ function findMatchingUseCaseSpec(item: UseCaseListItem, docs: UseCaseSpecDocumen
   ])
   return docs.find((doc) => {
     const content = doc.content ?? {}
+    const scopeIdSuffix = parseScopeIdUseCaseSuffix(doc.scopeId)
     const docKeys = normalizedSet([
       doc.scopeId,
+      scopeIdSuffix,
       readString(content.use_case_id),
       readString(content.useCaseId),
       readString(content.title),
     ])
     for (const itemKey of itemKeys) {
       if (docKeys.has(itemKey)) return true
-      if ([...docKeys].some((docKey) => docKey.includes(itemKey))) return true
     }
-    return false
+    return [...docKeys].some((docKey) => docKey.includes(stableKeyNormalized))
   }) ?? null
+}
+
+function parseScopeIdUseCaseSuffix(scopeId: string | null): string | null {
+  if (!scopeId) return null
+  const idx = scopeId.indexOf(':use_case:')
+  return idx >= 0 ? scopeId.slice(idx + ':use_case:'.length) : null
 }
 
 function loadProjectModels(db: MaterializeGraphDb, projectId: string): Model[] {
