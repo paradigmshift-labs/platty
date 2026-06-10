@@ -185,6 +185,47 @@ describe('detectSharedCodeSegments subtree coverage', () => {
     expect(result[0]!.coveredNodeIds).toEqual(['node:ns', 'node:ns-inline'])
   })
 
+  it('still roots a namespace segment when an earlier co-traveler segment covered the root id', () => {
+    // 실환경 재현: depth-1 공통 인터셉터가 먼저 세그먼트가 되고, 그 동행 커버(top-N)에
+    // namespace 루트가 삼켜져도 루트는 자기 서브트리를 흡수하는 세그먼트를 만들어야 한다.
+    // 실데이터처럼 멤버에 parentNodeId가 없고 라인 범위 포함만 있는 모양으로 구성한다.
+    const members = Array.from({ length: 6 }, (_, i) => node(
+      `node:ns-member-${i}`,
+      `MEMBER_${i}`,
+      'src/constants.ts',
+      'variable',
+      { lineStart: 2 + i * 4, lineEnd: 4 + i * 4 },
+    ))
+    const result = detectSharedCodeSegments({
+      maxCoveredNodesPerSegment: 1,
+      entryPoints: [...routeEntryPoints],
+      bundles: [
+        ...handlerRows,
+        ...ROUTES.flatMap((entryPointId) => [
+          { entryPointId, nodeId: 'node:interceptor', depth: 1 },
+          { entryPointId, nodeId: 'node:ns', depth: 2 },
+          ...members.map((member) => ({ entryPointId, nodeId: member.id, depth: 3 })),
+        ]),
+      ],
+      nodes: [
+        ...handlerNodes,
+        node('node:interceptor', 'ErrorInterceptor', 'src/common/interceptor.ts', 'class'),
+        node('node:ns', 'AppConstants', 'src/constants.ts', 'variable', { lineStart: 1, lineEnd: 100 }),
+        ...members,
+      ],
+    })
+
+    // interceptor 세그먼트(동행 캡 1 → 루트만 삼킴) + 루트 세그먼트. 멤버별 세그먼트는 없어야 한다.
+    const roots = result.map((segment) => segment.rootNodeId)
+    expect(roots).toContain('node:interceptor')
+    expect(roots).toContain('node:ns')
+    expect(result).toHaveLength(2)
+    const nsSegment = result.find((segment) => segment.rootNodeId === 'node:ns')!
+    for (const member of members) {
+      expect(nsSegment.coveredNodeIds).toContain(member.id)
+    }
+  })
+
   it('keeps the cap for cross-file co-travelers', () => {
     const coTravelers = Array.from({ length: 7 }, (_, i) => node(
       `node:ct-${i}`,

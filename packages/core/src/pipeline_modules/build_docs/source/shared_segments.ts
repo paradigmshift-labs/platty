@@ -105,13 +105,31 @@ export function detectSharedCodeSegments(input: {
       return aDepth - bDepth || a.nodeId.localeCompare(b.nodeId)
     })
 
+  const childrenByParent = new Map<string, string[]>()
+  const nodesByFile = new Map<string, SharedSegmentNodeInput[]>()
+  for (const node of input.nodes) {
+    if (node.parentNodeId) {
+      const children = childrenByParent.get(node.parentNodeId) ?? []
+      children.push(node.id)
+      childrenByParent.set(node.parentNodeId, children)
+    }
+    const fileNodes = nodesByFile.get(node.filePath) ?? []
+    fileNodes.push(node)
+    nodesByFile.set(node.filePath, fileNodes)
+  }
+
   const globallyCovered = new Set<string>()
   const segments: DetectedSharedCodeSegment[] = []
 
   for (const candidate of candidates) {
-    if (globallyCovered.has(candidate.nodeId)) continue
     const root = nodeById.get(candidate.nodeId)
     if (!root) continue
+    // 이미 커버된 후보는 스킵하되, 미커버 구조적 자손을 가진 컨테이너(namespace 루트 등)는
+    // 예외 — 앞선 세그먼트의 동행 커버가 루트 id만 삼켜도 서브트리 흡수 기회를 보장한다.
+    if (
+      globallyCovered.has(candidate.nodeId)
+      && !hasUncoveredDescendant(root, childrenByParent, nodesByFile, nodeById, usageByNode, globallyCovered)
+    ) continue
     const usedByEntryPoints = candidate.entryPointIds.map((entryPointId) => {
       const entryPoint = entryPointById.get(entryPointId)!
       return {
@@ -426,6 +444,33 @@ function collectCoveredNodes(
   return [...subtree, ...general.slice(0, maxCoveredNodes)]
     .sort((a, b) => a.minDepth - b.minDepth || a.nodeId.localeCompare(b.nodeId))
     .map((item) => item.nodeId)
+}
+
+function hasUncoveredDescendant(
+  root: SharedSegmentNodeInput,
+  childrenByParent: Map<string, string[]>,
+  nodesByFile: Map<string, SharedSegmentNodeInput[]>,
+  nodeById: Map<string, SharedSegmentNodeInput>,
+  usageByNode: Map<string, SharedSegmentBundleInput[]>,
+  covered: ReadonlySet<string>,
+): boolean {
+  // 1순위: parentNodeId 체인 자손
+  const stack = [...(childrenByParent.get(root.id) ?? [])]
+  const seen = new Set<string>()
+  while (stack.length > 0) {
+    const current = stack.pop()!
+    if (seen.has(current)) continue
+    seen.add(current)
+    if (usageByNode.has(current) && !covered.has(current)) return true
+    stack.push(...(childrenByParent.get(current) ?? []))
+  }
+  // 폴백: 같은 파일 라인 범위 자손 (실데이터는 parentNodeId가 비어 있는 경우가 많다)
+  for (const node of nodesByFile.get(root.filePath) ?? []) {
+    if (node.id === root.id) continue
+    if (!usageByNode.has(node.id) || covered.has(node.id)) continue
+    if (isDescendantOf(node, root, nodeById)) return true
+  }
+  return false
 }
 
 function isDescendantOf(
