@@ -25,6 +25,7 @@ export class AnalysisWorktreeError extends Error {
       | 'INVALID_REPOSITORY_ID'
       | 'SOURCE_NOT_GIT'
       | 'BRANCH_NOT_FOUND'
+      | 'REMOTE_FETCH_FAILED'
       | 'WORKTREE_FAILED',
     options?: { cause?: unknown },
   ) {
@@ -117,10 +118,37 @@ function hasBranch(repoPath: string, branch: string): boolean {
 }
 
 function resolveBranchCommit(repoPath: string, branch: string): string | null {
+  const remote = fetchRemoteBranchCommit(repoPath, branch)
+  if (remote.kind === 'found') return remote.commit
+  if (remote.kind === 'failed') {
+    throw new AnalysisWorktreeError(`failed to fetch latest origin branch: ${branch}`, 'REMOTE_FETCH_FAILED', {
+      cause: remote.error,
+    })
+  }
+
   const local = runGit(repoPath, ['rev-parse', '--verify', `${branch}^{commit}`])
   if (isCommit(local)) return local
+  if (remote.kind === 'remote_missing') return null
+
+  const remoteTracking = runGit(repoPath, ['rev-parse', '--verify', `origin/${branch}^{commit}`])
+  return isCommit(remoteTracking) ? remoteTracking : null
+}
+
+function fetchRemoteBranchCommit(
+  repoPath: string,
+  branch: string,
+): { kind: 'found'; commit: string } | { kind: 'no_origin' } | { kind: 'remote_missing' } | { kind: 'failed'; error: unknown } {
+  if (!runGit(repoPath, ['remote', 'get-url', 'origin'])) return { kind: 'no_origin' }
+
+  const refspec = `+refs/heads/${branch}:refs/remotes/origin/${branch}`
+  const fetched = runGitDetailed(repoPath, ['fetch', '--prune', 'origin', refspec])
+  if (!fetched.ok) {
+    if (isMissingRemoteBranchError(fetched.stderr)) return { kind: 'remote_missing' }
+    return { kind: 'failed', error: fetched.error }
+  }
+
   const remote = runGit(repoPath, ['rev-parse', '--verify', `origin/${branch}^{commit}`])
-  return isCommit(remote) ? remote : null
+  return isCommit(remote) ? { kind: 'found', commit: remote } : { kind: 'remote_missing' }
 }
 
 function refreshExistingWorktree(worktreePath: string, commit: string): void {
@@ -186,6 +214,21 @@ function runGit(repoPath: string, args: string[]): string | null {
   }
 }
 
+function runGitDetailed(repoPath: string, args: string[]): { ok: true; stdout: string } | { ok: false; stderr: string; error: unknown } {
+  try {
+    const stdout = execFileSync('git', args, gitOptions(repoPath))
+    return { ok: true, stdout: stdout.trim() }
+  } catch (error) {
+    return {
+      ok: false,
+      stderr: error instanceof Error && 'stderr' in error
+        ? String((error as { stderr?: unknown }).stderr ?? '')
+        : '',
+      error,
+    }
+  }
+}
+
 function runGitOrThrow(
   repoPath: string,
   args: string[],
@@ -216,4 +259,8 @@ function gitOptions(repoPath: string) {
 
 function isCommit(value: string | null): value is string {
   return Boolean(value && /^[0-9a-f]{40}$/.test(value))
+}
+
+function isMissingRemoteBranchError(stderr: string): boolean {
+  return stderr.includes("couldn't find remote ref") || stderr.includes('could not find remote ref')
 }
