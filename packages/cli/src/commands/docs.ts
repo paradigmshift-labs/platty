@@ -756,7 +756,45 @@ function exportFormat(argv: string[], outPath: string) {
   return outPath.endsWith('.md') || outPath.endsWith('.markdown') ? 'markdown' : 'json'
 }
 
+const DOCS_HELP = `\
+Usage: platty docs <command> [options]
+
+Run and inspect technical-document generation workflows.
+
+Commands:
+  list                              List all active documents
+  search <query>                    Search documents by content
+  show --document <id>              Show document details and items
+  related --document <id>           Show related documents
+  export --out <path>               Export documents to JSON or Markdown
+  targets list                      List documentation generation targets
+  targets deprecate                 Mark targets as deprecated
+  targets include                   Restore deprecated targets
+  shared-segments list              List shared code segments
+  shared-segments rebuild           Rebuild shared code segments
+  start                             Start a docs generation run
+  run                               Run the docs worker queue
+  preview --run-id <id>             Preview a run's planned tasks
+  approve --run-id <id>             Approve pending tasks
+  status --run-id <id>              Check run status
+  cancel --run-id <id>              Cancel an active run
+  tasks lease --run-id <id>         Lease tasks for a worker
+  tasks submit                      Submit task results
+  worker next --run-id <id>         Get next work packet for a worker
+  context get                       Get task context bundle
+  leases release --run-id <id>      Release active leases
+
+Options:
+  --json                            Machine-readable JSON output
+  --project <selector>              Target project (id, name, or current)
+  -h, --help                        Display help for command
+`
+
 export async function runDocsCommand(argv: string[], options: DocsCommandOptions): Promise<PlattyCommandResponse> {
+  if (argv.includes('--help') || argv.includes('-h') || argv.length === 0) {
+    return { exitCode: 0, result: success(), stdout: DOCS_HELP, stderr: '', skipDefaultRender: true }
+  }
+
   const root = await requireProjectRoot(options.cwd)
   if ('exitCode' in root) return root
 

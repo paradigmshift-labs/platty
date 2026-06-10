@@ -36,7 +36,51 @@ type EpicRow = typeof schema.epics.$inferSelect
 type DocumentRow = typeof schema.documents.$inferSelect
 type EpicDocumentLinkRow = typeof schema.epicDocumentLinks.$inferSelect
 
+const EPICS_HELP = `\
+Usage: platty epics <command> [options]
+
+Run and inspect epic generation workflows.
+
+Commands:
+  list                              List epics for the current project
+  search                            Search epics
+  show --epic <id>                  Show epic details
+  related --epic <id>               Show related epics
+  preview                           Preview the epic generation plan
+  start                             Start an epic generation run
+  run                               Run the epics worker queue
+  status --run-id <id>              Check run status
+  validate --run-id <id>            Validate a run
+  cancel --run-id <id>              Cancel an active run
+  draft show --run-id <id>          Show the draft output
+  draft edit --run-id <id>          Edit the draft output
+  draft confirm --run-id <id>       Confirm and commit the draft
+  tasks lease --run-id <id>         Lease tasks for a worker
+  tasks submit                      Submit task results
+  worker next --run-id <id>         Get next work packet for a worker
+  context get                       Get task context bundle
+  sync start --doc-sync-plan-id <id>  Start an epic sync run
+  sync preview --doc-sync-plan-id <id> Preview an epic sync plan
+  sync run --doc-sync-plan-id <id>  Run the sync worker queue
+  sync status --run-id <id>         Check sync run status
+  sync draft show --run-id <id>     Show the sync draft
+  sync draft confirm --run-id <id>  Confirm the sync draft
+  sync tasks lease --run-id <id>    Lease sync tasks for a worker
+  sync tasks submit                 Submit sync task results
+  sync worker next --run-id <id>    Get next sync work packet
+  sync context get                  Get sync task context
+
+Options:
+  --json                            Machine-readable JSON output
+  --project <selector>              Target project (id, name, or current)
+  -h, --help                        Display help for command
+`
+
 export async function runEpicsCommand(argv: string[], options: EpicsCommandOptions): Promise<PlattyCommandResponse> {
+  if (argv.includes('--help') || argv.includes('-h') || argv.length === 0) {
+    return { exitCode: 0, result: success(), stdout: EPICS_HELP, stderr: '', skipDefaultRender: true }
+  }
+
   const root = await requireProjectRoot(options.cwd, options)
   if ('exitCode' in root) return root
 

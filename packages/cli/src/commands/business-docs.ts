@@ -173,10 +173,47 @@ function requireSelectedProject(
   return { project: resolvedProject.project }
 }
 
+const BUSINESS_DOCS_HELP = `\
+Usage: platty business-docs <command> [options]
+
+Run and inspect business-document generation workflows.
+
+Commands:
+  preview                           Preview the business-docs generation plan
+  start                             Start a business-docs generation run
+  run                               Run the business-docs worker queue
+  status --run <id>                 Check run status
+  resume --run <id>                 Resume a paused run
+  cancel --run <id>                 Cancel an active run
+  cleanup --run <id>                Clean up a completed run
+  validate --run <id>               Validate a run
+  review --run <id>                 Review a run
+  document show --document <id>     Show a business document
+  sync preview                      Preview a business-docs sync plan
+  sync start                        Start a business-docs sync run
+  graph rebuild                     Rebuild the business document graph
+  leases release --run <id>         Release active leases
+  tasks lease --run <id>            Lease tasks for a worker
+  tasks retry --task <id>           Retry a failed task
+  tasks heartbeat --task <id>       Send task heartbeat
+  tasks submit --task <id>          Submit task results
+  context get --context <handle>    Get task context bundle
+  context page --context <handle>   Get a context page
+
+Options:
+  --json                            Machine-readable JSON output
+  --project <selector>              Target project (id, name, or current)
+  -h, --help                        Display help for command
+`
+
 export async function runBusinessDocsCommand(
   argv: string[],
   options: BusinessDocsCommandOptions,
 ): Promise<PlattyCommandResponse> {
+  if (argv.includes('--help') || argv.includes('-h') || argv.length === 0) {
+    return { exitCode: 0, result: success(), stdout: BUSINESS_DOCS_HELP, stderr: '', skipDefaultRender: true }
+  }
+
   const root = await requireProjectRoot(options.cwd)
   if ('exitCode' in root) return root
 

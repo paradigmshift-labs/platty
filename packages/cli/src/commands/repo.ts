@@ -136,7 +136,34 @@ function repoSelectionResponse(result: ReturnType<typeof updateRepository> | Ret
   return missingRepo()
 }
 
+const REPO_HELP = `\
+Usage: platty repo <command> [options]
+
+Register and manage local Git repositories.
+
+Commands:
+  add <path>                        Add a repository to the current project
+  list                              List repositories in the current project
+  update <selector>                 Update repository settings
+  remove <selector>                 Remove a repository from the current project
+
+Options for add / update:
+  --name <name>                     Repository display name
+  --branch <branch>                 Analysis branch (default: current branch)
+  --path <path>                     New repository path (update only)
+  --source-root <path>              Source root path within the repository
+
+Options:
+  --json                            Machine-readable JSON output
+  --project <selector>              Target project (id, name, or current)
+  -h, --help                        Display help for command
+`
+
 export async function runRepoCommand(argv: string[], options: RepoCommandOptions): Promise<PlattyCommandResponse> {
+  if (argv.includes('--help') || argv.includes('-h') || argv.length === 0) {
+    return { exitCode: 0, result: success(), stdout: REPO_HELP, stderr: '', skipDefaultRender: true }
+  }
+
   const root = await requireProjectRoot(options.cwd)
   if ('exitCode' in root) return root
 

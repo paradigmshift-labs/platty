@@ -105,7 +105,30 @@ function runNotFound(): PlattyCommandResponse {
   }
 }
 
+const RUNS_HELP = `\
+Usage: platty runs <command> [options]
+
+Inspect and manage Platty runs.
+
+Commands:
+  list                              List all runs for the current project
+  show --run-id <id>                Show details of a run
+  cancel --run-id <id>              Cancel a run
+
+Options for cancel:
+  --reason <text>                   Cancellation reason
+
+Options:
+  --json                            Machine-readable JSON output
+  --project <selector>              Target project (id, name, or current)
+  -h, --help                        Display help for command
+`
+
 export async function runRunsCommand(argv: string[], options: RunsCommandOptions): Promise<PlattyCommandResponse> {
+  if (argv.includes('--help') || argv.includes('-h') || argv.length === 0) {
+    return { exitCode: 0, result: success(), stdout: RUNS_HELP, stderr: '', skipDefaultRender: true }
+  }
+
   const root = await requireProjectRoot(options.cwd)
   if ('exitCode' in root) return root
 

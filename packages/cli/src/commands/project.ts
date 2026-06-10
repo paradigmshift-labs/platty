@@ -84,7 +84,30 @@ function projectNotSelected(): PlattyCommandResponse {
   return { exitCode: 2, result, stdout: '', stderr: '' }
 }
 
+const PROJECT_HELP = `\
+Usage: platty project <command> [options]
+
+Create and manage Platty projects.
+
+Commands:
+  create <name>                     Create a new project
+  list                              List all projects
+  use <selector>                    Select the current project
+  status                            Show current project status
+
+Options for create:
+  --description <text>              Project description
+
+Options:
+  --json                            Machine-readable JSON output
+  -h, --help                        Display help for command
+`
+
 export async function runProjectCommand(argv: string[], options: ProjectCommandOptions): Promise<PlattyCommandResponse> {
+  if (argv.includes('--help') || argv.includes('-h') || argv.length === 0) {
+    return { exitCode: 0, result: success(), stdout: PROJECT_HELP, stderr: '', skipDefaultRender: true }
+  }
+
   const root = await requireProjectRoot(options.cwd)
   if ('exitCode' in root) return root
 

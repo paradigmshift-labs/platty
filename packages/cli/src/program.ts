@@ -11,6 +11,7 @@ type CommandHandler = () => Promise<PlattyCommandResponse>
 type SetResponseHandler = (handler: CommandHandler) => void
 
 interface PassthroughCommand {
+  helpOption(flag: false): PassthroughCommand
   allowUnknownOption(value?: boolean): PassthroughCommand
   allowExcessArguments(value?: boolean): PassthroughCommand
   arguments(description: string): PassthroughCommand
@@ -63,6 +64,7 @@ function isTopLevelHelpRequest(argv: string[]) {
 
 function configurePassthrough(command: PassthroughCommand) {
   return command
+    .helpOption(false)
     .allowUnknownOption(true)
     .allowExcessArguments(true)
     .arguments('[args...]')
