@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import * as schema from '@/db/schema/index.js'
 import type { DB } from '@/db/client.js'
@@ -103,7 +103,10 @@ const STATIC_REPO_PHASES = ['build_graph', 'build_models', 'build_route', 'build
 const STATIC_PROJECT_PHASES = ['build_service_map'] as const
 
 export async function syncStaticMap(input: SyncStaticMapInput): Promise<SyncStaticMapResult> {
-  const repos = input.db.select().from(repositories).where(eq(repositories.projectId, input.projectId)).all()
+  const repos = input.db.select()
+    .from(repositories)
+    .where(and(eq(repositories.projectId, input.projectId), isNull(repositories.deletedAt)))
+    .all()
   const missingRepo = repos.find((repo) => !repo.analysisBranch || !repo.analysisWorktreePath)
   if (missingRepo) {
     throw new SyncStaticMapError(

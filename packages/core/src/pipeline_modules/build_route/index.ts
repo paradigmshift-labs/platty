@@ -1,7 +1,7 @@
 // build_route 메인 orchestrator.
 // repositories + code graph → adapter detection/rules → fallback/compose → bundles → DB.
 
-import { and, eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { readFileSync } from 'node:fs'
 import { join as joinPath } from 'node:path'
 import type { DB } from '@/db/client.js'
@@ -85,7 +85,10 @@ export async function runBuildRoute(input: RunBuildRouteInput): Promise<RunBuild
   const { db, repoId } = input
 
   // 1. repository → stackInfo
-  const repo = db.select().from(repositories).where(eq(repositories.id, repoId)).get()
+  const repo = db.select()
+    .from(repositories)
+    .where(and(eq(repositories.id, repoId), isNull(repositories.deletedAt)))
+    .get()
   if (!repo) {
     throw new BuildRouteError('REPO_NOT_FOUND', `Repository '${repoId}' not found`)
   }

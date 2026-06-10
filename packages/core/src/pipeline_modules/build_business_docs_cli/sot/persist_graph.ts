@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { DB } from '@/db/client.js'
 import {
@@ -65,7 +65,12 @@ export function replaceDocumentLinks(
   document: BusinessDocument,
   systemSourceDocIds: string[] = [],
 ): void {
-  db.delete(documentLinks).where(eq(documentLinks.fromDocumentId, documentId)).run()
+  db.delete(documentLinks)
+    .where(and(
+      eq(documentLinks.fromDocumentId, documentId),
+      eq(documentLinks.linkType, 'derives_from'),
+    ))
+    .run()
   for (const sourceId of linkedDocumentIds(document, systemSourceDocIds)) {
     if (sourceId === documentId) continue
     const linked = db.select({ id: documents.id }).from(documents).where(eq(documents.id, sourceId)).get()
@@ -115,7 +120,12 @@ export function replaceDocumentItemSatellites(
 
   for (const item of items) {
     db.run(sql`DELETE FROM document_items_fts WHERE item_id = ${item.id}`)
-    db.delete(documentItemDocumentLinks).where(eq(documentItemDocumentLinks.fromItemId, item.id)).run()
+    db.delete(documentItemDocumentLinks)
+      .where(and(
+        eq(documentItemDocumentLinks.fromItemId, item.id),
+        eq(documentItemDocumentLinks.linkType, 'derives_from'),
+      ))
+      .run()
   }
 
   const sourceDocumentIds = resolveExistingSourceDocumentIds(db, systemSourceDocIds, documentId)

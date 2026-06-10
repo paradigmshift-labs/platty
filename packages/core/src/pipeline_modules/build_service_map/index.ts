@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import { projects, repositories } from '@/db/schema/core.js'
 import { PipelineExecution, type PipelineFailure } from '@/pipeline_infra/index.js'
@@ -154,7 +154,10 @@ export * from './f9_validate_service_map.js'
 
 function resolveRunScope(db: DB, input: { repoId?: string; projectId?: string }) {
   if (input.repoId) {
-    const repo = db.select().from(repositories).where(eq(repositories.id, input.repoId)).get()
+    const repo = db.select()
+      .from(repositories)
+      .where(and(eq(repositories.id, input.repoId), isNull(repositories.deletedAt)))
+      .get()
     if (!repo) throw new PipelineError(`Repository not found: ${input.repoId}`, 'NOT_FOUND')
     if (input.projectId && input.projectId !== repo.projectId) {
       throw new PipelineError(

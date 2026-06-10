@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import type { TechnicalDocumentType } from '@/db/schema/build_docs.js'
 import { codeBundles, entryPoints } from '@/db/schema/build_route.js'
@@ -248,7 +248,10 @@ export async function rebuildSharedCodeSegmentsForProject(input: {
 }> {
   const repoRows = input.repoIds
     ? input.db.select().from(repositories).where(inArray(repositories.id, input.repoIds)).all()
-    : input.db.select().from(repositories).where(eq(repositories.projectId, input.projectId)).all()
+    : input.db.select()
+      .from(repositories)
+      .where(and(eq(repositories.projectId, input.projectId), isNull(repositories.deletedAt)))
+      .all()
   let segmentCount = 0
 
   for (const repo of repoRows) {

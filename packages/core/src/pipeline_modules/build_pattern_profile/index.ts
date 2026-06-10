@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import { repositories, repositoryPhaseStatus } from '@/db/schema/core.js'
 import { PipelineExecution, type PipelineFailure } from '@/pipeline_infra/index.js'
@@ -33,7 +33,10 @@ export async function runBuildPatternProfile(input: {
   signal?: AbortSignal
 }): Promise<RunBuildPatternProfileResult> {
   const { db, repoId } = input
-  const repo = db.select().from(repositories).where(eq(repositories.id, repoId)).get()
+  const repo = db.select()
+    .from(repositories)
+    .where(and(eq(repositories.id, repoId), isNull(repositories.deletedAt)))
+    .get()
   if (!repo) {
     throw new BuildPatternProfileError('REPO_NOT_FOUND', `Repository '${repoId}' not found`)
   }

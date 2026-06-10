@@ -1,4 +1,4 @@
-import { desc, eq, inArray, or } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull, or } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import { docRelationLinks, documents, type Document } from '@/db/schema/build_docs.js'
 import { models } from '@/db/schema/build_models.js'
@@ -271,7 +271,7 @@ function loadModelInputs(
 ): Array<Record<string, unknown> & { sourceDocumentIds: string[] }> {
   if (relations.length === 0) return []
   const repoRows = db.select({ id: repositories.id }).from(repositories)
-    .where(eq(repositories.projectId, projectId))
+    .where(and(eq(repositories.projectId, projectId), isNull(repositories.deletedAt)))
     .all()
   const repoIds = new Set(repoRows.map((repo) => repo.id))
   const relationTargets = relations

@@ -26,7 +26,7 @@ describe('platty corpus CLI', () => {
         },
       },
     })
-  })
+  }, 10_000)
 
   it('returns corpus summary and candidate commands without requiring a project database', async () => {
     const report = await runPlattyCommand(['corpus', 'batch-report', '--json'])

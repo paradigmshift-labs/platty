@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm'
+import { eq, and, isNull } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import { repositories, repositoryPhaseStatus } from '@/db/schema/core.js'
 import { PipelineExecution, type PipelineContext, type PipelineFailure } from '@/pipeline_infra/index.js'
@@ -28,7 +28,10 @@ export async function runBuildModels(params: {
   const adapterRegistry = params._adapterRegistry ?? composeModelAdapterRegistry(DEFAULT_ADAPTER_REGISTRY, promotedSpecs)
 
   // 1. repo 조회
-  const repo = db.select().from(repositories).where(eq(repositories.id, repoId)).get()
+  const repo = db.select()
+    .from(repositories)
+    .where(and(eq(repositories.id, repoId), isNull(repositories.deletedAt)))
+    .get()
   if (!repo) {
     throw new PipelineError(`Repository not found: ${repoId}`, 'NOT_FOUND')
   }

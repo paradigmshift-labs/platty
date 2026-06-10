@@ -388,6 +388,14 @@ export function buildBusinessDocsPromptForTask(
     'Also populate items[] with searchable SOT items and source_mapping/sourceRef fields so each item links back to lower source documents.',
     'Do not use empty objects in canonical content arrays. Mirror the same concrete business entries in both content arrays and items[] when they represent the same concepts.',
     'For UCL tasks, cover every business-docs-source-coverage.v1 clusters[].clusterId in at least one items[].content.sourceClusterIds entry and the matching content.use_cases entry; merge related clusters only when the source-backed user goal is the same.',
+    ...(task.documentType === 'data_dictionary'
+      ? [
+        'For data_dictionary tasks, use model_evidence when present and preserve exact backend storage identity in content.entities[] and items[].content.',
+        'Do not translate model/table/column identifiers. User-facing entity and field names may be natural language, but storage.model_id, storage.model_name, storage.table_name, fields[].model_id, and fields[].column_name must keep exact source identifiers.',
+        'When a logical entity has backend model evidence, set storage.kind="model" and fill storage.model_id, storage.model_name, and storage.table_name from model_evidence.',
+        'When no backend model evidence exists, keep the logical DD entity and set storage.kind to dto_only, external, derived, or unknown instead of inventing a table.',
+      ]
+      : []),
     `Each items[].content must include: ${contract.itemContentHint}.`,
     'Avoid raw technical identifiers such as API paths, class names, DTO names, decorators, or SQL in narrative business fields and evidence_gaps.',
     'Do not return empty content. Do not put the canonical body only in items[].content.',
@@ -476,7 +484,7 @@ function outputContractForTask(task: BusinessDocsLeasedTask): { contentFields: s
     return {
       contentFields: ['evidence_gaps', 'entities'],
       minItemsByField: { entities: 0 },
-      itemContentHint: 'entity with fields[].source_mapping, or gapType=missing_model_evidence with message and source_mapping',
+      itemContentHint: 'entity with storage.kind/storage.model_id/storage.model_name/storage.table_name and fields[].source_mapping/fields[].model_id/fields[].column_name, or gapType=missing_model_evidence with message and source_mapping',
     }
   }
   if (task.documentType === 'glossary') {
@@ -546,14 +554,32 @@ function itemContentSchemaForTask(task: BusinessDocsLeasedTask): Record<string, 
       anyOf: [
         objectSchema({
           entity: { type: 'string' },
+          storage: {
+            type: 'object',
+            additionalProperties: true,
+            required: ['kind'],
+            properties: {
+              kind: { type: 'string', enum: ['model', 'dto_only', 'external', 'derived', 'unknown'] },
+              model_id: { type: ['string', 'null'] },
+              model_name: { type: ['string', 'null'] },
+              table_name: { type: ['string', 'null'] },
+            },
+          },
           fields: {
             type: 'array',
             minItems: 1,
-            items: objectSchema({
-              name: { type: 'string' },
-              meaning: { type: 'string' },
-              source_mapping: stringArraySchema(1),
-            }),
+            items: {
+              type: 'object',
+              additionalProperties: true,
+              required: ['name', 'meaning', 'source_mapping'],
+              properties: {
+                name: { type: 'string' },
+                meaning: { type: 'string' },
+                source_mapping: stringArraySchema(1),
+                model_id: { type: ['string', 'null'] },
+                column_name: { type: ['string', 'null'] },
+              },
+            },
           },
         }),
         objectSchema({

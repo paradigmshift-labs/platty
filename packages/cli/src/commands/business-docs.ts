@@ -9,6 +9,7 @@ import {
   leaseBusinessDocsTasks,
   previewBusinessDocsGeneration,
   previewBusinessDocsSync,
+  materializeBusinessDocumentGraph,
   resolveProjectSelector,
   resumeBusinessDocsRun,
   reviewBusinessDocsRun,
@@ -320,6 +321,46 @@ export async function runBusinessDocsCommand(
       const result = failure(
         'BUSINESS_DOCS_UNKNOWN_COMMAND',
         `Unknown business-docs command: sync ${syncCommand ?? ''}`.trim(),
+      )
+      return { exitCode: 2, result, stdout: '', stderr: '' }
+    }
+
+    if (subcommand === 'graph') {
+      const graphCommand = argv[1]
+      if (graphCommand === 'rebuild') {
+        const selected = requireSelectedProject(db, options, root.config)
+        if ('exitCode' in selected) return selected
+
+        const epicIds = parseEpicIds(argv)
+        const targets = epicIds && epicIds.length > 0 ? epicIds : [undefined]
+        const rebuilt = targets.map((epicId) => ({
+          epicId,
+          ...materializeBusinessDocumentGraph(db, {
+            projectId: selected.project.id,
+            epicId,
+          }),
+        }))
+        const data = {
+          project: {
+            id: selected.project.id,
+            name: selected.project.name,
+          },
+          epicIds: epicIds ?? [],
+          deletedLinks: rebuilt.reduce((sum, item) => sum + item.deletedLinks, 0),
+          createdLinks: rebuilt.reduce((sum, item) => sum + item.createdLinks, 0),
+          deletedModelLinks: rebuilt.reduce((sum, item) => sum + (item.deletedModelLinks ?? 0), 0),
+          createdModelLinks: rebuilt.reduce((sum, item) => sum + (item.createdModelLinks ?? 0), 0),
+          rebuilds: rebuilt,
+        }
+        const result = success(data, {
+          evidenceRefs: [{ label: 'business-docs-graph-rebuild', path: `project:${selected.project.id}` }],
+        })
+        return { exitCode: 0, result, stdout: '', stderr: '' }
+      }
+
+      const result = failure(
+        'BUSINESS_DOCS_UNKNOWN_COMMAND',
+        `Unknown business-docs command: graph ${graphCommand ?? ''}`.trim(),
       )
       return { exitCode: 2, result, stdout: '', stderr: '' }
     }

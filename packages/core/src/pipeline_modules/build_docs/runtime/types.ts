@@ -239,6 +239,12 @@ export interface DraftSchemaContext extends Record<string, unknown> {
   quality_rules: string[]
 }
 
+export interface BuildDocsRepairContext extends Record<string, unknown> {
+  retryCount: number
+  maxRetries: number
+  validationErrors: ValidationError[]
+}
+
 export interface BuildDocsGenerationMetadata extends Record<string, unknown> {
   run_id: string
   task_id?: string
@@ -273,6 +279,7 @@ export interface BuildDocsGenerationContextResponse {
     source_context: SourceContext[]
     shared_context?: SharedCodeSegmentContext[]
     source_context_compaction?: BuildDocsGenerationManifest['source_context_compaction']
+    repair?: BuildDocsRepairContext
     source_link_candidates?: SourceLinkCandidate[]
     code_relation_facts: RelationFactContext[]
     service_map_facts: RelationFactContext[]

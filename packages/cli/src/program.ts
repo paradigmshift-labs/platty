@@ -4,7 +4,7 @@ import { commandArgvAfter, stripGlobalFlags, value } from './argv.js'
 import { failure, success, type PlattyCommandResponse } from './output.js'
 
 const VERSION = '0.1.0'
-const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'confirm', 'corpus', 'docs', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'service-map', 'status', 'version'])
+const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'confirm', 'corpus', 'docs', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'version'])
 
 type DispatchOptions = PlattyCommandRunOptions & { cwd: string }
 type CommandHandler = () => Promise<PlattyCommandResponse>
@@ -188,17 +188,6 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
       openDb: _options.openDb,
       project: value(_argv, '--project'),
       businessDocsTaskInvoker: _options.businessDocsTaskInvoker,
-    })
-  }, setResponse)
-
-  setAction(configurePassthrough(program.command('service-map').description('Export service map and business document viewer artifacts.')), async () => {
-    const { runServiceMapCommand } = await import('./commands/service-map.js')
-    return runServiceMapCommand(commandArgvAfter('service-map', stripGlobalFlags(_argv)), {
-      cwd: _options.cwd,
-      db: _options.db,
-      openDb: _options.openDb,
-      project: value(_argv, '--project'),
-      now: _options.now,
     })
   }, setResponse)
 

@@ -1,7 +1,7 @@
 // build_relations 오케스트레이터 (F1~F6)
 // SOT: specs/build_relations/architecture.md §3
 
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { repositories } from '@/db/schema/core.js'
 import { PipelineError } from '@/infra/errors.js'
 import { PipelineExecution, type PipelineFailure } from '@/pipeline_infra/index.js'
@@ -30,7 +30,10 @@ export async function runBuildRelations(
 ): Promise<BuildRelationsResult & { runId: string }> {
   const { db, repoId } = input
 
-  const repo = db.select().from(repositories).where(eq(repositories.id, repoId)).get()
+  const repo = db.select()
+    .from(repositories)
+    .where(and(eq(repositories.id, repoId), isNull(repositories.deletedAt)))
+    .get()
   if (!repo) throw new PipelineError(`Repository not found: ${repoId}`, 'NOT_FOUND')
   const paths = typeof repo.repoPath === 'string' ? getRepositoryPaths(repo) : null
 

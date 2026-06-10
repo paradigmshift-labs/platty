@@ -1,4 +1,4 @@
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, eq, isNull } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { DB } from '@/db/client.js'
 import { entryPoints } from '@/db/schema/build_route.js'
@@ -210,7 +210,11 @@ function validateDecisionTarget(db: DB, input: UpsertAnalysisReviewDecisionInput
   const repo = db
     .select({ id: repositories.id })
     .from(repositories)
-    .where(and(eq(repositories.id, input.repoId), eq(repositories.projectId, input.projectId)))
+    .where(and(
+      eq(repositories.id, input.repoId),
+      eq(repositories.projectId, input.projectId),
+      isNull(repositories.deletedAt),
+    ))
     .get()
 
   if (!repo) {

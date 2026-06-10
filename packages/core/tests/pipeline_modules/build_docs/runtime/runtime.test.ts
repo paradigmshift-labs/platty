@@ -14,6 +14,7 @@ import { docSyncCandidates, staticMerkleSnapshots } from '@/db/schema/sync.js'
 import { BuildDocsGenerationRuntime, BuildDocsGenerationRuntimeError } from '@/pipeline_modules/build_docs/runtime/runtime.js'
 import { buildDocumentLookup, DOCUMENT_GRAPH_MATERIALIZER_CREATED_BY } from '@/pipeline_modules/build_docs/runtime/materialize_document_graph.js'
 import type { BuildDocsGenerationContextResponse } from '@/pipeline_modules/build_docs/runtime/types.js'
+import { buildDocsAgentWorkPacket } from '@/pipeline_modules/build_docs/source/agent_packet.js'
 import { upsertAnalysisReviewDecision } from '@/pipeline_modules/build_route/review_decisions.js'
 import { createDocSyncPlan } from '@/pipeline_modules/sync/doc_sync.js'
 import { createViennaChainFixture, leaseApiTask } from '../helpers.js'
@@ -75,6 +76,59 @@ describe('BuildDocsGenerationRuntime', () => {
       'repo:web:screen:/orders:OrdersPage',
     ])
     expect(new Set(tasks.map((task) => task.targetDocumentId)).size).toBe(2)
+  })
+
+  it('does not create tasks for soft-deleted repositories with stale entry points', async () => {
+    const db = createTestDb()
+    seedProject(db, { serviceMapReady: true })
+    const deletedAt = '2026-06-03T01:00:00.000Z'
+    db.insert(repositories).values({
+      ...repo('repo:deleted', 'deleted-service', 'commit:deleted'),
+      deletedAt,
+      updatedAt: deletedAt,
+    }).run()
+    db.insert(codeNodes).values(
+      node('node:deleted:LegacyPage', 'repo:deleted', 'src/app/legacy/page.tsx', 'LegacyPage', 'export default function LegacyPage()'),
+    ).run()
+    db.insert(entryPoints).values(
+      entryPoint('ep:deleted:legacy', 'repo:deleted', 'page', null, '/legacy', 'node:deleted:LegacyPage'),
+    ).run()
+    seedRequiredRepositoryPhases(db, ['repo:deleted'])
+    const runtime = new BuildDocsGenerationRuntime({ db })
+
+    const start = await runtime.start({
+      projectId: 'project:docs-generation',
+      outputLanguage: 'ko',
+      requestedBy: 'user:test',
+    })
+
+    const tasks = db.select().from(generationTasks).where(eq(generationTasks.runId, start.run_id)).all()
+    expect(tasks.map((task) => `${task.repositoryId}:${task.targetKey}`).sort()).toEqual([
+      'repo:api:api:GET:/api/orders',
+      'repo:web:screen:/orders:OrdersPage',
+    ])
+  })
+
+  it('does not require static phases from soft-deleted repositories', async () => {
+    const db = createTestDb()
+    seedProject(db, { serviceMapReady: true })
+    const deletedAt = '2026-06-03T01:00:00.000Z'
+    db.insert(repositories).values({
+      ...repo('repo:deleted', 'deleted-service', 'commit:deleted'),
+      deletedAt,
+      updatedAt: deletedAt,
+    }).run()
+    const runtime = new BuildDocsGenerationRuntime({ db })
+
+    const start = await runtime.start({
+      projectId: 'project:docs-generation',
+      outputLanguage: 'ko',
+      requestedBy: 'user:test',
+    })
+
+    expect(start).toMatchObject({ status: 'awaiting_approval', active_run: false })
+    const tasks = db.select().from(generationTasks).where(eq(generationTasks.runId, start.run_id)).all()
+    expect(tasks.map((task) => task.repositoryId).sort()).toEqual(['repo:api', 'repo:web'])
   })
 
   it('does not create build_docs tasks for deprecated review targets', async () => {
@@ -1380,6 +1434,64 @@ describe('BuildDocsGenerationRuntime', () => {
         }),
       ],
     })
+  })
+
+  it('returns validation errors and candidate enum in repair context for source_link_selection failures', async () => {
+    const db = createTestDb()
+    seedProject(db, { serviceMapReady: true })
+    const runtime = new BuildDocsGenerationRuntime({ db })
+    const task = await leaseFirstTask(runtime, 'api_spec')
+    await runtime.getContext({
+      taskId: task.task_id,
+      leaseToken: task.lease_token,
+    })
+
+    await runtime.submitTask({
+      taskId: task.task_id,
+      leaseToken: task.lease_token,
+      document: {
+        title: 'Order API',
+        summary: 'Returns orders.',
+        access: 'No access evidence: no guard is present in the context.',
+        flow: ['The handler returns orders.'],
+        rules: [],
+        source_link_selection: {
+          input: ['source_link_candidate:999'],
+        },
+      },
+    })
+
+    const repairTask = await runtime.leaseTask({
+      runId: task.run_id,
+      workerId: 'worker:api-repair',
+      documentTypes: ['api_spec'],
+    })
+    if (repairTask.type !== 'task') throw new Error(`expected repair task lease, got ${repairTask.type}`)
+
+    const context = await runtime.getContext({
+      taskId: repairTask.task_id,
+      leaseToken: repairTask.lease_token,
+    })
+    expect((context.content as any).repair).toMatchObject({
+      retryCount: 1,
+      validationErrors: [
+        expect.objectContaining({
+          code: 'UNKNOWN_SOURCE_LINK_CANDIDATE',
+          message: 'source_link_candidate:999 is not an available source link candidate',
+        }),
+      ],
+    })
+
+    const packet = buildDocsAgentWorkPacket({ task: repairTask, context })
+    expect(packet.agentInput.prompt).toContain('Repair these validation errors first')
+    expect(packet.agentInput.prompt).toContain('UNKNOWN_SOURCE_LINK_CANDIDATE')
+    expect(packet.agentInput.prompt).toContain('source_link_candidate:999')
+    expect(packet.agentInput.prompt).toContain('content.source_link_candidates')
+
+    const schema = packet.agentInput.outputSchema as any
+    expect(schema.properties.source_link_selection.properties.input.items.enum).toEqual(
+      context.content.source_link_candidates?.map((candidate) => candidate.candidate_id),
+    )
   })
 
   it('reports only draft shape errors for malformed source_link_selection entries', async () => {

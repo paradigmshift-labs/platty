@@ -1235,6 +1235,89 @@ describe('platty business-docs CLI', () => {
     })
   })
 
+  it('rebuilds the business document traversal graph', async () => {
+    const project = await runPlattyCommand(['project', 'create', 'Commerce', '--json'], { cwd: rootDir, db })
+    const projectId = String(project.result.data?.id)
+    db.insert(documents).values({
+      id: 'doc:ucl:orders',
+      projectId,
+      type: 'ucl',
+      track: 'business',
+      scope: 'epic',
+      scopeId: 'epic:orders',
+      status: 'active',
+      validity: 'fresh',
+      summary: 'Order use cases',
+      content: { type: 'ucl' },
+      rawLlmOutput: '',
+      contentHash: 'hash:ucl',
+      updatedBy: 'llm',
+      updatedAt: now,
+    }).run()
+    db.insert(documentItems).values({
+      id: 'item:ucl:create-order',
+      documentId: 'doc:ucl:orders',
+      projectId,
+      itemType: 'use_case',
+      stableKey: 'uc:create-order',
+      ordinal: 1,
+      title: 'Create order',
+      summary: 'Create order.',
+      content: { use_case_id: 'uc:create-order', title: 'Create order' },
+      contentHash: 'hash:uc:create-order',
+      status: 'active',
+      createdBy: 'llm',
+      updatedBy: 'llm',
+      updatedAt: now,
+    }).run()
+    db.insert(documents).values({
+      id: 'doc:ucs:create-order',
+      projectId,
+      type: 'ucs',
+      track: 'business',
+      scope: 'use_case',
+      scopeId: 'epic:epic:orders:use_case:uc:create-order',
+      status: 'active',
+      validity: 'fresh',
+      summary: 'Create order spec',
+      content: { type: 'ucs', use_case_id: 'uc:create-order' },
+      rawLlmOutput: '',
+      contentHash: 'hash:ucs',
+      updatedBy: 'llm',
+      updatedAt: now,
+    }).run()
+
+    const command = await runPlattyCommand([
+      'business-docs',
+      'graph',
+      'rebuild',
+      '--project',
+      'Commerce',
+      '--epic',
+      'epic:orders',
+      '--json',
+    ], { cwd: rootDir, db })
+
+    expect(command.exitCode).toBe(0)
+    expect(command.result).toMatchObject({
+      ok: true,
+      data: {
+        project: { id: projectId, name: 'Commerce' },
+        epicIds: ['epic:orders'],
+        createdLinks: 1,
+      },
+      warnings: [],
+      errors: [],
+    })
+    expect(db.select().from(documentItemDocumentLinks).all()).toEqual([
+      expect.objectContaining({
+        fromItemId: 'item:ucl:create-order',
+        toDocumentId: 'doc:ucs:create-order',
+        linkType: 'expands_use_case',
+      }),
+    ])
+  })
+
   it('previews business-docs sync with a JSON envelope and optional doc sync plan', async () => {
     const project = await runPlattyCommand(['project', 'create', 'Commerce', '--json'], { cwd: rootDir, db })
     const projectId = String(project.result.data?.id)

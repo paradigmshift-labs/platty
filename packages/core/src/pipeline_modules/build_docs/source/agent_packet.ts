@@ -50,7 +50,7 @@ export function buildDocsAgentWorkPacket(input: {
     agentInput: {
       modelHint: { provider: 'claude_code', model: 'haiku', effort: 'low' },
       prompt: promptForDocsContext(input.context),
-      outputSchema: jsonSchemaForDraft(schema),
+      outputSchema: jsonSchemaForDraft(schema, input.context),
       context: input.context,
       rules: [...schema.output_rules, ...schema.quality_rules],
       forbiddenFields: schema.system_injected_fields,
@@ -76,8 +76,18 @@ export function buildDocsAgentWorkPacket(input: {
 function promptForDocsContext(context: BuildDocsGenerationContextResponse): string {
   const schema = context.content.schema
   const outputFields = Object.keys(propertiesFor(schema.schema_name))
+  const repair = context.content.repair
+  const repairBlock = repair?.validationErrors?.length
+    ? [
+        'Repair these validation errors first:',
+        JSON.stringify(repair.validationErrors, null, 2),
+        'If a validation error mentions source_link_selection, choose ids only from content.source_link_candidates[].candidate_id.',
+        '',
+      ]
+    : []
   return [
     `Generate one Platty ${schema.schema_name} draft JSON object from the provided CLI context.`,
+    ...repairBlock,
     outputLanguageInstruction(outputLanguageForContext(context)),
     'Use only agentInput.context. Do not inspect local files, databases, or other artifacts.',
     'Return exactly one JSON object matching agentInput.outputSchema.',
@@ -99,8 +109,8 @@ function outputLanguageForContext(context: BuildDocsGenerationContextResponse): 
   return context.metadata.outputLanguage === 'ko' ? 'ko' : 'en'
 }
 
-function jsonSchemaForDraft(schema: DraftSchemaContext): Record<string, unknown> {
-  const properties = propertiesFor(schema.schema_name)
+function jsonSchemaForDraft(schema: DraftSchemaContext, context: BuildDocsGenerationContextResponse): Record<string, unknown> {
+  const properties = propertiesFor(schema.schema_name, context)
   const required = Object.keys(properties)
   return {
     type: 'object',
@@ -110,8 +120,9 @@ function jsonSchemaForDraft(schema: DraftSchemaContext): Record<string, unknown>
   }
 }
 
-function propertiesFor(documentType: TechnicalDocumentType): Record<string, unknown> {
+function propertiesFor(documentType: TechnicalDocumentType, context?: BuildDocsGenerationContextResponse): Record<string, unknown> {
   if (documentType === 'api_spec') {
+    const candidateIds = unique((context?.content.source_link_candidates ?? []).map((candidate) => candidate.candidate_id))
     return {
       title: { type: 'string' },
       summary: { type: 'string' },
@@ -123,9 +134,9 @@ function propertiesFor(documentType: TechnicalDocumentType): Record<string, unkn
         additionalProperties: false,
         required: ['access', 'input', 'response'],
         properties: {
-          access: arrayOfStrings(),
-          input: arrayOfStrings(),
-          response: arrayOfStrings(),
+          access: arrayOfCandidateIds(candidateIds),
+          input: arrayOfCandidateIds(candidateIds),
+          response: arrayOfCandidateIds(candidateIds),
         },
       },
     }
@@ -176,6 +187,15 @@ function arrayOfStrings(): Record<string, unknown> {
   return { type: 'array', items: { type: 'string' } }
 }
 
+function arrayOfCandidateIds(candidateIds: string[]): Record<string, unknown> {
+  return {
+    type: 'array',
+    items: candidateIds.length > 0
+      ? { type: 'string', enum: candidateIds }
+      : { type: 'string' },
+  }
+}
+
 function closedObject(properties: Record<string, unknown>): Record<string, unknown> {
   return {
     type: 'object',
@@ -183,4 +203,8 @@ function closedObject(properties: Record<string, unknown>): Record<string, unkno
     required: Object.keys(properties),
     properties,
   }
+}
+
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values))
 }

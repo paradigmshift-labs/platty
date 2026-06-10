@@ -42,6 +42,7 @@ import {
   replaceDocumentItemSatellites,
   replaceDocumentLinks,
 } from './sot/persist_graph.js'
+import { materializeDocumentItemModelLinks } from './sot/materialize_business_graph.js'
 import { validateBusinessDocumentSotQuality } from './quality.js'
 import {
   readSourceEvidenceTargets,
@@ -1118,6 +1119,12 @@ function persistValidDocument(
       pages: input.context.pages,
       items: persistedItems,
     })
+    if (input.document.documentType === 'data_dictionary') {
+      materializeDocumentItemModelLinks(db, {
+        projectId: input.context.task.projectId,
+        documentId: savedDocumentId,
+      })
+    }
   }
 
   db.update(businessDocGenerationTasks)

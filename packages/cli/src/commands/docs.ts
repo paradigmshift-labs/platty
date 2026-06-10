@@ -40,7 +40,13 @@ type DocumentRow = typeof schema.documents.$inferSelect
 type DocumentItemRow = typeof schema.documentItems.$inferSelect
 type TechnicalDocumentType = 'api_spec' | 'screen_spec' | 'event_spec' | 'schedule_spec'
 
-const { documents, documentItems, sharedCodeSegments } = schema
+const {
+  documentItemDocumentLinks,
+  documentItems,
+  documentLinks,
+  documents,
+  sharedCodeSegments,
+} = schema
 
 function value(argv: string[], flag: string) {
   const index = argv.indexOf(flag)
@@ -71,7 +77,8 @@ function positional(argv: string[]) {
       part === '--track' ||
       part === '--scope' ||
       part === '--validity' ||
-      part === '--limit'
+      part === '--limit' ||
+      part === '--document'
     ) {
       index += 1
       continue
@@ -479,6 +486,128 @@ function searchDocs(db: DB, project: ProjectRow, query: string) {
   ]
 }
 
+function isVisibleDocument(doc: DocumentRow): boolean {
+  return (doc.status === 'active' || doc.status === 'passed') && doc.validity !== 'orphaned'
+}
+
+function documentMiniView(doc: DocumentRow) {
+  return {
+    id: doc.id,
+    type: doc.type,
+    track: doc.track,
+    scope: doc.scope,
+    scopeId: doc.scopeId,
+    status: doc.status,
+    validity: doc.validity,
+    title: contentTitle(doc.content),
+    summary: doc.summary,
+    freshness: documentFreshness(doc),
+  }
+}
+
+function documentNotFound(documentId: string): PlattyCommandResponse {
+  const result = failure('DOCS_DOCUMENT_NOT_FOUND', `Document was not found: ${documentId}`)
+  return { exitCode: 2, result, stdout: '', stderr: '' }
+}
+
+function showDocument(db: DB, project: ProjectRow, documentId: string) {
+  const doc = activeDocuments(db, project.id).find((candidate) => candidate.id === documentId && isVisibleDocument(candidate))
+  if (!doc) return null
+  const items = activeItems(db, project.id).filter((item) => item.documentId === documentId)
+  const related = relatedDocuments(db, project, documentId)
+  return {
+    project: projectPointer(project),
+    document: {
+      ...documentView(doc, items.length),
+      content: doc.content,
+    },
+    items: items.map((item) => ({
+      ...itemView(item),
+      targetDocumentLinks: (related?.itemDocumentLinks ?? [])
+        .filter((link) => link.fromItemId === item.id)
+        .map((link) => ({
+          documentId: link.documentId,
+          linkType: link.linkType,
+          role: link.role,
+          createdBy: link.createdBy,
+          target: link.target,
+        })),
+      relatedItems: [],
+      modelLinks: [],
+    })),
+    relatedDocuments: {
+      outgoing: related?.outgoingDocumentLinks ?? [],
+      incoming: related?.incomingDocumentLinks ?? [],
+      itemDocumentLinks: related?.itemDocumentLinks ?? [],
+    },
+  }
+}
+
+function relatedDocuments(db: DB, project: ProjectRow, documentId: string) {
+  const docs = activeDocuments(db, project.id).filter(isVisibleDocument)
+  const docById = new Map(docs.map((doc) => [doc.id, doc]))
+  const sourceDoc = docById.get(documentId)
+  if (!sourceDoc) return null
+
+  const outgoingDocumentLinks = db.select().from(documentLinks)
+    .where(eq(documentLinks.fromDocumentId, documentId))
+    .all()
+    .flatMap((link) => {
+      const target = docById.get(link.toDocumentId)
+      if (!target) return []
+      return [{
+        fromDocumentId: link.fromDocumentId,
+        documentId: link.toDocumentId,
+        linkType: link.linkType,
+        createdBy: link.createdBy,
+        target: documentMiniView(target),
+      }]
+    })
+  const incomingDocumentLinks = db.select().from(documentLinks)
+    .where(eq(documentLinks.toDocumentId, documentId))
+    .all()
+    .flatMap((link) => {
+      const source = docById.get(link.fromDocumentId)
+      if (!source) return []
+      return [{
+        fromDocumentId: link.fromDocumentId,
+        documentId: link.toDocumentId,
+        linkType: link.linkType,
+        createdBy: link.createdBy,
+        source: documentMiniView(source),
+      }]
+    })
+
+  const items = activeItems(db, project.id).filter((item) => item.documentId === documentId)
+  const itemIds = items.map((item) => item.id)
+  const itemDocumentLinks = itemIds.length === 0
+    ? []
+    : db.select().from(documentItemDocumentLinks)
+      .where(inArray(documentItemDocumentLinks.fromItemId, itemIds))
+      .all()
+      .flatMap((link) => {
+        const target = docById.get(link.toDocumentId)
+        if (!target) return []
+        return [{
+          fromItemId: link.fromItemId,
+          documentId: link.toDocumentId,
+          linkType: link.linkType,
+          role: link.role,
+          createdBy: link.createdBy,
+          target: documentMiniView(target),
+        }]
+      })
+
+  return {
+    project: projectPointer(project),
+    documentId,
+    source: documentMiniView(sourceDoc),
+    outgoingDocumentLinks,
+    incomingDocumentLinks,
+    itemDocumentLinks,
+  }
+}
+
 function docsForExport(db: DB, project: ProjectRow) {
   const docs = activeDocuments(db, project.id)
   const itemsByDocument = new Map<string, DocumentItemRow[]>()
@@ -841,6 +970,22 @@ export async function runDocsCommand(argv: string[], options: DocsCommandOptions
         evidenceRefs: [{ label: 'documents', path: `project:${project.name}` }],
       })
       return { exitCode: 0, result, stdout: '', stderr: '' }
+    }
+
+    if (subcommand === 'show' || subcommand === 'related') {
+      const documentId = optionValue(argv, '--document')
+      if (!documentId) {
+        const result = failure('DOCS_DOCUMENT_REQUIRED', 'docs show/related requires --document')
+        return { exitCode: 2, result, stdout: '', stderr: '' }
+      }
+      if (subcommand === 'show') {
+        const shown = showDocument(db, project, documentId)
+        if (!shown) return documentNotFound(documentId)
+        return ok(shown)
+      }
+      const related = relatedDocuments(db, project, documentId)
+      if (!related) return documentNotFound(documentId)
+      return ok(related)
     }
 
     if (subcommand === 'export') {

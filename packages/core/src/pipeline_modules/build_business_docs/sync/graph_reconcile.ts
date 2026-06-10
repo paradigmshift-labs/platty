@@ -3,6 +3,7 @@ import type { DB } from '@/db/client.js'
 import {
   documentItemDocumentLinks,
   documentItemItemLinks,
+  documentItemModelLinks,
   documentItemRelationLinks,
   documentItems,
   documentLinkEvidence,
@@ -22,9 +23,10 @@ export interface CleanupBusinessDocGraphInput {
 
 export interface BusinessDocGraphInvariantViolation {
   code:
-    | 'ACTIVE_ITEM_UNDER_ORPHANED_BUSINESS_DOC'
-    | 'FTS_ROW_UNDER_ORPHANED_BUSINESS_DOC'
-    | 'ACTIVE_ITEM_LINK_TO_ORPHANED_SOURCE_DOC'
+      | 'ACTIVE_ITEM_UNDER_ORPHANED_BUSINESS_DOC'
+      | 'FTS_ROW_UNDER_ORPHANED_BUSINESS_DOC'
+      | 'ACTIVE_ITEM_LINK_TO_ORPHANED_SOURCE_DOC'
+      | 'MODEL_FIELD_LINK_DANGLING'
   documentId: string
   itemId?: string
   linkedDocumentId?: string
@@ -56,6 +58,9 @@ export function cleanupOrphanedBusinessDocumentGraph(db: BusinessDocGraphCleanup
     db.delete(documentItemRelationLinks)
       .where(inArray(documentItemRelationLinks.itemId, itemIds))
       .run()
+    db.delete(documentItemModelLinks)
+      .where(inArray(documentItemModelLinks.itemId, itemIds))
+      .run()
     db.update(documentItems)
       .set({ status: 'stale', updatedBy: 'system', updatedAt: input.now })
       .where(inArray(documentItems.id, itemIds))
@@ -65,8 +70,17 @@ export function cleanupOrphanedBusinessDocumentGraph(db: BusinessDocGraphCleanup
   db.delete(documentLinks)
     .where(inArray(documentLinks.fromDocumentId, documentIds))
     .run()
+  db.delete(documentLinks)
+    .where(inArray(documentLinks.toDocumentId, documentIds))
+    .run()
   db.delete(documentLinkEvidence)
     .where(inArray(documentLinkEvidence.fromDocumentId, documentIds))
+    .run()
+  db.delete(documentLinkEvidence)
+    .where(inArray(documentLinkEvidence.toDocumentId, documentIds))
+    .run()
+  db.delete(documentItemDocumentLinks)
+    .where(inArray(documentItemDocumentLinks.toDocumentId, documentIds))
     .run()
   db.delete(epicDocumentLinks)
     .where(inArray(epicDocumentLinks.documentId, documentIds))
@@ -175,6 +189,33 @@ export function checkBusinessDocGraphInvariants(db: BusinessDocGraphInvariantDb,
   for (const row of activeItemLinksToOrphanedSourceDocs) {
     violations.push({
       code: 'ACTIVE_ITEM_LINK_TO_ORPHANED_SOURCE_DOC',
+      documentId: row.documentId,
+      itemId: row.itemId,
+      linkedDocumentId: row.linkedDocumentId,
+    })
+  }
+
+  const danglingModelFieldLinks = db.all(sql`
+    SELECT d.id AS documentId, i.id AS itemId, l.model_id AS linkedDocumentId
+    FROM document_item_model_links l
+    JOIN document_items i ON i.id = l.item_id
+    JOIN documents d ON d.id = i.document_id
+    JOIN models m ON m.id = l.model_id
+    WHERE d.project_id = ${input.projectId}
+      AND d.track = 'business'
+      AND d.status = 'active'
+      AND i.status = 'active'
+      AND l.field_name IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1
+        FROM json_each(m.fields)
+        WHERE json_extract(json_each.value, '$.name') = l.field_name
+      )
+  `) as Array<{ documentId: string; itemId: string; linkedDocumentId: string }>
+
+  for (const row of danglingModelFieldLinks) {
+    violations.push({
+      code: 'MODEL_FIELD_LINK_DANGLING',
       documentId: row.documentId,
       itemId: row.itemId,
       linkedDocumentId: row.linkedDocumentId,

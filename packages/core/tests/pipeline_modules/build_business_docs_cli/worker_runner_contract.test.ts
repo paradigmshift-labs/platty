@@ -58,6 +58,28 @@ describe('build_business_docs_cli worker output contract', () => {
     ]))
   })
 
+  it('requires data dictionary modeled entities to preserve backend storage identity', () => {
+    const task = leasedTask({
+      taskType: 'data_dictionary',
+      documentType: 'data_dictionary',
+    })
+    const schema = normalizeCodexOutputSchema(buildBusinessDocsSchemaForTask(task)) as Record<string, unknown>
+    const itemContent = readArrayItemContentSchema(schema)
+    const alternatives = itemContent.anyOf as Array<Record<string, unknown>>
+    const entityAlternative = alternatives.find((alternative) =>
+      Array.isArray(alternative.required) && alternative.required.includes('entity'))
+    const prompt = buildBusinessDocsPromptForTask(task, contextBundle(task), contextPages())
+
+    expect(entityAlternative?.required).toEqual(expect.arrayContaining(['entity', 'storage', 'fields']))
+    expect(prompt).toContain('model_evidence')
+    expect(prompt).toContain('storage.model_id')
+    expect(prompt).toContain('storage.model_name')
+    expect(prompt).toContain('storage.table_name')
+    expect(prompt).toContain('fields[].model_id')
+    expect(prompt).toContain('fields[].column_name')
+    expect(prompt).toContain('Do not translate model/table/column identifiers')
+  })
+
   it('names the task-specific canonical content fields in the prompt', () => {
     const task = leasedTask({
       taskType: 'use_case_list_refine',

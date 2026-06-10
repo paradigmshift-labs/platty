@@ -172,6 +172,7 @@ export function showBusinessDoc(
     ))
     .all()
   const links = loadSourceLinks(db, items)
+  const allItemDocumentLinks = loadItemDocumentLinks(db, items)
   return {
     ok: true,
     data: {
@@ -203,6 +204,15 @@ export function showBusinessDoc(
           linkType: link.linkType,
           role: link.role ?? null,
         })),
+        targetDocumentLinks: (allItemDocumentLinks.get(item.id) ?? [])
+          .filter((link) => link.linkType !== 'source_document')
+          .map((link) => ({
+            documentId: link.toDocumentId,
+            linkType: link.linkType,
+            role: link.role ?? null,
+          })),
+        relatedItems: [],
+        modelLinks: [],
       })),
     } satisfies BusinessDocsDocumentShowResult,
   }
@@ -268,6 +278,24 @@ function loadSourceLinks(
       inArray(documentItemDocumentLinks.fromItemId, itemIds),
       eq(documentItemDocumentLinks.linkType, 'source_document'),
     ))
+    .all()
+  const byItem = new Map<string, DocumentItemDocumentLink[]>()
+  for (const link of links) {
+    const existing = byItem.get(link.fromItemId) ?? []
+    existing.push(link)
+    byItem.set(link.fromItemId, existing)
+  }
+  return byItem
+}
+
+function loadItemDocumentLinks(
+  db: RuntimeReadDb,
+  items: DocumentItem[],
+): Map<string, DocumentItemDocumentLink[]> {
+  const itemIds = items.map((item) => item.id)
+  if (itemIds.length === 0) return new Map()
+  const links = db.select().from(documentItemDocumentLinks)
+    .where(inArray(documentItemDocumentLinks.fromItemId, itemIds))
     .all()
   const byItem = new Map<string, DocumentItemDocumentLink[]>()
   for (const link of links) {

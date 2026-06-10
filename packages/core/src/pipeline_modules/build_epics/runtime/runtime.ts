@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { and, asc, eq, inArray } from 'drizzle-orm'
+import { and, asc, eq, inArray, isNull } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import {
   generationContextBundles,
@@ -92,7 +92,10 @@ export class BuildEpicsCliRuntime {
       totalAssignableDocs: assignableDocs(docIndex),
       totalDocumentCards: cards.length,
     })
-    const repo = this.input.db.select().from(repositories).where(eq(repositories.projectId, input.projectId)).get()
+    const repo = this.input.db.select()
+      .from(repositories)
+      .where(and(eq(repositories.projectId, input.projectId), isNull(repositories.deletedAt)))
+      .get()
     if (!repo) throw new Error('BUILD_EPICS_REPOSITORY_REQUIRED')
 
     const runId = `gen:build_epics:${randomUUID()}`
@@ -686,7 +689,10 @@ export class BuildEpicsCliRuntime {
     const assignmentsDone = completedPrerequisites(tasks, ['document_assignment'])
     if (!taxonomyDone || !consolidationDone || !assignmentsDone) return
 
-    const repo = this.input.db.select().from(repositories).where(eq(repositories.projectId, run.projectId)).get()
+    const repo = this.input.db.select()
+      .from(repositories)
+      .where(and(eq(repositories.projectId, run.projectId), isNull(repositories.deletedAt)))
+      .get()
     if (!repo) throw new Error('BUILD_EPICS_REPOSITORY_REQUIRED')
     const docIndex = await loadDocIndex({ db: this.input.db, projectId: run.projectId, documentScope: 'all' })
     const cards = packBuildEpicsDocumentCards(docIndex)

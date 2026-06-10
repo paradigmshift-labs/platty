@@ -1,10 +1,11 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, realpathSync } from 'node:fs'
 import { basename, resolve } from 'node:path'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { DB } from './db/client.js'
-import { projects, repositories } from './db/schema/core.js'
+import { documents } from './db/schema/build_docs.js'
+import { projectPhaseStatus, projects, repositories } from './db/schema/core.js'
 import { normalizeSourceRoot } from './repo/repository-paths.js'
 
 export interface AddRepositoryInput {
@@ -31,15 +32,55 @@ export type RepositorySelectorResult =
   | { kind: 'missing' }
   | { kind: 'ambiguous'; selector: string; matches: Array<typeof repositories.$inferSelect> }
 
+const PROJECT_REPOSITORY_INVENTORY_PHASES = [
+  'build_service_map',
+  'build_docs',
+  'build_epics',
+  'build_business_docs',
+] as const
+
 export function addRepository(db: DB, input: AddRepositoryInput) {
   const project = db.select().from(projects).where(eq(projects.id, input.projectId)).get()
   if (!project) throw new Error(`Project not found: ${input.projectId}`)
 
   const repoPath = resolveGitRoot(input.cwd ?? process.cwd(), input.path)
   const now = new Date().toISOString()
-  const id = nanoid()
   const sourceRoot = normalizeSourceRoot(input.sourceRoot)
   const analysisBranch = input.analysisBranch ?? detectAnalysisBranch(repoPath)
+  const existingReposForPath = db
+    .select()
+    .from(repositories)
+    .where(and(eq(repositories.projectId, input.projectId), eq(repositories.repoPath, repoPath)))
+    .all()
+
+  const activeRepoForPath = existingReposForPath.find((repo) => repo.deletedAt === null)
+  if (activeRepoForPath) throw new Error(`Repository already registered: ${repoPath}`)
+
+  const deletedRepoForPath = existingReposForPath.find((repo) => repo.deletedAt !== null)
+  if (deletedRepoForPath) {
+    db.update(repositories)
+      .set({
+        name: input.name?.trim() || deletedRepoForPath.name || basename(repoPath),
+        repoPath,
+        sourceRoot,
+        analysisBranch,
+        deletedAt: null,
+        updatedAt: now,
+      })
+      .where(eq(repositories.id, deletedRepoForPath.id))
+      .run()
+    invalidateProjectRepositoryInventoryDependents(db, {
+      projectId: input.projectId,
+      repositoryId: deletedRepoForPath.id,
+      reason: 'repository_reactivated',
+      invalidatedAt: now,
+    })
+    const repo = db.select().from(repositories).where(eq(repositories.id, deletedRepoForPath.id)).get()
+    if (!repo) throw new Error(`Repository reactivate failed: ${deletedRepoForPath.id}`)
+    return repo
+  }
+
+  const id = nanoid()
 
   db.insert(repositories).values({
     id,
@@ -51,6 +92,12 @@ export function addRepository(db: DB, input: AddRepositoryInput) {
     createdAt: now,
     updatedAt: now,
   }).run()
+  invalidateProjectRepositoryInventoryDependents(db, {
+    projectId: input.projectId,
+    repositoryId: id,
+    reason: 'repository_added',
+    invalidatedAt: now,
+  })
 
   const repo = db.select().from(repositories).where(eq(repositories.id, id)).get()
   if (!repo) throw new Error(`Repository create failed: ${id}`)
@@ -117,6 +164,12 @@ export function removeRepository(db: DB, projectId: string, selector: string, cw
     .set({ deletedAt, updatedAt: deletedAt })
     .where(eq(repositories.id, resolved.repository.id))
     .run()
+  invalidateProjectRepositoryInventoryDependents(db, {
+    projectId,
+    repositoryId: resolved.repository.id,
+    reason: 'repository_removed',
+    invalidatedAt: deletedAt,
+  })
 
   return {
     kind: 'found',
@@ -126,6 +179,40 @@ export function removeRepository(db: DB, projectId: string, selector: string, cw
       updatedAt: deletedAt,
     },
   }
+}
+
+function invalidateProjectRepositoryInventoryDependents(
+  db: DB,
+  input: {
+    projectId: string
+    repositoryId: string
+    reason: 'repository_added' | 'repository_reactivated' | 'repository_removed'
+    invalidatedAt: string
+  },
+) {
+  db.update(projectPhaseStatus)
+    .set({
+      status: 'pending',
+      updatedAt: Date.now(),
+      meta: {
+        invalidatedBy: input.reason,
+        repositoryId: input.repositoryId,
+        invalidatedAt: input.invalidatedAt,
+      },
+    })
+    .where(and(
+      eq(projectPhaseStatus.projectId, input.projectId),
+      inArray(projectPhaseStatus.phase, [...PROJECT_REPOSITORY_INVENTORY_PHASES]),
+    ))
+    .run()
+
+  db.update(documents)
+    .set({
+      validity: 'stale',
+      updatedAt: input.invalidatedAt,
+    })
+    .where(and(eq(documents.projectId, input.projectId), eq(documents.validity, 'fresh')))
+    .run()
 }
 
 function resolveGitRoot(cwd: string, requestedPath: string): string {

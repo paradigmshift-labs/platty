@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { and, asc, desc, eq, inArray, or } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, isNull, or } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { DB } from '@/db/client.js'
 import {
@@ -1541,7 +1541,7 @@ export function loadEpicSourceBundles(db: DB, projectId: string, epicIds: string
       .where(inArray(documentMemories.documentId, [...documentIds])).all() as DocumentMemory[])
 
   const repoRows = db.select({ id: repositories.id }).from(repositories)
-    .where(eq(repositories.projectId, projectId)).all()
+    .where(and(eq(repositories.projectId, projectId), isNull(repositories.deletedAt))).all()
   const repoIds = repoRows.map((row) => row.id)
   const allModels = repoIds.length === 0
     ? []

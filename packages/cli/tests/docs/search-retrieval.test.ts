@@ -9,7 +9,7 @@ let rootDir: string
 let db: DB
 let client: TestPlattyDb
 
-const { documents, documentItems } = schema
+const { documentItemDocumentLinks, documents, documentItems } = schema
 const now = '2026-06-10T00:00:00.000Z'
 
 beforeEach(async () => {
@@ -165,6 +165,102 @@ describe('platty docs retrieval commands', () => {
         }),
       }),
     ])
+  })
+
+  it('shows a document with active items and related traversal links', async () => {
+    const project = await runPlattyCommand(['project', 'create', 'Commerce', '--json'], { cwd: rootDir, db })
+    const projectId = String(project.result.data?.id)
+    seedDocument(projectId, {
+      id: 'doc:ucl:orders',
+      type: 'ucl',
+      scope: 'epic',
+      scopeId: 'epic:orders',
+      title: 'Order Use Cases',
+      summary: 'Order use case list',
+    })
+    seedDocument(projectId, {
+      id: 'doc:ucs:create-order',
+      type: 'ucs',
+      scope: 'use_case',
+      scopeId: 'epic:epic:orders:use_case:uc:create-order',
+      title: 'Create Order',
+      summary: 'Create order details',
+    })
+    db.insert(documentItems).values({
+      id: 'item:ucl:create-order',
+      documentId: 'doc:ucl:orders',
+      projectId,
+      itemType: 'use_case',
+      stableKey: 'uc:create-order',
+      ordinal: 1,
+      title: 'Create order',
+      summary: 'Create order.',
+      content: { use_case_id: 'uc:create-order' },
+      contentHash: 'hash:item:ucl:create-order',
+      status: 'active',
+      createdBy: 'system',
+      updatedBy: 'system',
+      updatedAt: now,
+    }).run()
+    db.insert(documentItemDocumentLinks).values({
+      fromItemId: 'item:ucl:create-order',
+      toDocumentId: 'doc:ucs:create-order',
+      linkType: 'expands_use_case',
+      role: 'primary',
+      createdBy: 'business_graph_materializer_v1',
+      createdAt: now,
+    }).run()
+
+    const show = await runPlattyCommand([
+      'docs',
+      'show',
+      '--project',
+      'Commerce',
+      '--document',
+      'doc:ucl:orders',
+      '--json',
+    ], { cwd: rootDir, db })
+    const related = await runPlattyCommand([
+      'docs',
+      'related',
+      '--project',
+      'Commerce',
+      '--document',
+      'doc:ucl:orders',
+      '--json',
+    ], { cwd: rootDir, db })
+
+    expect(show.exitCode).toBe(0)
+    expect(show.result.data).toMatchObject({
+      document: {
+        id: 'doc:ucl:orders',
+        type: 'ucl',
+        freshness: { isStale: false },
+      },
+      items: [
+        expect.objectContaining({
+          id: 'item:ucl:create-order',
+          targetDocumentLinks: [
+            expect.objectContaining({
+              documentId: 'doc:ucs:create-order',
+              linkType: 'expands_use_case',
+              target: expect.objectContaining({ id: 'doc:ucs:create-order', type: 'ucs' }),
+            }),
+          ],
+        }),
+      ],
+    })
+    expect(related.exitCode).toBe(0)
+    expect(related.result.data).toMatchObject({
+      documentId: 'doc:ucl:orders',
+      itemDocumentLinks: [
+        expect.objectContaining({
+          fromItemId: 'item:ucl:create-order',
+          documentId: 'doc:ucs:create-order',
+          linkType: 'expands_use_case',
+        }),
+      ],
+    })
   })
 })
 

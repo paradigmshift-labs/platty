@@ -59,6 +59,36 @@ describe('build_business_docs_cli sot/persist_graph', () => {
     })
   })
 
+  it('replaceDocumentLinks preserves links owned by the business graph materializer', () => {
+    const db = seeded()
+    const docId = seedBusinessDoc(db, 'doc:br:orders')
+    seedSourceDoc(db, 'doc:orders-api')
+    seedSourceDoc(db, 'doc:orders-ucl')
+    db.insert(documentLinks).values({
+      fromDocumentId: docId,
+      toDocumentId: 'doc:orders-ucl',
+      linkType: 'lists_use_case',
+      createdBy: 'business_graph_materializer_v1',
+    }).run()
+    db.insert(documentLinks).values({
+      fromDocumentId: docId,
+      toDocumentId: 'doc:orders-ucl',
+      linkType: 'derives_from',
+      createdBy: 'system',
+    }).run()
+    const document = { type: 'br', source_doc_ids: [] } as unknown as BusinessDocument
+
+    replaceDocumentLinks(db, docId, document, ['doc:orders-api'])
+
+    const links = db.select().from(documentLinks)
+      .where(eq(documentLinks.fromDocumentId, docId))
+      .all()
+    expect(links.map((row) => `${row.linkType}:${row.toDocumentId}:${row.createdBy}`).sort()).toEqual([
+      'derives_from:doc:orders-api:system',
+      'lists_use_case:doc:orders-ucl:business_graph_materializer_v1',
+    ])
+  })
+
   it('replaceDocumentItemSatellites links each item to source docs + indexes FTS, idempotently', () => {
     const db = seeded()
     const docId = seedBusinessDoc(db, 'doc:br:orders')
@@ -79,6 +109,31 @@ describe('build_business_docs_cli sot/persist_graph', () => {
     expect(ftsRows.map((row) => row.item_id).sort()).toEqual(['item:a', 'item:b'])
     const hit = db.all(sql`SELECT item_id FROM document_items_fts WHERE document_items_fts MATCH ${'fulfillment'}`) as Array<{ item_id: string }>
     expect(hit.map((row) => row.item_id)).toEqual(['item:b'])
+  })
+
+  it('replaceDocumentItemSatellites preserves item links owned by the business graph materializer', () => {
+    const db = seeded()
+    const docId = seedBusinessDoc(db, 'doc:br:orders')
+    seedSourceDoc(db, 'doc:orders-api')
+    seedSourceDoc(db, 'doc:orders-ucs')
+    seedItem(db, { id: 'item:a', documentId: docId, itemType: 'br_rule', stableKey: 'rule:a', title: 'Payment rule' })
+    db.insert(documentItemDocumentLinks).values({
+      fromItemId: 'item:a',
+      toDocumentId: 'doc:orders-ucs',
+      linkType: 'governed_by_rule',
+      role: 'primary',
+      createdBy: 'business_graph_materializer_v1',
+    }).run()
+
+    replaceDocumentItemSatellites(db, docId, projectId, ['doc:orders-api'])
+
+    const itemLinks = db.select().from(documentItemDocumentLinks)
+      .where(eq(documentItemDocumentLinks.fromItemId, 'item:a'))
+      .all()
+    expect(itemLinks.map((row) => `${row.linkType}:${row.toDocumentId}:${row.createdBy}:${row.role}`).sort()).toEqual([
+      'derives_from:doc:orders-api:system:supporting',
+      'governed_by_rule:doc:orders-ucs:business_graph_materializer_v1:primary',
+    ])
   })
 
   it('linkedDocumentIds prefers systemSourceDocIds, else falls back to source_doc_ids + non-model refs', () => {

@@ -650,6 +650,9 @@ export interface BusinessDocsDocumentShowResult {
     content: Record<string, unknown>
     status: string
     sourceDocumentLinks: Array<{ documentId: string; linkType: string; role: string | null }>
+    targetDocumentLinks: Array<{ documentId: string; linkType: string; role: string | null }>
+    relatedItems: Array<{ itemId: string; linkType: string; role: string | null }>
+    modelLinks: Array<{ modelId: string; fieldName: string | null; linkType: string; role: string }>
   }>
 }
 

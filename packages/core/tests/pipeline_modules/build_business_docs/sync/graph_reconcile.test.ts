@@ -1,8 +1,18 @@
 import { eq, sql } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
-import { documentItemDocumentLinks, documentItemItemLinks, documentItemRelationLinks, documentItems, documentLinkEvidence, documentLinks, documents } from '../../../../src/db/schema/build_docs.js'
+import {
+  documentItemDocumentLinks,
+  documentItemItemLinks,
+  documentItemModelLinks,
+  documentItemRelationLinks,
+  documentItems,
+  documentLinkEvidence,
+  documentLinks,
+  documents,
+} from '../../../../src/db/schema/build_docs.js'
 import { epicDocumentLinks } from '../../../../src/db/schema/build_epics.js'
-import { epics, projects } from '../../../../src/db/schema/core.js'
+import { models } from '../../../../src/db/schema/build_models.js'
+import { epics, projects, repositories } from '../../../../src/db/schema/core.js'
 import {
   checkBusinessDocGraphInvariants,
   cleanupOrphanedBusinessDocumentGraph,
@@ -22,14 +32,23 @@ describe('business docs graph reconcile', () => {
     seedEpic(db, 'epic:old')
     seedTechnicalDoc(db, 'doc:api')
     seedBusinessDoc(db, 'doc:business', 'epic:old')
+    seedBusinessDoc(db, 'doc:active', 'epic:active')
     seedBusinessItem(db, 'item:business', 'doc:business')
     seedBusinessItem(db, 'item:related', 'doc:business')
+    seedBusinessItem(db, 'item:active', 'doc:active')
+    seedModel(db)
 
     db.insert(documentLinks).values({
       fromDocumentId: 'doc:business',
       toDocumentId: 'doc:api',
       linkType: 'derives_from',
       createdBy: 'system',
+    }).run()
+    db.insert(documentLinks).values({
+      fromDocumentId: 'doc:active',
+      toDocumentId: 'doc:business',
+      linkType: 'governed_by_rule',
+      createdBy: 'business_graph_materializer_v1',
     }).run()
     db.insert(documentLinkEvidence).values({
       projectId,
@@ -50,6 +69,13 @@ describe('business docs graph reconcile', () => {
       role: 'primary',
       createdBy: 'system',
     }).run()
+    db.insert(documentItemDocumentLinks).values({
+      fromItemId: 'item:active',
+      toDocumentId: 'doc:business',
+      linkType: 'expands_use_case',
+      role: 'primary',
+      createdBy: 'business_graph_materializer_v1',
+    }).run()
     db.insert(documentItemItemLinks).values({
       fromItemId: 'item:business',
       toItemId: 'item:related',
@@ -66,6 +92,15 @@ describe('business docs graph reconcile', () => {
       kind: 'calls',
       evidenceNodeIdsJson: [],
       confidence: 'high',
+    }).run()
+    db.insert(documentItemModelLinks).values({
+      projectId,
+      itemId: 'item:business',
+      modelId: 'repo:orders:Order',
+      fieldName: 'id',
+      linkType: 'describes_field',
+      role: 'supporting',
+      createdBy: 'business_graph_materializer_v1',
     }).run()
     db.insert(epicDocumentLinks).values({
       epicId: 'epic:old',
@@ -86,12 +121,13 @@ describe('business docs graph reconcile', () => {
       now,
     })
 
-    expect(db.select().from(documentItems).all().map((item) => item.status)).toEqual(['stale', 'stale'])
+    expect(db.select().from(documentItems).all().map((item) => item.status).sort()).toEqual(['active', 'stale', 'stale'])
     expect(db.select().from(documentLinks).all()).toEqual([])
     expect(db.select().from(documentLinkEvidence).all()).toEqual([])
     expect(db.select().from(documentItemDocumentLinks).all()).toEqual([])
     expect(db.select().from(documentItemItemLinks).all()).toEqual([])
     expect(db.select().from(documentItemRelationLinks).all()).toEqual([])
+    expect(db.select().from(documentItemModelLinks).all()).toEqual([])
     expect(db.select().from(epicDocumentLinks).all()).toEqual([])
     expect(db.all(sql`SELECT * FROM document_items_fts WHERE item_id = 'item:business'`)).toEqual([])
   })
@@ -196,6 +232,32 @@ describe('business docs graph reconcile', () => {
       linkedDocumentId: 'doc:deleted-api',
     }))
   })
+
+  it('reports DD model links to fields that no longer exist on the model', () => {
+    const db = createTestDb()
+    seedProject(db)
+    seedBusinessDoc(db, 'doc:dd', 'epic:orders')
+    seedBusinessItem(db, 'item:dd', 'doc:dd')
+    seedModel(db)
+    db.insert(documentItemModelLinks).values({
+      projectId,
+      itemId: 'item:dd',
+      modelId: 'repo:orders:Order',
+      fieldName: 'missingField',
+      linkType: 'describes_field',
+      role: 'supporting',
+      createdBy: 'business_graph_materializer_v1',
+    }).run()
+
+    const result = checkBusinessDocGraphInvariants(db, { projectId })
+
+    expect(result.violations).toContainEqual(expect.objectContaining({
+      code: 'MODEL_FIELD_LINK_DANGLING',
+      documentId: 'doc:dd',
+      itemId: 'item:dd',
+      linkedDocumentId: 'repo:orders:Order',
+    }))
+  })
 })
 
 function seedProject(db: TestDb): void {
@@ -220,6 +282,30 @@ function seedEpic(db: TestDb, id: string): void {
     confidence: 'high',
     confirmedAt: now,
     deletedAt: null,
+    createdAt: now,
+    updatedAt: now,
+  }).run()
+}
+
+function seedModel(db: TestDb): void {
+  db.insert(repositories).values({
+    id: 'repo:orders',
+    projectId,
+    name: 'orders',
+    repoPath: '/repo/orders',
+    analysisBranch: 'main',
+    createdAt: now,
+    updatedAt: now,
+  }).run()
+  db.insert(models).values({
+    id: 'repo:orders:Order',
+    repositoryId: 'repo:orders',
+    name: 'Order',
+    tableName: 'orders',
+    fields: [{ name: 'id', type: 'String', nullable: false, primary: true, unique: true, line: 1 }],
+    relations: [],
+    orm: 'prisma',
+    validity: 'fresh',
     createdAt: now,
     updatedAt: now,
   }).run()

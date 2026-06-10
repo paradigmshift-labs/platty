@@ -2,6 +2,7 @@ import { sqliteTable, text, integer, index, primaryKey, uniqueIndex } from 'driz
 import { sql } from 'drizzle-orm'
 import type { CodeRelationConfidence, CodeRelationKind } from './build_relations.js'
 import { codeRelations } from './build_relations.js'
+import { models } from './build_models.js'
 import { projects, repositories } from './core.js'
 
 export const documents = sqliteTable(
@@ -227,6 +228,35 @@ export const documentItemRelationLinks = sqliteTable(
 
 export type DocumentItemRelationLink = typeof documentItemRelationLinks.$inferSelect
 export type NewDocumentItemRelationLink = typeof documentItemRelationLinks.$inferInsert
+
+export const documentItemModelLinks = sqliteTable(
+  'document_item_model_links',
+  {
+    projectId: text('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    itemId: text('item_id')
+      .notNull()
+      .references(() => documentItems.id, { onDelete: 'cascade' }),
+    modelId: text('model_id')
+      .notNull()
+      .references(() => models.id, { onDelete: 'cascade' }),
+    fieldName: text('field_name'),
+    linkType: text('link_type').notNull().$type<'describes_model' | 'describes_field' | 'uses_model'>(),
+    role: text('role').notNull().$type<'primary' | 'supporting'>(),
+    evidenceJson: text('evidence_json', { mode: 'json' }).$type<Record<string, unknown> | null>(),
+    createdBy: text('created_by').notNull().default('business_graph_materializer_v1'),
+    createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  },
+  (t) => [
+    uniqueIndex('idx_document_item_model_links_unique').on(t.itemId, t.modelId, t.fieldName, t.linkType),
+    index('idx_document_item_model_links_project').on(t.projectId),
+    index('idx_document_item_model_links_model').on(t.modelId),
+  ],
+)
+
+export type DocumentItemModelLink = typeof documentItemModelLinks.$inferSelect
+export type NewDocumentItemModelLink = typeof documentItemModelLinks.$inferInsert
 
 export const documentMemories = sqliteTable(
   'document_memories',

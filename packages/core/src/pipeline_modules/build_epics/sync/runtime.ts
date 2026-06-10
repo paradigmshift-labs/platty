@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { and, asc, eq, inArray } from 'drizzle-orm'
+import { and, asc, eq, inArray, isNull } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import {
   generationContextBundles,
@@ -76,7 +76,10 @@ export class BuildEpicsSyncRuntime {
     requestedBy: string
     policy?: { changedRatioFullRebuildThreshold?: number; maxWorkerCount?: number; maxRepairPasses?: number; maxAssignmentBatchSize?: number }
   }) {
-    const repo = this.input.db.select().from(repositories).where(eq(repositories.projectId, input.projectId)).get()
+    const repo = this.input.db.select()
+      .from(repositories)
+      .where(and(eq(repositories.projectId, input.projectId), isNull(repositories.deletedAt)))
+      .get()
     if (!repo) throw new Error('BUILD_EPICS_REPOSITORY_REQUIRED')
 
     const impact = deriveEpicSyncImpact({ db: this.input.db, projectId: input.projectId, docSyncPlanId: input.docSyncPlanId })

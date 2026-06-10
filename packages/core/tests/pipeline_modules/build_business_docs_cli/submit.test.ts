@@ -4,6 +4,7 @@ import { createTestDb } from '../../server/helpers.js'
 import { sql } from 'drizzle-orm'
 import {
   documentItemDocumentLinks,
+  documentItemModelLinks,
   documentItems,
   documentLinks,
   documentProposals,
@@ -11,7 +12,8 @@ import {
   documents,
 } from '../../../src/db/schema/build_docs.js'
 import { epicDocumentLinks } from '../../../src/db/schema/build_epics.js'
-import { epics, projects } from '../../../src/db/schema/core.js'
+import { models } from '../../../src/db/schema/build_models.js'
+import { epics, projects, repositories } from '../../../src/db/schema/core.js'
 import {
   businessDocContextBundles,
   businessDocContextPages,
@@ -933,6 +935,27 @@ describe('build_business_docs_cli submit / validate / persist', () => {
 
   it('materializes item source links from model evidence source document ids', () => {
     const db = createRunnableProject()
+    db.insert(repositories).values({
+      id: 'repo:orders',
+      projectId,
+      name: 'orders',
+      repoPath: '/repo/orders',
+      analysisBranch: 'main',
+      createdAt: now,
+      updatedAt: now,
+    }).run()
+    db.insert(models).values({
+      id: 'repo:orders:Order',
+      repositoryId: 'repo:orders',
+      name: 'Order',
+      tableName: 'orders',
+      fields: [{ name: 'id', type: 'String', nullable: false, primary: true, unique: true, line: 1 }],
+      relations: [],
+      orm: 'prisma',
+      validity: 'fresh',
+      createdAt: now,
+      updatedAt: now,
+    }).run()
     const runId = startRun(db)
     const task = leaseOne(db, runId, 'data_dictionary')
     const modelEvidenceId = `${runId}:${task.id}:model_evidence:1`
@@ -993,11 +1016,26 @@ describe('build_business_docs_cli submit / validate / persist', () => {
     }))
 
     const links = db.select().from(documentItemDocumentLinks).all()
+    const modelLinks = db.select().from(documentItemModelLinks).all()
     expect(result.task.status).toBe('saved')
     expect(links).toEqual(expect.arrayContaining([
       expect.objectContaining({
         toDocumentId: 'doc:orders-api',
         linkType: 'source_document',
+        role: 'supporting',
+      }),
+    ]))
+    expect(modelLinks).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        modelId: 'repo:orders:Order',
+        fieldName: null,
+        linkType: 'describes_model',
+        role: 'primary',
+      }),
+      expect.objectContaining({
+        modelId: 'repo:orders:Order',
+        fieldName: 'id',
+        linkType: 'describes_field',
         role: 'supporting',
       }),
     ]))

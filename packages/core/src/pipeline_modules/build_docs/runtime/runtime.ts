@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { and, asc, eq, inArray } from 'drizzle-orm'
+import { and, asc, eq, inArray, isNull } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import {
   docDeps,
@@ -41,6 +41,7 @@ import {
   BUILD_DOCS_LEASE_TTL_MS,
   type BuildDocsGenerationContextResponse,
   type BuildDocsGenerationManifest,
+  type BuildDocsRepairContext,
   type BuildDocsGenerationRuntimeInput,
   type BuildDocsNextAction,
   type BuildDocsPreconditionDetails,
@@ -161,7 +162,10 @@ export class BuildDocsGenerationRuntime {
     this.assertPreconditions(input.projectId)
     await rebuildSharedCodeSegmentsForProject({ db, projectId: input.projectId })
 
-    const repoRows = db.select().from(repositories).where(eq(repositories.projectId, input.projectId)).all()
+    const repoRows = db.select()
+      .from(repositories)
+      .where(and(eq(repositories.projectId, input.projectId), isNull(repositories.deletedAt)))
+      .all()
     const sourceCommit = repoRows.map((repo) => repo.lastSyncedCommit).find((commit): commit is string => !!commit) ?? 'unknown'
     const runId = `gen:${randomUUID()}`
     const now = timestamp()
@@ -1019,6 +1023,7 @@ export class BuildDocsGenerationRuntime {
         source_context: sourceContext,
         shared_context: sharedContextForAgent,
         source_context_compaction: compactedSource.metadata,
+        repair: repairContextForTask(task),
         source_link_candidates: sourceLinkCandidates,
         code_relation_facts: codeRelationFacts,
         service_map_facts: serviceMapFacts,
@@ -1129,6 +1134,7 @@ export class BuildDocsGenerationRuntime {
         source_context: sourceContext,
         shared_context: sharedContext,
         source_context_compaction: manifest.source_context_compaction,
+        repair: repairContextForTask(task),
         source_link_candidates: sourceLinkCandidates,
         code_relation_facts: codeRelationFacts,
         service_map_facts: serviceMapFacts,
@@ -1377,7 +1383,10 @@ export class BuildDocsGenerationRuntime {
 }
 
 export function verifyBuildDocsPreconditions(db: DB, projectId: string): BuildDocsPreconditionDetails {
-  const repos = db.select().from(repositories).where(eq(repositories.projectId, projectId)).all()
+  const repos = db.select()
+    .from(repositories)
+    .where(and(eq(repositories.projectId, projectId), isNull(repositories.deletedAt)))
+    .all()
   const missing: string[] = []
   const stale: string[] = []
   const failed: string[] = []
@@ -1835,6 +1844,25 @@ function hasSourceLinkSelectionShapeErrors(errors: ValidationError[]): boolean {
     error.path.startsWith('$.source_link_selection')
       && (error.code === 'QUALITY_FIELD_SHAPE' || error.code === 'FORBIDDEN_DRAFT_FIELD')
   ))
+}
+
+function repairContextForTask(task: GenerationTask): BuildDocsRepairContext | undefined {
+  const validationErrors = Array.isArray(task.lastValidationErrors)
+    ? task.lastValidationErrors.filter(isValidationError)
+    : []
+  if (task.retryCount === 0 && validationErrors.length === 0) return undefined
+  return {
+    retryCount: task.retryCount,
+    maxRetries: task.maxRetries,
+    validationErrors,
+  }
+}
+
+function isValidationError(value: unknown): value is ValidationError {
+  return isRecord(value)
+    && typeof value.code === 'string'
+    && typeof value.path === 'string'
+    && typeof value.message === 'string'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
