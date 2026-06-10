@@ -20,6 +20,7 @@ import {
   type DB,
   type DocsTargetKind,
   type DocsTargetSelector,
+  type DocsTargetStatus,
   type OpenPlattyDbResult,
 } from '@platty/core'
 import { readProjectConfig } from '../config-store.js'
@@ -84,7 +85,17 @@ function positional(argv: string[]) {
       part === '--scope' ||
       part === '--validity' ||
       part === '--limit' ||
-      part === '--document'
+      part === '--document' ||
+      part === '--kind' ||
+      part === '--path' ||
+      part === '--method' ||
+      part === '--repo' ||
+      part === '--ids' ||
+      part === '--input' ||
+      part === '--status' ||
+      part === '--note' ||
+      part === '--decided-by' ||
+      part === '--requested-by'
     ) {
       index += 1
       continue
@@ -199,10 +210,40 @@ function offsetValue(argv: string[]): number {
   return numberValue(argv, '--offset', 0)
 }
 
-function docsTargetKindValue(argv: string[]): DocsTargetKind | null | undefined {
+function docsTargetKindValue(argv: string[]): DocsTargetKind | 'all' | null | undefined {
   const option = optionValue(argv, '--kind')
   if (!option) return undefined
+  if (option === 'all') return 'all'
   return normalizeDocsTargetKind(option)
+}
+
+function listDocsTargetKindValue(argv: string[]): DocsTargetKind | null | undefined {
+  const kind = docsTargetKindValue(argv)
+  if (kind === 'all') return undefined
+  return kind
+}
+
+function mutationDocsTargetKindValue(argv: string[]): DocsTargetKind | null | undefined {
+  const kind = docsTargetKindValue(argv)
+  if (kind === 'all') return null
+  return kind
+}
+
+function docsTargetStatusValue(argv: string[]): DocsTargetStatus | null | undefined {
+  const option = optionValue(argv, '--status')
+  if (!option) return undefined
+  if (option === 'active' || option === 'deprecated' || option === 'all') return option
+  return null
+}
+
+function emptyTargetKindCounts(): Record<DocsTargetKind, number> {
+  return { api: 0, screen: 0, job: 0, event: 0 }
+}
+
+function countTargetsByKind(targets: Array<{ kind: DocsTargetKind }>): Record<DocsTargetKind, number> {
+  const counts = emptyTargetKindCounts()
+  for (const target of targets) counts[target.kind] += 1
+  return counts
 }
 
 function targetSelectorFromValue(value: unknown): DocsTargetSelector | { error: string; message: string } | null {
@@ -232,7 +273,7 @@ function targetSelectorFromValue(value: unknown): DocsTargetSelector | { error: 
 
 async function targetSelectorsValue(argv: string[]): Promise<DocsTargetSelector[] | { error: string; message: string }> {
   const selectors: DocsTargetSelector[] = idsValue(argv).map((id) => ({ id }))
-  const kind = docsTargetKindValue(argv)
+  const kind = mutationDocsTargetKindValue(argv)
   if (kind === null) {
     return { error: 'INVALID_TARGET_KIND', message: `Invalid docs target kind: ${optionValue(argv, '--kind') ?? ''}` }
   }
@@ -784,6 +825,13 @@ Commands:
   context get                       Get task context bundle
   leases release --run-id <id>      Release active leases
 
+Targets:
+  Targets are build_route entry points: api, screen, job, and event.
+  --kind api|screen|job|event|all    Filter target kind for targets list
+  --status active|deprecated|all     Filter review status for targets list
+  --ids <id,id>                      Select targets for deprecate/include
+  --kind <kind> --path <path>        Select one target for deprecate/include
+
 Options:
   --json                            Machine-readable JSON output
   --project <selector>              Target project (id, name, or current)
@@ -862,15 +910,21 @@ export async function runDocsCommand(argv: string[], options: DocsCommandOptions
       const selected = requireSelectedProject(db, options, root.config)
       if ('exitCode' in selected) return selected
 
-      const kind = docsTargetKindValue(argv)
+      const kind = listDocsTargetKindValue(argv)
       if (kind === null) {
         const result = failure('INVALID_TARGET_KIND', `Invalid docs target kind: ${optionValue(argv, '--kind') ?? ''}`)
+        return { exitCode: 2, result, stdout: '', stderr: '' }
+      }
+      const status = docsTargetStatusValue(argv)
+      if (status === null) {
+        const result = failure('INVALID_TARGET_STATUS', `Invalid docs target status: ${optionValue(argv, '--status') ?? ''}`)
         return { exitCode: 2, result, stdout: '', stderr: '' }
       }
 
       const listed = listDocsTargets(db, {
         projectId: selected.project.id,
         kind,
+        status,
         repo: optionValue(argv, '--repo'),
         method: optionValue(argv, '--method'),
         search: optionValue(argv, '--search'),
@@ -932,6 +986,7 @@ export async function runDocsCommand(argv: string[], options: DocsCommandOptions
         })
       }
 
+      const updatedByKind = countTargetsByKind(resolved.targets)
       return ok({
         project: projectPointer(selected.project),
         decision,
@@ -943,6 +998,8 @@ export async function runDocsCommand(argv: string[], options: DocsCommandOptions
           path: target.path,
           method: target.method,
         })),
+        updatedByKind,
+        updated_by_kind: updatedByKind,
         skipped: [],
       })
     }
