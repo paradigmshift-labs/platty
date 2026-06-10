@@ -1,0 +1,36 @@
+{
+  "name": "platty",
+  "version": "0.1.0",
+  "description": "Shared Platty CLI and documentation workflow skills for Codex and Claude Code.",
+  "author": {
+    "name": "Paradigm Shift Labs"
+  },
+  "homepage": "https://github.com/paradigmshift-labs/platty",
+  "repository": "https://github.com/paradigmshift-labs/platty",
+  "license": "UNLICENSED",
+  "keywords": [
+    "platty",
+    "skills",
+    "cli",
+    "documentation",
+    "codex",
+    "claude"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Platty",
+    "shortDescription": "Platty CLI, analysis, and document-generation workflows",
+    "longDescription": "Use Platty Agent Skills to guide workspace setup, static analysis, technical document generation, business document generation, epic generation, retrieval, and fixture corpus quality workflows.",
+    "developerName": "Paradigm Shift Labs",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "What should I run next in Platty?",
+      "Generate Platty docs for this project."
+    ]
+  }
+}

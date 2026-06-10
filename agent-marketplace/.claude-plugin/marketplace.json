@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "platty",
+  "description": "Platty CLI and documentation workflow skills for Claude Code.",
+  "owner": {
+    "name": "Paradigm Shift Labs"
+  },
+  "plugins": [
+    {
+      "name": "platty",
+      "description": "Shared Platty CLI, analysis, retrieval, and documentation workflow skills.",
+      "author": {
+        "name": "Paradigm Shift Labs"
+      },
+      "category": "development",
+      "source": "./plugins/platty",
+      "homepage": "https://github.com/paradigmshift-labs/platty"
+    }
+  ]
+}

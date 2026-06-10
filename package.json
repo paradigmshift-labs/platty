@@ -9,8 +9,12 @@
   ],
   "scripts": {
     "build": "node \"$npm_execpath\" run build --workspaces --if-present && node scripts/resolve-core-dist-aliases.mjs packages/core/dist",
-    "test": "node --test tests/**/*.test.mjs && node \"$npm_execpath\" run check:architecture",
+    "test": "node --test tests/**/*.test.mjs && node \"$npm_execpath\" run check:architecture && node \"$npm_execpath\" run check:agent-skills && node \"$npm_execpath\" run check:agent-marketplace",
     "check:architecture": "node scripts/check-architecture.mjs",
+    "sync:agent-skills": "node scripts/sync-agent-skills.mjs",
+    "check:agent-skills": "node scripts/sync-agent-skills.mjs --check",
+    "package:agent-marketplace": "node scripts/package-agent-marketplace.mjs",
+    "check:agent-marketplace": "node scripts/package-agent-marketplace.mjs --check",
     "typecheck": "tsc -b"
   },
   "devDependencies": {

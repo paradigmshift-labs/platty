@@ -74,7 +74,9 @@ function extractBusinessDocumentItems(document: BusinessDocument): BusinessDocum
         sourceDocumentIds: (useCase.coverage ?? []).map((coverage) => coverage.source_document_id),
       })))
     case 'data_dictionary':
-      return dedupeItems(document.entities.flatMap((entity) => entity.fields.map((field) => ({
+      // Gap entities (gapType: missing_model_evidence) carry no fields; guard so
+      // a fields-less entity does not crash the field projection.
+      return dedupeItems(document.entities.flatMap((entity) => (entity.fields ?? []).map((field) => ({
         itemType: 'dd_field',
         stableKey: `field:${stableKeyPart(entity.name)}:${stableKeyPart(field.name)}`,
         title: `${entity.name}.${field.name}`,

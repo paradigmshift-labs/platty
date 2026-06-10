@@ -442,7 +442,7 @@ function summarizeDataDictionary(document: DataDictionaryDocument): Record<strin
       name: entity.name,
       table_name: entity.table_name,
       source_refs: entity.source_refs,
-      fields: entity.fields.map((field) => ({
+      fields: (entity.fields ?? []).map((field) => ({
         name: field.name,
         column_name: field.column_name,
         type: field.type,

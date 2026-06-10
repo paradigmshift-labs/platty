@@ -39,8 +39,12 @@ describe('Platty monorepo workspace contract', () => {
       scripts.build,
       'node "$npm_execpath" run build --workspaces --if-present && node scripts/resolve-core-dist-aliases.mjs packages/core/dist',
     )
-    assert.equal(scripts.test, 'node --test tests/**/*.test.mjs && node "$npm_execpath" run check:architecture')
+    assert.equal(scripts.test, 'node --test tests/**/*.test.mjs && node "$npm_execpath" run check:architecture && node "$npm_execpath" run check:agent-skills && node "$npm_execpath" run check:agent-marketplace')
     assert.equal(scripts['check:architecture'], 'node scripts/check-architecture.mjs')
+    assert.equal(scripts['sync:agent-skills'], 'node scripts/sync-agent-skills.mjs')
+    assert.equal(scripts['check:agent-skills'], 'node scripts/sync-agent-skills.mjs --check')
+    assert.equal(scripts['package:agent-marketplace'], 'node scripts/package-agent-marketplace.mjs')
+    assert.equal(scripts['check:agent-marketplace'], 'node scripts/package-agent-marketplace.mjs --check')
     assert.equal(scripts.typecheck, 'tsc -b')
   })
 
