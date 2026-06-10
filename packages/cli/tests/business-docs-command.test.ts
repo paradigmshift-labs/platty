@@ -69,7 +69,7 @@ describe('platty business-docs CLI', () => {
           persistMode: 'incremental',
           projectGlossaryMode: 'auto',
           judgeMode: 'off',
-          outputLanguage: 'ko',
+          outputLanguage: 'en',
         },
       },
       warnings: [],

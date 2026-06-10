@@ -17,6 +17,7 @@ import type {
   BusinessDocsTaskType,
 } from './types.js'
 import { invokeCodexCliJson, safeName, type CodexCliEffort } from '@/pipeline_modules/cli_agent_runner/codex_cli.js'
+import { outputLanguageInstruction, type OutputLanguage } from '@/pipeline_modules/shared/output_language.js'
 
 export type BusinessDocsRunnerProvider = 'codex_cli' | 'claude_code'
 export type BusinessDocsRunnerPreset = 'final-mixed' | 'balanced'
@@ -52,6 +53,7 @@ export interface RunBusinessDocsWorkerQueueInput {
   workers?: number
   newRun?: boolean
   forceRegenerate?: boolean
+  outputLanguage?: 'ko' | 'en'
   workDir: string
   taskInvoker?: BusinessDocsTaskInvoker
 }
@@ -249,6 +251,7 @@ function startRun(input: RunBusinessDocsWorkerQueueInput): string {
     projectId: input.projectId,
     newRun: input.newRun,
     forceRegenerate: input.forceRegenerate,
+    outputLanguage: input.outputLanguage,
   })
   if (!started.ok) throw new Error(`${started.code}: ${started.message}`)
   return started.data.run.id
@@ -374,6 +377,7 @@ export function buildBusinessDocsPromptForTask(
   const contract = outputContractForTask(task)
   return [
     `Generate one Platty business document draft for ${task.taskType}.`,
+    outputLanguageInstruction(outputLanguageForBusinessDocsContext(contextPages)),
     'Use only the provided JSON context. Do not inspect local files, databases, or other artifacts.',
     'Return exactly one JSON object matching the output schema.',
     'The JSON must use schemaVersion "business-doc.v1" and must preserve documentType, scope, and scopeId from the task.',
@@ -394,6 +398,14 @@ export function buildBusinessDocsPromptForTask(
     'Context pages JSON:',
     JSON.stringify(contextPages, null, 2),
   ].join('\n')
+}
+
+function outputLanguageForBusinessDocsContext(contextPages: BusinessDocsContextPageResult[]): OutputLanguage {
+  for (const page of contextPages) {
+    const content = page.page.content
+    if (isRecord(content) && content.outputLanguage === 'ko') return 'ko'
+  }
+  return 'en'
 }
 
 export function buildBusinessDocsSchemaForTask(task: BusinessDocsLeasedTask): Record<string, unknown> {

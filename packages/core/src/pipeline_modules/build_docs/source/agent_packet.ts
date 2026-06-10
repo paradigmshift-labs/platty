@@ -5,6 +5,7 @@ import type {
   LeasedGenerationTask,
   LeaseTaskResult,
 } from '../runtime/types.js'
+import { outputLanguageInstruction, type OutputLanguage } from '@/pipeline_modules/shared/output_language.js'
 
 export interface BuildDocsAgentWorkPacket {
   type: 'task'
@@ -77,6 +78,7 @@ function promptForDocsContext(context: BuildDocsGenerationContextResponse): stri
   const outputFields = Object.keys(propertiesFor(schema.schema_name))
   return [
     `Generate one Platty ${schema.schema_name} draft JSON object from the provided CLI context.`,
+    outputLanguageInstruction(outputLanguageForContext(context)),
     'Use only agentInput.context. Do not inspect local files, databases, or other artifacts.',
     'Return exactly one JSON object matching agentInput.outputSchema.',
     'Do not include system-owned fields listed in agentInput.forbiddenFields.',
@@ -91,6 +93,10 @@ function promptForDocsContext(context: BuildDocsGenerationContextResponse): stri
     'Quality rules:',
     ...schema.quality_rules.map((rule) => `- ${rule}`),
   ].join('\n')
+}
+
+function outputLanguageForContext(context: BuildDocsGenerationContextResponse): OutputLanguage {
+  return context.metadata.outputLanguage === 'ko' ? 'ko' : 'en'
 }
 
 function jsonSchemaForDraft(schema: DraftSchemaContext): Record<string, unknown> {

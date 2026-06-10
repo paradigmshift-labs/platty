@@ -185,6 +185,7 @@ interface StartInput {
   selectedEpicIds?: string[]
   newRun?: boolean
   forceRegenerate?: boolean
+  outputLanguage?: 'ko' | 'en'
   now?: () => Date
   makeId?: () => string
 }
@@ -349,11 +350,15 @@ export function startBusinessDocsGeneration(db: DB, input: StartInput): Business
     existingCanonicalByTarget,
   })
 
+  const policy = {
+    ...DEFAULT_BUSINESS_DOCS_RUNTIME_POLICY,
+    outputLanguage: input.outputLanguage ?? DEFAULT_BUSINESS_DOCS_RUNTIME_POLICY.outputLanguage,
+  }
   const runRow: NewBusinessDocGenerationRun = {
     id: runId,
     projectId: input.projectId,
     status: 'running',
-    policyJson: DEFAULT_BUSINESS_DOCS_RUNTIME_POLICY,
+    policyJson: policy,
     previewSnapshotJson: preview,
     selectedEpicIdsJson: selectedEpicIds,
     sourceCommit: SOURCE_COMMIT,
@@ -369,7 +374,7 @@ export function startBusinessDocsGeneration(db: DB, input: StartInput): Business
         task,
         runId,
         projectId: input.projectId,
-        maxRepairAttempts: DEFAULT_BUSINESS_DOCS_RUNTIME_POLICY.maxRepairAttempts,
+        maxRepairAttempts: policy.maxRepairAttempts,
         now,
       })).run()
     }
@@ -386,7 +391,7 @@ export function startBusinessDocsGeneration(db: DB, input: StartInput): Business
         createdAt: now,
       } satisfies NewBusinessDocContextBundle).run()
 
-      for (const page of buildPages({ task, runId, now })) {
+      for (const page of buildPages({ task, runId, now, outputLanguage: policy.outputLanguage })) {
         tx.insert(businessDocContextPages).values(page).run()
       }
     }
@@ -406,7 +411,7 @@ export function startBusinessDocsGeneration(db: DB, input: StartInput): Business
         updatedAt: now,
       },
       project: preview.project,
-      policy: DEFAULT_BUSINESS_DOCS_RUNTIME_POLICY,
+      policy,
       preview,
       tasks: summarizeCreatedTasks(plannedTasks, preview, input.forceRegenerate === true),
       contexts: {
@@ -838,7 +843,7 @@ export function buildManifest(input: { task: PlannedTask; runId: string; now: st
   }
 }
 
-export function buildPages(input: { task: PlannedTask; runId: string; now: string }): NewBusinessDocContextPage[] {
+export function buildPages(input: { task: PlannedTask; runId: string; now: string; outputLanguage?: 'ko' | 'en' }): NewBusinessDocContextPage[] {
   const targetContent = {
     runId: input.runId,
     taskId: input.task.id,
@@ -847,7 +852,7 @@ export function buildPages(input: { task: PlannedTask; runId: string; now: strin
     scope: input.task.scope,
     scopeId: input.task.scopeId,
     epicId: input.task.epicId,
-    outputLanguage: DEFAULT_BUSINESS_DOCS_RUNTIME_POLICY.outputLanguage,
+    outputLanguage: input.outputLanguage ?? DEFAULT_BUSINESS_DOCS_RUNTIME_POLICY.outputLanguage,
     sourceCommit: SOURCE_COMMIT,
     dependencyTaskIds: input.task.dependsOnTaskIds,
     target: {

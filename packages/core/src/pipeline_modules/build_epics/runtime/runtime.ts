@@ -64,7 +64,7 @@ export class BuildEpicsCliRuntime {
     const docIndex = await loadDocIndex({ db: this.input.db, projectId: input.projectId, documentScope: 'all' })
     const cards = packBuildEpicsDocumentCards(docIndex)
     const policy = resolveBuildEpicsRuntimePolicy(
-      { ...input.policy, outputLanguage: input.outputLanguage ?? input.policy?.outputLanguage ?? 'ko' },
+      { ...input.policy, outputLanguage: input.outputLanguage ?? input.policy?.outputLanguage ?? 'en' },
       { totalAssignableDocs: assignableDocs(docIndex), totalDocumentCards: cards.length },
     )
 
@@ -175,7 +175,7 @@ export class BuildEpicsCliRuntime {
   async getContext(input: { taskId: string; leaseToken: string }) {
     const task = this.requireTaskLease(input.taskId, input.leaseToken)
     const run = this.requireBuildEpicsRun(task.runId)
-    const content = await this.contextContent(task)
+    const content = await this.contextContent(task, run.outputLanguage)
     const contentHash = hashJson(content)
     const contextHandle = `ctx:${task.id}`
     const manifest = {
@@ -435,13 +435,14 @@ export class BuildEpicsCliRuntime {
     if (rows.length > 0) this.input.db.insert(generationTasks).values(rows).run()
   }
 
-  private async contextContent(task: GenerationTask) {
+  private async contextContent(task: GenerationTask, outputLanguage: 'ko' | 'en') {
     const target = task.targetJson as { task_type: string; cards: BuildEpicsDocumentCard[] }
     const tasks = this.tasksForRun(task.runId)
     if (target.task_type === 'taxonomy_consolidation') {
       const taxonomyResults = completedTaskDocuments<TaxonomyCandidateSubmission>(tasks, 'taxonomy_candidate')
       return {
         taskType: target.task_type,
+        outputLanguage,
         cards: target.cards,
         taxonomyCandidates: taxonomyResults,
         instruction: 'Merge duplicate or overlapping candidate EPICs into one MECE taxonomy. Do not assign documents here.',
@@ -466,6 +467,7 @@ export class BuildEpicsCliRuntime {
       })
       return {
         taskType: target.task_type,
+        outputLanguage,
         cards: target.cards,
         epics: draft.epics,
         owners: Object.fromEntries(buildOwnerMap(draft.epics)),
@@ -478,6 +480,7 @@ export class BuildEpicsCliRuntime {
     }
     return {
       taskType: target.task_type,
+      outputLanguage,
       cards: target.cards,
       epics: completedTaxonomy,
       repair: {

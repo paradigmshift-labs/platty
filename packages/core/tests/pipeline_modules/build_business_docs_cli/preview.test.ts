@@ -272,7 +272,7 @@ describe('build_business_docs_cli preview', () => {
       persistMode: 'incremental',
       projectGlossaryMode: 'auto',
       judgeMode: 'off',
-      outputLanguage: 'ko',
+      outputLanguage: 'en',
     })
   })
 

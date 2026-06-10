@@ -70,7 +70,7 @@ describe('build_business_docs_cli start', () => {
           maxRepairAttempts: 1,
           persistMode: 'incremental',
           judgeMode: 'off',
-          outputLanguage: 'ko',
+          outputLanguage: 'en',
         },
         preview: {
           selectedEpicCount: 1,
@@ -102,6 +102,7 @@ describe('build_business_docs_cli start', () => {
       workerRuntime: 'external_cli',
       workerProvider: 'codex',
       maxRepairAttempts: 1,
+      outputLanguage: 'en',
     })
     expect(runs[0].previewSnapshotJson).toMatchObject({
       selectedEpicCount: 1,
@@ -132,6 +133,7 @@ describe('build_business_docs_cli start', () => {
       .all()
     const targetPage = pages.find((page) => page.pageKind === 'target')
     expect(targetPage?.contentJson).toMatchObject({
+      outputLanguage: 'en',
       target: {
         epic: {
           id: 'epic:orders',
@@ -171,6 +173,35 @@ describe('build_business_docs_cli start', () => {
         }),
       ],
     })
+  })
+
+  it('stores Korean output language in policy and target context when requested', () => {
+    const db = createRunnableProject()
+
+    const result = startBusinessDocsGeneration(db, {
+      projectId,
+      outputLanguage: 'ko',
+      now: fixedNow,
+      makeId: makeSequentialIds(),
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      data: {
+        policy: {
+          outputLanguage: 'ko',
+        },
+      },
+    })
+
+    const run = db.select().from(businessDocGenerationRuns).get()
+    expect(run?.policyJson).toMatchObject({ outputLanguage: 'ko' })
+    const task = db.select().from(businessDocGenerationTasks).get()
+    const targetPage = db.select().from(businessDocContextPages)
+      .where(eq(businessDocContextPages.contextHandle, task!.contextHandle!))
+      .all()
+      .find((page) => page.pageKind === 'target')
+    expect(targetPage?.contentJson).toMatchObject({ outputLanguage: 'ko' })
   })
 
   it('creates tasks only for selected EPIC ids when provided', () => {

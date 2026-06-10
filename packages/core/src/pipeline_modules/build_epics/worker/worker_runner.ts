@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { invokeCodexCliJson, safeName } from '@/pipeline_modules/cli_agent_runner/codex_cli.js'
+import { outputLanguageInstruction, type OutputLanguage } from '@/pipeline_modules/shared/output_language.js'
 import type { BuildEpicsCliRuntime } from '../runtime/runtime.js'
 import type { BuildEpicsRuntimePolicyInput, BuildEpicsRuntimeTaskType } from '../runtime/types.js'
 
@@ -292,7 +293,7 @@ async function startRun(input: RunBuildEpicsWorkerQueueInput, maxWorkers: number
     maxWorkerCount: maxWorkers,
     taskMultiplier: input.policy?.taskMultiplier ?? 1,
     maxCrossLinksPerDocument: input.policy?.maxCrossLinksPerDocument ?? 8,
-    outputLanguage: input.policy?.outputLanguage ?? 'ko',
+    outputLanguage: input.policy?.outputLanguage ?? 'en',
   }
   return await input.runtime.start({
     projectId: input.projectId,
@@ -494,11 +495,13 @@ function promptForContext(content: Record<string, any>): string {
     ? `\n\nRepair these validation errors first:\n${JSON.stringify(repair.validationErrors, null, 2)}`
     : ''
   const contextJson = JSON.stringify(compactContentForPrompt(content), null, 2)
+  const languageInstruction = outputLanguageInstruction(outputLanguageForContent(content))
   if (content.taskType === 'taxonomy_candidate') {
     return [
       'You are generating Platty build_epics taxonomy candidates.',
+      languageInstruction,
       'Use only the provided JSON context. Do not call tools or inspect files.',
-      'Return Korean business-facing names and summaries. Keep stableKey as concise lower_snake_case.',
+      'Return business-facing names and summaries. Keep stableKey as concise lower_snake_case.',
       'Group cards into MECE business EPIC candidates. Do not assign documents.',
       'Prefer durable product/business capabilities over technical folders or HTTP path shapes.',
       'Create domainId/tempEpicId values that are stable and readable, such as domain:commerce and epic:orders.',
@@ -510,8 +513,9 @@ function promptForContext(content: Record<string, any>): string {
   if (content.taskType === 'taxonomy_consolidation') {
     return [
       'You are consolidating Platty build_epics taxonomy candidates into one final MECE taxonomy.',
+      languageInstruction,
       'Use only the provided JSON context. Do not call tools or inspect files.',
-      'Return Korean business-facing names and summaries. Keep stableKey as concise lower_snake_case.',
+      'Return business-facing names and summaries. Keep stableKey as concise lower_snake_case.',
       'Target 1-12 domains and 1-60 EPICs. Merge duplicates and near-duplicates across chunks.',
       'aliases must map removed or renamed candidate stableKeys to the final stableKey. boundaryNotes should clarify important include/exclude boundaries.',
       'Do not assign documents here.',
@@ -523,6 +527,7 @@ function promptForContext(content: Record<string, any>): string {
   if (content.taskType === 'document_assignment') {
     return [
       'You are assigning Platty technical documents to existing EPIC stableKeys.',
+      languageInstruction,
       'Use only the provided JSON context. Do not call tools or inspect files.',
       'Return one assignment for every card when possible. Never create EPICs. Do not include an epics field.',
       'API cards must use role "owner" exactly once. Screen cards usually use "primary" for the owning EPIC or "supporting" for secondary context.',
@@ -538,6 +543,7 @@ function promptForContext(content: Record<string, any>): string {
   if (content.taskType === 'cross_domain_link') {
     return [
       'You are adding cross-EPIC links for Platty build_epics.',
+      languageInstruction,
       'Use only the provided JSON context. Do not call tools or inspect files.',
       'Only return links where a source document has a meaningful business side effect or dependency on a non-owner EPIC.',
       'Do not link a document to its owner EPIC from owners. Do not add weak path/name-only references.',
@@ -550,6 +556,10 @@ function promptForContext(content: Record<string, any>): string {
     ].join('\n')
   }
   return `Return an empty JSON object.\n${contextJson}`
+}
+
+function outputLanguageForContent(content: Record<string, any>): OutputLanguage {
+  return content.outputLanguage === 'ko' ? 'ko' : 'en'
 }
 
 function compactContentForPrompt(content: Record<string, any>) {

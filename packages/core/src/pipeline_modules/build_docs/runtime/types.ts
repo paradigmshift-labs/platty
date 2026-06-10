@@ -243,6 +243,7 @@ export interface BuildDocsGenerationMetadata extends Record<string, unknown> {
   run_id: string
   task_id?: string
   schema_version: string
+  outputLanguage?: 'ko' | 'en'
   source_commit: string
   generated_at: string
   evidence_id_namespace: string

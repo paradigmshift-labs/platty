@@ -59,6 +59,34 @@ describe('buildBuildEpicsSyncAgentWorkPacket', () => {
     ])
   })
 
+  it('defaults sync worker prompts to English user-facing natural language', () => {
+    const packet = buildBuildEpicsSyncAgentWorkPacket({
+      task: { taskId: 'task:sync', leaseToken: 'lease:sync', taskType: 'epic_sync_assignment', targetKey: 'sync:assignment:1' },
+      context: {
+        taskType: 'epic_sync_assignment',
+        impactedCards: [],
+        existingEpics: [],
+      },
+    })
+
+    expect(packet.agentInput.prompt).toContain('Write user-facing natural-language values in English.')
+    expect(packet.agentInput.prompt).toContain('Do not translate JSON keys or source identifiers.')
+  })
+
+  it('uses Korean sync worker prompt instructions when the context requests Korean', () => {
+    const packet = buildBuildEpicsSyncAgentWorkPacket({
+      task: { taskId: 'task:sync', leaseToken: 'lease:sync', taskType: 'epic_sync_assignment', targetKey: 'sync:assignment:1' },
+      context: {
+        taskType: 'epic_sync_assignment',
+        outputLanguage: 'ko',
+        impactedCards: [],
+        existingEpics: [],
+      },
+    })
+
+    expect(packet.agentInput.prompt).toContain('Write user-facing natural-language values in Korean.')
+  })
+
   it('narrows assignment schema to current impacted documents and existing EPIC keys', () => {
     const schema = assignmentOutputSchema({
       impactedCards: [

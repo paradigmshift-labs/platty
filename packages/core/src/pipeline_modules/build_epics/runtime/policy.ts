@@ -20,7 +20,7 @@ const defaults: Required<BuildEpicsRuntimePolicyInput> = {
   targetDomainMax: 12,
   targetEpicMin: 1,
   targetEpicMax: 60,
-  outputLanguage: 'ko',
+  outputLanguage: 'en',
   allowPartialBuildDocs: false,
 }
 

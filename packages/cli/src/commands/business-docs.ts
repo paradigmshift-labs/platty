@@ -68,6 +68,10 @@ function numberValue(argv: string[], flag: string, fallback: number): number {
   return value ? Number(value) : fallback
 }
 
+function languageValue(argv: string[]): 'ko' | 'en' {
+  return optionValue(argv, '--language') === 'ko' ? 'ko' : 'en'
+}
+
 function providerValue(argv: string[]): BusinessDocsRunnerProvider {
   const provider = optionValue(argv, '--provider') ?? 'codex_cli'
   if (provider !== 'codex_cli' && provider !== 'claude_code') throw new Error(`Unsupported --provider: ${provider}`)
@@ -205,6 +209,7 @@ export async function runBusinessDocsCommand(
         selectedEpicIds: parseEpicIds(argv),
         newRun: hasFlag(argv, '--new-run'),
         forceRegenerate: hasFlag(argv, '--force-regenerate'),
+        outputLanguage: languageValue(argv),
       })
       if (!started.ok) {
         const result = failure(started.code, started.message, {
@@ -248,6 +253,7 @@ export async function runBusinessDocsCommand(
           workers: numberValue(argv, '--workers', 20),
           newRun: hasFlag(argv, '--new-run'),
           forceRegenerate: hasFlag(argv, '--force-regenerate'),
+          outputLanguage: languageValue(argv),
           workDir: resolve(options.cwd, workDir),
           taskInvoker: options.businessDocsTaskInvoker,
         })

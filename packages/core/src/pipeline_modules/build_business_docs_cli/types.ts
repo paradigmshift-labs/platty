@@ -74,7 +74,7 @@ export interface BusinessDocsRuntimePolicy {
   persistMode: 'incremental'
   projectGlossaryMode: 'auto'
   judgeMode: 'off'
-  outputLanguage: 'ko'
+  outputLanguage: 'ko' | 'en'
 }
 
 export interface BusinessDocsBlocker {
@@ -702,5 +702,5 @@ export const DEFAULT_BUSINESS_DOCS_RUNTIME_POLICY = {
   persistMode: 'incremental',
   projectGlossaryMode: 'auto',
   judgeMode: 'off',
-  outputLanguage: 'ko',
+  outputLanguage: 'en',
 } as const satisfies BusinessDocsRuntimePolicy

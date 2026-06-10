@@ -146,7 +146,7 @@ function numberValue(argv: string[], flag: string, fallback: number): number {
 }
 
 function languageValue(argv: string[]): 'ko' | 'en' {
-  return optionValue(argv, '--language') === 'en' ? 'en' : 'ko'
+  return optionValue(argv, '--language') === 'ko' ? 'ko' : 'en'
 }
 
 function documentTypesValue(argv: string[]): TechnicalDocumentType[] | undefined {

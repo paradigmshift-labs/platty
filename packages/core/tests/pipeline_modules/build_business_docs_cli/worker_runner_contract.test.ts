@@ -72,6 +72,27 @@ describe('build_business_docs_cli worker output contract', () => {
     expect(prompt).toContain('Do not return empty content')
   })
 
+  it('defaults worker prompts to English user-facing natural language', () => {
+    const task = leasedTask({
+      taskType: 'business_rules',
+      documentType: 'br',
+    })
+    const prompt = buildBusinessDocsPromptForTask(task, contextBundle(task), contextPages())
+
+    expect(prompt).toContain('Write user-facing natural-language values in English.')
+    expect(prompt).toContain('Do not translate JSON keys or source identifiers.')
+  })
+
+  it('uses Korean prompt instructions when the context target requests Korean', () => {
+    const task = leasedTask({
+      taskType: 'business_rules',
+      documentType: 'br',
+    })
+    const prompt = buildBusinessDocsPromptForTask(task, contextBundle(task), contextPages('ko'))
+
+    expect(prompt).toContain('Write user-facing natural-language values in Korean.')
+  })
+
   it('does not treat idle workers as no-progress while other workers hold active leases', () => {
     expect(shouldThrowBusinessDocsNoProgress({
       idlePolls: 101,
@@ -149,8 +170,38 @@ function contextBundle(task: BusinessDocsLeasedTask): BusinessDocsContextBundleR
   }
 }
 
-function contextPages(): BusinessDocsContextPageResult[] {
-  return []
+function contextPages(outputLanguage?: 'ko' | 'en'): BusinessDocsContextPageResult[] {
+  if (!outputLanguage) return []
+  return [{
+    run: { id: 'run:1', projectId: 'project:1', status: 'running' },
+    task: {
+      id: 'task:1',
+      runId: 'run:1',
+      status: 'leased',
+      taskType: 'business_rules',
+      documentType: 'br',
+      scope: 'epic',
+      scopeId: 'epic:orders',
+      attemptNo: 0,
+      leaseExpiresAt: '2026-06-08T00:00:00.000Z',
+      contextHandle: 'context:1',
+    },
+    page: {
+      pageToken: 'target',
+      pageKind: 'target',
+      pageOrder: 0,
+      summary: 'target',
+      evidenceIds: [],
+      contentHash: 'hash',
+      content: { outputLanguage },
+    },
+    manifest: {
+      schemaVersion: 'business-docs-context.v1',
+      sourceCommit: 'unknown',
+      generatedAt: '2026-06-08T00:00:00.000Z',
+      evidenceIdNamespace: 'run:1:task:1',
+    },
+  } as any]
 }
 
 function readSchemaObject(schema: Record<string, unknown>, key: string): Record<string, unknown> {

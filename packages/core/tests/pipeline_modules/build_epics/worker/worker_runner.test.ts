@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+  buildBuildEpicsAgentWorkPacket,
   normalizeBuildEpicsRunnerResult,
   resolveBuildEpicsRunnerModelPolicy,
   runBuildEpicsWorkerQueue,
@@ -43,6 +44,48 @@ describe('runBuildEpicsWorkerQueue', () => {
 })
 
 describe('build_epics worker runner policy', () => {
+  it('defaults worker prompts to English user-facing natural language', () => {
+    const packet = buildBuildEpicsAgentWorkPacket({
+      task: {
+        taskId: 'task:taxonomy',
+        taskType: 'taxonomy_candidate',
+        targetKey: 'taxonomy:1',
+        leaseToken: 'lease:taxonomy',
+      },
+      context: {
+        content: {
+          taskType: 'taxonomy_candidate',
+          cards: [],
+          repair: { retryCount: 0, maxRetries: 1, validationErrors: [] },
+        },
+      },
+    })
+
+    expect(packet.agentInput.prompt).toContain('Write user-facing natural-language values in English.')
+    expect(packet.agentInput.prompt).not.toContain('Return Korean business-facing names and summaries.')
+  })
+
+  it('uses Korean prompt instructions when build_epics policy requests Korean', () => {
+    const packet = buildBuildEpicsAgentWorkPacket({
+      task: {
+        taskId: 'task:taxonomy',
+        taskType: 'taxonomy_candidate',
+        targetKey: 'taxonomy:1',
+        leaseToken: 'lease:taxonomy',
+      },
+      context: {
+        content: {
+          taskType: 'taxonomy_candidate',
+          outputLanguage: 'ko',
+          cards: [],
+          repair: { retryCount: 0, maxRetries: 1, validationErrors: [] },
+        },
+      },
+    })
+
+    expect(packet.agentInput.prompt).toContain('Write user-facing natural-language values in Korean.')
+  })
+
   it('uses the validated Codex final mixed model policy', () => {
     const policy = resolveBuildEpicsRunnerModelPolicy({ provider: 'codex_cli', preset: 'final-mixed' })
 

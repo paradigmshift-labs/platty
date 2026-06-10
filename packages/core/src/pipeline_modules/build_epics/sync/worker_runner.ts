@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { outputLanguageInstruction, type OutputLanguage } from '@/pipeline_modules/shared/output_language.js'
 import type { BuildEpicsSyncRuntime } from './runtime.js'
 
 export type BuildEpicsSyncRunnerProvider = 'codex_cli' | 'claude_code'
@@ -411,6 +412,7 @@ async function runCodexCli(input: BuildEpicsSyncTaskInvokerInput & { schemaPath:
 function promptForAssignmentContext(content: Record<string, any>): string {
   return [
     'You are updating Platty build_epics assignments from an incremental docs sync.',
+    outputLanguageInstruction(outputLanguageForContent(content)),
     'Use only the provided JSON context. Do not call tools or inspect files.',
     'For each impactedCards item, choose one action:',
     '- assign_existing when an existing EPIC clearly owns the document.',
@@ -425,6 +427,7 @@ function promptForAssignmentContext(content: Record<string, any>): string {
 function promptForCrossContext(content: Record<string, any>): string {
   return [
     'You are updating Platty build_epics cross-EPIC links after an incremental docs sync.',
+    outputLanguageInstruction(outputLanguageForContent(content)),
     'Use only the provided JSON context. Do not call tools or inspect files.',
     'For each affectedCards item, decide whether it has a supported cross-EPIC relationship to an existing EPIC.',
     'Only emit links when the affected document summary or relation hints show a concrete relationship to another EPIC.',
@@ -434,6 +437,10 @@ function promptForCrossContext(content: Record<string, any>): string {
     '\nContext JSON:',
     JSON.stringify(compactCrossContext(content), null, 2),
   ].join('\n')
+}
+
+function outputLanguageForContent(content: Record<string, any>): OutputLanguage {
+  return content.outputLanguage === 'ko' ? 'ko' : 'en'
 }
 
 function compactAssignmentContext(content: Record<string, any>) {

@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { resolveBuildEpicsRuntimePolicy } from '@/pipeline_modules/build_epics/runtime/policy.js'
 
 describe('build_epics CLI runtime policy', () => {
+  it('defaults output language to English', () => {
+    const policy = resolveBuildEpicsRuntimePolicy({}, { totalAssignableDocs: 1, totalDocumentCards: 1 })
+
+    expect(policy.outputLanguage).toBe('en')
+  })
+
   it('resolves bounded assignment chunks for large projects', () => {
     const policy = resolveBuildEpicsRuntimePolicy({ outputLanguage: 'en' }, { totalAssignableDocs: 2000, totalDocumentCards: 2000 })
 

@@ -109,7 +109,7 @@ export class BuildEpicsSyncRuntime {
       projectId: input.projectId,
       stage: 'build_epics',
       status: runStatus,
-      outputLanguage: 'ko',
+      outputLanguage: 'en',
       requestedBy: input.requestedBy,
       sourceCommit: repo.lastSyncedCommit ?? 'unknown',
       maxConcurrentTasks: Math.max(1, input.policy?.maxWorkerCount ?? 1),
@@ -201,6 +201,7 @@ export class BuildEpicsSyncRuntime {
     const taskType = target.task_type ?? 'epic_sync_assignment'
     const content = {
       taskType,
+      outputLanguage: run.outputLanguage,
       impactedCards,
       ...(taskType === 'epic_sync_cross_links' ? { affectedCards: impactedCards } : {}),
       existingEpics: (draft.draftJson as unknown as BuildEpicsSyncDraftPlan).epics.map((epic) => ({
