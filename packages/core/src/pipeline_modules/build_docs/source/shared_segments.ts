@@ -10,9 +10,10 @@ import {
   sharedCodeSegmentNodes,
   sharedCodeSegments,
 } from '@/db/schema/shared_code_segments.js'
+import { listDeprecatedEntryPointIds } from '../../build_route/review_decisions.js'
 import type { SharedCodeSegmentContext, SourceContext } from '../runtime/types.js'
 
-export const SHARED_CODE_SEGMENTS_DETECTOR_VERSION = 'shared_code_segments_v1'
+export const SHARED_CODE_SEGMENTS_DETECTOR_VERSION = 'shared_code_segments_v2'
 export const SHARED_CODE_SUMMARY_SCHEMA_VERSION = 'shared_code_summary_v1'
 
 export interface SharedSegmentEntryPointInput {
@@ -35,6 +36,7 @@ export interface SharedSegmentNodeInput {
   lineStart: number | null
   lineEnd: number | null
   signature: string | null
+  parentNodeId?: string | null
 }
 
 export interface DetectedSharedCodeSegment {
@@ -119,7 +121,7 @@ export function detectSharedCodeSegments(input: {
         depth: minDepthFor(candidate.usage.filter((usage) => usage.entryPointId === entryPointId)),
       }
     })
-    const coveredNodeIds = collectCoveredNodes(candidate.entryPointIds, usageByNode, maxCoveredNodes)
+    const coveredNodeIds = collectCoveredNodes(root, candidate.entryPointIds, usageByNode, nodeById, maxCoveredNodes)
     for (const nodeId of coveredNodeIds) globallyCovered.add(nodeId)
     const deterministicSummary = buildDeterministicSummary(root, coveredNodeIds, nodeById)
     const hashInput = {
@@ -255,12 +257,18 @@ export async function rebuildSharedCodeSegmentsForProject(input: {
   let segmentCount = 0
 
   for (const repo of repoRows) {
+    const deprecatedEntryPointIds = listDeprecatedEntryPointIds(input.db, {
+      projectId: input.projectId,
+      repoId: repo.id,
+    })
     const entries = input.db.select().from(entryPoints).where(eq(entryPoints.repoId, repo.id)).all()
+      .filter((entry) => !deprecatedEntryPointIds.has(entry.id))
+    // 버전 필터 없이 삭제 — 구버전 detector 행이 잔류하면 loadSharedCodeSegmentsForEntryPoints가
+    // 버전 구분 없이 읽어 중복 로드되기 때문.
     input.db.delete(sharedCodeSegments)
       .where(and(
         eq(sharedCodeSegments.projectId, input.projectId),
         eq(sharedCodeSegments.repoId, repo.id),
-        eq(sharedCodeSegments.detectorVersion, SHARED_CODE_SEGMENTS_DETECTOR_VERSION),
       ))
       .run()
     if (entries.length === 0) continue
@@ -292,6 +300,7 @@ export async function rebuildSharedCodeSegmentsForProject(input: {
         lineStart: node.lineStart,
         lineEnd: node.lineEnd,
         signature: node.signature,
+        parentNodeId: node.parentNodeId,
       })),
     })
 
@@ -322,12 +331,15 @@ export async function rebuildSharedCodeSegmentsForProject(input: {
         documentType: entry.documentType,
         rootDepth: entry.depth,
       }))).run()
-      input.db.insert(sharedCodeSegmentNodes).values(segment.coveredNodeIds.map((nodeId, index) => ({
+      // subtree covered는 캡이 없어 행 수가 커질 수 있다 — SQLite bind 한도 보호 (f6_persist_results 관례).
+      for (const chunk of chunked(segment.coveredNodeIds.map((nodeId, index) => ({
         segmentId: segment.id,
         nodeId,
         role: nodeId === segment.rootNodeId ? 'root' as const : 'covered' as const,
         depthFromRoot: index,
-      }))).run()
+      })), 200)) {
+        input.db.insert(sharedCodeSegmentNodes).values(chunk).run()
+      }
     }
 
     segmentCount += detected.length
@@ -382,12 +394,14 @@ export function loadSharedCodeSegmentsForEntryPoints(input: {
 }
 
 function collectCoveredNodes(
+  root: SharedSegmentNodeInput,
   entryPointIds: string[],
   usageByNode: Map<string, SharedSegmentBundleInput[]>,
+  nodeById: Map<string, SharedSegmentNodeInput>,
   maxCoveredNodes: number,
 ): string[] {
   const entryPointSet = new Set(entryPointIds)
-  return [...usageByNode.entries()]
+  const intersection = [...usageByNode.entries()]
     .filter(([, usage]) => {
       const usedBy = new Set(usage.map((item) => item.entryPointId))
       return entryPointIds.every((entryPointId) => usedBy.has(entryPointId))
@@ -396,9 +410,43 @@ function collectCoveredNodes(
       nodeId,
       minDepth: minDepthFor(usage.filter((item) => entryPointSet.has(item.entryPointId))),
     }))
+
+  // 루트의 구조적 자식(subtree)은 캡 없이 covered에 포함한다 — 요약이 대신한다는 근거가
+  // 구조적으로 확실하고, 번들 자체 캡(maxNodes)이 자연 상한이다. cross-file 동행자는
+  // 동시출현 추정이라 기존 캡을 유지한다.
+  const subtree: typeof intersection = []
+  const general: typeof intersection = []
+  for (const item of intersection) {
+    const node = nodeById.get(item.nodeId)
+    if (node && isDescendantOf(node, root, nodeById)) subtree.push(item)
+    else general.push(item)
+  }
+  general.sort((a, b) => a.minDepth - b.minDepth || a.nodeId.localeCompare(b.nodeId))
+
+  return [...subtree, ...general.slice(0, maxCoveredNodes)]
     .sort((a, b) => a.minDepth - b.minDepth || a.nodeId.localeCompare(b.nodeId))
-    .slice(0, maxCoveredNodes)
     .map((item) => item.nodeId)
+}
+
+function isDescendantOf(
+  node: SharedSegmentNodeInput,
+  root: SharedSegmentNodeInput,
+  nodeById: Map<string, SharedSegmentNodeInput>,
+): boolean {
+  if (node.id === root.id) return true
+  let current = node
+  for (let i = 0; i < 100; i++) {
+    const parentId = current.parentNodeId
+    if (!parentId) break
+    if (parentId === root.id) return true
+    const parent = nodeById.get(parentId)
+    if (!parent) break
+    current = parent
+  }
+  return node.filePath === root.filePath
+    && root.lineStart != null && root.lineEnd != null
+    && node.lineStart != null && node.lineEnd != null
+    && root.lineStart <= node.lineStart && node.lineEnd <= root.lineEnd
 }
 
 function buildDeterministicSummary(
@@ -468,6 +516,14 @@ function minDepthFor(usage: SharedSegmentBundleInput[]): number {
 
 function uniqueSorted(values: string[]): string[] {
   return [...new Set(values)].sort((a, b) => a.localeCompare(b))
+}
+
+function chunked<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = []
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size))
+  }
+  return chunks
 }
 
 function hashStable(value: unknown): string {
