@@ -5,7 +5,7 @@ import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { DB } from './db/client.js'
 import { documents } from './db/schema/build_docs.js'
-import { projectPhaseStatus, projects, repositories } from './db/schema/core.js'
+import { projectPhaseStatus, projects, repositories, repositoryPhaseStatus } from './db/schema/core.js'
 import { normalizeSourceRoot } from './repo/repository-paths.js'
 
 export interface AddRepositoryInput {
@@ -136,6 +136,15 @@ export function resolveRepositorySelector(
   return { kind: 'found', repository: uniqueMatches[0] }
 }
 
+const STATIC_REPO_PHASES = [
+  'analyze_repo',
+  'build_graph',
+  'build_pattern_profile',
+  'build_models',
+  'build_route',
+  'build_relations',
+] as const
+
 export function updateRepository(db: DB, input: UpdateRepositoryInput) {
   const resolved = resolveRepositorySelector(db, input.projectId, input.selector, input.cwd)
   if (resolved.kind !== 'found') return resolved
@@ -147,9 +156,30 @@ export function updateRepository(db: DB, input: UpdateRepositoryInput) {
   if (input.name !== undefined) updates.name = input.name.trim()
   if (input.path !== undefined) updates.repoPath = resolveGitRoot(input.cwd ?? process.cwd(), input.path)
   if (input.sourceRoot !== undefined) updates.sourceRoot = normalizeSourceRoot(input.sourceRoot)
-  if (input.analysisBranch !== undefined) updates.analysisBranch = input.analysisBranch?.trim() || null
+
+  const newBranch = input.analysisBranch !== undefined
+    ? (input.analysisBranch?.trim() || null)
+    : undefined
+  const branchChanging = newBranch !== undefined && newBranch !== resolved.repository.analysisBranch
+
+  if (newBranch !== undefined) updates.analysisBranch = newBranch
+  if (branchChanging) {
+    updates.lastSyncedCommit = null
+    updates.analysisWorktreePath = null
+  }
 
   db.update(repositories).set(updates).where(eq(repositories.id, resolved.repository.id)).run()
+
+  if (branchChanging) {
+    db.update(repositoryPhaseStatus)
+      .set({ validity: 'stale', updatedAt: new Date().toISOString() })
+      .where(and(
+        eq(repositoryPhaseStatus.repositoryId, resolved.repository.id),
+        inArray(repositoryPhaseStatus.phase, [...STATIC_REPO_PHASES]),
+      ))
+      .run()
+  }
+
   const repository = db.select().from(repositories).where(eq(repositories.id, resolved.repository.id)).get()
   if (!repository) return { kind: 'missing' } satisfies RepositorySelectorResult
   return { kind: 'found', repository } satisfies RepositorySelectorResult

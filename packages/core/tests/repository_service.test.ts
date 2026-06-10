@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { and, eq } from 'drizzle-orm'
 import { createTestPlattyDb } from '../src/db/testing.js'
 import { documents } from '../src/db/schema/build_docs.js'
-import { projectPhaseStatus } from '../src/db/schema/core.js'
+import { projectPhaseStatus, repositoryPhaseStatus, repositories } from '../src/db/schema/core.js'
 import { createProject } from '../src/project_service.js'
 import {
   addRepository,
@@ -15,6 +15,15 @@ import {
   resolveRepositorySelector,
   updateRepository,
 } from '../src/repository_service.js'
+
+const STATIC_REPO_PHASES = [
+  'analyze_repo',
+  'build_graph',
+  'build_pattern_profile',
+  'build_models',
+  'build_route',
+  'build_relations',
+] as const
 
 function gitRepo() {
   const dir = mkdtempSync(join(tmpdir(), 'platty-cli-repo-'))
@@ -171,6 +180,180 @@ describe('repository_service', () => {
       'doc:business:stale',
     ])
     client.close()
+  })
+
+  describe('updateRepository branch change invalidation', () => {
+    function seedAnalyzedRepo(db: ReturnType<typeof createTestPlattyDb>['db'], repoId: string) {
+      db.update(repositories)
+        .set({
+          analysisBranch: 'feature/x',
+          lastSyncedCommit: 'aaa111',
+          analysisWorktreePath: '/worktrees/feature-x',
+        })
+        .where(eq(repositories.id, repoId))
+        .run()
+
+      db.insert(repositoryPhaseStatus).values(
+        STATIC_REPO_PHASES.map((phase) => ({
+          repositoryId: repoId,
+          phase,
+          status: 'passed' as const,
+          validity: 'fresh' as const,
+          sourceCommit: 'aaa111',
+        })),
+      ).run()
+    }
+
+    it('marks static phases stale and clears commit/worktree when branch changes', () => {
+      const client = createTestPlattyDb()
+      const project = createProject(client.db, { name: 'app' })
+      const repoPath = gitRepo()
+      const repo = addRepository(client.db, { projectId: project.id, path: repoPath, cwd: repoPath })
+      seedAnalyzedRepo(client.db, repo.id)
+
+      const result = updateRepository(client.db, {
+        projectId: project.id,
+        selector: repo.id,
+        analysisBranch: 'main',
+        cwd: repoPath,
+      })
+
+      expect(result.kind).toBe('found')
+      if (result.kind !== 'found') return
+
+      expect(result.repository.analysisBranch).toBe('main')
+      expect(result.repository.lastSyncedCommit).toBeNull()
+      expect(result.repository.analysisWorktreePath).toBeNull()
+
+      const phases = client.db
+        .select()
+        .from(repositoryPhaseStatus)
+        .where(eq(repositoryPhaseStatus.repositoryId, repo.id))
+        .all()
+
+      expect(phases).toHaveLength(STATIC_REPO_PHASES.length)
+      expect(phases.every((p) => p.validity === 'stale')).toBe(true)
+
+      client.close()
+    })
+
+    it('does not touch phase status when branch is unchanged', () => {
+      const client = createTestPlattyDb()
+      const project = createProject(client.db, { name: 'app' })
+      const repoPath = gitRepo()
+      const repo = addRepository(client.db, { projectId: project.id, path: repoPath, cwd: repoPath })
+      seedAnalyzedRepo(client.db, repo.id)
+
+      updateRepository(client.db, {
+        projectId: project.id,
+        selector: repo.id,
+        analysisBranch: 'feature/x',
+        cwd: repoPath,
+      })
+
+      const updated = client.db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.id, repo.id))
+        .get()
+
+      expect(updated?.lastSyncedCommit).toBe('aaa111')
+      expect(updated?.analysisWorktreePath).toBe('/worktrees/feature-x')
+
+      const phases = client.db
+        .select()
+        .from(repositoryPhaseStatus)
+        .where(eq(repositoryPhaseStatus.repositoryId, repo.id))
+        .all()
+
+      expect(phases.every((p) => p.validity === 'fresh')).toBe(true)
+
+      client.close()
+    })
+
+    it('does not touch phase status when non-branch fields change', () => {
+      const client = createTestPlattyDb()
+      const project = createProject(client.db, { name: 'app' })
+      const repoPath = gitRepo()
+      const repo = addRepository(client.db, { projectId: project.id, path: repoPath, cwd: repoPath })
+      seedAnalyzedRepo(client.db, repo.id)
+
+      updateRepository(client.db, {
+        projectId: project.id,
+        selector: repo.id,
+        name: 'api-renamed',
+        cwd: repoPath,
+      })
+
+      const updated = client.db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.id, repo.id))
+        .get()
+
+      expect(updated?.lastSyncedCommit).toBe('aaa111')
+
+      const phases = client.db
+        .select()
+        .from(repositoryPhaseStatus)
+        .where(eq(repositoryPhaseStatus.repositoryId, repo.id))
+        .all()
+
+      expect(phases.every((p) => p.validity === 'fresh')).toBe(true)
+
+      client.close()
+    })
+
+    it('marks phases stale when branch is set to null', () => {
+      const client = createTestPlattyDb()
+      const project = createProject(client.db, { name: 'app' })
+      const repoPath = gitRepo()
+      const repo = addRepository(client.db, { projectId: project.id, path: repoPath, cwd: repoPath })
+      seedAnalyzedRepo(client.db, repo.id)
+
+      updateRepository(client.db, {
+        projectId: project.id,
+        selector: repo.id,
+        analysisBranch: null,
+        cwd: repoPath,
+      })
+
+      const updated = client.db
+        .select()
+        .from(repositories)
+        .where(eq(repositories.id, repo.id))
+        .get()
+
+      expect(updated?.lastSyncedCommit).toBeNull()
+
+      const phases = client.db
+        .select()
+        .from(repositoryPhaseStatus)
+        .where(eq(repositoryPhaseStatus.repositoryId, repo.id))
+        .all()
+
+      expect(phases.every((p) => p.validity === 'stale')).toBe(true)
+
+      client.close()
+    })
+
+    it('handles branch change with no existing phase rows without error', () => {
+      const client = createTestPlattyDb()
+      const project = createProject(client.db, { name: 'app' })
+      const repoPath = gitRepo()
+      const repo = addRepository(client.db, { projectId: project.id, path: repoPath, cwd: repoPath })
+
+      expect(() =>
+        updateRepository(client.db, {
+          projectId: project.id,
+          selector: repo.id,
+          analysisBranch: 'main',
+          cwd: repoPath,
+        }),
+      ).not.toThrow()
+
+      client.close()
+    })
   })
 
   it('reactivates a soft-deleted repository instead of creating a duplicate', () => {
