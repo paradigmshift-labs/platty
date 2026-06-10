@@ -196,6 +196,113 @@ describe('platty epics CLI runtime', () => {
     expect(calls.map((call) => call.taskType)).toContain('document_assignment')
     expect(calls.map((call) => call.taskType)).toContain('cross_domain_link')
   })
+
+  it('lists confirmed EPIC retrieval candidates with document counts and freshness', async () => {
+    seedRetrievalGraph(db)
+
+    const command = await runPlattyCommand([
+      'epics',
+      'list',
+      '--project',
+      'project:test',
+      '--compact',
+      '--json',
+    ], { cwd: rootDir, db })
+
+    expect(command.exitCode).toBe(0)
+    expect(command.result.data).toMatchObject({
+      project: { id: 'project:test', name: 'Project' },
+      epics: [
+        {
+          epicId: 'epic:orders',
+          stableKey: 'orders',
+          title: 'Orders',
+          summary: 'Order checkout and fulfillment.',
+          status: 'confirmed',
+          confirmedAt: '2026-06-10T00:00:00.000Z',
+          documentCounts: {
+            api_spec: 1,
+            br: 1,
+            data_dictionary: 1,
+            ucl: 1,
+          },
+          terms: expect.arrayContaining(['orders', 'Orders', 'Order Rules', 'GET /orders']),
+          freshness: {
+            validity: 'fresh',
+            isStale: false,
+            staleDocumentCount: 0,
+            orphanedDocumentCount: 0,
+          },
+        },
+      ],
+    })
+  })
+
+  it('searches EPIC retrieval candidates with normalized terms', async () => {
+    seedRetrievalGraph(db)
+
+    const command = await runPlattyCommand([
+      'epics',
+      'search',
+      '--project',
+      'project:test',
+      '--terms',
+      'checkout,order',
+      '--json',
+    ], { cwd: rootDir, db })
+
+    expect(command.exitCode).toBe(0)
+    expect(command.result.data).toMatchObject({
+      query: {
+        terms: ['checkout', 'order'],
+      },
+      epics: [
+        expect.objectContaining({
+          epicId: 'epic:orders',
+          score: expect.any(Number),
+          matchedTerms: expect.arrayContaining(['checkout', 'order']),
+        }),
+      ],
+    })
+    expect(command.result.data?.epics[0].score).toBeGreaterThan(0)
+  })
+
+  it('shows an EPIC document graph grouped by type', async () => {
+    seedRetrievalGraph(db)
+
+    const command = await runPlattyCommand([
+      'epics',
+      'show',
+      '--project',
+      'project:test',
+      '--epic',
+      'epic:orders',
+      '--include-docs',
+      '--json',
+    ], { cwd: rootDir, db })
+
+    expect(command.exitCode).toBe(0)
+    expect(command.result.data).toMatchObject({
+      epic: {
+        epicId: 'epic:orders',
+        stableKey: 'orders',
+        title: 'Orders',
+      },
+      documents: {
+        ucl: [expect.objectContaining({ id: 'doc:orders-ucl', type: 'ucl' })],
+        br: [expect.objectContaining({ id: 'doc:orders-br', type: 'br' })],
+        data_dictionary: [expect.objectContaining({ id: 'doc:orders-dd', type: 'data_dictionary' })],
+        api_spec: [expect.objectContaining({ id: 'doc:orders-api', type: 'api_spec' })],
+      },
+      links: [
+        expect.objectContaining({
+          epicId: 'epic:orders',
+          documentId: 'doc:orders-api',
+          role: 'owner',
+        }),
+      ],
+    })
+  })
 })
 
 function seedProject(db: DB): void {
@@ -224,6 +331,79 @@ function row(id: string, title: string, summary: string) {
     rawLlmOutput: '{}',
     sourceRunId: 'run:docs',
     sourceCommit: 'commit:test',
+  }
+}
+
+function seedRetrievalGraph(db: DB): void {
+  const now = '2026-06-10T00:00:00.000Z'
+  db.insert(schema.epics).values([
+    {
+      id: 'epic:orders',
+      projectId: 'project:test',
+      name: 'Orders',
+      abbr: 'ORD',
+      description: 'Order checkout and fulfillment.',
+      stableKey: 'orders',
+      summary: 'Order checkout and fulfillment.',
+      status: 'confirmed',
+      source: 'llm',
+      confidence: 'high',
+      confirmedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: 'epic:unconfirmed',
+      projectId: 'project:test',
+      name: 'Unconfirmed',
+      stableKey: 'unconfirmed',
+      summary: 'Should not appear.',
+      status: 'proposed',
+      source: 'llm',
+      confidence: 'low',
+      confirmedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ]).run()
+  db.insert(schema.documents).values([
+    retrievalDoc('doc:orders-ucl', 'ucl', 'Order Use Cases', 'Order use case list.'),
+    retrievalDoc('doc:orders-br', 'br', 'Order Rules', 'Order business rules.'),
+    retrievalDoc('doc:orders-dd', 'data_dictionary', 'Order Data Dictionary', 'Order data entities.'),
+    retrievalDoc('doc:orders-api', 'api_spec', 'GET /orders', 'List orders.'),
+  ]).run()
+  db.insert(schema.epicDocumentLinks).values([
+    {
+      epicId: 'epic:orders',
+      documentId: 'doc:orders-api',
+      documentType: 'api_spec',
+      role: 'owner',
+      reason: 'Orders API.',
+      confidence: 'high',
+      createdAt: now,
+    },
+  ]).run()
+}
+
+function retrievalDoc(id: string, type: string, title: string, summary: string) {
+  const isTechnical = type === 'api_spec' || type === 'screen_spec' || type === 'event_spec' || type === 'schedule_spec'
+  return {
+    id,
+    projectId: 'project:test',
+    type,
+    track: isTechnical ? 'technical' : 'business',
+    scope: isTechnical ? 'endpoint' : 'epic',
+    scopeId: isTechnical ? id : 'epic:orders',
+    status: 'active',
+    validity: 'fresh',
+    summary,
+    content: { title },
+    rawLlmOutput: '{}',
+    contentHash: `hash:${id}`,
+    sourceRunId: 'run:retrieval',
+    sourceCommit: 'commit:retrieval',
+    updatedBy: 'system',
+    updatedAt: '2026-06-10T00:00:00.000Z',
   }
 }
 

@@ -1,27 +1,52 @@
 ---
 name: platty-retrieval
-description: Use when answering product, business, design, or development questions from Platty-generated docs using Platty CLI combinations; plan retrieval first, inspect document indexes before full content, refine multilingual terminology through glossaries, search docs and targets, and report stale document freshness.
+description: Use when answering product, business, data, design, or development questions from Platty-generated docs using deterministic Platty CLI primitives; align terms through the project glossary, choose EPIC candidates, traverse connected documents, inspect DD model evidence and API code evidence, and report freshness.
 ---
 
 # Platty Retrieval
 
 Use this skill when a user asks a question that should be answered from Platty-generated project documents or static-analysis targets.
 
-Do not start with one broad search and stop. Treat retrieval as a short investigation loop:
+Do not start with one broad search and stop. Retrieval is an EPIC-centered graph walk:
 
 ```text
-question -> retrieval plan -> index/list -> glossary detail -> refined queries -> docs/targets search -> evidence synthesis
+question
+-> project glossary
+-> optional clarification
+-> subquestions
+-> EPIC candidates
+-> EPIC document graph
+-> docs show/related
+-> DD model evidence or API code evidence
+-> answer with freshness
 ```
+
+## Boundary
+
+The CLI does not understand natural language and must not be treated like an LLM.
+
+- Do not use or invent `docs ask`.
+- Do not use or invent `docs investigate`.
+- Do not pass a natural-language question to `epics search`.
+- Do not expect CLI commands to synthesize the final answer.
+
+You, the agent, read the glossary, rewrite terms, plan branches, choose commands, and synthesize the answer.
 
 ## Required Inputs
 
-Resolve these before running commands:
+Resolve these before running retrieval commands:
 
 - Project selector: `--project <project-id-or-name>`.
 - User question.
-- Question type: `business`, `development`, `design`, or `mixed`.
+- Question type: `business`, `data`, `development`, `design`, or `mixed`.
 
-If the project is unknown, run `platty project list --json` or ask for the project.
+If the project is unknown, run:
+
+```bash
+platty project list --json
+```
+
+or ask the user for the project.
 
 ## Core CLI
 
@@ -31,155 +56,222 @@ Use the local CLI available in the repo, for example:
 node packages/cli/dist/main.js <command> --json
 ```
 
-Prefer these commands:
+Preferred retrieval commands:
 
 ```bash
-docs list --project <project> --type glossary --track business --compact --json
-business-docs document show --project <project> --document <doc-id> --json
-docs search --project <project> "<refined query>" --json
-docs targets list --project <project> --search "<term>" --json
-docs targets list --project <project> --kind api --method POST --search "<term>" --json
+docs list --project <project> --type glossary --track business --scope project --compact --json
+docs show --project <project> --document <project-glossary-doc-id> --json
+epics list --project <project> --compact --json
+epics search --project <project> --terms "<term1,term2,term3>" --json
+epics show --project <project> --epic <epic-id> --include-docs --json
+epics related --project <project> --epic <epic-id> --json
+docs show --project <project> --document <doc-id> --json
+docs related --project <project> --document <doc-id> --json
+docs targets list --project <project> --search "<route-or-code-term>" --json
 ```
 
-Useful `docs list` filters:
-
-- `--type glossary|br|data_dictionary|design|ucl|ucs|api_spec|screen_spec`
-- `--track business|technical`
-- `--scope project|epic|api|screen`
-- `--validity fresh|stale|orphaned`
-- `--compact`
-- `--limit <n>`
+`docs list` is fallback/debug inventory. It is not the normal entry point after the project glossary.
 
 ## Freshness Rule
 
-`docs list` and `docs search` candidates may include:
+Retrieval outputs may include:
 
 ```text
 freshness.validity
 freshness.isStale
 freshness.sourceCommit
+freshness.sourceRunId
 freshness.staticSnapshotId
 freshness.documentSourceHash
 freshness.updatedAt
 ```
 
-`business-docs document show` returns the detailed document with:
-
-```text
-data.freshness.state
-data.freshness.reason
-```
-
-If `freshness.isStale === true`, `freshness.validity !== "fresh"`, or `data.freshness.state !== "fresh"`:
+If `freshness.isStale === true` or `freshness.validity !== "fresh"`:
 
 - You may use the result as a clue.
 - State that the document may not reflect the latest analyzed source.
-- Recommend running the relevant sync/regeneration flow before treating it as authoritative.
+- Recommend sync or regeneration before treating it as authoritative.
 
 Do not hide stale evidence.
 
-## Retrieval Workflow
+## Workflow
 
-### 1. Plan Branches
+### 1. Classify The Question
 
-Rewrite the user question into 2-5 retrieval branches.
+Classify the question as one or more:
 
-Examples:
+- `business`: rules, user journeys, use cases, product behavior.
+- `data`: entities, tables, fields, persistence, model meaning.
+- `development`: route/API/screen behavior, handler, service, repository, source code.
+- `design`: system design, component responsibility, flow boundaries.
+- `mixed`: more than one of the above.
 
-- Business branch: terms, rules, use cases, data dictionary.
-- Development branch: routes, screens, APIs, handler files.
-- Design branch: system design, data concepts, rules, target entrypoints.
-- Multilingual branch: Korean, English, Japanese, code identifiers, route paths.
+### 2. Read The Project Glossary First
 
-### 2. Inspect Indexes First
-
-Start with compact lists. This is the equivalent of reading filenames and a table of contents before opening files.
-
-For business/design questions:
-
-```bash
-docs list --project <project> --type glossary --track business --compact --json
-docs list --project <project> --type br --track business --compact --json
-docs list --project <project> --type ucl --track business --compact --json
-docs list --project <project> --type design --track business --compact --json
-```
-
-For development questions:
-
-```bash
-docs list --project <project> --type api_spec --track technical --compact --json
-docs list --project <project> --type screen_spec --track technical --compact --json
-```
-
-Do not open every full document. Pick likely candidates from titles, summaries, type, scope, and freshness.
-
-### 3. Use Project Glossary As The Language Bridge
-
-Prefer the project glossary first when it exists:
+Find and open the project glossary:
 
 ```bash
 docs list --project <project> --type glossary --track business --scope project --compact --json
-business-docs document show --project <project> --document <project-glossary-id> --json
+docs show --project <project> --document <project-glossary-doc-id> --json
 ```
-
-If the project glossary is missing or too broad, inspect relevant epic glossaries from the compact glossary list.
 
 Extract:
 
-- canonical term
+- canonical business terms
 - aliases
 - Korean/English/Japanese equivalents
-- code names, route names, API names
-- related use cases or rules
+- code identifiers
+- API or route names
+- related EPIC hints
 
-Then rewrite the search query.
+If terms are ambiguous, ask the user one concise clarification question before continuing.
 
-### 4. Search With Refined Queries
+### 3. Split Into Subquestions
 
-Run multiple narrow searches, not one vague search:
+Rewrite the user question into 2-5 answerable subquestions.
+
+Example:
+
+```text
+User: 캠페인 제외 그룹은 어떤 API와 테이블을 거치니?
+
+Subquestions:
+1. Which EPIC owns campaign exclusion group behavior?
+2. Which BR/UCS documents define the business behavior?
+3. Which DD items describe the data entities?
+4. Which API specs implement the behavior?
+5. Which code nodes implement those APIs?
+```
+
+### 4. Choose EPIC Candidates
+
+Use normalized terms from the glossary and subquestions:
 
 ```bash
-docs search --project <project> "<canonical business term>" --json
-docs search --project <project> "<English/code alias>" --json
-docs targets list --project <project> --search "<route-or-code-term>" --json
+epics list --project <project> --compact --json
+epics search --project <project> --terms "campaign,exclusion,group" --json
 ```
 
-If a query has multiple tokens and returns nothing, split it into atomic terms and search separately.
+Select several likely EPICs. Prefer EPICs with matching terms, relevant summaries, and useful document counts.
 
-### 5. Choose Details By Question Type
+### 5. Traverse The EPIC Graph
 
-Business answer priority:
+For each candidate EPIC:
+
+```bash
+epics show --project <project> --epic <epic-id> --include-docs --json
+```
+
+Use the grouped documents as the retrieval index:
 
 ```text
-glossary -> br -> ucl -> ucs -> data_dictionary -> design
+glossary
+ucl
+ucs
+br
+data_dictionary
+design
+api_spec
+screen_spec
+event_spec
+schedule_spec
 ```
 
-Use UCL as the use-case table of contents. Open UCS only for the specific use case needed.
+Do not open every document. Choose the likely documents based on type, title, summary, links, and freshness.
 
-Development answer priority:
+### 6. Follow Document Links
+
+Open relevant documents and then traverse their graph:
+
+```bash
+docs show --project <project> --document <doc-id> --json
+docs related --project <project> --document <doc-id> --json
+```
+
+Expected paths:
 
 ```text
-targets list -> api_spec/screen_spec -> design/data_dictionary -> source file if needed
+UCL item -> UCS document
+UCS -> BR / DD / design / source technical docs
+BR -> DD / source technical docs
+DD -> model/table/field evidence
+api_spec or screen_spec -> code node/file location
 ```
 
-Use targets for entrypoint, route, handler, and file path evidence.
+### 7. Inspect Data Evidence
 
-Design answer priority:
+For data questions, use DD documents and item `modelLinks`.
+
+Look for:
+
+- `modelName`
+- `tableName`
+- `fieldName`
+- `linkType`: `describes_model`, `describes_field`, or `uses_model`
+- field metadata
+- model source file and lines when present
+
+If DD has a gap item such as `missing_model_evidence`, say that the generated evidence did not identify a backing model/table.
+
+### 8. Inspect Code Evidence
+
+For API/screen/development questions, use technical documents and `code`.
+
+Look for:
+
+- `code.primaryNode.nodeId`
+- `code.primaryNode.filePath`
+- `code.primaryNode.startLine`
+- `code.relatedNodes`
+- target results from `docs targets list`
+
+`nodeId` is graph identity. `filePath` and line numbers are what you use when source inspection is needed.
+
+## Retrieval Paths
+
+Business question:
 
 ```text
-glossary -> design -> data_dictionary -> br -> targets -> api_spec/screen_spec
+glossary -> EPIC candidates -> UCL -> UCS -> BR -> DD -> design -> source technical docs
 ```
 
-Mixed questions should run the relevant branches and merge evidence.
+Data question:
+
+```text
+glossary -> EPIC candidates -> DD -> model/table/field -> related BR/UCS -> api_spec -> code
+```
+
+Development question:
+
+```text
+glossary -> EPIC candidates if business scope matters -> targets list -> api_spec/screen_spec -> code -> related DD/BR/UCS
+```
+
+Design question:
+
+```text
+glossary -> EPIC candidates -> design -> UCS -> BR -> DD -> source technical docs
+```
+
+Mixed questions should run the relevant paths and merge evidence.
 
 ## Answer Contract
 
 When answering:
 
-- Say which terms were used to refine the question.
+- State the normalized terms used.
 - Cite document ids, document types, and target file paths when available.
-- Separate evidence from inference.
-- Mention stale/freshness status for any stale result.
-- If evidence is weak, say what command should be run next.
+- Separate direct evidence from inference.
+- Mention stale/freshness status for stale or orphaned evidence.
+- If evidence is weak, say which command or regeneration step should run next.
 
 Keep the final answer concise unless the user asks for a full trace.
+
+## Fallback Inventory
+
+Use `docs list` only when the EPIC index is missing, you need a type-specific audit, or you are debugging generated inventory:
+
+```bash
+docs list --project <project> --type br --track business --compact --json
+docs list --project <project> --type api_spec --track technical --compact --json
+```

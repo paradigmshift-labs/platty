@@ -38,13 +38,19 @@ export interface DocsCommandOptions {
 type ProjectRow = typeof schema.projects.$inferSelect
 type DocumentRow = typeof schema.documents.$inferSelect
 type DocumentItemRow = typeof schema.documentItems.$inferSelect
+type CodeNodeRow = typeof schema.codeNodes.$inferSelect
 type TechnicalDocumentType = 'api_spec' | 'screen_spec' | 'event_spec' | 'schedule_spec'
 
 const {
+  codeBundles,
+  codeNodes,
+  documentItemModelLinks,
   documentItemDocumentLinks,
   documentItems,
   documentLinks,
   documents,
+  entryPoints,
+  models,
   sharedCodeSegments,
 } = schema
 
@@ -515,6 +521,7 @@ function showDocument(db: DB, project: ProjectRow, documentId: string) {
   if (!doc) return null
   const items = activeItems(db, project.id).filter((item) => item.documentId === documentId)
   const related = relatedDocuments(db, project, documentId)
+  const modelLinks = modelLinksForItems(db, project.id, items.map((item) => item.id))
   return {
     project: projectPointer(project),
     document: {
@@ -533,13 +540,100 @@ function showDocument(db: DB, project: ProjectRow, documentId: string) {
           target: link.target,
         })),
       relatedItems: [],
-      modelLinks: [],
+      modelLinks: modelLinks.get(item.id) ?? [],
     })),
+    code: codeEvidenceForDocument(db, doc),
     relatedDocuments: {
       outgoing: related?.outgoingDocumentLinks ?? [],
       incoming: related?.incomingDocumentLinks ?? [],
       itemDocumentLinks: related?.itemDocumentLinks ?? [],
     },
+  }
+}
+
+function modelLinksForItems(db: DB, projectId: string, itemIds: string[]) {
+  const result = new Map<string, Array<Record<string, unknown>>>()
+  if (itemIds.length === 0) return result
+  const modelRows = db.select().from(models).all()
+  const modelById = new Map(modelRows.map((model) => [model.id, model]))
+  const links = db.select().from(documentItemModelLinks)
+    .where(and(eq(documentItemModelLinks.projectId, projectId), inArray(documentItemModelLinks.itemId, itemIds)))
+    .all()
+  for (const link of links) {
+    const model = modelById.get(link.modelId)
+    const field = model?.fields.find((candidate) => candidate.name === link.fieldName) ?? null
+    const rows = result.get(link.itemId) ?? []
+    rows.push({
+      modelId: link.modelId,
+      modelName: model?.name ?? null,
+      tableName: model?.tableName ?? null,
+      fieldName: link.fieldName,
+      linkType: link.linkType,
+      role: link.role,
+      evidence: link.evidenceJson ?? null,
+      field,
+      model: model
+        ? {
+            id: model.id,
+            name: model.name,
+            tableName: model.tableName,
+            description: model.description,
+            sourceFile: model.sourceFile,
+            lineStart: model.lineStart,
+            lineEnd: model.lineEnd,
+            orm: model.orm,
+            validity: model.validity,
+          }
+        : null,
+    })
+    result.set(link.itemId, rows)
+  }
+  return result
+}
+
+function codeEvidenceForDocument(db: DB, doc: DocumentRow) {
+  if (doc.type !== 'api_spec' && doc.type !== 'screen_spec' && doc.type !== 'event_spec' && doc.type !== 'schedule_spec') return null
+  if (!doc.scopeId) return null
+  const entryPoint = db.select().from(entryPoints).where(eq(entryPoints.id, doc.scopeId)).get()
+  if (!entryPoint) return null
+  const nodeRows = db.select().from(codeNodes).all()
+  const nodeById = new Map(nodeRows.map((node) => [node.id, node]))
+  const primaryNode = nodeById.get(entryPoint.handlerNodeId)
+  const bundleRows = db.select().from(codeBundles)
+    .where(eq(codeBundles.entryPointId, entryPoint.id))
+    .all()
+    .sort((left, right) => left.depth - right.depth || left.nodeId.localeCompare(right.nodeId))
+  return {
+    entryPoint: {
+      id: entryPoint.id,
+      kind: entryPoint.kind,
+      framework: entryPoint.framework,
+      method: entryPoint.httpMethod,
+      path: entryPoint.fullPath ?? entryPoint.path,
+      confidence: entryPoint.confidence,
+      detectionSource: entryPoint.detectionSource,
+    },
+    primaryNode: primaryNode ? codeNodeView(primaryNode, 'primary') : null,
+    relatedNodes: bundleRows
+      .filter((bundle) => bundle.nodeId !== entryPoint.handlerNodeId)
+      .flatMap((bundle) => {
+        const node = nodeById.get(bundle.nodeId)
+        return node ? [{ ...codeNodeView(node, 'reachable'), depth: bundle.depth, edgePath: bundle.edgePath ?? [] }] : []
+      }),
+  }
+}
+
+function codeNodeView(node: CodeNodeRow, role: 'primary' | 'reachable') {
+  return {
+    nodeId: node.id,
+    role,
+    kind: node.type,
+    symbol: node.name,
+    signature: node.signature,
+    filePath: node.filePath,
+    startLine: node.lineStart,
+    endLine: node.lineEnd,
+    missingLocationReason: node.lineStart === null ? 'line_start_missing' : null,
   }
 }
 

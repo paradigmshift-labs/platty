@@ -14,6 +14,9 @@ import {
   runBuildEpicsSyncWorkerQueue,
   runBuildEpicsWorkerQueue,
   type OpenPlattyDbResult,
+  projectPointer,
+  resolveProjectSelector,
+  schema,
 } from '@platty/core'
 import { readProjectConfig } from '../config-store.js'
 import { openCliDb } from '../db.js'
@@ -28,6 +31,11 @@ export interface EpicsCommandOptions {
   epicsTaskInvoker?: BuildEpicsTaskInvoker
 }
 
+type ProjectRow = typeof schema.projects.$inferSelect
+type EpicRow = typeof schema.epics.$inferSelect
+type DocumentRow = typeof schema.documents.$inferSelect
+type EpicDocumentLinkRow = typeof schema.epicDocumentLinks.$inferSelect
+
 export async function runEpicsCommand(argv: string[], options: EpicsCommandOptions): Promise<PlattyCommandResponse> {
   const root = await requireProjectRoot(options.cwd, options)
   if ('exitCode' in root) return root
@@ -39,6 +47,32 @@ export async function runEpicsCommand(argv: string[], options: EpicsCommandOptio
   try {
     const command = positional(argv)
     const projectId = options.project ?? root.config.currentProject?.id
+
+    if (command[0] === 'list') {
+      const selected = requireSelectedProject(db, options, root.config)
+      if ('exitCode' in selected) return selected
+      return ok(listEpicsForRetrieval(db, selected.project, { compact: argv.includes('--compact') }))
+    }
+    if (command[0] === 'search') {
+      const selected = requireSelectedProject(db, options, root.config)
+      if ('exitCode' in selected) return selected
+      return ok(searchEpicsForRetrieval(db, selected.project, { terms: termsValue(argv) }))
+    }
+    if (command[0] === 'show' || command[0] === 'related') {
+      const selected = requireSelectedProject(db, options, root.config)
+      if ('exitCode' in selected) return selected
+      const epicId = required(argv, '--epic')
+      const graph = showEpicRetrievalGraph(db, selected.project, epicId)
+      if (!graph) {
+        return {
+          exitCode: 2,
+          result: failure('EPIC_NOT_FOUND', `EPIC was not found: ${epicId}`),
+          stdout: '',
+          stderr: '',
+        }
+      }
+      return ok(graph)
+    }
 
     if (command[0] === 'sync') {
       if (!projectId) return projectNotSelected()
@@ -255,6 +289,241 @@ function projectNotSelected(): PlattyCommandResponse {
     stdout: '',
     stderr: '',
   }
+}
+
+function missingProject(): PlattyCommandResponse {
+  return {
+    exitCode: 2,
+    result: failure('PROJECT_NOT_FOUND', 'Platty project was not found'),
+    stdout: '',
+    stderr: '',
+  }
+}
+
+function ambiguousProject(selector: string): PlattyCommandResponse {
+  return {
+    exitCode: 2,
+    result: failure('PROJECT_AMBIGUOUS', `Project selector matched multiple projects: ${selector}`),
+    stdout: '',
+    stderr: '',
+  }
+}
+
+function requireSelectedProject(
+  db: DB,
+  options: EpicsCommandOptions,
+  config: Awaited<ReturnType<typeof readProjectConfig>>,
+): { project: ProjectRow } | PlattyCommandResponse {
+  const selector = options.project?.trim() || config.currentProject?.id
+  if (!selector) return projectNotSelected()
+  const resolvedProject = resolveProjectSelector(db, selector, config.currentProject)
+  if (resolvedProject.kind === 'missing') return missingProject()
+  if (resolvedProject.kind === 'ambiguous') return ambiguousProject(selector)
+  return { project: resolvedProject.project }
+}
+
+function listEpicsForRetrieval(db: DB, project: ProjectRow, _input: { compact: boolean }) {
+  const index = epicRetrievalIndex(db, project)
+
+  return {
+    project: projectPointer(project),
+    epics: index.epics.map((epic) => compactEpicView(epic, documentsForEpic(epic, index.docs, index.links, index.docsById))),
+  }
+}
+
+function searchEpicsForRetrieval(db: DB, project: ProjectRow, input: { terms: string[] }) {
+  const index = epicRetrievalIndex(db, project)
+  const scored = index.epics
+    .map((epic) => {
+      const docs = documentsForEpic(epic, index.docs, index.links, index.docsById)
+      const searchable = searchableText([
+        epic.id,
+        epic.stableKey,
+        epic.name,
+        epic.abbr,
+        epic.summary,
+        epic.description,
+        ...docs.flatMap((doc) => [doc.id, doc.type, doc.scope, doc.scopeId, doc.summary, contentTitle(doc.content), doc.content]),
+      ])
+      const matchedTerms = input.terms.filter((term) => searchable.includes(term.toLowerCase()))
+      return {
+        ...compactEpicView(epic, docs),
+        score: matchedTerms.length,
+        matchedTerms,
+      }
+    })
+    .filter((epic) => epic.score > 0)
+    .sort((left, right) => right.score - left.score || left.title.localeCompare(right.title))
+  return {
+    project: projectPointer(project),
+    query: { terms: input.terms },
+    epics: scored,
+  }
+}
+
+function showEpicRetrievalGraph(db: DB, project: ProjectRow, epicId: string) {
+  const index = epicRetrievalIndex(db, project)
+  const epic = index.epics.find((candidate) => candidate.id === epicId || candidate.stableKey === epicId)
+  if (!epic) return null
+  const docs = documentsForEpic(epic, index.docs, index.links, index.docsById)
+  const links = index.links.filter((link) => link.epicId === epic.id && index.docsById.has(link.documentId))
+  return {
+    project: projectPointer(project),
+    epic: compactEpicView(epic, docs),
+    documents: groupDocumentsByType(docs),
+    links: links.map((link) => ({
+      epicId: link.epicId,
+      documentId: link.documentId,
+      documentType: link.documentType,
+      role: link.role,
+      reason: link.reason,
+      confidence: link.confidence,
+      target: documentMiniView(index.docsById.get(link.documentId)!),
+    })),
+  }
+}
+
+function epicRetrievalIndex(db: DB, project: ProjectRow) {
+  const epics = db.select().from(schema.epics).all()
+    .filter((epic) => epic.projectId === project.id && epic.deletedAt === null && epic.confirmedAt !== null)
+    .sort((left, right) => (left.stableKey ?? left.name).localeCompare(right.stableKey ?? right.name))
+  const docs = db.select().from(schema.documents).all()
+    .filter((doc) => doc.projectId === project.id && (doc.status === 'active' || doc.status === 'passed'))
+  const links = db.select().from(schema.epicDocumentLinks).all()
+  const docsById = new Map(docs.map((doc) => [doc.id, doc]))
+  return { epics, docs, links, docsById }
+}
+
+function documentsForEpic(
+  epic: EpicRow,
+  docs: DocumentRow[],
+  links: EpicDocumentLinkRow[],
+  docsById: Map<string, DocumentRow>,
+) {
+  const byId = new Map<string, DocumentRow>()
+  for (const doc of docs) {
+    if (doc.scope === 'epic' && doc.scopeId === epic.id) byId.set(doc.id, doc)
+  }
+  for (const link of links) {
+    if (link.epicId !== epic.id) continue
+    const doc = docsById.get(link.documentId)
+    if (doc) byId.set(doc.id, doc)
+  }
+  return [...byId.values()].sort((left, right) => `${left.type}:${left.id}`.localeCompare(`${right.type}:${right.id}`))
+}
+
+function compactEpicView(epic: EpicRow, docs: DocumentRow[]) {
+  return {
+    epicId: epic.id,
+    stableKey: epic.stableKey,
+    title: epic.name,
+    summary: epic.summary ?? epic.description,
+    status: epic.status,
+    confirmedAt: epic.confirmedAt,
+    documentCounts: documentCounts(docs),
+    terms: termsForEpic(epic, docs),
+    freshness: epicFreshness(docs),
+  }
+}
+
+function groupDocumentsByType(docs: DocumentRow[]) {
+  const groups: Record<string, ReturnType<typeof documentMiniView>[]> = {
+    glossary: [],
+    ucl: [],
+    ucs: [],
+    br: [],
+    data_dictionary: [],
+    design: [],
+    api_spec: [],
+    screen_spec: [],
+    event_spec: [],
+    schedule_spec: [],
+  }
+  for (const doc of docs) {
+    const target = groups[doc.type] ?? []
+    target.push(documentMiniView(doc))
+    groups[doc.type] = target
+  }
+  return groups
+}
+
+function documentMiniView(doc: DocumentRow) {
+  return {
+    id: doc.id,
+    type: doc.type,
+    track: doc.track,
+    scope: doc.scope,
+    scopeId: doc.scopeId,
+    status: doc.status,
+    validity: doc.validity,
+    title: contentTitle(doc.content),
+    summary: doc.summary,
+    freshness: documentFreshness(doc),
+  }
+}
+
+function documentCounts(docs: DocumentRow[]) {
+  const counts: Record<string, number> = {}
+  for (const doc of docs) counts[doc.type] = (counts[doc.type] ?? 0) + 1
+  return counts
+}
+
+function termsForEpic(epic: EpicRow, docs: DocumentRow[]) {
+  const terms = new Set<string>()
+  for (const value of [epic.stableKey, epic.name, epic.abbr, epic.summary, epic.description]) {
+    if (value) terms.add(value)
+  }
+  for (const doc of docs) {
+    for (const value of [contentTitle(doc.content), doc.summary, doc.type, doc.scopeId]) {
+      if (value) terms.add(value)
+    }
+  }
+  return [...terms].slice(0, 40)
+}
+
+function epicFreshness(docs: DocumentRow[]) {
+  const staleDocumentCount = docs.filter((doc) => doc.validity === 'stale').length
+  const orphanedDocumentCount = docs.filter((doc) => doc.validity === 'orphaned').length
+  return {
+    validity: staleDocumentCount > 0 ? 'stale' : orphanedDocumentCount > 0 ? 'orphaned' : 'fresh',
+    isStale: staleDocumentCount > 0 || orphanedDocumentCount > 0,
+    staleDocumentCount,
+    orphanedDocumentCount,
+  }
+}
+
+function documentFreshness(doc: DocumentRow) {
+  return {
+    validity: doc.validity,
+    isStale: doc.validity !== 'fresh',
+    sourceCommit: doc.sourceCommit ?? null,
+    sourceRunId: doc.sourceRunId ?? null,
+    staticSnapshotId: doc.staticSnapshotId ?? null,
+    documentSourceHash: doc.documentSourceHash ?? null,
+    updatedAt: doc.updatedAt,
+  }
+}
+
+function termsValue(argv: string[]): string[] {
+  return (optionValue(argv, '--terms') ?? '')
+    .split(',')
+    .map((term) => term.trim())
+    .filter(Boolean)
+}
+
+function searchableText(values: unknown[]) {
+  return values
+    .map((field) => {
+      if (field === null || field === undefined) return ''
+      if (typeof field === 'string') return field
+      return JSON.stringify(field)
+    })
+    .join('\n')
+    .toLowerCase()
+}
+
+function contentTitle(content: Record<string, unknown> | null) {
+  return typeof content?.title === 'string' ? content.title : null
 }
 
 function positional(argv: string[]): string[] {

@@ -262,6 +262,166 @@ describe('platty docs retrieval commands', () => {
       ],
     })
   })
+
+  it('shows DD model and field links on document items', async () => {
+    const project = await runPlattyCommand(['project', 'create', 'Commerce', '--json'], { cwd: rootDir, db })
+    const projectId = String(project.result.data?.id)
+    seedDocument(projectId, {
+      id: 'doc:orders-dd',
+      type: 'data_dictionary',
+      scope: 'epic',
+      scopeId: 'epic:orders',
+      title: 'Order Data Dictionary',
+      summary: 'Order data entities',
+    })
+    seedRepository(projectId)
+    db.insert(schema.models).values({
+      id: 'repo:test:Order',
+      repositoryId: 'repo:test',
+      name: 'Order',
+      tableName: 'orders',
+      comment: null,
+      description: 'Stores placed orders.',
+      fields: [
+        { name: 'id', type: 'String', nullable: false, primary: true, unique: true, line: 1 },
+        { name: 'status', type: 'String', nullable: false, primary: false, unique: false, line: 2 },
+      ],
+      relations: [],
+      isDeprecated: false,
+      sourceFile: 'prisma/schema.prisma',
+      lineStart: 10,
+      lineEnd: 20,
+      orm: 'prisma',
+      builtFromCommit: 'commit:model',
+      validity: 'fresh',
+      createdAt: now,
+      updatedAt: now,
+    }).run()
+    db.insert(documentItems).values({
+      id: 'item:dd:order',
+      documentId: 'doc:orders-dd',
+      projectId,
+      itemType: 'entity',
+      stableKey: 'entity:order',
+      ordinal: 1,
+      title: 'Order',
+      summary: 'Order business entity.',
+      content: { entity: 'Order' },
+      contentHash: 'hash:item:dd:order',
+      status: 'active',
+      createdBy: 'system',
+      updatedBy: 'system',
+      updatedAt: now,
+    }).run()
+    db.insert(schema.documentItemModelLinks).values([
+      {
+        projectId,
+        itemId: 'item:dd:order',
+        modelId: 'repo:test:Order',
+        fieldName: null,
+        linkType: 'describes_model',
+        role: 'primary',
+        evidenceJson: { source: 'dd-storage' },
+        createdBy: 'business_graph_materializer_v1',
+        createdAt: now,
+      },
+      {
+        projectId,
+        itemId: 'item:dd:order',
+        modelId: 'repo:test:Order',
+        fieldName: 'status',
+        linkType: 'describes_field',
+        role: 'primary',
+        evidenceJson: { source: 'dd-field' },
+        createdBy: 'business_graph_materializer_v1',
+        createdAt: now,
+      },
+    ]).run()
+
+    const show = await runPlattyCommand([
+      'docs',
+      'show',
+      '--project',
+      'Commerce',
+      '--document',
+      'doc:orders-dd',
+      '--json',
+    ], { cwd: rootDir, db })
+
+    expect(show.exitCode).toBe(0)
+    expect(show.result.data).toMatchObject({
+      items: [
+        expect.objectContaining({
+          id: 'item:dd:order',
+          modelLinks: [
+            expect.objectContaining({
+              modelId: 'repo:test:Order',
+              modelName: 'Order',
+              tableName: 'orders',
+              fieldName: null,
+              linkType: 'describes_model',
+            }),
+            expect.objectContaining({
+              modelId: 'repo:test:Order',
+              modelName: 'Order',
+              tableName: 'orders',
+              fieldName: 'status',
+              linkType: 'describes_field',
+              field: expect.objectContaining({ name: 'status', type: 'String' }),
+            }),
+          ],
+        }),
+      ],
+    })
+  })
+
+  it('shows API code node file locations for technical documents', async () => {
+    const project = await runPlattyCommand(['project', 'create', 'Commerce', '--json'], { cwd: rootDir, db })
+    const projectId = String(project.result.data?.id)
+    seedCodeEvidence(projectId)
+    seedDocument(projectId, {
+      id: 'doc:api:list-orders',
+      type: 'api_spec',
+      scope: 'endpoint',
+      scopeId: 'ep:api:listOrders',
+      title: 'GET /api/orders',
+      summary: 'List orders API',
+    })
+
+    const show = await runPlattyCommand([
+      'docs',
+      'show',
+      '--project',
+      'Commerce',
+      '--document',
+      'doc:api:list-orders',
+      '--json',
+    ], { cwd: rootDir, db })
+
+    expect(show.exitCode).toBe(0)
+    expect(show.result.data).toMatchObject({
+      code: {
+        primaryNode: {
+          nodeId: 'node:controller:listOrders',
+          kind: 'method',
+          symbol: 'OrdersController.listOrders',
+          filePath: 'src/orders.controller.ts',
+          startLine: 10,
+          endLine: 24,
+        },
+        relatedNodes: [
+          expect.objectContaining({
+            nodeId: 'node:service:listOrders',
+            role: 'reachable',
+            symbol: 'OrdersService.listOrders',
+            filePath: 'src/orders.service.ts',
+            startLine: 30,
+            endLine: 55,
+          }),
+        ],
+      },
+    })
+  })
 })
 
 function seedDocument(
@@ -299,4 +459,65 @@ function seedDocument(
     updatedBy: 'system',
     updatedAt: now,
   }).run()
+}
+
+function seedRepository(projectId: string) {
+  db.insert(schema.repositories).values({
+    id: 'repo:test',
+    projectId,
+    name: 'api-service',
+    repoPath: rootDir,
+    framework: 'nestjs',
+    analysisBranch: 'main',
+    lastSyncedCommit: 'commit:code',
+    createdAt: now,
+    updatedAt: now,
+  }).run()
+}
+
+function seedCodeEvidence(projectId: string) {
+  seedRepository(projectId)
+  db.insert(schema.codeNodes).values([
+    codeNode('node:controller:listOrders', 'OrdersController.listOrders', 'src/orders.controller.ts', 10, 24),
+    codeNode('node:service:listOrders', 'OrdersService.listOrders', 'src/orders.service.ts', 30, 55),
+  ]).run()
+  db.insert(schema.entryPoints).values({
+    id: 'ep:api:listOrders',
+    repoId: 'repo:test',
+    framework: 'nestjs',
+    kind: 'api',
+    httpMethod: 'GET',
+    path: '/api/orders',
+    fullPath: '/api/orders',
+    handlerNodeId: 'node:controller:listOrders',
+    metadata: {},
+    detectionSource: 'rule:test',
+    confidence: 'high',
+    detectionEvidence: { matchedNodeIds: ['node:controller:listOrders'] },
+    createdAt: now,
+  }).run()
+  db.insert(schema.codeBundles).values([
+    { entryPointId: 'ep:api:listOrders', nodeId: 'node:controller:listOrders', depth: 0, edgePath: ['node:controller:listOrders'] },
+    { entryPointId: 'ep:api:listOrders', nodeId: 'node:service:listOrders', depth: 1, edgePath: ['node:controller:listOrders', 'node:service:listOrders'] },
+  ]).run()
+}
+
+function codeNode(id: string, name: string, filePath: string, lineStart: number, lineEnd: number) {
+  return {
+    id,
+    repoId: 'repo:test',
+    type: 'method',
+    filePath,
+    name,
+    lineStart,
+    lineEnd,
+    normalizedCodeHash: `hash:${id}`,
+    signature: `async ${name}()`,
+    exported: true,
+    isDefaultExport: false,
+    isAsync: true,
+    isTest: false,
+    parseStatus: 'ok',
+    createdAt: now,
+  }
 }
