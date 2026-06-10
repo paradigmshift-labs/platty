@@ -1086,7 +1086,7 @@ function expectedItemContentContract(
       antonyms: 'string[] opposite or contrast terms',
       contrast_terms: 'string[] optional contrast terms when antonym is too strong',
       related_terms: 'string[] near but not equivalent terms',
-      signals: 'string[] code/business clues useful for deterministic search',
+      signals: 'string[] business-language search clues only; do not include class, service, usecase, controller, repository, API path, SQL, or DTO identifiers',
       code_term: 'string optional code identifier or DB value',
       source_mapping: 'Array<{ sourceRef: string; role: string; reason: string }>',
       ambiguity: 'object with status none | ambiguous | user_resolved, candidates, and optional resolution_note',

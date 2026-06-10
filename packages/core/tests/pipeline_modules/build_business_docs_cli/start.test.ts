@@ -717,7 +717,7 @@ describe('build_business_docs_cli start', () => {
           synonyms: 'string[] including bilingual variants',
           antonyms: 'string[] opposite or contrast terms',
           related_terms: 'string[] near but not equivalent terms',
-          signals: 'string[] code/business clues useful for deterministic search',
+          signals: 'string[] business-language search clues only; do not include class, service, usecase, controller, repository, API path, SQL, or DTO identifiers',
           ambiguity: 'object with status none | ambiguous | user_resolved, candidates, and optional resolution_note',
         },
       },

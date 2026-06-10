@@ -397,7 +397,7 @@ export function buildBusinessDocsPromptForTask(
       ]
       : []),
     `Each items[].content must include: ${contract.itemContentHint}.`,
-    'Avoid raw technical identifiers such as API paths, class names, DTO names, decorators, or SQL in narrative business fields and evidence_gaps.',
+    'Avoid raw technical identifiers such as API paths, class names, DTO names, decorators, SQL, class/usecase/service/repository names, or DTO identifiers in narrative business fields, glossary terms, glossary signals, and evidence_gaps.',
     'Do not return empty content. Do not put the canonical body only in items[].content.',
     '',
     'Context bundle JSON:',
