@@ -2,230 +2,456 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make project repository add, remove, and re-add semantics correct across static analysis, technical docs, epics, business docs, and merkle/doc-sync flows.
+**Goal:** Implement precise repository add/delete propagation across static analysis, technical build_docs, EPIC assignment, and business docs sync.
 
-**Architecture:** `repository_service` is the single lifecycle boundary for repo inventory changes. Static/project generation modules must consume only active repositories (`repositories.deleted_at IS NULL`) and document invalidation must use the existing document lifecycle fields: `validity = 'stale'` for regeneration required, `status = 'deleted'` plus `validity = 'orphaned'` for targets removed from the latest merkle snapshot.
+**Architecture:** `repository_service` remains the single boundary for repository inventory mutations. Repo add only invalidates static/project aggregate readiness; business docs are not stale until build_epics assigns new/changed technical docs to EPICs. Repo delete immediately soft-deletes technical documents owned by the deleted repo and marks only connected business documents stale so the user is told to run sync/regeneration.
 
-**Tech Stack:** TypeScript, Drizzle ORM, SQLite, Vitest, existing Platty core/CLI service modules.
+**Tech Stack:** TypeScript, Drizzle ORM, SQLite, Vitest, existing Platty core/CLI services.
 
 ---
 
-## Current State To Preserve
+## Current Behavior To Correct
 
-- The workspace is currently on `main`; do not delete or revert existing changes without explicit user approval.
-- `documents` has no `deleted_at` column. Document soft delete is represented as `status = 'deleted'` and `validity = 'orphaned'`.
-- `validity = 'stale'` means an existing document is still present but must be regenerated or reviewed.
-- Merkle/doc-sync already marks removed technical targets as orphaned during incremental planning/application, but only after a new static merkle snapshot and doc sync plan exist.
-- Repository delete should be immediate soft delete on `repositories.deleted_at`; hard delete is out of scope.
+- Current branch is `main`; do not revert or delete existing code unless explicitly approved.
+- Current patched `repository_service` marks all project documents `validity = 'stale'` on repo add/delete.
+- Current patched `repository_service` does not immediately set deleted repo technical documents to `status = 'deleted'`.
+- Existing business doc source hash includes lower technical document `status`, `contentHash`, `documentSourceHash`, and `staticSnapshotId`, but not lower document `validity`.
+- Therefore `validity = 'stale'` alone may not change business doc source hashes; `status = 'deleted'` removes a technical source document from business hash inputs.
 
-## Lifecycle Matrix
+## Target Policy
 
-| Scenario | Required behavior |
-|---|---|
-| Project created, no repos | No static/docs/business outputs exist; repo list empty. |
-| Add first repo before static analysis | Active repo appears in list and static pipeline can analyze it. No stale docs required if no docs exist. |
-| Delete repo before static analysis | Repo is soft-deleted and excluded from list/static pipeline. No docs exist. |
-| Re-add same repo after delete | Existing repo row is reactivated; no duplicate row for same project/path. |
-| Add repo after static analysis | Project static aggregate phases become pending/stale; docs/business docs become stale. |
-| Delete repo after static analysis but before docs | Repo excluded from future static/doc planning; project aggregate phases become pending. |
-| Delete repo after technical docs | Existing technical docs become stale immediately; next merkle/doc-sync can classify removed targets as orphaned/deleted. |
-| Delete repo after business docs | Existing business docs become stale immediately; business sync can later decide orphaned business targets from source impact. |
-| Delete repo during active generation run | Policy decision needed: cancel active tasks vs let current run finish but block next planning. |
+| Event | Technical build_docs | Business docs |
+|---|---|---|
+| repo add | Do not stale existing docs immediately. New repo becomes static/docs candidate after analysis. | Do not stale immediately. Wait until build_epics assigns new docs to existing/new EPICs. |
+| repo delete | Technical docs owned by deleted repo become `status = 'deleted'`, `validity = 'orphaned'`. | Only business docs connected to those technical docs become `validity = 'stale'`; status remains active. |
+| repo re-add | Existing repo row is reactivated. Static/docs are recalculated from current snapshot. | No direct business stale until build_epics assignment/sync proves impact. |
 
-## Task 1: Freeze And Branch Safely
+## Ownership And Link Rules
+
+Technical docs affected by repo delete are documents where:
+
+```ts
+documents.track === 'technical'
+documents.type in ['api_spec', 'screen_spec', 'event_spec', 'schedule_spec']
+documents.scope/scopeId maps to deleted repo generation targets
+```
+
+Preferred ownership lookup:
+
+1. Use `generation_tasks.savedDocumentId` or `generation_tasks.repositoryId` if a saved task exists.
+2. Use `docRelationLinks.repoId` for relation-backed technical docs.
+3. Use `documentLinkEvidence.repoId` where present.
+4. Avoid deleting project-wide/system docs without a repo ownership signal.
+
+Business docs connected to deleted technical docs are any active business documents reachable through:
+
+```text
+epic_document_links -> affected technical document -> same epic -> business docs with scope='epic' and scopeId=epic.id
+document_item_document_links.to_document_id = affected technical document id
+document_links to/from affected technical document id
+document_link_evidence from/to affected technical document id
+```
+
+The implementation can start with EPIC-scope links and direct document item links, then add tests for other link tables before expanding.
+
+## Task 1: Freeze Current State
 
 **Files:**
 - No source changes.
 
-- [ ] **Step 1: Capture current branch and diff**
+- [ ] **Step 1: Confirm branch and dirty state**
 
 Run:
 
 ```bash
 git branch --show-current
 git status --short
+```
+
+Expected: branch is visible. If branch is `main`, ask before further production code edits.
+
+- [ ] **Step 2: Confirm no implementation happens before RED tests**
+
+Run:
+
+```bash
 git diff -- packages/core/src/repository_service.ts packages/core/tests/repository_service.test.ts
 ```
 
-Expected: branch is identified before further changes; unrelated dirty files are visible and not touched.
+Expected: current lifecycle changes are visible; do not edit production code until the tests below are added and observed failing.
 
-- [ ] **Step 2: Ask whether to create a branch**
-
-Ask:
-
-```text
-현재 main에 변경이 있습니다. 이 상태에서 새 branch를 만들어 이어갈까요, 아니면 main에서 계획/검증만 계속할까요?
-```
-
-Expected: no branch operation until user answers.
-
-## Task 2: Pin Repository Service Lifecycle Tests
+## Task 2: TDD Repo Add Does Not Stale Business Docs
 
 **Files:**
 - Test: `packages/core/tests/repository_service.test.ts`
-- Modify: `packages/core/src/repository_service.ts`
+- Modify later: `packages/core/src/repository_service.ts`
 
-- [ ] **Step 1: Write failing tests for inventory changes**
+- [ ] **Step 1: Write failing test**
 
-Add/keep tests asserting that `addRepository` and `removeRepository`:
+Add a test named:
 
 ```ts
-expect(phasesAfterAdd.map((phase) => `${phase.phase}:${phase.status}`).sort()).toEqual([
-  'build_business_docs:pending',
-  'build_docs:pending',
-  'build_epics:pending',
-  'build_service_map:pending',
-])
-expect(docsAfterAdd.map((doc) => `${doc.id}:${doc.validity}`).sort()).toEqual([
-  'doc:api:stale',
-  'doc:business:stale',
-])
+it('does not stale business docs when a repository is added before epic assignment', () => {
+  const client = createTestPlattyDb()
+  const project = createProject(client.db, { name: 'My App' })
+  const repoPath = gitRepo()
+  addRepository(client.db, { projectId: project.id, path: repoPath, name: 'api', cwd: repoPath })
+
+  client.db.insert(documents).values({
+    id: 'doc:business',
+    projectId: project.id,
+    type: 'ucl',
+    track: 'business',
+    scope: 'epic',
+    scopeId: 'epic:orders',
+    status: 'active',
+    validity: 'fresh',
+    content: { summary: 'Order business use cases' },
+    rawLlmOutput: '',
+  }).run()
+
+  const webPath = gitRepo()
+  addRepository(client.db, { projectId: project.id, path: webPath, name: 'web', cwd: webPath })
+
+  const businessDoc = client.db.select().from(documents).where(eq(documents.id, 'doc:business')).get()
+  expect(businessDoc?.status).toBe('active')
+  expect(businessDoc?.validity).toBe('fresh')
+  client.close()
+})
 ```
 
-- [ ] **Step 2: Run red/green check**
+- [ ] **Step 2: Verify RED**
 
 Run:
 
 ```bash
 cd packages/core
-npx vitest run tests/repository_service.test.ts
+npx vitest run tests/repository_service.test.ts -t "does not stale business docs when a repository is added before epic assignment"
 ```
 
-Expected after implementation: all repository service tests pass.
+Expected now: FAIL because current `repository_service` stales all documents on repo add.
 
-- [ ] **Step 3: Ensure implementation remains centralized**
+- [ ] **Step 3: Implement minimal GREEN**
 
-`packages/core/src/repository_service.ts` should contain the only repo inventory invalidation helper. It must:
+Change repo add invalidation so it does not update `documents` directly. It may still mark project static aggregate phases pending:
 
 ```ts
-db.update(projectPhaseStatus).set({ status: 'pending', ... })
-db.update(documents).set({ validity: 'stale', ... })
+invalidateProjectRepositoryInventoryDependents(db, {
+  projectId: input.projectId,
+  repositoryId: id,
+  reason: 'repository_added',
+  invalidatedAt: now,
+  staleDocuments: false,
+})
 ```
 
-Expected: no CLI-specific stale logic.
-
-## Task 3: Pin Active Repository Filtering
-
-**Files:**
-- Modify/test relevant consumers:
-  - `packages/core/src/pipeline_modules/build_docs/runtime/runtime.ts`
-  - `packages/core/src/pipeline_modules/sync/static_map.ts`
-  - `packages/core/src/pipeline_modules/build_business_docs_cli/start.ts`
-  - `packages/core/src/pipeline_modules/build_business_docs_cli/sot/materialize_business_graph.ts`
-  - `packages/core/src/pipeline_modules/build_business_docs/sync/source_hashes.ts`
-  - `packages/core/src/pipeline_modules/build_epics/runtime/runtime.ts`
-  - `packages/core/src/pipeline_modules/build_epics/sync/runtime.ts`
-  - direct static stage entrypoints
-
-- [ ] **Step 1: Search for project repo queries**
-
-Run:
-
-```bash
-rg -n "repositories\\.projectId|from\\(repositories\\)" packages/core/src packages/cli/src -S
-```
-
-Expected: every project-level repo inventory query either uses `listRepositories` or filters `isNull(repositories.deletedAt)`.
-
-- [ ] **Step 2: Run focused tests**
+- [ ] **Step 4: Verify GREEN**
 
 Run:
 
 ```bash
 cd packages/core
-npx vitest run tests/static_pipeline.test.ts tests/pipeline_modules/build_docs/runtime/runtime.test.ts tests/pipeline_modules/build_route/review_decisions.test.ts
+npx vitest run tests/repository_service.test.ts -t "does not stale business docs when a repository is added before epic assignment"
 ```
 
-Expected: all tests pass.
+Expected: PASS.
 
-## Task 4: Decide Technical Document Delete Semantics
+## Task 3: TDD Repo Delete Soft-Deletes Deleted Repo Technical Docs
 
 **Files:**
-- Test: `packages/core/tests/pipeline_modules/sync/doc_sync.test.ts` or nearest existing doc sync test file
-- Potentially modify: `packages/core/src/pipeline_modules/sync/doc_sync.ts`
-- Potentially modify: `packages/core/src/pipeline_modules/build_docs/runtime/runtime.ts`
+- Test: `packages/core/tests/repository_service.test.ts`
+- Modify later: `packages/core/src/repository_service.ts`
 
-- [ ] **Step 1: Write test for repo deletion after docs and new merkle snapshot**
+- [ ] **Step 1: Write failing test**
 
-Test setup:
-
-```ts
-// Old snapshot includes a technical target for repo:api.
-// New snapshot excludes repo:api because it is soft-deleted.
-// Existing document has documentSourceHash equal to the old target hash.
-```
-
-Expected:
+Add a test named:
 
 ```ts
-expect(candidate.kind).toBe('orphan_document')
-expect(document.status).toBe('deleted')
-expect(document.validity).toBe('orphaned')
+it('soft-deletes technical documents owned by a removed repository', () => {
+  const client = createTestPlattyDb()
+  const project = createProject(client.db, { name: 'My App' })
+  const repoPath = gitRepo()
+  const repo = addRepository(client.db, { projectId: project.id, path: repoPath, name: 'api', cwd: repoPath })
+
+  client.db.insert(documents).values({
+    id: 'doc:api',
+    projectId: project.id,
+    type: 'api_spec',
+    track: 'technical',
+    scope: 'route',
+    scopeId: 'GET /orders',
+    status: 'passed',
+    validity: 'fresh',
+    content: { summary: 'Order API' },
+    rawLlmOutput: '',
+  }).run()
+  client.db.insert(generationTasks).values({
+    id: 'task:api',
+    runId: 'run:docs',
+    projectId: project.id,
+    repositoryId: repo.id,
+    documentType: 'api_spec',
+    targetDocumentId: 'GET /orders',
+    targetKey: 'api:GET /orders',
+    targetJson: {},
+    status: 'completed',
+    savedDocumentId: 'doc:api',
+    createdAt: '2026-06-10T00:00:00.000Z',
+    updatedAt: '2026-06-10T00:00:00.000Z',
+  }).run()
+
+  const removed = removeRepository(client.db, project.id, repo.id, repoPath)
+  expect(removed.kind).toBe('found')
+
+  const technicalDoc = client.db.select().from(documents).where(eq(documents.id, 'doc:api')).get()
+  expect(technicalDoc?.status).toBe('deleted')
+  expect(technicalDoc?.validity).toBe('orphaned')
+  client.close()
+})
 ```
 
-- [ ] **Step 2: Clarify immediate vs doc-sync delete**
+If `generationTasks` requires an existing `generationRuns` row in tests, insert a minimal run before inserting the task:
 
-Decision:
-
-```text
-Immediate repo delete marks all documents stale.
-Doc-sync after new merkle snapshot marks removed technical targets deleted/orphaned.
+```ts
+client.db.insert(generationRuns).values({
+  id: 'run:docs',
+  projectId: project.id,
+  stage: 'build_docs',
+  status: 'completed',
+  outputLanguage: 'ko',
+  requestedBy: 'test',
+  sourceCommit: 'commit:test',
+  createdAt: '2026-06-10T00:00:00.000Z',
+  updatedAt: '2026-06-10T00:00:00.000Z',
+}).run()
 ```
 
-Expected: no immediate `status = 'deleted'` unless the target is proven absent from the new snapshot.
+- [ ] **Step 2: Verify RED**
 
-## Task 5: Decide Business Document Delete Semantics
+Run:
+
+```bash
+cd packages/core
+npx vitest run tests/repository_service.test.ts -t "soft-deletes technical documents owned by a removed repository"
+```
+
+Expected now: FAIL because current repo delete only stales documents.
+
+- [ ] **Step 3: Implement minimal GREEN**
+
+Add a helper in `repository_service.ts`:
+
+```ts
+function softDeleteTechnicalDocumentsForRepository(db: DB, input: {
+  projectId: string
+  repositoryId: string
+  deletedAt: string
+}): string[] {
+  const rows = db.select({ documentId: generationTasks.savedDocumentId })
+    .from(generationTasks)
+    .where(and(
+      eq(generationTasks.projectId, input.projectId),
+      eq(generationTasks.repositoryId, input.repositoryId),
+      isNotNull(generationTasks.savedDocumentId),
+    ))
+    .all()
+  const documentIds = [...new Set(rows.map((row) => row.documentId).filter((id): id is string => typeof id === 'string'))]
+  if (documentIds.length === 0) return []
+  db.update(documents)
+    .set({
+      status: 'deleted',
+      validity: 'orphaned',
+      updatedBy: 'system',
+      updatedAt: input.deletedAt,
+    })
+    .where(and(
+      eq(documents.projectId, input.projectId),
+      eq(documents.track, 'technical'),
+      inArray(documents.id, documentIds),
+    ))
+    .run()
+  return documentIds
+}
+```
+
+Call it inside `removeRepository` after setting `repositories.deletedAt`.
+
+- [ ] **Step 4: Verify GREEN**
+
+Run:
+
+```bash
+cd packages/core
+npx vitest run tests/repository_service.test.ts -t "soft-deletes technical documents owned by a removed repository"
+```
+
+Expected: PASS.
+
+## Task 4: TDD Repo Delete Stales Connected Business Docs
 
 **Files:**
-- Test: `packages/core/tests/pipeline_modules/build_business_docs/sync/impact.test.ts` or nearest existing business sync test file
-- Potentially modify:
-  - `packages/core/src/pipeline_modules/build_business_docs/sync/impact.ts`
-  - `packages/core/src/pipeline_modules/build_business_docs/sync/start.ts`
+- Test: `packages/core/tests/repository_service.test.ts`
+- Modify later: `packages/core/src/repository_service.ts`
 
-- [ ] **Step 1: Write test for business doc stale on repo inventory change**
+- [ ] **Step 1: Write failing EPIC-link test**
 
-Expected:
+Add a test named:
 
 ```ts
-expect(businessDoc.validity).toBe('stale')
-expect(businessDoc.status).toBe('active')
+it('marks business documents stale when their linked technical documents are deleted by repository removal', () => {
+  const client = createTestPlattyDb()
+  const project = createProject(client.db, { name: 'My App' })
+  const repoPath = gitRepo()
+  const repo = addRepository(client.db, { projectId: project.id, path: repoPath, name: 'api', cwd: repoPath })
+
+  client.db.insert(epics).values({
+    id: 'epic:orders',
+    projectId: project.id,
+    name: 'Orders',
+    confirmedAt: '2026-06-10T00:00:00.000Z',
+    createdAt: '2026-06-10T00:00:00.000Z',
+    updatedAt: '2026-06-10T00:00:00.000Z',
+  }).run()
+  client.db.insert(documents).values([
+    {
+      id: 'doc:api',
+      projectId: project.id,
+      type: 'api_spec',
+      track: 'technical',
+      scope: 'route',
+      scopeId: 'GET /orders',
+      status: 'passed',
+      validity: 'fresh',
+      content: { summary: 'Order API' },
+      rawLlmOutput: '',
+    },
+    {
+      id: 'doc:business',
+      projectId: project.id,
+      type: 'ucl',
+      track: 'business',
+      scope: 'epic',
+      scopeId: 'epic:orders',
+      status: 'active',
+      validity: 'fresh',
+      content: { summary: 'Order use cases' },
+      rawLlmOutput: '',
+    },
+  ]).run()
+  client.db.insert(epicDocumentLinks).values({
+    epicId: 'epic:orders',
+    documentId: 'doc:api',
+    documentType: 'api_spec',
+    role: 'owner',
+    reason: 'test',
+    confidence: 'high',
+    createdAt: '2026-06-10T00:00:00.000Z',
+  }).run()
+  seedGenerationTaskForDocument(client.db, {
+    projectId: project.id,
+    repositoryId: repo.id,
+    documentId: 'doc:api',
+  })
+
+  removeRepository(client.db, project.id, repo.id, repoPath)
+
+  const businessDoc = client.db.select().from(documents).where(eq(documents.id, 'doc:business')).get()
+  expect(businessDoc?.status).toBe('active')
+  expect(businessDoc?.validity).toBe('stale')
+  client.close()
+})
 ```
 
-- [ ] **Step 2: Write test for business doc orphaning only after business sync impact**
+- [ ] **Step 2: Verify RED**
 
-Expected:
+Run:
+
+```bash
+cd packages/core
+npx vitest run tests/repository_service.test.ts -t "marks business documents stale when their linked technical documents are deleted by repository removal"
+```
+
+Expected now: FAIL until connected-business stale propagation is implemented.
+
+- [ ] **Step 3: Implement minimal GREEN**
+
+Add helper:
 
 ```ts
-expect(preview.orphanedTargets).toContainEqual(expect.objectContaining({
-  documentId: 'doc:business',
-  state: 'orphaned',
-}))
+function staleBusinessDocumentsLinkedToTechnicalDocuments(db: DB, input: {
+  projectId: string
+  technicalDocumentIds: string[]
+  updatedAt: string
+}): string[] {
+  if (input.technicalDocumentIds.length === 0) return []
+  const epicIds = db.select({ epicId: epicDocumentLinks.epicId })
+    .from(epicDocumentLinks)
+    .where(inArray(epicDocumentLinks.documentId, input.technicalDocumentIds))
+    .all()
+    .map((row) => row.epicId)
+  const uniqueEpicIds = [...new Set(epicIds)]
+  if (uniqueEpicIds.length === 0) return []
+  const businessDocs = db.select({ id: documents.id })
+    .from(documents)
+    .where(and(
+      eq(documents.projectId, input.projectId),
+      eq(documents.track, 'business'),
+      eq(documents.status, 'active'),
+      inArray(documents.scopeId, uniqueEpicIds),
+    ))
+    .all()
+  const businessDocumentIds = businessDocs.map((row) => row.id)
+  if (businessDocumentIds.length === 0) return []
+  db.update(documents)
+    .set({ validity: 'stale', updatedBy: 'system', updatedAt: input.updatedAt })
+    .where(inArray(documents.id, businessDocumentIds))
+    .run()
+  return businessDocumentIds
+}
 ```
 
-Expected policy: business docs are not immediately deleted on repo delete; they become stale first because EPIC/source ownership may need review.
+Call it after `softDeleteTechnicalDocumentsForRepository`.
 
-## Task 6: Active Run Policy
+- [ ] **Step 4: Verify GREEN**
+
+Run:
+
+```bash
+cd packages/core
+npx vitest run tests/repository_service.test.ts -t "marks business documents stale when their linked technical documents are deleted by repository removal"
+```
+
+Expected: PASS.
+
+## Task 5: TDD Business Hash Reflects Deleted Technical Status
 
 **Files:**
-- Test: generation run lifecycle tests
-- Potentially modify shared generation run adapter
+- Test: existing or new `packages/core/tests/pipeline_modules/build_business_docs/sync/source_hashes.test.ts`
+- Source likely unchanged: `packages/core/src/pipeline_modules/build_business_docs/sync/source_hashes.ts`
 
-- [ ] **Step 1: Choose policy**
+- [ ] **Step 1: Write proof test**
 
-Options:
+Create a test where:
 
-```text
-Option A: On repo delete, cancel active generation tasks for that repo and mark run failed/cancelled.
-Option B: Leave active run untouched, but next planning excludes deleted repo and stale marks force regeneration.
+```ts
+const before = computeBusinessDocSourceHashes(db, { projectId }).targets.find((target) => target.documentType === 'ucl')
+db.update(documents).set({ status: 'deleted', validity: 'orphaned' }).where(eq(documents.id, 'doc:api')).run()
+const after = computeBusinessDocSourceHashes(db, { projectId }).targets.find((target) => target.documentType === 'ucl')
+expect(after?.sourceHash).not.toBe(before?.sourceHash)
 ```
 
-Recommended: Option B for minimal blast radius unless UI requires immediate cancellation.
+- [ ] **Step 2: Run test**
 
-- [ ] **Step 2: Add policy test after decision**
+Run:
 
-Expected: chosen behavior is explicit and covered.
+```bash
+cd packages/core
+npx vitest run tests/pipeline_modules/build_business_docs/sync/source_hashes.test.ts
+```
 
-## Task 7: Final Verification
+Expected: PASS if current hash behavior is already sufficient.
+
+## Task 6: Final Verification
 
 **Files:**
 - No source changes.
@@ -240,18 +466,18 @@ npm run typecheck
 
 Expected: exit code 0.
 
-- [ ] **Step 2: Focused core tests**
+- [ ] **Step 2: Focused tests**
 
 Run:
 
 ```bash
 cd packages/core
-npx vitest run tests/repository_service.test.ts tests/static_pipeline.test.ts tests/pipeline_modules/build_docs/runtime/runtime.test.ts tests/pipeline_modules/build_route/review_decisions.test.ts
+npx vitest run tests/repository_service.test.ts tests/pipeline_modules/build_business_docs/sync/source_hashes.test.ts tests/pipeline_modules/build_docs/runtime/runtime.test.ts tests/static_pipeline.test.ts
 ```
 
 Expected: all tests pass.
 
-- [ ] **Step 3: Focused CLI tests**
+- [ ] **Step 3: CLI repo flow**
 
 Run:
 
@@ -264,7 +490,7 @@ Expected: all tests pass.
 
 ## Self-Review
 
-- Spec coverage: repo add/delete/re-add, no-doc/docs-exist, pre/post-static, technical/business docs, merkle/doc-sync, active run policy are represented.
-- Placeholder scan: no TBD/TODO placeholders.
-- Type consistency: uses existing `documents.status`, `documents.validity`, `repositories.deletedAt`, and `projectPhaseStatus.status` fields.
+- Spec coverage: repo add no business stale, repo delete technical orphan, connected business stale, hash proof, verification.
+- Placeholder scan: no TODO/TBD placeholders.
+- Type consistency: uses existing `documents.status`, `documents.validity`, `repositories.deletedAt`, `generationTasks.savedDocumentId`, `epicDocumentLinks`, and `projectPhaseStatus`.
 

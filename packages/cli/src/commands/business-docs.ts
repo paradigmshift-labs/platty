@@ -9,6 +9,7 @@ import {
   leaseBusinessDocsTasks,
   previewBusinessDocsGeneration,
   previewBusinessDocsSync,
+  releaseActiveBusinessDocsLeases,
   materializeBusinessDocumentGraph,
   resolveProjectSelector,
   resumeBusinessDocsRun,
@@ -394,6 +395,32 @@ export async function runBusinessDocsCommand(
 
       const result = success(lifecycle.data, {
         evidenceRefs: [{ label: `business-docs-${subcommand}`, path: `run:${lifecycle.data.run.id}` }],
+      })
+      return { exitCode: 0, result, stdout: '', stderr: '' }
+    }
+
+    if (subcommand === 'leases' && argv[1] === 'release') {
+      const selected = requireSelectedProject(db, options, root.config)
+      if ('exitCode' in selected) return selected
+
+      const runId = nonEmptyOption(argv, '--run')
+      if (!runId) {
+        const result = failure('BUSINESS_DOCS_RUN_REQUIRED', 'Business docs run id is required.')
+        return { exitCode: 2, result, stdout: '', stderr: '' }
+      }
+
+      const released = releaseActiveBusinessDocsLeases(db, {
+        projectId: selected.project.id,
+        runId,
+        reason: nonEmptyOption(argv, '--reason') ?? 'manual_release',
+      })
+      if (!released.ok) {
+        const result = failure(released.code, released.message)
+        return { exitCode: 2, result, stdout: '', stderr: '' }
+      }
+
+      const result = success(released.data, {
+        evidenceRefs: [{ label: 'business-docs-leases-release', path: `run:${runId}` }],
       })
       return { exitCode: 0, result, stdout: '', stderr: '' }
     }

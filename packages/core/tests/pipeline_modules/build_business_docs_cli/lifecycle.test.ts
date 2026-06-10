@@ -17,6 +17,7 @@ import {
   cancelBusinessDocsRun,
   cleanupBusinessDocsRun,
   getBusinessDocsStatus,
+  releaseActiveBusinessDocsLeases,
   resumeBusinessDocsRun,
   retryBusinessDocsTask,
 } from '../../../src/pipeline_modules/build_business_docs_cli/lifecycle.js'
@@ -67,7 +68,7 @@ describe('build_business_docs_cli lifecycle status retry resume cancel cleanup',
       },
     })
     expect(status.tasks.counts.pending).toBeGreaterThan(0)
-    expect(Object.keys(status.tasks).sort()).toEqual(['activeLeases', 'counts', 'expiredRecovered'])
+    expect(Object.keys(status.tasks).sort()).toEqual(['activeLeases', 'counts', 'expiredRecovered', 'retryableFailed'])
     expect(status.contexts.bundles).toBeGreaterThan(0)
     expect(status.recentEvents.length).toBeGreaterThan(0)
     expect(status.recentEvents[0]).toMatchObject({
@@ -270,6 +271,62 @@ describe('build_business_docs_cli lifecycle status retry resume cancel cleanup',
       leaseExpiresAt: null,
     })
     expect(retried?.validationErrors?.length).toBeGreaterThan(0)
+  })
+
+  it('releases active leases back to pending without cancelling the run', () => {
+    const db = createRunnableProject()
+    const runId = startRun(db)
+    const leased = leaseOne(db, runId, 'business_rules')
+
+    const released = releaseActiveBusinessDocsLeases(db, {
+      projectId,
+      runId,
+      reason: 'stale_runner',
+      now: fixedNow,
+    })
+
+    expect(released).toMatchObject({
+      ok: true,
+      data: {
+        run: {
+          id: runId,
+          status: 'running',
+        },
+        released: {
+          activeLeases: expect.any(Number),
+        },
+        nextAction: {
+          type: 'lease_tasks',
+        },
+      },
+    })
+    expect(released.ok ? released.data.released.activeLeases : 0).toBeGreaterThan(0)
+    expect(db.select().from(businessDocGenerationTasks)
+      .where(eq(businessDocGenerationTasks.id, leased.id))
+      .get()).toMatchObject({
+      status: 'pending',
+      workerId: null,
+      leaseToken: null,
+      leaseExpiresAt: null,
+      lastErrorJson: {
+        code: 'LEASE_RELEASED',
+        reason: 'stale_runner',
+      },
+    })
+    expect(leaseBusinessDocsTasks(db, {
+      projectId,
+      runId,
+      workerId: 'after-release',
+      now: fixedNow,
+      makeLeaseToken: makeSequentialIds('lease:after-release'),
+    })).toMatchObject({
+      ok: true,
+      data: {
+        tasks: expect.arrayContaining([
+          expect.objectContaining({ id: leased.id }),
+        ]),
+      },
+    })
   })
 
   it('rejects retry for saved, proposal, and leased tasks', () => {

@@ -14,7 +14,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs ../core/dist",
     "test": "vitest run",
     "release:pack:dry-run": "npm pack --dry-run",
     "release:publish:dry-run": "npm publish --dry-run"

@@ -1,6 +1,6 @@
 ---
 name: platty-retrieval
-description: Use when answering product, business, data, design, or development questions from Platty-generated docs using deterministic Platty CLI primitives; align terms through the project glossary, choose EPIC candidates, traverse connected documents, inspect DD model evidence and API code evidence, and report freshness.
+description: Use when answering product, business, data, design, or development questions from Platty-generated docs using deterministic Platty CLI primitives.
 ---
 
 # Platty Retrieval
@@ -14,6 +14,7 @@ question
 -> project glossary
 -> optional clarification
 -> subquestions
+-> EPIC catalog
 -> EPIC candidates
 -> EPIC document graph
 -> docs show/related
@@ -62,13 +63,20 @@ Preferred retrieval commands:
 docs list --project <project> --type glossary --track business --scope project --compact --json
 docs show --project <project> --document <project-glossary-doc-id> --json
 epics list --project <project> --compact --json
-epics search --project <project> --terms "<term1,term2,term3>" --json
 epics show --project <project> --epic <epic-id> --include-docs --json
 epics related --project <project> --epic <epic-id> --json
 docs show --project <project> --document <doc-id> --json
 docs related --project <project> --document <doc-id> --json
 docs targets list --project <project> --search "<route-or-code-term>" --json
 ```
+
+Fallback retrieval commands:
+
+```bash
+epics search --project <project> --terms "<term1,term2,term3>" --json
+```
+
+`epics search` is a term-matching helper. It is not semantic RAG, and it must not replace reading the EPIC catalog.
 
 `docs list` is fallback/debug inventory. It is not the normal entry point after the project glossary.
 
@@ -143,18 +151,44 @@ Subquestions:
 5. Which code nodes implement those APIs?
 ```
 
-### 4. Choose EPIC Candidates
+### 4. Read The EPIC Catalog
 
-Use normalized terms from the glossary and subquestions:
+Always read the compact EPIC catalog before choosing candidates:
 
 ```bash
 epics list --project <project> --compact --json
+```
+
+Use the catalog like a table of contents. Compare the normalized terms and subquestions against:
+
+- EPIC title
+- EPIC summary
+- `terms`
+- `documentCounts`
+- freshness
+
+Select 1-3 likely EPICs. Prefer candidates whose summaries explain the user's concept, not candidates that merely contain one matching word.
+
+Do not skip this step. String matching can be wrong when the user asks in Korean and the generated docs use English, Japanese, code identifiers, or business aliases.
+
+### 5. Optional Term Search For Disambiguation
+
+Use `epics search` only after reading the EPIC catalog, and only when one of these is true:
+
+- The catalog is too large to confidently narrow candidates.
+- The glossary exposes useful aliases, code identifiers, or translated terms.
+- Several EPICs look plausible and need a quick term cross-check.
+- The first selected EPIC does not contain the expected document types.
+
+Example:
+
+```bash
 epics search --project <project> --terms "campaign,exclusion,group" --json
 ```
 
-Select several likely EPICs. Prefer EPICs with matching terms, relevant summaries, and useful document counts.
+Treat the result as a hint. If `epics search` disagrees with the catalog, inspect both candidates instead of trusting the score.
 
-### 5. Traverse The EPIC Graph
+### 6. Traverse The EPIC Graph
 
 For each candidate EPIC:
 
@@ -179,7 +213,7 @@ schedule_spec
 
 Do not open every document. Choose the likely documents based on type, title, summary, links, and freshness.
 
-### 6. Follow Document Links
+### 7. Follow Document Links
 
 Open relevant documents and then traverse their graph:
 
@@ -198,7 +232,7 @@ DD -> model/table/field evidence
 api_spec or screen_spec -> code node/file location
 ```
 
-### 7. Inspect Data Evidence
+### 8. Inspect Data Evidence
 
 For data questions, use DD documents and item `modelLinks`.
 
@@ -213,7 +247,7 @@ Look for:
 
 If DD has a gap item such as `missing_model_evidence`, say that the generated evidence did not identify a backing model/table.
 
-### 8. Inspect Code Evidence
+### 9. Inspect Code Evidence
 
 For API/screen/development questions, use technical documents and `code`.
 

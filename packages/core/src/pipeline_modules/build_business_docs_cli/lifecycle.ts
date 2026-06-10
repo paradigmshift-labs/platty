@@ -17,6 +17,8 @@ import type {
   BusinessDocsGenerationTaskStatus,
   BusinessDocsLifecycleNextAction,
   BusinessDocsLifecycleRunSummary,
+  BusinessDocsReleaseLeasesResult,
+  BusinessDocsReleaseLeasesServiceResult,
   BusinessDocsResumeResult,
   BusinessDocsResumeServiceResult,
   BusinessDocsRetryResult,
@@ -24,6 +26,7 @@ import type {
   BusinessDocsStatusResult,
   BusinessDocsStatusServiceResult,
   BusinessDocsTaskStatusCounts,
+  BusinessDocsTaskType,
 } from './types.js'
 
 const TASK_STATUSES = [
@@ -156,6 +159,83 @@ export function resumeBusinessDocsRun(db: DB, input: LifecycleInput): BusinessDo
     return {
       ok: true,
       data: buildResumeResult(tx, refreshed.run, refreshed.tasks, refreshed.expiredRecovered),
+    }
+  })
+}
+
+export function releaseActiveBusinessDocsLeases(
+  db: DB,
+  input: LifecycleInput & { reason?: string },
+): BusinessDocsReleaseLeasesServiceResult {
+  const nowIso = (input.now ?? (() => new Date()))().toISOString()
+  return db.transaction((tx): BusinessDocsReleaseLeasesServiceResult => {
+    const run = loadRun(tx, input.runId, input.projectId)
+    if (!run) return runNotFound()
+    if (run.status === 'completed' || run.status === 'cancelled') {
+      return {
+        ok: false,
+        code: 'BUSINESS_DOCS_RUN_NOT_RESUMABLE',
+        message: 'Business docs generation run is not resumable.',
+      }
+    }
+
+    const refreshed = refreshLifecycle(tx, run, nowIso)
+    if (!RESUMABLE_RUN_STATUSES.has(refreshed.run.status)) {
+      return {
+        ok: false,
+        code: 'BUSINESS_DOCS_RUN_NOT_RESUMABLE',
+        message: 'Business docs generation run is not resumable.',
+      }
+    }
+
+    const activeLeases = refreshed.tasks.filter((task) => task.status === 'leased' && task.leaseToken)
+    for (const task of activeLeases) {
+      tx.update(businessDocGenerationTasks)
+        .set({
+          status: 'pending',
+          workerId: null,
+          leaseToken: null,
+          leaseExpiresAt: null,
+          lastErrorJson: {
+            code: 'LEASE_RELEASED',
+            reason: input.reason ?? 'manual_release',
+            leaseExpiresAt: task.leaseExpiresAt,
+            releasedAt: nowIso,
+          },
+          updatedAt: nowIso,
+        })
+        .where(eq(businessDocGenerationTasks.id, task.id))
+        .run()
+    }
+    tx.update(businessDocGenerationRuns)
+      .set({
+        status: 'running',
+        finishedAt: null,
+        updatedAt: nowIso,
+      })
+      .where(eq(businessDocGenerationRuns.id, refreshed.run.id))
+      .run()
+
+    const updatedRun = {
+      ...refreshed.run,
+      status: 'running',
+      finishedAt: null,
+      updatedAt: nowIso,
+    } satisfies BusinessDocGenerationRun
+    const tasks = loadTasks(tx, refreshed.run.id)
+    const counts = countTaskStatuses(tasks)
+    const nextAction = nextActionFor(updatedRun, counts, countContexts(tx, refreshed.run.id))
+    return {
+      ok: true,
+      data: {
+        run: summarizeRun(updatedRun),
+        released: {
+          activeLeases: activeLeases.length,
+        },
+        nextAction: nextAction.type === 'cancelled' || nextAction.type === 'cleanup_completed'
+          ? { type: 'done' }
+          : nextAction,
+      } satisfies BusinessDocsReleaseLeasesResult,
     }
   })
 }
@@ -427,6 +507,15 @@ function buildStatusResult(
       counts,
       activeLeases: countActiveLeases(tasks),
       expiredRecovered,
+      retryableFailed: tasks
+        .filter((task) => task.status === 'failed')
+        .slice(0, 20)
+        .map((task) => ({
+          id: task.id,
+          taskType: task.taskType as BusinessDocsTaskType,
+          attemptNo: task.attemptNo,
+          lastError: task.lastErrorJson,
+        })),
     },
     documents: {
       saved: counts.saved,

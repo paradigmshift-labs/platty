@@ -1021,6 +1021,72 @@ describe('platty business-docs CLI', () => {
     })
   })
 
+  it('releases active business docs leases through CLI without cancelling the run', async () => {
+    const project = await runPlattyCommand(['project', 'create', 'Commerce', '--json'], { cwd: rootDir, db })
+    seedBusinessDocsPreview(String(project.result.data?.id))
+    const started = await runPlattyCommand(['business-docs', 'start', '--project', 'Commerce', '--json'], { cwd: rootDir, db })
+    const leased = await runPlattyCommand([
+      'business-docs',
+      'tasks',
+      'lease',
+      '--project',
+      'Commerce',
+      '--run',
+      String(started.result.data?.run.id),
+      '--worker',
+      'worker:stale',
+      '--limit',
+      '1',
+      '--json',
+    ], { cwd: rootDir, db })
+    expect(leased.exitCode).toBe(0)
+    const leasedTaskId = String(leased.result.data?.tasks[0].id)
+
+    const command = await runPlattyCommand([
+      'business-docs',
+      'leases',
+      'release',
+      '--project',
+      'Commerce',
+      '--run',
+      String(started.result.data?.run.id),
+      '--reason',
+      'stale_runner',
+      '--json',
+    ], { cwd: rootDir, db })
+
+    expect(command.exitCode).toBe(0)
+    expect(command.result).toMatchObject({
+      ok: true,
+      data: {
+        run: {
+          id: started.result.data?.run.id,
+          status: 'running',
+        },
+        released: {
+          activeLeases: 1,
+        },
+        nextAction: {
+          type: 'lease_tasks',
+        },
+      },
+      warnings: [],
+      errors: [],
+    })
+    expect(db.select().from(businessDocGenerationTasks)
+      .where(eq(businessDocGenerationTasks.id, leasedTaskId))
+      .get()).toMatchObject({
+      status: 'pending',
+      workerId: null,
+      leaseToken: null,
+      leaseExpiresAt: null,
+      lastErrorJson: {
+        code: 'LEASE_RELEASED',
+        reason: 'stale_runner',
+      },
+    })
+  })
+
   it('cleans completed business docs context through CLI', async () => {
     const project = await runPlattyCommand(['project', 'create', 'Commerce', '--json'], { cwd: rootDir, db })
     seedBusinessDocsPreview(String(project.result.data?.id))
@@ -1086,6 +1152,20 @@ describe('platty business-docs CLI', () => {
         errors: [{ code: 'BUSINESS_DOCS_RUN_REQUIRED' }],
       })
     }
+
+    const missingRunForLeaseRelease = await runPlattyCommand([
+      'business-docs',
+      'leases',
+      'release',
+      '--project',
+      'Commerce',
+      '--json',
+    ], { cwd: rootDir, db })
+    expect(missingRunForLeaseRelease.exitCode).toBe(2)
+    expect(missingRunForLeaseRelease.result).toMatchObject({
+      ok: false,
+      errors: [{ code: 'BUSINESS_DOCS_RUN_REQUIRED' }],
+    })
 
     const missingTask = await runPlattyCommand([
       'business-docs',

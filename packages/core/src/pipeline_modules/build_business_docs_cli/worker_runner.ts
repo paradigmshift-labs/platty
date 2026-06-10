@@ -145,13 +145,26 @@ export async function runBusinessDocsWorkerQueue(input: RunBusinessDocsWorkerQue
     }
 
     const document = isRecord(result) ? result : failedDocumentFor(task)
-    const submitted = submitBusinessDocsTask(input.db, {
-      projectId: input.projectId,
-      taskId: task.id,
-      leaseToken: task.leaseToken,
-      attemptNo: task.attemptNo,
-      document,
-    })
+    let submitted: ReturnType<typeof submitBusinessDocsTask>
+    try {
+      submitted = submitBusinessDocsTask(input.db, {
+        projectId: input.projectId,
+        taskId: task.id,
+        leaseToken: task.leaseToken,
+        attemptNo: task.attemptNo,
+        document,
+      })
+    } catch {
+      taskStats.codexErrors += 1
+      taskStats.byType[taskType]!.codexErrors += 1
+      submitted = submitBusinessDocsTask(input.db, {
+        projectId: input.projectId,
+        taskId: task.id,
+        leaseToken: task.leaseToken,
+        attemptNo: task.attemptNo,
+        document: failedDocumentFor(task),
+      })
+    }
     if (!submitted.ok) throw new Error(`${submitted.code} for ${task.id}/${task.taskType}/attempt:${task.attemptNo}: ${submitted.message}`)
 
     const elapsedMs = Date.now() - taskStartedAt
@@ -336,11 +349,15 @@ function leaseOne(db: DB, input: { projectId: string; runId: string; workerId: s
 
 function startHeartbeat(db: DB, projectId: string, task: BusinessDocsLeasedTask): { stop: () => void } {
   const interval = setInterval(() => {
-    heartbeatBusinessDocsTask(db, {
-      projectId,
-      taskId: task.id,
-      leaseToken: task.leaseToken,
-    })
+    try {
+      heartbeatBusinessDocsTask(db, {
+        projectId,
+        taskId: task.id,
+        leaseToken: task.leaseToken,
+      })
+    } catch {
+      clearInterval(interval)
+    }
   }, 60_000)
   interval.unref()
   return {
@@ -375,6 +392,7 @@ export function buildBusinessDocsPromptForTask(
   contextPages: BusinessDocsContextPageResult[],
 ): string {
   const contract = outputContractForTask(task)
+  const promptContextPages = contextPagesForPrompt(task, contextPages)
   return [
     `Generate one Platty business document draft for ${task.taskType}.`,
     outputLanguageInstruction(outputLanguageForBusinessDocsContext(contextPages)),
@@ -404,8 +422,277 @@ export function buildBusinessDocsPromptForTask(
     JSON.stringify(contextBundle, null, 2),
     '',
     'Context pages JSON:',
-    JSON.stringify(contextPages, null, 2),
+    JSON.stringify(promptContextPages, null, 2),
   ].join('\n')
+}
+
+function contextPagesForPrompt(
+  task: BusinessDocsLeasedTask,
+  contextPages: BusinessDocsContextPageResult[],
+): BusinessDocsContextPageResult[] {
+  if (task.taskType !== 'project_glossary') return contextPages
+  const allowedPageTokens = new Set([
+    'target',
+    'schema',
+    'upstream_business_docs',
+    'validation_errors',
+    'existing_canonical',
+  ])
+  return contextPages
+    .filter((page) => allowedPageTokens.has(page.page.pageToken))
+    .map((page) => ({
+      ...page,
+      page: {
+        ...page.page,
+        content: page.page.pageToken === 'upstream_business_docs'
+          ? compactProjectGlossaryUpstreamContent(page.page.content) as Record<string, unknown>
+          : page.page.content,
+      },
+    }))
+}
+
+function compactProjectGlossaryUpstreamContent(content: unknown): unknown {
+  if (!isRecord(content)) return content
+  const dependencies = Array.isArray(content.dependencies) ? content.dependencies : []
+  const compactDependencies = dependencies.map(compactProjectGlossaryDependency)
+  return {
+    ...compactRecordShallow(content, ['dependencies']),
+    dependencies: compactDependencies,
+    termRelationshipHints: buildProjectGlossaryTermRelationshipHints(compactDependencies),
+    omittedForPrompt: {
+      reason: 'project_glossary receives upstream epic glossary term registries only; raw source cards, source graph, relation evidence, and full document prose are intentionally excluded',
+      dependencyCount: dependencies.length,
+      includedInputs: ['epic glossary terms', 'epic scope ids', 'saved document ids', 'term source_mapping refs', 'term relationship hints'],
+      excludedInputs: ['source_document_cards', 'source_graph_projection', 'relation_evidence', 'model_evidence', 'full upstream document prose'],
+    },
+  }
+}
+
+function compactProjectGlossaryDependency(value: unknown): unknown {
+  if (!isRecord(value)) return compactJsonValue(value, { maxStringLength: 300, maxArrayItems: 20, maxDepth: 3 })
+  const document = isRecord(value.document) ? value.document : null
+  return {
+    taskId: value.taskId,
+    taskType: value.taskType,
+    documentType: value.documentType,
+    status: value.status,
+    savedDocumentId: value.savedDocumentId,
+    summary: truncateText(value.summary, 500),
+    document: document ? compactBusinessDocumentForProjectGlossary(document) : null,
+  }
+}
+
+function compactBusinessDocumentForProjectGlossary(document: Record<string, unknown>): Record<string, unknown> {
+  const content = isRecord(document.content) ? document.content : {}
+  const terms = Array.isArray(content.terms) ? content.terms : []
+  const items = Array.isArray(document.items) ? document.items : []
+  return {
+    schemaVersion: document.schemaVersion,
+    documentType: document.documentType,
+    scope: document.scope,
+    scopeId: document.scopeId,
+    title: truncateText(document.title, 200),
+    summary: truncateText(document.summary, 800),
+    content: {
+      evidence_gaps: compactStringArray(content.evidence_gaps, 5, 300),
+      terms: terms.map(compactGlossaryTerm),
+    },
+    omittedForPrompt: {
+      originalTermCount: terms.length,
+      originalItemCount: items.length,
+      omittedFields: ['items searchable copy', 'full document prose beyond glossary term registry fields'],
+    },
+  }
+}
+
+function compactGlossaryTerm(value: unknown): unknown {
+  if (!isRecord(value)) return compactJsonValue(value, { maxStringLength: 300, maxArrayItems: 10, maxDepth: 3 })
+  return {
+    term: truncateText(value.term, 120),
+    canonical_term: truncateText(value.canonical_term, 120),
+    definition: truncateText(value.definition, 600),
+    termType: value.termType,
+    source_mapping: compactSourceMapping(value.source_mapping),
+    aliases: compactStringArray(value.aliases, 8, 120),
+    synonyms: compactStringArray(value.synonyms, 8, 120),
+    candidate_aliases: compactStringArray(value.candidate_aliases, 8, 120),
+    antonyms: compactStringArray(value.antonyms, 8, 120),
+    contrast_terms: compactStringArray(value.contrast_terms, 8, 120),
+    related_terms: compactStringArray(value.related_terms, 12, 120),
+    signals: compactStringArray(value.signals, 12, 120),
+    ambiguity: compactJsonValue(value.ambiguity, { maxStringLength: 160, maxArrayItems: 8, maxDepth: 3 }),
+  }
+}
+
+function compactSourceMapping(value: unknown): unknown[] {
+  if (!Array.isArray(value)) return []
+  return value.slice(0, 5).map((item) => {
+    if (!isRecord(item)) return compactJsonValue(item, { maxStringLength: 160, maxArrayItems: 5, maxDepth: 2 })
+    return {
+      sourceRef: truncateText(item.sourceRef, 120),
+      role: truncateText(item.role, 80),
+      reason: truncateText(item.reason, 260),
+    }
+  })
+}
+
+function buildProjectGlossaryTermRelationshipHints(dependencies: unknown[]): Record<string, unknown> {
+  const byCanonical = new Map<string, ProjectGlossaryTermHintBucket>()
+  const aliasToCanonical = new Map<string, Set<string>>()
+  for (const dependency of dependencies) {
+    if (!isRecord(dependency) || !isRecord(dependency.document)) continue
+    const document = dependency.document
+    const scopeId = typeof document.scopeId === 'string' ? document.scopeId : null
+    const savedDocumentId = typeof dependency.savedDocumentId === 'string' ? dependency.savedDocumentId : null
+    const terms = readCompactGlossaryTerms(document)
+    for (const term of terms) {
+      const canonical = stringValue(term.canonical_term) || stringValue(term.term)
+      if (!canonical) continue
+      const canonicalKey = normalizeTermKey(canonical)
+      if (!canonicalKey) continue
+      const bucket = byCanonical.get(canonicalKey) ?? {
+        canonicalTerm: canonical,
+        sourceScopeIds: new Set<string>(),
+        savedDocumentIds: new Set<string>(),
+        sourceRefs: new Set<string>(),
+        aliases: new Set<string>(),
+        relatedTerms: new Set<string>(),
+        termTypes: new Set<string>(),
+      }
+      if (scopeId) bucket.sourceScopeIds.add(scopeId)
+      if (savedDocumentId) bucket.savedDocumentIds.add(savedDocumentId)
+      for (const sourceRef of readSourceRefs(term.source_mapping)) bucket.sourceRefs.add(sourceRef)
+      for (const alias of readTermStrings(term)) {
+        bucket.aliases.add(alias)
+        const aliasKey = normalizeTermKey(alias)
+        if (!aliasKey) continue
+        const aliases = aliasToCanonical.get(aliasKey) ?? new Set<string>()
+        aliases.add(canonical)
+        aliasToCanonical.set(aliasKey, aliases)
+      }
+      for (const related of compactStringArray(term.related_terms, 12, 120)) bucket.relatedTerms.add(related)
+      const termType = stringValue(term.termType)
+      if (termType) bucket.termTypes.add(termType)
+      byCanonical.set(canonicalKey, bucket)
+    }
+  }
+
+  const repeatedCanonicalTerms = [...byCanonical.values()]
+    .filter((bucket) => bucket.sourceScopeIds.size > 1 || bucket.savedDocumentIds.size > 1)
+    .slice(0, 80)
+    .map((bucket) => ({
+      canonicalTerm: bucket.canonicalTerm,
+      sourceScopeIds: [...bucket.sourceScopeIds].slice(0, 12),
+      savedDocumentIds: [...bucket.savedDocumentIds].slice(0, 12),
+      sourceRefs: [...bucket.sourceRefs].slice(0, 12),
+      aliases: [...bucket.aliases].slice(0, 12),
+      relatedTerms: [...bucket.relatedTerms].slice(0, 12),
+      termTypes: [...bucket.termTypes].slice(0, 6),
+    }))
+
+  const ambiguousAliases = [...aliasToCanonical.entries()]
+    .filter(([, canonicalTerms]) => canonicalTerms.size > 1)
+    .slice(0, 80)
+    .map(([surface, canonicalTerms]) => ({
+      surface,
+      canonicalTermCandidates: [...canonicalTerms].slice(0, 12),
+    }))
+
+  return {
+    repeatedCanonicalTerms,
+    ambiguousAliases,
+    note: 'Use these hints only to merge clearly identical terms or keep ambiguous terms separate. They are derived from upstream epic glossary registries, not raw source graph edges.',
+  }
+}
+
+interface ProjectGlossaryTermHintBucket {
+  canonicalTerm: string
+  sourceScopeIds: Set<string>
+  savedDocumentIds: Set<string>
+  sourceRefs: Set<string>
+  aliases: Set<string>
+  relatedTerms: Set<string>
+  termTypes: Set<string>
+}
+
+function readCompactGlossaryTerms(document: Record<string, unknown>): Record<string, unknown>[] {
+  const contentTerms = isRecord(document.content) && Array.isArray(document.content.terms)
+    ? document.content.terms
+    : []
+  const itemTerms = Array.isArray(document.items)
+    ? document.items
+      .map((item) => isRecord(item) && isRecord(item.content) ? item.content : null)
+      .filter((item): item is Record<string, unknown> => item !== null)
+    : []
+  return [...contentTerms, ...itemTerms].filter(isRecord)
+}
+
+function readTermStrings(term: Record<string, unknown>): string[] {
+  return [
+    stringValue(term.term),
+    stringValue(term.canonical_term),
+    ...compactStringArray(term.aliases, 8, 120),
+    ...compactStringArray(term.synonyms, 8, 120),
+    ...compactStringArray(term.candidate_aliases, 8, 120),
+  ].filter((value): value is string => Boolean(value))
+}
+
+function readSourceRefs(sourceMapping: unknown): string[] {
+  if (!Array.isArray(sourceMapping)) return []
+  return sourceMapping
+    .map((item) => isRecord(item) ? stringValue(item.sourceRef) : null)
+    .filter((value): value is string => Boolean(value))
+}
+
+function normalizeTermKey(value: string | null): string {
+  return (value ?? '').trim().toLocaleLowerCase()
+}
+
+function stringValue(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null
+}
+
+function compactJsonValue(
+  value: unknown,
+  limits: { maxStringLength: number; maxArrayItems: number; maxDepth: number },
+  depth = 0,
+): unknown {
+  if (typeof value === 'string') return truncateText(value, limits.maxStringLength)
+  if (Array.isArray(value)) {
+    const items = value.slice(0, limits.maxArrayItems).map((item) => compactJsonValue(item, limits, depth + 1))
+    if (value.length > limits.maxArrayItems) {
+      items.push({ omittedForPrompt: value.length - limits.maxArrayItems })
+    }
+    return items
+  }
+  if (!isRecord(value)) return value
+  if (depth >= limits.maxDepth) return { omittedForPrompt: 'maxDepth' }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, compactJsonValue(item, limits, depth + 1)]),
+  )
+}
+
+function compactRecordShallow(record: Record<string, unknown>, omittedKeys: string[]): Record<string, unknown> {
+  const omitted = new Set(omittedKeys)
+  return Object.fromEntries(
+    Object.entries(record)
+      .filter(([key]) => !omitted.has(key))
+      .map(([key, value]) => [key, typeof value === 'string' ? truncateText(value, 500) : value]),
+  )
+}
+
+function compactStringArray(value: unknown, maxItems: number, maxLength: number): string[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .slice(0, maxItems)
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => truncateText(item, maxLength) as string)
+}
+
+function truncateText(value: unknown, maxLength: number): unknown {
+  if (typeof value !== 'string') return value
+  if (value.length <= maxLength) return value
+  return `${value.slice(0, maxLength)}...[truncated ${value.length - maxLength} chars]`
 }
 
 function outputLanguageForBusinessDocsContext(contextPages: BusinessDocsContextPageResult[]): OutputLanguage {

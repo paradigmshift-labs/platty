@@ -486,6 +486,12 @@ export interface BusinessDocsStatusResult {
     counts: BusinessDocsTaskStatusCounts
     activeLeases: number
     expiredRecovered: number
+    retryableFailed: Array<{
+      id: string
+      taskType: BusinessDocsTaskType
+      attemptNo: number
+      lastError: unknown
+    }>
   }
   documents: {
     saved: number
@@ -509,6 +515,14 @@ export interface BusinessDocsResumeResult {
     failedTasksReady: number
   }
   nextAction: BusinessDocsLifecycleNextAction
+}
+
+export interface BusinessDocsReleaseLeasesResult {
+  run: BusinessDocsLifecycleRunSummary
+  released: {
+    activeLeases: number
+  }
+  nextAction: { type: 'lease_tasks' | 'done' | 'repair_task' | 'retry_failed' }
 }
 
 export interface BusinessDocsRetryResult {
@@ -558,6 +572,10 @@ export type BusinessDocsStatusServiceResult =
 
 export type BusinessDocsResumeServiceResult =
   | { ok: true; data: BusinessDocsResumeResult }
+  | { ok: false; code: 'BUSINESS_DOCS_RUN_NOT_FOUND' | 'BUSINESS_DOCS_RUN_NOT_RESUMABLE'; message: string }
+
+export type BusinessDocsReleaseLeasesServiceResult =
+  | { ok: true; data: BusinessDocsReleaseLeasesResult }
   | { ok: false; code: 'BUSINESS_DOCS_RUN_NOT_FOUND' | 'BUSINESS_DOCS_RUN_NOT_RESUMABLE'; message: string }
 
 export type BusinessDocsRetryServiceResult =

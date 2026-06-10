@@ -115,6 +115,29 @@ describe('build_business_docs_cli worker output contract', () => {
     expect(prompt).toContain('Write user-facing natural-language values in Korean.')
   })
 
+  it('compacts project glossary prompts that aggregate large upstream context', () => {
+    const task = leasedTask({
+      taskType: 'project_glossary',
+      documentType: 'glossary',
+      scope: 'project',
+      scopeId: 'project:1',
+      epicId: null,
+    })
+    const pages = largeProjectGlossaryPages()
+
+    const prompt = buildBusinessDocsPromptForTask(task, contextBundle(task), pages)
+
+    expect(prompt.length).toBeLessThan(1_048_576)
+    expect(prompt).toContain('upstream_business_docs')
+    expect(prompt).toContain('content.terms')
+    expect(prompt).toContain('omittedForPrompt')
+    expect(prompt).toContain('termRelationshipHints')
+    expect(prompt).not.toContain('"pageToken": "source_document_cards"')
+    expect(prompt).not.toContain('"pageToken": "source_graph_projection"')
+    expect(prompt).not.toContain('"pageToken": "relation_evidence"')
+    expect(prompt).not.toContain('x'.repeat(20_000))
+  })
+
   it('does not treat idle workers as no-progress while other workers hold active leases', () => {
     expect(shouldThrowBusinessDocsNoProgress({
       idlePolls: 101,
@@ -224,6 +247,145 @@ function contextPages(outputLanguage?: 'ko' | 'en'): BusinessDocsContextPageResu
       evidenceIdNamespace: 'run:1:task:1',
     },
   } as any]
+}
+
+function largeProjectGlossaryPages(): BusinessDocsContextPageResult[] {
+  const largeText = 'x'.repeat(80_000)
+  const dependencies = Array.from({ length: 30 }, (_, index) => ({
+    taskId: `task:${index}`,
+    taskType: 'epic_glossary',
+    documentType: 'glossary',
+    status: 'saved',
+    savedDocumentId: `doc:${index}`,
+    summary: `${largeText}-${index}`,
+    document: {
+      schemaVersion: 'business-doc.v1',
+      documentType: 'glossary',
+      scope: 'epic',
+      scopeId: `epic:${index}`,
+      title: `Glossary ${index}`,
+      summary: `${largeText}-${index}`,
+      content: {
+        evidence_gaps: [largeText],
+        terms: Array.from({ length: 12 }, (_, termIndex) => ({
+          term: `term ${index}-${termIndex}`,
+          canonical_term: `canonical ${index}-${termIndex}`,
+          definition: largeText,
+          termType: 'domain',
+          source_mapping: [{ sourceRef: 'source_document_1', role: 'primary', reason: largeText }],
+          aliases: [largeText],
+          synonyms: [largeText],
+          candidate_aliases: [largeText],
+          antonyms: [],
+          contrast_terms: [],
+          related_terms: [],
+          signals: [largeText],
+          ambiguity: { status: 'none', candidates: [] },
+        })),
+      },
+      evidenceIds: [],
+      items: Array.from({ length: 12 }, (_, itemIndex) => ({
+        itemType: 'glossary_term',
+        stableKey: `term:${index}:${itemIndex}`,
+        ordinal: itemIndex,
+        title: `term ${index}-${itemIndex}`,
+        summary: largeText,
+        content: {
+          term: `term ${index}-${itemIndex}`,
+          canonical_term: `canonical ${index}-${itemIndex}`,
+          definition: largeText,
+          termType: 'domain',
+          source_mapping: [{ sourceRef: 'source_document_1', role: 'primary', reason: largeText }],
+          aliases: [largeText],
+          synonyms: [largeText],
+          candidate_aliases: [largeText],
+          antonyms: [],
+          contrast_terms: [],
+          related_terms: [],
+          signals: [largeText],
+          ambiguity: { status: 'none', candidates: [] },
+        },
+        evidenceIds: [],
+      })),
+    },
+  }))
+  const base = {
+    run: { id: 'run:1', projectId: 'project:1', status: 'running' },
+    task: {
+      id: 'task:1',
+      runId: 'run:1',
+      status: 'leased',
+      taskType: 'project_glossary',
+      documentType: 'glossary',
+      scope: 'project',
+      scopeId: 'project:1',
+      attemptNo: 0,
+      leaseExpiresAt: '2026-06-08T00:00:00.000Z',
+      contextHandle: 'context:1',
+    },
+    page: {
+      pageToken: 'upstream_business_docs',
+      pageKind: 'upstream_business_docs',
+      pageOrder: 20,
+      summary: 'Upstream business docs',
+      evidenceIds: [],
+      contentHash: 'hash',
+      content: { dependencies },
+    },
+    manifest: {
+      schemaVersion: 'business-docs-context.v1',
+      sourceCommit: 'unknown',
+      generatedAt: '2026-06-08T00:00:00.000Z',
+      evidenceIdNamespace: 'run:1:task:1',
+    },
+  } as any
+  return [
+    base,
+    {
+      ...base,
+      page: {
+        pageToken: 'source_document_cards',
+        pageKind: 'source_document_cards',
+        pageOrder: 2,
+        summary: 'Source document cards',
+        evidenceIds: [],
+        contentHash: 'hash-source',
+        content: {
+          cards: [{ sourceRef: 'source_document_1', facts: { body: largeText } }],
+        },
+      },
+    } as any,
+    {
+      ...base,
+      page: {
+        pageToken: 'source_graph_projection',
+        pageKind: 'source_graph_projection',
+        pageOrder: 3,
+        summary: 'Source graph projection',
+        evidenceIds: [],
+        contentHash: 'hash-graph',
+        content: {
+          coverageOutline: {
+            clusters: [{ clusterId: 'cluster:large', relationEvidence: [largeText] }],
+          },
+        },
+      },
+    } as any,
+    {
+      ...base,
+      page: {
+        pageToken: 'relation_evidence',
+        pageKind: 'relation_evidence',
+        pageOrder: 4,
+        summary: 'Relation evidence',
+        evidenceIds: [],
+        contentHash: 'hash-relation',
+        content: {
+          relations: [{ detail: largeText }],
+        },
+      },
+    } as any,
+  ]
 }
 
 function readSchemaObject(schema: Record<string, unknown>, key: string): Record<string, unknown> {

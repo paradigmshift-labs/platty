@@ -35,7 +35,10 @@ describe('Platty monorepo workspace contract', () => {
     assert.equal(rootPackage.type, 'module')
     assert.deepEqual(rootPackage.workspaces, ['packages/*', 'apps/*'])
     assert.deepEqual(rootPackage.engines, { node: '>=20' })
-    assert.equal(scripts.build, 'node "$npm_execpath" run build --workspaces --if-present')
+    assert.equal(
+      scripts.build,
+      'node "$npm_execpath" run build --workspaces --if-present && node scripts/resolve-core-dist-aliases.mjs packages/core/dist',
+    )
     assert.equal(scripts.test, 'node --test tests/**/*.test.mjs && node "$npm_execpath" run check:architecture')
     assert.equal(scripts['check:architecture'], 'node scripts/check-architecture.mjs')
     assert.equal(scripts.typecheck, 'tsc -b')
@@ -102,7 +105,9 @@ describe('Platty monorepo workspace contract', () => {
       assert.equal(manifest.type, 'module')
       const expectedBuildScript = manifestPath === 'packages/core/package.json'
         ? 'tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs dist'
-        : 'tsc -b'
+        : manifestPath === 'packages/cli/package.json'
+          ? 'tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs ../core/dist'
+          : 'tsc -b'
       assert.equal(manifest.scripts.build, expectedBuildScript)
       const expectedTestScript = manifestPath === 'packages/core/package.json' || manifestPath === 'packages/cli/package.json'
         ? 'vitest run'

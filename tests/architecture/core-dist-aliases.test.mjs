@@ -1,9 +1,37 @@
 import assert from 'node:assert/strict'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { execFile } from 'node:child_process'
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { describe, it } from 'node:test'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { promisify } from 'node:util'
 import { copyCoreWasmAssets, rewriteCoreDistAliases, rewriteCoreDistAliasFiles } from '../../scripts/resolve-core-dist-aliases.mjs'
+
+const execFileAsync = promisify(execFile)
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const runtimeUnsafeAliasPattern = /(?:from\s*['"]|import\s*\(\s*['"])@\//
+
+async function listDistRuntimeFiles(dir) {
+  const entries = await readdir(dir, { withFileTypes: true })
+  const files = []
+  for (const entry of entries) {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...await listDistRuntimeFiles(path))
+    } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.d.ts'))) {
+      files.push(path)
+    }
+  }
+  return files
+}
+
+async function runNpm(args) {
+  if (process.env.npm_execpath) {
+    return execFileAsync(process.execPath, [process.env.npm_execpath, ...args], { cwd: repoRoot })
+  }
+  return execFileAsync('npm', args, { cwd: repoRoot })
+}
 
 describe('core dist alias resolver', () => {
   it('rewrites @/ specifiers to runtime-safe relative imports', () => {
@@ -64,5 +92,21 @@ describe('core dist alias resolver', () => {
     } finally {
       await rm(root, { recursive: true, force: true })
     }
+  })
+
+  it('keeps core dist runtime-safe after CLI build re-emits referenced projects', async () => {
+    const coreDistRoot = join(repoRoot, 'packages/core/dist')
+    await rm(join(coreDistRoot, 'tsconfig.tsbuildinfo'), { force: true })
+
+    await runNpm(['--workspace', '@pshift/platty', 'run', 'build'])
+
+    const unsafeFiles = []
+    for (const file of await listDistRuntimeFiles(coreDistRoot)) {
+      const source = await readFile(file, 'utf8')
+      if (runtimeUnsafeAliasPattern.test(source)) unsafeFiles.push(file)
+    }
+
+    assert.deepEqual(unsafeFiles, [])
+    await import(pathToFileURL(join(coreDistRoot, 'index.js')).href)
   })
 })

@@ -73,6 +73,11 @@ function assertRootManifest() {
   assert.equal(manifest.private, true, 'root package must stay private')
   assert.equal(manifest.type, 'module', 'root package must use ESM')
   assert.deepEqual(manifest.workspaces, ['packages/*', 'apps/*'], 'root workspaces must stay package/app scoped')
+  assert.equal(
+    manifest.scripts?.build,
+    'node "$npm_execpath" run build --workspaces --if-present && node scripts/resolve-core-dist-aliases.mjs packages/core/dist',
+    'root build must leave @platty/core dist runtime-safe after workspace builds',
+  )
 }
 
 function assertWorkspaceManifest(workspace) {
@@ -81,7 +86,9 @@ function assertWorkspaceManifest(workspace) {
   assert.equal(manifest.type, 'module', `${workspace.manifestPath} must use ESM`)
   const expectedBuildScript = workspace.manifestPath === 'packages/core/package.json'
     ? 'tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs dist'
-    : 'tsc -b'
+    : workspace.manifestPath === 'packages/cli/package.json'
+      ? 'tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs ../core/dist'
+      : 'tsc -b'
   assert.equal(manifest.scripts?.build, expectedBuildScript, `${workspace.manifestPath} must expose a build script`)
   const expectedTestScript = workspace.manifestPath === 'packages/core/package.json' || workspace.manifestPath === 'packages/cli/package.json'
     ? 'vitest run'
