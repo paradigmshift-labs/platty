@@ -8,10 +8,12 @@ import type { AnalysisReviewDecisionRow, AnalysisReviewTargetType } from '@/db/s
 import { listAnalysisReviewDecisions } from './review_decisions.js'
 
 export type DocsTargetKind = 'api' | 'screen' | 'job' | 'event'
+export type DocsTargetStatus = 'active' | 'deprecated' | 'all'
 
 export interface ListDocsTargetsInput {
   projectId: string
   kind?: DocsTargetKind
+  status?: DocsTargetStatus
   repo?: string
   method?: string
   search?: string
@@ -107,14 +109,15 @@ export function listDocsTargets(db: DB, input: ListDocsTargetsInput): ListDocsTa
   const decisionByTargetId = new Map(
     listAnalysisReviewDecisions(db, { projectId: input.projectId }).map((decision) => [decision.targetId, decision]),
   )
+  const filteredRows = filterRowsByTargetStatus(allRows, decisionByTargetId, input.status)
   const limit = normalizeLimit(input.limit)
   const offset = normalizeOffset(input.offset)
-  const returnedRows = allRows.slice(offset, offset + limit)
+  const returnedRows = filteredRows.slice(offset, offset + limit)
   const bundleCounts = countBundlesByEntryPoint(db, returnedRows.map((row) => row.id))
   const targets = returnedRows.map((row) => toDocsTargetRow(row, bundleCounts, decisionByTargetId))
 
   return {
-    summary: summarizeTargets(allRows, decisionByTargetId),
+    summary: summarizeTargets(filteredRows, decisionByTargetId),
     pagination: {
       limit,
       offset,
@@ -301,6 +304,18 @@ function summarizeTargets(
     event: docsKinds.filter((kind) => kind === 'event').length,
     deprecated: rows.filter((row) => decisionByTargetId.get(row.id)?.decision === 'deprecated').length,
   }
+}
+
+function filterRowsByTargetStatus(
+  rows: EntryPointTargetRow[],
+  decisionByTargetId: Map<string, AnalysisReviewDecisionRow>,
+  status: DocsTargetStatus | undefined,
+): EntryPointTargetRow[] {
+  if (!status || status === 'all') return rows
+  return rows.filter((row) => {
+    const deprecated = decisionByTargetId.get(row.id)?.decision === 'deprecated'
+    return status === 'deprecated' ? deprecated : !deprecated
+  })
 }
 
 function countBundlesByEntryPoint(db: DB, entryPointIds: string[]): Map<string, number> {
