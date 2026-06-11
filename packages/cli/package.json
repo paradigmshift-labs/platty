@@ -6,28 +6,43 @@
   "license": "UNLICENSED",
   "type": "module",
   "bin": {
-    "platty": "dist/main.js"
+    "platty": "release/main.js"
   },
   "files": [
-    "dist",
+    "release",
     "package.json",
     "README.md"
   ],
   "scripts": {
     "build": "tsc -b && node ../../scripts/resolve-core-dist-aliases.mjs ../core/dist",
+    "build:release": "npm run build && node scripts/build-release.mjs",
     "test": "vitest run",
     "release:pack:dry-run": "npm pack --dry-run",
     "release:publish:dry-run": "npm publish --dry-run"
   },
   "dependencies": {
-    "@platty/core": "0.1.0",
+    "better-sqlite3": "11.10.0",
     "commander": "14.0.3",
-    "drizzle-orm": "0.45.2"
+    "drizzle-orm": "0.45.2",
+    "fast-glob": "^3.3.3",
+    "nanoid": "5.1.11",
+    "tree-sitter": "^0.25.0",
+    "tree-sitter-dart": "^1.0.0",
+    "tree-sitter-prisma": "^1.6.0",
+    "tree-sitter-typescript": "^0.23.2",
+    "typescript": "^5.9.3",
+    "web-tree-sitter": "^0.26.7",
+    "zod": "4.3.6"
   },
   "engines": {
     "node": ">=20"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@platty/core": "0.1.0",
+    "esbuild": "^0.28.0",
+    "javascript-obfuscator": "^5.4.3"
   }
 }

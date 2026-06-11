@@ -23,12 +23,20 @@ platty project create "<name>" --description "<description>" --json
 platty project use <project-id-or-name> --json
 ```
 
+## Invariants
+
+```text
+1. A repository path is NEVER a project selector. Resolve <project> only from
+   the JSON output of project list / project create / project use.
+2. On an existing project, run repo list BEFORE repo add. repo add does not
+   warn about duplicate names or dead repoPath entries — you must check.
+```
+
 ## Project Scoping
 
 - Inspect JSON output from `project list`, `project create`, or `project use` to determine the resolved project selector.
 - For existing-project setup, select the existing project before `repo add`.
 - Use the resolved project id/name consistently as `<project>` for `repo add`, `repo list`, and `status`.
-- Do not treat the repository path as the project selector.
 
 3. Add repositories:
 
@@ -48,6 +56,12 @@ For an existing project, run `repo list` BEFORE `repo add` and inspect the regis
 platty repo update <repo-id-or-name> --path <new-path> --project <project> --json
 platty repo remove <repo-id-or-name> --project <project> --json
 ```
+
+## Stop Conditions
+
+- `project use` or any `--project` command fails with `PROJECT_AMBIGUOUS`: stop and ask the user which project to use — never pick one of the matches yourself.
+- `repo add` fails with `NOT_A_GIT_REPO`, `NOT_A_DIRECTORY`, or a nonexistent path: stop and report the path — do not retry with guessed path variants.
+- `repo update` / `repo remove` fails with `REPO_AMBIGUOUS` or `REPO_NOT_FOUND` after you already re-checked `repo list`: stop and ask the user which registration to change.
 
 ## Next Step
 

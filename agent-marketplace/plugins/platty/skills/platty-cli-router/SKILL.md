@@ -31,6 +31,18 @@ init -> project -> repo -> status -> run -> confirm -> status -> docs or epics o
 | Generate business docs | `platty-business-docs-generation` |
 | Check fixture corpus | `platty-corpus-quality` |
 
-## Rule
+## Invariants
 
-If the CLI output includes `nextAction.command`, prefer that command as the next step.
+```text
+1. If the CLI output includes nextAction.command (top level or data.nextAction),
+   that command IS the next step. Do not substitute a command you prefer.
+2. Re-attach --project <project> and --json when nextAction.command omits them
+   (e.g. confirm_required suggests bare "platty confirm").
+   [F5 workaround — remove when nextAction emits both flags itself]
+```
+
+## Stop Conditions
+
+- Following `nextAction.command` twice in a row returns the same `nextAction` (`type`, `repoId`, `stage`) with no other state change: stop routing — this is a stalled loop; switch to `platty-static-analysis` Stop Conditions instead of re-running the command a third time.
+- A command from the table fails with `UNKNOWN_COMMAND`: retry once through the local build (`node packages/cli/dist/main.js ...`); if that also fails, stop and report — do not substitute a guessed command.
+- A command fails with `PROJECT_AMBIGUOUS` or `PROJECT_NOT_FOUND` and no `nextAction` resolves it: stop and ask the user for the project instead of guessing a selector.

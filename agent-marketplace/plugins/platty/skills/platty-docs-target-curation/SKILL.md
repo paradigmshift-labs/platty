@@ -41,6 +41,12 @@ platty docs shared-segments rebuild --project <project> --json
 platty docs shared-segments list --project <project> --json
 ```
 
+## Stop Conditions
+
+- `deprecate` / `include` fails with `TARGET_NOT_FOUND` or `TARGET_SELECTOR_AMBIGUOUS`: stop mutating scope — re-run `docs targets list` and use exact ids from the fresh listing. If an id from the fresh listing still fails, report it instead of guessing.
+- `docs targets list` returns zero targets while `platty status` reports `build_docs`: stop curation — static analysis has not produced targets for this project; go back to `platty-static-analysis` and report.
+- The step-4 re-list does not reflect a mutation you just made (a deprecated id is still active, or an included id is missing): stop and report — do not re-issue the same `deprecate`/`include` in a loop.
+
 ## Next Step
 
 Switch to `platty-docs-generation` after target scope is accepted.

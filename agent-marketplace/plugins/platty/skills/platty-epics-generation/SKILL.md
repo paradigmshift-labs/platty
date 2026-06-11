@@ -30,3 +30,10 @@ platty epics sync worker next --run-id <run-id> --out packet.json --json
 platty epics sync tasks submit --task-id <task-id> --lease-token <lease-token> --input result.json --json
 platty epics sync draft confirm --run-id <run-id> --json
 ```
+
+## Stop Conditions
+
+- `epics start` fails with `BUILD_EPICS_REPOSITORY_REQUIRED`: static analysis is incomplete — switch to `platty-static-analysis`; do not retry `epics start` in a loop.
+- `draft confirm` fails with `BUILD_EPICS_DRAFT_NOT_READY`, or `validate` reports errors: do not force-confirm — finish remaining worker tasks first. If `worker next` returns `no_task_available` and the draft is still not ready, stop and report the run state.
+- `draft confirm` fails with `BUILD_EPICS_DRAFT_ALREADY_CONFIRMED`: the draft is final — stop; do not confirm again or regenerate unless the user asks.
+- A submit returns `failed` for a task: stop, report the error — do not invent epic content to force the run forward.
