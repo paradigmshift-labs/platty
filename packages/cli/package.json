@@ -1,6 +1,6 @@
 {
   "name": "@pshift/platty",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": false,
   "description": "Platty CLI for repository static analysis and documentation workflows.",
   "license": "UNLICENSED",
@@ -41,7 +41,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@platty/core": "0.1.0",
+    "@platty/core": "0.0.1",
     "esbuild": "^0.28.0",
     "javascript-obfuscator": "^5.4.3"
   }

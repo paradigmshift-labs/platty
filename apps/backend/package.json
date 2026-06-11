@@ -1,6 +1,6 @@
 {
   "name": "@platty/backend",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "type": "commonjs",
   "main": "dist/main.js",
@@ -20,7 +20,7 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
-    "@platty/core": "0.1.0",
+    "@platty/core": "0.0.1",
     "@prisma/client": "^6.19.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",

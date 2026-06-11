@@ -3,7 +3,7 @@ import type { PlattyCommandRunOptions } from './main.js'
 import { commandArgvAfter, stripGlobalFlags, value } from './argv.js'
 import { failure, success, type PlattyCommandResponse } from './output.js'
 
-const VERSION = '0.1.0'
+const VERSION = '0.0.1'
 const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'confirm', 'corpus', 'docs', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'version'])
 
 type DispatchOptions = PlattyCommandRunOptions & { cwd: string }
