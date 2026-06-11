@@ -4,7 +4,7 @@ import { commandArgvAfter, stripGlobalFlags, value } from './argv.js'
 import { failure, success, type PlattyCommandResponse } from './output.js'
 
 const VERSION = '0.0.1'
-const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'confirm', 'corpus', 'docs', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'version'])
+const PUBLIC_COMMAND_ROOTS = new Set(['business-docs', 'confirm', 'corpus', 'docs', 'epics', 'init', 'project', 'repo', 'run', 'runs', 'status', 'uninstall', 'version'])
 
 type DispatchOptions = PlattyCommandRunOptions & { cwd: string }
 type CommandHandler = () => Promise<PlattyCommandResponse>
@@ -198,6 +198,11 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
     return runCorpusCommand(commandArgvAfter('corpus', stripGlobalFlags(_argv)), {
       cwd: _options.cwd,
     })
+  }, setResponse)
+
+  setAction(configurePassthrough(program.command('uninstall').description('Show uninstall steps and optionally remove Platty state.')), async () => {
+    const { runUninstallCommand } = await import('./commands/uninstall.js')
+    return runUninstallCommand(commandArgvAfter('uninstall', stripGlobalFlags(_argv)))
   }, setResponse)
 
   setAction(configurePassthrough(program.command('version').description('Show Platty CLI version.')), async () => versionResponse(), setResponse)

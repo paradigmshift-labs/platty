@@ -19,12 +19,33 @@ being analyzed.
 platty init --json
 ```
 
-2. Create or select a project:
+2. Create or select a project. A project is the Platty work container; a
+   repository path is added only after a project is selected.
 
 ```bash
 platty project list --json
 platty project create "<name>" --description "<description>" --json
 platty project use <project-id-or-name> --json
+```
+
+Use this decision order:
+
+- If `project list` returns zero projects, ask for a project name or create the
+  requested project.
+- If exactly one project is clearly the intended target, run `project use`.
+- If multiple projects exist or a selector is ambiguous, ask the user which
+  project to use.
+- After `project use`, run `repo list` before any `repo add`.
+
+Use this setup notice when context is missing:
+
+```text
+Platty: setup needed
+- State root: ~/.platty or PLATTY_HOME
+- Step 1: Create or select a project.
+- Step 2: Register repositories inside that selected project.
+- First command: platty project list --json
+- Next: platty project use <project> --json or platty project create "<name>" --json
 ```
 
 ## Invariants
@@ -44,9 +65,10 @@ platty project use <project-id-or-name> --json
 - For existing-project setup, select the existing project before `repo add`.
 - Use the resolved project id/name consistently as `<project>` for `repo add`, `repo list`, and `status`.
 
-3. Add repositories:
+3. Add repositories inside the selected project:
 
 ```bash
+platty repo list --project <project> --json
 platty repo add <path> --project <project> --json
 platty repo list --project <project> --json
 ```

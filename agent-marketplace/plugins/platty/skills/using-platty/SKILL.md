@@ -48,6 +48,41 @@ Common routes:
 - Follow `nextAction.command` from JSON output unless there is a specific reason not to. Check both the top level and `data.nextAction` — responses place it in either spot. Re-add `--project <project>` and `--json` if the suggested command omits them.
 - Do not use generation skills for retrieval-only questions.
 
+## Project Context Gate
+
+Before any project-scoped command, make the project/repository sequence explicit:
+
+1. If Platty is not initialized, run `platty init --json`.
+2. If no selected project is known, run `platty project list --json`.
+3. If no project exists, guide the user to create one:
+   `platty project create "<name>" --description "<description>" --json`.
+4. If exactly one existing project is the intended target, run
+   `platty project use <project-id-or-name> --json`.
+5. If multiple projects could match, ask the user which project to use. Do not
+   choose one yourself.
+6. After selecting a project, inspect repositories with
+   `platty repo list --project <project> --json`.
+7. Only then add repositories with
+   `platty repo add <path> --project <project> --json`.
+
+Phrase setup guidance as "create or select a project, then register repositories
+inside that project." A filesystem repository path is never a project selector.
+Use `platty project use` for selecting the current project context; do not create
+a separate "use project" workflow unless the user is explicitly comparing or
+switching between multiple projects.
+
+## Uninstall / Reset
+
+Use `platty uninstall --json` to inspect what would be removed and get the npm
+package removal command. The command is a dry run by default. Use
+`platty uninstall --yes --json` only when the user explicitly wants to remove the
+Platty state root (`~/.platty` or `PLATTY_HOME`). The global npm package still
+needs to be removed outside Platty with:
+
+```bash
+npm uninstall -g @pshift/platty
+```
+
 ## Operator UX
 
 Follow this communication shape for every Platty workflow. Keep it short,

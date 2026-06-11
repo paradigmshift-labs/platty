@@ -28,4 +28,26 @@ describe('project commands', () => {
       await db.cleanup()
     }
   })
+
+  it('guides users from missing project context to project list before repo setup', async () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'platty-project-context-'))
+    const db = createTestPlattyDb()
+    vi.stubEnv('PLATTY_HOME', join(cwd, '.platty'))
+
+    try {
+      expect((await runPlattyCommand(['init'], { cwd, db: db.db })).exitCode).toBe(0)
+
+      const response = await runPlattyCommand(['--json', 'status'], { cwd, db: db.db })
+
+      expect(response.exitCode).toBe(2)
+      expect(response.result.errors[0]?.code).toBe('PROJECT_NOT_SELECTED')
+      expect(response.result.nextAction).toMatchObject({
+        type: 'select_project',
+        command: ['platty', 'project', 'list'],
+        message: 'Create or select a Platty project, then register repositories inside that project.',
+      })
+    } finally {
+      await db.cleanup()
+    }
+  })
 })

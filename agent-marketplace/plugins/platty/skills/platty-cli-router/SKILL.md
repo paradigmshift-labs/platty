@@ -13,6 +13,10 @@ Use this before choosing a Platty command when the user asks what to run next or
 init -> project -> repo -> status -> run -> confirm -> status -> docs or epics or business-docs
 ```
 
+When project context is missing, route to `platty-project-setup` first. The user
+must create or select a project before registering repositories, and repositories
+must be registered inside that selected project.
+
 ## Root Commands
 
 | Need | Command or skill |
@@ -30,6 +34,7 @@ init -> project -> repo -> status -> run -> confirm -> status -> docs or epics o
 | Generate epics | `platty-epics-generation` |
 | Generate business docs | `platty-business-docs-generation` |
 | Check fixture corpus | `platty-corpus-quality` |
+| Uninstall or reset local Platty state | `platty uninstall --json`; use `--yes` only with explicit confirmation |
 
 ## Invariants
 
@@ -41,6 +46,8 @@ init -> project -> repo -> status -> run -> confirm -> status -> docs or epics o
    [F5 workaround — remove when nextAction emits both flags itself]
 3. The filesystem state root is the global Platty home, not cwd and not the
    repository path. The CLI config field `projectRoot` names that state root.
+4. `project use` selects the current Platty project context. It is not a
+   separate workflow skill; route it through `platty-project-setup`.
 ```
 
 ## Routing UX

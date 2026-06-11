@@ -79,6 +79,7 @@ function projectNotSelected(): PlattyCommandResponse {
     nextAction: {
       type: 'select_project',
       command: ['platty', 'project', 'list'],
+      message: 'Create or select a Platty project, then register repositories inside that project.',
     },
   })
   return { exitCode: 2, result, stdout: '', stderr: '' }
@@ -164,6 +165,11 @@ export async function runProjectCommand(argv: string[], options: ProjectCommandO
       })
 
       const result = success({ currentProject }, {
+        nextAction: {
+          type: 'list_repositories',
+          command: ['platty', 'repo', 'list', '--project', resolvedProject.project.id],
+          message: 'Inspect repositories registered inside this project before adding another one.',
+        },
         evidenceRefs: [{ label: 'platty-config', path: configPath(root.projectRoot) }],
       })
       return { exitCode: 0, result, stdout: '', stderr: '' }
