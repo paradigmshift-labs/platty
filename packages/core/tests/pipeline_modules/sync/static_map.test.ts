@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm'
 import { models } from '@/db/schema/build_models.js'
 import { codeRelations } from '@/db/schema/build_relations.js'
 import { entryPoints, codeBundles } from '@/db/schema/build_route.js'
-import { codeNodes, fileCache } from '@/db/schema/code_graph.js'
+import { codeEdges, codeNodes, fileCache } from '@/db/schema/code_graph.js'
 import { projects, repositories } from '@/db/schema/core.js'
 import { pipelineRuns } from '@/db/schema/pipeline_runs.js'
 import { staticMerkleSnapshots, syncStaticMapRuns } from '@/db/schema/sync.js'
@@ -201,6 +201,79 @@ describe('syncStaticMap', () => {
     })
     expect(stagingDbPath).toBeTruthy()
     expect(existsSync(stagingDbPath)).toBe(false)
+  })
+
+  it('lets canonical assign fresh code edge ids during static-map apply', async () => {
+    seedReadyRepo('r1')
+    db.insert(repositories).values({
+      id: 'r-old',
+      projectId: 'p1',
+      name: 'Old Repo',
+      repoPath: '/repo/old',
+      analysisBranch: 'main',
+      analysisWorktreePath: '/analysis/old',
+      deletedAt: '2026-01-01T00:00:00.000Z',
+    }).run()
+    db.insert(codeNodes).values({
+      id: 'r-old:src/old.ts:oldFn',
+      repoId: 'r-old',
+      type: 'function',
+      filePath: 'src/old.ts',
+      name: 'oldFn',
+      parseStatus: 'ok',
+    }).run()
+    db.insert(codeEdges).values({
+      id: 1,
+      repoId: 'r-old',
+      sourceId: 'r-old:src/old.ts:oldFn',
+      targetId: null,
+      relation: 'imports',
+      targetSpecifier: 'legacy-lib',
+      resolveStatus: 'pending',
+      source: 'static',
+    }).run()
+
+    const result = await syncStaticMap({
+      db,
+      projectId: 'p1',
+      stagingRoot,
+      hooks: {
+        getRepoPin: async () => 'commit:r1',
+        ...noopStaticStages(),
+        initializeStagingDb: ({ stagingDb }) => {
+          stagingDb.insert(codeNodes).values({
+            id: 'r1:src/current.ts:currentFn',
+            repoId: 'r1',
+            type: 'function',
+            filePath: 'src/current.ts',
+            name: 'currentFn',
+            parseStatus: 'ok',
+          }).run()
+          stagingDb.insert(codeEdges).values({
+            id: 1,
+            repoId: 'r1',
+            sourceId: 'r1:src/current.ts:currentFn',
+            targetId: null,
+            relation: 'imports',
+            targetSpecifier: 'current-lib',
+            resolveStatus: 'pending',
+            source: 'static',
+          }).run()
+        },
+        buildMerkleSnapshot: async () => snapshotInput('root:edge-id-regenerated'),
+      },
+    })
+
+    expect(result.status).toBe('applied')
+    expect(db.select().from(codeEdges).where(eq(codeEdges.repoId, 'r-old')).all()).toEqual([
+      expect.objectContaining({ id: 1, repoId: 'r-old', targetSpecifier: 'legacy-lib' }),
+    ])
+
+    const currentEdges = db.select().from(codeEdges).where(eq(codeEdges.repoId, 'r1')).all()
+    expect(currentEdges).toEqual([
+      expect.objectContaining({ repoId: 'r1', targetSpecifier: 'current-lib' }),
+    ])
+    expect(currentEdges[0]?.id).not.toBe(1)
   })
 
   it('seeds a pipeline parent run in staging before default static stages run', async () => {

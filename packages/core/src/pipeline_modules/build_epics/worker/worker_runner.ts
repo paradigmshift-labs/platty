@@ -133,6 +133,7 @@ export async function runBuildEpicsWorkerQueue(input: RunBuildEpicsWorkerQueueIn
     repairRequested: 0,
     failed: 0,
     codexErrors: 0,
+    lastCodexError: null as string | null,
     byType: {} as Record<string, { completed: number; repairRequested: number; failed: number; codexErrors: number; totalMs: number }>,
   }
   const normalizationStats: NormalizationStats = {
@@ -187,9 +188,15 @@ export async function runBuildEpicsWorkerQueue(input: RunBuildEpicsWorkerQueueIn
         workDir: path.join(runDir, 'tasks'),
         timeoutMs: timeoutForTask(taskType),
       })
-    } catch {
+    } catch (error) {
       taskStats.codexErrors += 1
       taskStats.byType[taskType]!.codexErrors += 1
+      // Surface the real invocation failure (e.g. codex usage limit / auth) instead of swallowing it.
+      // Otherwise the downstream schema validation reports a misleading "<field> arrays are required"
+      // error and the actual cause is only visible in the per-task codex .log file.
+      const reason = error instanceof Error ? error.message : String(error)
+      taskStats.lastCodexError = reason
+      console.error(`[build_epics] codex invocation failed for ${taskType} (task ${task.taskId}): ${reason}`)
       result = failedInvocationResultFor(taskType)
     }
 

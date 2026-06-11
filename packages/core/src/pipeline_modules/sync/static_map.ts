@@ -337,9 +337,15 @@ async function runBuildRelationsForStaticMap(context: StaticMapRepoStageContext)
 }
 
 async function runBuildServiceMapForStaticMap(context: StaticMapRepoStageContext): Promise<void> {
+  // Run project-scoped (no repoId). build_service_map is a project-level phase; passing repoId routes
+  // its phase-status write to repository_phase_status and leaves project_phase_status.build_service_map
+  // at the stale value seeded from canonical. Since build_relations is freshly rebuilt (newer built_at),
+  // the project service-map phase then looks older than its upstream, so `docs start` fails its freshness
+  // precondition until a manual `platty run`. Writing the project phase here keeps the normal
+  // run → sync static-map → docs flow working without that extra step. The service-map content is
+  // project-wide either way; only the phase-status target changes.
   await runBuildServiceMap({
     db: context.stagingDb,
-    repoId: context.repo.id,
     projectId: context.projectId,
     parentRunId: context.runId,
     opts: { includeDocumentFacts: false },
@@ -380,7 +386,7 @@ function applyCanonicalStaticMapFromStaging(context: StaticMapApplyContext): voi
 
   copyRows(context, fileCache, context.stagingDb.select().from(fileCache).where(inArray(fileCache.repoId, repoIds)).all())
   copyRows(context, codeNodes, context.stagingDb.select().from(codeNodes).where(inArray(codeNodes.repoId, repoIds)).all())
-  copyRows(context, codeEdges, context.stagingDb.select().from(codeEdges).where(inArray(codeEdges.repoId, repoIds)).all())
+  copyCodeEdgesWithoutIds(context, context.stagingDb.select().from(codeEdges).where(inArray(codeEdges.repoId, repoIds)).all())
   copyRows(context, models, context.stagingDb.select().from(models).where(inArray(models.repositoryId, repoIds)).all())
   copyRows(context, entryPoints, context.stagingDb.select().from(entryPoints).where(inArray(entryPoints.repoId, repoIds)).all())
   copyRows(context, codeBundles, context.stagingDb.select().from(codeBundles).all())
@@ -413,7 +419,11 @@ function buildDefaultMerkleSnapshot(context: StaticMapStageContext): StaticMapSn
   const edgeRows = context.stagingDb.select().from(codeEdges).where(inArray(codeEdges.repoId, repoIds)).all()
   const modelRows = context.stagingDb.select().from(models).where(inArray(models.repositoryId, repoIds)).all()
   const entryPointRows = context.stagingDb.select().from(entryPoints).where(inArray(entryPoints.repoId, repoIds)).all()
+  // Filter bundles to this project's entry points. A no-op for staging DBs (single project), but
+  // required when this snapshot builder is reused against the canonical DB (multi-project).
+  const entryPointIdSet = new Set(entryPointRows.map((row) => row.id))
   const codeBundleRows = context.stagingDb.select().from(codeBundles).all()
+    .filter((row) => entryPointIdSet.has(row.entryPointId))
   const frameworkRows = context.stagingDb.select().from(frameworkDetections).where(inArray(frameworkDetections.repoId, repoIds)).all()
   const relationRows = context.stagingDb.select().from(codeRelations).where(inArray(codeRelations.repoId, repoIds)).all()
   const serviceNodeRows = context.stagingDb.select().from(serviceMapNodes).where(eq(serviceMapNodes.projectId, context.projectId)).all()
@@ -504,6 +514,63 @@ function buildDefaultMerkleSnapshot(context: StaticMapStageContext): StaticMapSn
   }
 }
 
+export interface EnsureCanonicalStaticSnapshotResult {
+  snapshotId: string
+  created: boolean
+}
+
+/**
+ * Bootstrap a baseline Merkle snapshot directly from the canonical DB (no staging re-analysis,
+ * no canonical churn). This lets first-time technical-doc generation stamp documents with a
+ * documentSourceHash so the next sync can classify changes as `stale` rather than `stale_candidate`.
+ * No-op (returns the latest existing snapshot) when the project already has one.
+ */
+export function ensureCanonicalStaticSnapshot(db: SyncDb, projectId: string): EnsureCanonicalStaticSnapshotResult {
+  const existing = db.select()
+    .from(staticMerkleSnapshots)
+    .where(eq(staticMerkleSnapshots.projectId, projectId))
+    .all()
+    .sort((a, b) => `${b.createdAt}:${b.id}`.localeCompare(`${a.createdAt}:${a.id}`))[0]
+  if (existing) return { snapshotId: existing.id, created: false }
+
+  const repos = db.select()
+    .from(repositories)
+    .where(and(eq(repositories.projectId, projectId), isNull(repositories.deletedAt)))
+    .all()
+  const repoPins: StaticMapRepoPin[] = repos.map((repo) => ({
+    repoId: repo.id,
+    analysisBranch: repo.analysisBranch ?? '',
+    sourceCommit: repo.lastSyncedCommit
+      ?? (repo.analysisWorktreePath ? getHeadCommit(repo.analysisWorktreePath) : null)
+      ?? 'unknown',
+    analysisWorktreePath: repo.analysisWorktreePath ?? '',
+  }))
+
+  const snapshotId = `static_merkle:${nanoid()}`
+  const context: StaticMapStageContext = {
+    db,
+    stagingDb: db,
+    projectId,
+    runId: `bootstrap:${snapshotId}`,
+    stagingDbPath: '',
+    repoPins,
+  }
+  const snapshot = buildDefaultMerkleSnapshot(context)
+  db.insert(staticMerkleSnapshots).values({
+    id: snapshotId,
+    projectId,
+    snapshotKind: 'project',
+    analysisBranch: null,
+    sourceCommit: null,
+    repoCommitPinsJson: repoPins.map(repoPinToJson),
+    rootHash: snapshot.rootHash,
+    hashSetJson: snapshot.hashSet,
+    reasonInputsJson: snapshot.reasonInputs,
+    createdByRunId: null,
+  }).run()
+  return { snapshotId, created: true }
+}
+
 function deleteStagingDbFiles(path: string): void {
   rmSync(path, { force: true })
   rmSync(`${path}-wal`, { force: true })
@@ -539,6 +606,13 @@ function insertRows(db: SyncDb, table: unknown, rows: unknown[]): void {
 function copyRows(context: StaticMapApplyContext, table: unknown, rows: unknown[]): void {
   for (const row of rows) {
     context.tx.insert(table as never).values(row as never).run()
+  }
+}
+
+function copyCodeEdgesWithoutIds(context: StaticMapApplyContext, rows: Array<typeof codeEdges.$inferSelect>): void {
+  for (const row of rows) {
+    const { id: _stagingId, ...value } = row
+    context.tx.insert(codeEdges).values(value).run()
   }
 }
 
@@ -722,13 +796,31 @@ function stableModel(row: typeof models.$inferSelect): Record<string, unknown> {
     name: row.name,
     tableName: row.tableName,
     comment: row.comment,
-    fields: row.fields,
-    relations: row.relations,
+    fields: stripPositionalMetadata(row.fields),
+    relations: stripPositionalMetadata(row.relations),
     isDeprecated: row.isDeprecated,
     sourceFile: row.sourceFile,
     orm: row.orm,
     validity: row.validity,
   }
+}
+
+// Model field/relation entries carry `line` numbers for editor navigation. Those shift
+// whenever unrelated earlier content in the schema file moves (e.g. adding/removing another
+// model), which would otherwise invalidate the document-source hash of every model below the
+// edit and cascade into route hashes via relatedModelHashes. Exclude positional metadata so the
+// hash reflects only the semantic shape of the model.
+function stripPositionalMetadata(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripPositionalMetadata)
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [key, inner] of Object.entries(value as Record<string, unknown>)) {
+      if (key === 'line') continue
+      out[key] = stripPositionalMetadata(inner)
+    }
+    return out
+  }
+  return value
 }
 
 function stableEntryPoint(row: typeof entryPoints.$inferSelect): Record<string, unknown> {

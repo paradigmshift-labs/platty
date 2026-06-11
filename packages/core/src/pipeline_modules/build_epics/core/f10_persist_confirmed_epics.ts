@@ -1,7 +1,8 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNull, like, ne } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { epicConfirmLogs, epicDependencies, epicDocumentLinks } from '@/db/schema/build_epics.js'
 import { epicDomains, epics } from '@/db/schema/core.js'
+import { documents } from '@/db/schema/build_docs.js'
 import { BuildEpicsError, type PersistConfirmedEpicsResult, type ValidatedConfirmedEpicPlan } from './types.js'
 import type { DB } from '@/db/client.js'
 import { upsertProjectPhaseStatus } from '@/pipeline_infra/phase/phase_status.js'
@@ -108,6 +109,19 @@ export async function persistConfirmedEpics(input: PersistConfirmedEpicsInput): 
       tx.delete(epicDocumentLinks).where(eq(epicDocumentLinks.epicId, row.id)).run()
       tx.delete(epicDependencies).where(eq(epicDependencies.sourceEpicId, row.id)).run()
       tx.delete(epicDependencies).where(eq(epicDependencies.targetEpicId, row.id)).run()
+      // Cascade the soft-delete to this epic's business documents so they don't linger as active
+      // docs pointing at a removed epic. Matches both epic-scoped docs (scopeId == epic id) and
+      // use_case-scoped docs whose composite scopeId embeds the epic id. Epic ids are unique nanoids
+      // so the substring match is collision-safe. Mirrors build_docs sync's orphan handling.
+      tx.update(documents)
+        .set({ status: 'deleted', validity: 'orphaned', updatedBy: 'system', updatedAt: now })
+        .where(and(
+          eq(documents.projectId, input.projectId),
+          eq(documents.track, 'business'),
+          like(documents.scopeId, `%${row.id}%`),
+          ne(documents.status, 'deleted'),
+        ))
+        .run()
       softDeletedCount += 1
     }
 
