@@ -20,3 +20,5 @@ platty corpus self-improve-once --id <fixture-id> --stage <stage> --dry-run --js
 ```
 
 `self-improve-once` requires `--dry-run` from the packaged CLI.
+
+Corpus commands often land in the local checkout before the packaged CLI. If global `platty corpus ...` returns `UNKNOWN_COMMAND`, run the same command through the local build: `node packages/cli/dist/main.js corpus ... --json`.

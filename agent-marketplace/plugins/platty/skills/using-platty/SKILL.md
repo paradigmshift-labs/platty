@@ -38,7 +38,8 @@ Common routes:
 ## Core Rules
 
 - Prefer `--json` for CLI commands so results can be inspected precisely.
+- Inside the Platty repo, prefer the local built CLI (`node packages/cli/dist/main.js <command> --json`). If the installed global `platty` returns `UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` that the local build does not, the global package is stale — switch to the local build.
 - Resolve the project before running project-scoped commands.
 - Use `platty status --json` when the next action is unclear.
-- Follow `nextAction.command` from JSON output unless there is a specific reason not to.
+- Follow `nextAction.command` from JSON output unless there is a specific reason not to. Check both the top level and `data.nextAction` — responses place it in either spot. Re-add `--project <project>` and `--json` if the suggested command omits them.
 - Do not use generation skills for retrieval-only questions.

@@ -37,7 +37,17 @@ platty repo add <path> --project <project> --json
 platty repo list --project <project> --json
 ```
 
-Use `--source-root` when only a subdirectory should be analyzed. Use `--branch` when analysis should track a specific branch.
+Use `--source-root` when only a subdirectory should be analyzed. Use `--branch` when analysis should track a specific branch — without it, `repo add` tracks whatever branch the repository currently has checked out.
+
+For an existing project, run `repo list` BEFORE `repo add` and inspect the registered entries:
+
+- Remove or fix registrations whose `repoPath` does not exist on disk (seeded or moved repos) — analysis pointed at them fails.
+- Watch for an existing entry with the same name as the repo you are adding; `repo add` does not warn on duplicate names.
+
+```bash
+platty repo update <repo-id-or-name> --path <new-path> --project <project> --json
+platty repo remove <repo-id-or-name> --project <project> --json
+```
 
 ## Next Step
 

@@ -54,11 +54,14 @@ Start the run, then loop in rounds until the run is no longer leaseable:
 Each parallel worker owns one leased task end-to-end:
 
 1. Read every context page for the task (`context get`, then `context page` for `target`, `schema`, `source_document_cards`, `source_graph_projection`, and any `relation_evidence` / `model_evidence`). The `schema` page's `expectedJson.expectedItemContent` defines the exact `items[].content` fields for the documentType. The `source_document_cards` page lists `sourceRef` labels (e.g. `source_document_1`).
-2. Build one `business-doc.v1` JSON object preserving `documentType`, `scope`, `scopeId`. Set document `evidenceIds` and every `items[].evidenceIds` to `[]`. Link sources only through `source_mapping` `sourceRef` labels. Write Korean prose (outputLanguage `ko`).
+2. Build one `business-doc.v1` JSON object preserving `documentType`, `scope`, `scopeId`. Set document `evidenceIds` and every `items[].evidenceIds` to `[]`. Link sources only through `source_mapping` `sourceRef` labels. Write prose in the language the `target` page declares in `outputLanguage` — do not assume a fixed language.
 3. **Populate `items[]` fully** — every item needs a non-empty `itemType`, `stableKey`, and `content` object matching the schema page. Never emit empty item objects (`{}`); empty items are the most common validation failure. Mirror the same concrete entries in both the canonical `content` arrays and `items[]`.
+   - The top-level `content` field must be a JSON object holding the type-specific core array (`content.rules` for `br`, `content.use_cases` for use-case docs, `content.entities` for `data_dictionary`, …). A missing `content` object fails with `$.content must be a JSON object`.
+   - `content.rules[]` entries additionally require a `statement` field carrying the rule text (the `items[].content` shape uses `rule`; the canonical array uses `statement`).
+   - Keep business prose free of technical identifiers: an API path such as `/api/...` inside `condition`/`rule` text fails with `BUSINESS_LANGUAGE_CONTAMINATION (TECH_API_PATH)`.
 4. Submit (write JSON to a temp file to avoid shell escaping):
    `platty business-docs tasks submit --project <p> --task <taskId> --lease-token <token> --attempt <n> --document-json "$(cat <file>)" --json`
-5. On `repair_requested`, read the validation errors and re-submit ONCE using `--attempt <nextRepairAttemptNo>` from the response, fixing every error. `maxRepairAttempts` defaults to 1, so a second failure becomes `failed`. Do this inside the same lease before it expires (15-minute TTL).
+5. On `repair_requested`, the submit releases the lease — the old lease token no longer authorizes context reads (`BUSINESS_DOCS_LEASE_CONFLICT`). Lease again with `tasks lease`: the same task comes back with a fresh lease token and a `validation_errors` context page. Read that page, fix every error, and re-submit with `--attempt <nextRepairAttemptNo>` from the repair response. `maxRepairAttempts` defaults to 1, so a second validation failure becomes `failed`.
 
 Worker model: prefer a capable model (Sonnet) for generation. Haiku is cheap but frequently fails the v3 quality gate on `data_dictionary` and `use_case_list_refine`, which require model/entity-shaped items and carried-over upstream use cases. Reserve Haiku for the lease/status coordinator agent.
 
@@ -83,14 +86,21 @@ platty business-docs context page --context <context-handle> --page <page-token>
 platty business-docs tasks submit --project <project> --task <task-id> --lease-token <token> --attempt <n> --document-json '<json>' --json
 ```
 
-If submit returns `repair_requested`, retry the task, then lease again to get a fresh lease token/context/attempt:
+If submit returns `repair_requested`, lease again — the repair submit released the old lease, and the fresh lease returns the same task with a new lease token plus a `validation_errors` context page:
+
+```bash
+platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json
+platty business-docs context page --context <context-handle> --page validation_errors --lease-token <new-token> --json
+```
+
+If the task has already become `failed` (repair attempts exhausted), retry it first, then lease again:
 
 ```bash
 platty business-docs tasks retry --project <project> --task <task-id> --json
 platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json
 ```
 
-Do not invent a repair subcommand or reuse an old lease token unless the CLI response explicitly says it is still valid.
+Do not invent a repair subcommand, and never reuse an old lease token — after any submit the prior token stops authorizing context reads (`BUSINESS_DOCS_LEASE_CONFLICT`).
 
 ## Sync Flow
 
