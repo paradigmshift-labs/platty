@@ -171,12 +171,22 @@ For `schedule_spec`:
 }
 ```
 
-## Common Mistakes
+## Red Flags
 
-- Running `platty docs run` when the user asked for Codex-authored skill work.
-- Starting a new run when the user supplied an existing run id.
-- Submitting a merged full document instead of the author-owned draft fields.
-- Copying system-owned fields from context into `result.json`.
-- Reading local files to add details missing from `agentInput.context`.
-- Treating `repair_requested` as failure instead of a normal validation loop.
-- Reporting success before checking `platty docs status`.
+STOP if you catch yourself thinking any of these:
+
+| Excuse | Reality |
+| --- | --- |
+| "The context is missing these fields — the source file is right there, reading it takes 30 seconds" | `agentInput.context` is the ONLY evidence contract for the draft. Reading local sources, databases, or generated docs to fill the body is a violation even when the result would be accurate. Use empty arrays or concise uncertainty notes instead. |
+| "A merged full document (or the system fields from context) looks more complete" | Submit only the author-owned draft fields. System-owned fields (`id`, `relations`, `evidence_refs`, ...) corrupt the merge — see Draft Safety Rules. |
+| "`repair_requested` means the task failed — report failure" | `repair_requested` is the normal validation loop. Fix `result.json` against the same `agentInput.context` and resubmit while the lease is valid. |
+| "The wave finished, so the run is done — report success" | Report only what `platty docs status` shows. Check completed/pending/repair/failed counts before claiming anything. |
+| "The user gave a run id, but a fresh run is cleaner" | Continue the supplied run. A new run duplicates tasks and orphans the old one. |
+| "`docs run` is faster than authoring through the worker flow" | `docs run` is the fully automatic queue — use it only when the user explicitly asks for it. |
+
+## Stop Conditions
+
+- Submit returns `failed`: stop, report the error from the response — never invent a successful document or restart the run to hide the failure.
+- The same task returns `repair_requested` twice with the same validation errors: stop and report the errors verbatim instead of resubmitting another variation.
+- `worker next` returns `no_task_available` while `docs status` still reports pending or repair counts above zero: report the blocking state to the user — do not poll `worker next` in a loop.
+- Submit fails with `LEASE_EXPIRED` or `INVALID_LEASE_TOKEN`: lease again via `worker next` once; if the fresh token also fails, stop and report.

@@ -51,21 +51,22 @@ Start the run, then loop in rounds until the run is no longer leaseable:
    d. after the wave, re-run status (new use_case_spec tasks unlock after use_case_list_refine saves).
 ```
 
-Each parallel worker owns one leased task end-to-end:
-
-1. Read every context page for the task (`context get`, then `context page` for `target`, `schema`, `source_document_cards`, `source_graph_projection`, and any `relation_evidence` / `model_evidence`). The `schema` page's `expectedJson.expectedItemContent` defines the exact `items[].content` fields for the documentType. The `source_document_cards` page lists `sourceRef` labels (e.g. `source_document_1`).
-2. Build one `business-doc.v1` JSON object preserving `documentType`, `scope`, `scopeId`. Set document `evidenceIds` and every `items[].evidenceIds` to `[]`. Link sources only through `source_mapping` `sourceRef` labels. Write prose in the language the `target` page declares in `outputLanguage` — do not assume a fixed language.
-3. **Populate `items[]` fully** — every item needs a non-empty `itemType`, `stableKey`, and `content` object matching the schema page. Never emit empty item objects (`{}`); empty items are the most common validation failure. Mirror the same concrete entries in both the canonical `content` arrays and `items[]`.
-   - The top-level `content` field must be a JSON object holding the type-specific core array (`content.rules` for `br`, `content.use_cases` for use-case docs, `content.entities` for `data_dictionary`, …). A missing `content` object fails with `$.content must be a JSON object`.
-   - `content.rules[]` entries additionally require a `statement` field carrying the rule text (the `items[].content` shape uses `rule`; the canonical array uses `statement`).
-   - Keep business prose free of technical identifiers: an API path such as `/api/...` inside `condition`/`rule` text fails with `BUSINESS_LANGUAGE_CONTAMINATION (TECH_API_PATH)`.
-4. Submit (write JSON to a temp file to avoid shell escaping):
-   `platty business-docs tasks submit --project <p> --task <taskId> --lease-token <token> --attempt <n> --document-json "$(cat <file>)" --json`
-5. On `repair_requested`, the submit releases the lease — the old lease token no longer authorizes context reads (`BUSINESS_DOCS_LEASE_CONFLICT`). Lease again with `tasks lease`: the same task comes back with a fresh lease token and a `validation_errors` context page. Read that page, fix every error, and re-submit with `--attempt <nextRepairAttemptNo>` from the repair response. `maxRepairAttempts` defaults to 1, so a second validation failure becomes `failed`.
+Each parallel worker owns one leased task end-to-end. Hand each worker the per-task prompt stored next to this skill at `./business-docs-worker-prompt.md` (read that file and pass its content to the worker) — it covers context-page reading, the `business-doc.v1` document shape, `items[]` population rules, output language, submit, and the repair loop.
 
 Worker model: prefer a capable model (Sonnet) for generation. Haiku is cheap but frequently fails the v3 quality gate on `data_dictionary` and `use_case_list_refine`, which require model/entity-shaped items and carried-over upstream use cases. Reserve Haiku for the lease/status coordinator agent.
 
 Effective concurrency is `min(workflow concurrency 16, approvedActiveLeases 20)`; lease in waves of <= 6 to stay well inside the active-lease limit.
+
+## Red Flags
+
+STOP if you catch yourself thinking any of these:
+
+| Excuse | Reality |
+| --- | --- |
+| "I still hold the lease token from before the repair — reuse it to re-read context" | A submit that returns `repair_requested` RELEASES the lease. The old token no longer authorizes context reads (`BUSINESS_DOCS_LEASE_CONFLICT`). Lease again: the same task returns with a fresh token plus a `validation_errors` page. |
+| "There must be a `repair` subcommand for this" | There is none. Repair is lease -> read `validation_errors` -> fix -> submit with `--attempt <nextRepairAttemptNo>` from the repair response. |
+| "Business rules need precision — keep the `/api/...` path in the rule text" | Technical identifiers in business prose fail validation with `BUSINESS_LANGUAGE_CONTAMINATION (TECH_API_PATH)`. Keep business language clean; sources link via `source_mapping` `sourceRef` labels. |
+| "I'll write the prose in the language the user spoke to me" | Write in the language the `target` page declares in `outputLanguage`. Do not assume a fixed language. |
 
 ## Lifecycle Recovery
 
@@ -101,6 +102,13 @@ platty business-docs tasks lease --project <project> --run <run-id> --worker <wo
 ```
 
 Do not invent a repair subcommand, and never reuse an old lease token — after any submit the prior token stops authorizing context reads (`BUSINESS_DOCS_LEASE_CONFLICT`).
+
+## Stop Conditions
+
+- `status --json` shows the run `status` as `failed`, or `counts.failed > 0` with `activeLeases == 0`: STOP the worker loop (Codex parity) and report the final task counts.
+- `tasks lease` returns 0 tasks with `activeLeases == 0`, or fails with `BUSINESS_DOCS_RUN_NOT_LEASEABLE`: the run is finished or blocked — stop leasing and report `status` output.
+- A task fails validation twice (`repair_requested`, then `failed` — `maxRepairAttempts` defaults to 1): stop authoring that task. Use `tasks retry` only when the user wants another attempt; `BUSINESS_DOCS_TASK_NOT_RETRYABLE` means stop for good.
+- A context read fails with `BUSINESS_DOCS_LEASE_CONFLICT`: the old lease token is dead — lease again for a fresh token; never retry the old token.
 
 ## Sync Flow
 

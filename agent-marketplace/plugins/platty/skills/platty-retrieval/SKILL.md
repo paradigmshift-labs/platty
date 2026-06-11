@@ -33,6 +33,17 @@ The CLI does not understand natural language and must not be treated like an LLM
 
 You, the agent, read the glossary, rewrite terms, plan branches, choose commands, and synthesize the answer.
 
+## Red Flags
+
+STOP if you catch yourself thinking any of these:
+
+| Excuse | Reality |
+| --- | --- |
+| "One `epics search` hit looks relevant — answer from it" / "the user complained I run too many commands, so answer from what I have" | Retrieval is an EPIC-centered graph walk. A search hit is a term match, not evidence — read the catalog and traverse `epics show --include-docs` -> `docs show` before answering. Answering from titles and a score is fabrication. |
+| "The question terms are clear, skip the glossary" | The user may ask in Korean while docs use English, Japanese, or code identifiers. The glossary maps aliases — skipping it is how you pick the wrong EPIC. |
+| "The search score is high, trust it over the catalog" | `epics search` is a term-matching helper, not semantic RAG. If it disagrees with the catalog, inspect both candidates. |
+| "The doc is stale but probably still right — present it as fact" | State `freshness.isStale` / `validity` and recommend regeneration. Do not hide stale evidence. |
+
 ## Required Inputs
 
 Resolve these before running retrieval commands:
@@ -309,3 +320,9 @@ Use `docs list` only when the EPIC index is missing, you need a type-specific au
 docs list --project <project> --type br --track business --compact --json
 docs list --project <project> --type api_spec --track technical --compact --json
 ```
+
+## Stop Conditions
+
+- The project has no glossary (`docs list ... --type glossary` returns nothing) AND `epics list` returns no epics: stop retrieval and report that docs/EPICs have not been generated for this project — route to the generation skills instead of answering from guesses.
+- Two full graph walks (catalog -> `epics show` -> `docs show`/`docs related`) surface no evidence for a subquestion: answer "no evidence found", listing the commands tried — do not fabricate an answer and do not keep widening the search indefinitely.
+- Every candidate document reports `freshness.validity === "orphaned"`: stop treating their content as evidence; report that the documents no longer map to analyzed sources and recommend regeneration before answering.

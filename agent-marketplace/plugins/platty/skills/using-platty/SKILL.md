@@ -43,3 +43,9 @@ Common routes:
 - Use `platty status --json` when the next action is unclear.
 - Follow `nextAction.command` from JSON output unless there is a specific reason not to. Check both the top level and `data.nextAction` — responses place it in either spot. Re-add `--project <project>` and `--json` if the suggested command omits them.
 - Do not use generation skills for retrieval-only questions.
+
+## Stop Conditions
+
+- The same command fails with `UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` on BOTH the global `platty` binary and the local build (`node packages/cli/dist/main.js`): the command does not exist in this checkout. Stop and report it — do not invent an alternative command or flags.
+- A command fails with `PROJECT_AMBIGUOUS`: stop and ask the user which project to use. Never pick one of the matches yourself.
+- You routed to a skill, followed it, and ended up at the same routing decision with no CLI state change in between: stop re-routing and ask the user, citing the last `status --json` output.
