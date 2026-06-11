@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import {
-  cpSync,
   existsSync,
   mkdirSync,
   readdirSync,
@@ -60,7 +59,9 @@ const claudeMarketplace = {
   ],
 }
 
-const copiedEntries = [
+// Files that must exist inside the plugin (the source of truth lives under
+// agent-marketplace/plugins/platty — there is no root-level mirror to copy from).
+const requiredPluginEntries = [
   '.codex-plugin',
   '.claude-plugin',
   'hooks',
@@ -80,10 +81,6 @@ const expectedSkills = [
   'platty-corpus-quality',
 ]
 
-function pathFor(...parts) {
-  return join(root, ...parts)
-}
-
 function read(path) {
   return readFileSync(path, 'utf8')
 }
@@ -92,35 +89,9 @@ function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`)
 }
 
-function listFiles(dir, prefix = '') {
-  return readdirSync(dir).flatMap((entry) => {
-    const fullPath = join(dir, entry)
-    const relativePath = prefix === '' ? entry : join(prefix, entry)
-    const stats = statSync(fullPath)
-    if (stats.isDirectory()) return listFiles(fullPath, relativePath)
-    if (stats.isFile()) return [relativePath]
-    return []
-  }).sort()
-}
-
-function assertSameFile(source, target) {
-  assert.equal(read(target), read(source), `${relative(root, target)} should match ${relative(root, source)}`)
-}
-
-function assertPackagedEntryMatches(entry) {
-  const source = pathFor(entry)
+function assertPluginEntryExists(entry) {
   const target = join(pluginRoot, entry)
-  assert.equal(existsSync(target), true, `Missing packaged entry: ${relative(root, target)}`)
-
-  if (statSync(source).isDirectory()) {
-    const sourceFiles = listFiles(source)
-    const targetFiles = listFiles(target)
-    assert.deepEqual(targetFiles, sourceFiles, `Packaged ${entry} file list should match source`)
-    for (const file of sourceFiles) assertSameFile(join(source, file), join(target, file))
-    return
-  }
-
-  assertSameFile(source, target)
+  assert.equal(existsSync(target), true, `Missing plugin entry: ${relative(root, target)}`)
 }
 
 function assertPackageMatches() {
@@ -132,7 +103,7 @@ function assertPackageMatches() {
   assert.equal(existsSync(claudeMarketplacePath), true, 'Claude marketplace manifest should exist')
   assert.deepEqual(JSON.parse(read(claudeMarketplacePath)), claudeMarketplace)
 
-  for (const entry of copiedEntries) assertPackagedEntryMatches(entry)
+  for (const entry of requiredPluginEntries) assertPluginEntryExists(entry)
 
   const skillsDir = join(pluginRoot, 'skills')
   assert.equal(existsSync(skillsDir), true, 'plugin skills directory should exist')
@@ -158,13 +129,6 @@ if (!checkOnly) {
   mkdirSync(pluginRoot, { recursive: true })
   writeJson(join(marketplaceRoot, '.agents', 'plugins', 'marketplace.json'), codexMarketplace)
   writeJson(join(marketplaceRoot, '.claude-plugin', 'marketplace.json'), claudeMarketplace)
-
-  for (const entry of copiedEntries) {
-    const source = pathFor(entry)
-    if (!existsSync(source)) continue
-    rmSync(join(pluginRoot, entry), { recursive: true, force: true })
-    cpSync(source, join(pluginRoot, entry), { recursive: true })
-  }
 }
 
 assertPackageMatches()
