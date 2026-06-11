@@ -7,6 +7,7 @@ const forbiddenDraftFields = [
   'identity',
   'relations',
   'relation_facts',
+  'source_excerpts',
   'relation_evidence_checked',
   'contracts',
   'source_links',
@@ -14,7 +15,6 @@ const forbiddenDraftFields = [
   'raw_evidence_pages',
   'evidence_pages',
   'source_context',
-  'source_excerpts',
   'source_link_candidates',
 ] as const
 

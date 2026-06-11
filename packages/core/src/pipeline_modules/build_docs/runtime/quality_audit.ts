@@ -29,7 +29,7 @@ function auditGenericFlow(
 }
 
 function hasBehaviorEvidence(context: BuildDocsGenerationContextResponse): boolean {
-  return context.content.relation_facts.length > 0 || context.content.source_context.length > 1
+  return context.content.code_relation_facts.length > 0 || context.content.service_map_facts.length > 0 || context.content.source_context.length > 1
 }
 
 function isGenericFlowStep(step: string): boolean {
@@ -41,7 +41,7 @@ function isGenericFlowStep(step: string): boolean {
 }
 
 function behaviorHint(context: BuildDocsGenerationContextResponse): string {
-  const relation = context.content.relation_facts[0]
+  const relation = context.content.code_relation_facts[0] ?? context.content.service_map_facts[0]
   if (relation?.target && relation.operation) return `${relation.operation} ${relation.target}`
   const repo = context.content.source_context.find((source) => /Repository\./.test(source.symbol))
   return repo?.symbol ?? context.content.source_context[0]?.symbol ?? 'the source-backed call chain'

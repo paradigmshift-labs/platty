@@ -291,8 +291,6 @@ export interface BuildDocsGenerationContextResponse {
       allowed_evidence_ids: string[]
       required: boolean
     }
-    source_excerpts: SourceContext[]
-    relation_facts: RelationFactContext[]
   }
 }
 

@@ -51,7 +51,7 @@ export function buildDocsAgentWorkPacket(input: {
       modelHint: { provider: 'claude_code', model: 'haiku', effort: 'low' },
       prompt: promptForDocsContext(input.context),
       outputSchema: jsonSchemaForDraft(schema, input.context),
-      context: input.context,
+      context: agentFacingContext(input.context),
       rules: [...schema.output_rules, ...schema.quality_rules],
       forbiddenFields: schema.system_injected_fields,
     },
@@ -69,6 +69,28 @@ export function buildDocsAgentWorkPacket(input: {
         'result.json',
         '--json',
       ],
+    },
+  }
+}
+
+// Relation facts (build_relations) and service-map facts (build_service_map) are system-owned: Platty
+// attaches them to the saved document after validation, the LLM never authors them. Keep them out of the
+// agent-facing context so the model reasons only over code chunks + route info. The runtime still holds the
+// full context (with these facts) for quality auditing and relation attachment, so this only changes what
+// the LLM sees.
+function agentFacingContext(context: BuildDocsGenerationContextResponse): BuildDocsGenerationContextResponse {
+  const hiddenPages = new Set(['code_relation_facts', 'service_map_facts', 'related_edges'])
+  return {
+    ...context,
+    manifest: {
+      ...context.manifest,
+      optional_pages: (context.manifest.optional_pages ?? []).filter((page) => !hiddenPages.has(page)),
+    },
+    content: {
+      ...context.content,
+      code_relation_facts: [],
+      service_map_facts: [],
+      related_edges: [],
     },
   }
 }
