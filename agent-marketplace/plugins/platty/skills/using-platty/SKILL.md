@@ -43,6 +43,7 @@ Common routes:
   location. The CLI config field `projectRoot` refers to this state root, not to
   an analyzed repository.
 - Use the installed global `platty` binary for Platty workflows. If the binary is missing or appears stale (`UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` for a command that should exist), stop and report that the global CLI needs reinstall/rebuild. Keep the workflow on the global CLI.
+- If the shell reports `command not found: platty`, check command resolution once with `command -v platty`. If it returns a path, treat it as a transient shell/PATH issue and retry the original Platty command once. If it returns nothing, stop and report the missing global CLI.
 - Resolve the project before running project-scoped commands.
 - Use `platty status --json` when the next action is unclear.
 - Follow `nextAction.command` from JSON output unless there is a specific reason not to. Check both the top level and `data.nextAction` — responses place it in either spot. Re-add `--project <project>` and `--json` if the suggested command omits them.
@@ -133,5 +134,7 @@ not to continue.
 ## Stop Conditions
 
 - A command fails with `UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` on the global `platty` binary: stop and report that the installed global CLI may be stale or the command may not exist. Do not invent an alternative command or execution path.
+- The shell reports `command not found: platty` and `command -v platty` returns no path: stop and report that the global CLI is not available in PATH.
+- The shell reports `command not found: platty` but `command -v platty` returns a path: retry the same Platty command once. If the retry fails the same way, stop with the exact PATH and resolved binary path as evidence.
 - A command fails with `PROJECT_AMBIGUOUS`: stop and ask the user which project to use. Never pick one of the matches yourself.
 - You routed to a skill, followed it, and ended up at the same routing decision with no CLI state change in between: stop re-routing and ask the user, citing the last `status --json` output.

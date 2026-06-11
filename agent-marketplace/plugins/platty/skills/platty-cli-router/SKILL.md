@@ -69,4 +69,5 @@ exact error code or repeated `nextAction` that caused the stop.
 
 - Following `nextAction.command` twice in a row returns the same `nextAction` (`type`, `repoId`, `stage`) with no other state change: stop routing — this is a stalled loop; switch to `platty-static-analysis` Stop Conditions instead of re-running the command a third time.
 - A command from the table fails with `UNKNOWN_COMMAND` or `UNEXPECTED_ERROR`: stop and report that the installed global CLI may be stale or the command may not exist. Rebuild/reinstall the global CLI before continuing; do not substitute a guessed command or execution path.
+- If the shell reports `command not found: platty`, run `command -v platty` once. Retry the original command once only if a binary path is returned; otherwise stop and report that the global CLI is missing from PATH.
 - A command fails with `PROJECT_AMBIGUOUS` or `PROJECT_NOT_FOUND` and no `nextAction` resolves it: stop and ask the user for the project instead of guessing a selector.
