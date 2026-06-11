@@ -26,7 +26,7 @@ must be registered inside that selected project.
 | Register repositories | `platty repo ...` via `platty-project-setup` |
 | Ask "what next?" | `platty status --json` via `platty-static-analysis` |
 | Run static analysis | `platty run --json` via `platty-static-analysis` |
-| Approve static gate | `platty confirm --json` via `platty-static-analysis` |
+| Approve static gate | `platty confirm --json` via `platty-static-analysis`, only when `status` reports `confirm_required` |
 | Inspect/cancel pipeline runs | `platty runs ... --json` via `platty-static-analysis` |
 | Curate technical targets | `platty docs targets ... --json` via `platty-docs-target-curation` |
 | Generate technical docs | `platty-docs-generation` |
@@ -48,6 +48,9 @@ must be registered inside that selected project.
    repository path. The CLI config field `projectRoot` names that state root.
 4. `project use` selects the current Platty project context. It is not a
    separate workflow skill; route it through `platty-project-setup`.
+5. Do not invent confirmation gates. In the current CLI, `confirm_required`
+   applies to static analysis output that status reports, and route target
+   review is handled by `platty docs targets ...` plus `docs approve`/`docs run`.
 ```
 
 ## Routing UX
