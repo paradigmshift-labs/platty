@@ -151,7 +151,8 @@ function documentStableKeys(document: BusinessDocument): string[] {
   }
   if (document.type === 'ucl') return document.use_cases.map((useCase) => `use_case:uc:${stableKeyPart(`${useCase.title}:${useCase.actor}:${useCase.goal}`)}`)
   if (document.type === 'data_dictionary') {
-    return document.entities.flatMap((entity) => entity.fields.map((field) => `dd_field:field:${stableKeyPart(entity.name)}:${stableKeyPart(field.name)}`))
+    // Gap entities (missing_model_evidence) carry no fields; guard the projection.
+    return document.entities.flatMap((entity) => (entity.fields ?? []).map((field) => `dd_field:field:${stableKeyPart(entity.name)}:${stableKeyPart(field.name)}`))
   }
   if (document.type === 'system_design') {
     return [

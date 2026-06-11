@@ -7,3 +7,6 @@ coverage/
 !.env.example
 .platty/
 .worktrees/
+
+# Claude Code runtime
+.claude/scheduled_tasks.lock
