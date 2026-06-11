@@ -23,13 +23,14 @@ If the project is unknown, run:
 platty project list --json
 ```
 
-Inside this repo, use the local CLI after it is built:
+Use the installed global CLI by default:
 
 ```bash
-node packages/cli/dist/main.js <command> --json
+platty <command> --json
 ```
 
-Use `platty <command> --json` when the installed binary is available.
+If the installed global CLI appears stale, follow `using-platty`: stop and
+report that the global CLI needs reinstall/rebuild before continuing.
 
 ## Worker Flow
 
@@ -104,6 +105,16 @@ platty docs status --run-id <run-id> --json
 ```
 
 Report completed, pending, repair, and failed counts from the JSON output.
+
+## Handoff
+
+At completion, pause, or any stop condition, use the `Platty handoff` card.
+Include `runId`, completed/pending/repair/failed counts, and the last
+task id when applicable. Recommended `Next` values:
+
+- pending or repair tasks remain: `platty docs worker next --run-id <run-id> --out packet.json --json`
+- all docs complete: route to `platty-retrieval`, `platty-epics-generation`, or `platty-business-docs-generation` depending on the user's goal
+- failed task/run: stop and list the failing code/message from JSON
 
 ## Draft Safety Rules
 

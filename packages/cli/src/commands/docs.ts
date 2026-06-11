@@ -23,7 +23,7 @@ import {
   type DocsTargetStatus,
   type OpenPlattyDbResult,
 } from '@platty/core'
-import { readProjectConfig } from '../config-store.js'
+import { plattyDir, readProjectConfig } from '../config-store.js'
 import { openCliDb } from '../db.js'
 import { failure, success, type PlattyCommandResponse } from '../output.js'
 import { requirePlattyRoot } from '../project-root.js'
@@ -1029,7 +1029,7 @@ export async function runDocsCommand(argv: string[], options: DocsCommandOptions
           stderr: '',
         }
       }
-      const workDir = optionValue(argv, '--work-dir') ?? `${root.projectRoot}/.platty/tmp/build_docs_runs`
+      const workDir = optionValue(argv, '--work-dir') ?? resolve(plattyDir(root.projectRoot), 'tmp', 'build_docs_runs')
       const workers = numberValue(argv, '--workers', 20)
       return ok(await runBuildDocsWorkerQueue({
         runtime,

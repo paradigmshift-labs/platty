@@ -5,11 +5,15 @@ description: Use when initializing a Platty workspace, creating or selecting a P
 
 # Platty Project Setup
 
-Use this for setup before analysis.
+Use this for setup before analysis. Platty stores CLI state in the user-global
+Platty home by default (`~/.platty` on macOS/Linux, `%APPDATA%\Platty` on
+Windows). `PLATTY_HOME` overrides that location. The CLI config field named
+`projectRoot` refers to this Platty home/workspace root, not to a repository
+being analyzed.
 
 ## Flow
 
-1. Initialize workspace:
+1. Initialize the global Platty home:
 
 ```bash
 platty init --json
@@ -30,6 +34,8 @@ platty project use <project-id-or-name> --json
    the JSON output of project list / project create / project use.
 2. On an existing project, run repo list BEFORE repo add. repo add does not
    warn about duplicate names or dead repoPath entries — you must check.
+3. Do not infer state location from cwd or the repository path. Run `platty init`
+   once to create the global Platty home, then register repositories explicitly.
 ```
 
 ## Project Scoping
@@ -69,4 +75,14 @@ Run:
 
 ```bash
 platty status --project <project> --json
+```
+
+## Handoff
+
+End setup with the `Platty handoff` card. The `State` line must include the
+selected project and registered repository count from JSON. The `Recommended
+next` line should normally be:
+
+```text
+Recommended next: platty status --project <project> --json, then route to platty-static-analysis
 ```

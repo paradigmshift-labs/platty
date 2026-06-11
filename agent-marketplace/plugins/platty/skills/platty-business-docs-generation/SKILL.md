@@ -17,6 +17,10 @@ platty business-docs validate --project <project> --run <run-id> --json
 platty business-docs review --project <project> --run <run-id> --json
 ```
 
+Use the `using-platty` Operator UX at workflow start and handoff. Business-docs
+runs are long and task-heavy, so every handoff must include run id, run status,
+task counts, active lease count, and the next command or stop reason.
+
 To run the automatic worker queue, pick the path for the runtime you are working in. Both produce the same documents through the same CLI contract — the only difference is who drives the worker loop.
 
 ## Choose The Worker Queue For Your Runtime
@@ -109,6 +113,15 @@ Do not invent a repair subcommand, and never reuse an old lease token — after 
 - `tasks lease` returns 0 tasks with `activeLeases == 0`, or fails with `BUSINESS_DOCS_RUN_NOT_LEASEABLE`: the run is finished or blocked — stop leasing and report `status` output.
 - A task fails validation twice (`repair_requested`, then `failed` — `maxRepairAttempts` defaults to 1): stop authoring that task. Use `tasks retry` only when the user wants another attempt; `BUSINESS_DOCS_TASK_NOT_RETRYABLE` means stop for good.
 - A context read fails with `BUSINESS_DOCS_LEASE_CONFLICT`: the old lease token is dead — lease again for a fresh token; never retry the old token.
+
+## Handoff
+
+Use this `Next` selection:
+
+- leaseable run with pending tasks: `platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json`
+- validation ready: `platty business-docs validate --project <project> --run <run-id> --json`
+- review ready: `platty business-docs review --project <project> --run <run-id> --json`
+- terminal failure: stop and report the failing code plus task counts
 
 ## Sync Flow
 

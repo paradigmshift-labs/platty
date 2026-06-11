@@ -3,7 +3,7 @@ import { mkdtempSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createTestPlattyDb } from '@platty/core'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { runPlattyCommand } from '../src/main.js'
 
 function gitRepo() {
@@ -15,10 +15,15 @@ function gitRepo() {
 }
 
 describe('repo commands', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('adds, lists, updates, and removes a repository under the selected project', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'platty-repo-command-'))
     const repoPath = gitRepo()
     const db = createTestPlattyDb()
+    vi.stubEnv('PLATTY_HOME', join(cwd, '.platty'))
 
     try {
       expect((await runPlattyCommand(['init'], { cwd, db: db.db })).exitCode).toBe(0)

@@ -1,6 +1,6 @@
 import { access, chmod, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import type { CurrentProjectPointer } from '@platty/core'
+import { type CurrentProjectPointer, getPlattyHomeDir } from '@platty/core'
 
 export interface PlattyProjectConfig {
   version: 1
@@ -18,6 +18,10 @@ async function exists(path: string) {
 }
 
 export function plattyDir(projectRoot: string) {
+  // In global mode the project root IS the Platty home dir, which already plays
+  // the role of the .platty dir — don't nest a second .platty inside it. This
+  // keeps config.json and platty.db side by side in the one global location.
+  if (resolve(projectRoot) === getPlattyHomeDir()) return resolve(projectRoot)
   return resolve(projectRoot, '.platty')
 }
 

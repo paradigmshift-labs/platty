@@ -95,7 +95,7 @@ function createProgram(_argv: string[], _options: DispatchOptions, setResponse: 
     .helpOption('-h, --help', 'display help for command')
     .option('--json', 'print machine-readable JSON')
     .option('--project <selector>', 'project id, name, slug, or current')
-    .option('--root <path>', 'workspace root for init')
+    .option('--root <path>', 'Platty state root for init')
 
   program.configureHelp({
     sortSubcommands: true,

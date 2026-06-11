@@ -23,13 +23,14 @@ Codex is one of two equal Platty runtimes. Skill bodies prefer runtime-neutral a
 | Detect git worktree state | Use `git rev-parse --git-dir`, `git rev-parse --git-common-dir`, and `git branch --show-current`. |
 | Stage, commit, branch, push, or create PRs | Use git commands when appropriate, then emit Codex app git directives only after successful actions. |
 
-Use the local built CLI when available:
+Use the installed global CLI by default:
 
 ```bash
-node packages/cli/dist/main.js <command> --json
+platty <command> --json
 ```
 
-Use installed `platty <command> --json` when the binary is on `PATH`.
+If global `platty` appears stale, report that it needs reinstall/rebuild before
+continuing. Keep the workflow on the global CLI.
 
 ## Git Environment Detection
 

@@ -6,7 +6,7 @@
 
 **Architecture:** 측정 작업이므로 코드 변경 없음. `~/.platty` 백업 후 워크스페이스를 제로에서 초기화하고, 프로젝트 3개(back→front→full 순)를 각각 7단계 완주한다. 각 단계는 해당 Platty 스킬을 invoke해서 따르고, 계획서는 검증·기록 절차만 규정한다.
 
-**Tech Stack:** Platty CLI 로컬 빌드(`node packages/cli/dist/main.js`), Claude Code Skill 툴, 스펙 `docs/superpowers/specs/2026-06-11-platty-e2e-skill-verification-design.md`
+**Tech Stack:** npm으로 전역 설치된 Platty CLI(`platty`), Claude Code Skill 툴, 스펙 `docs/superpowers/specs/2026-06-11-platty-e2e-skill-verification-design.md`
 
 ---
 
@@ -16,7 +16,7 @@
 
 1. 각 단계 진입 시 해당 스킬을 Skill 툴로 **반드시 invoke**하고, 거기 적힌 절차/명령을 따른다. 이 계획서는 단계의 시작·종료 판정과 기록 방법만 정의한다.
 2. 스킬에 없는 행동이 필요해지는 순간 = **finding**. 즉시 기록(아래 템플릿)하고, 최소한의 우회로 진행을 잇는다. 단, 스킬의 Stop Condition에 해당하면 우회하지 말고 멈춰서 사용자에게 보고한다 (이건 finding 아님 — 스킬이 시킨 행동).
-3. CLI는 항상 로컬 빌드: `node packages/cli/dist/main.js <command> --json`. 글로벌 `platty` 금지 (stale).
+3. CLI는 항상 npm으로 전역 설치된 `platty <command> --json`를 사용한다. 전역 CLI가 `UNKNOWN_COMMAND`/`UNEXPECTED_ERROR`를 반환하면 다른 실행 경로로 우회하지 않고 전역 CLI 재설치/재빌드 필요성을 보고한다.
 4. 각 단계에서 `[Fx workaround — remove when …]` 태그 규칙이 실제 발동했는지 체크하고 기록한다 (F5/F8/F16).
 
 ### Finding 기록 템플릿 (보고서에 누적)
@@ -36,10 +36,10 @@
 **Files:**
 - 없음 (읽기 전용 확인)
 
-- [ ] **Step 1: 로컬 CLI 빌드 존재·동작 확인**
+- [ ] **Step 1: 전역 CLI 설치·동작 확인**
 
-Run: `node packages/cli/dist/main.js version --json`
-Expected: `"ok": true` 와 버전 정보. 실패하면 `pnpm install && pnpm build` 후 재시도 (packages/cli 빌드 산출물 필요).
+Run: `command -v platty && platty version --json`
+Expected: `platty` 경로와 `"ok": true` 버전 정보. 실패하면 전역 CLI를 다시 설치한다: `npm run build:release --workspace @pshift/platty && npm install -g ./packages/cli`.
 
 - [ ] **Step 2: 대상 레포 3개 존재 확인**
 
@@ -108,7 +108,7 @@ Expected: "No such file or directory". **여기서부터 측정 시작.**
 각 Step 공통: ① 명시된 스킬 invoke → ② 따라서 수행 → ③ Expected 판정 → ④ 보고서 매트릭스 셀 + workaround 표 + finding 즉시 갱신.
 
 - [ ] **Step 1: setup** — `platty:platty-project-setup` invoke. 워크스페이스 init부터 (제로 상태이므로 스킬이 init을 안내해야 함 — 안내 없으면 finding). 프로젝트 "Heroines Back" 생성, heroines_back 레포 등록.
-판정: `node packages/cli/dist/main.js status --project heroines-back --json`에 프로젝트와 레포 1개가 나타남.
+판정: `platty status --project heroines-back --json`에 프로젝트와 레포 1개가 나타남.
 
 - [ ] **Step 2: 정적분석** — `platty:platty-static-analysis` invoke. confirm 게이트 포함 완주.
 판정: status JSON이 분석 완료를 보고하고 nextAction이 docs 계열로 넘어감.
@@ -183,6 +183,6 @@ Run: `git add docs/superpowers/ && git commit -m "test(skill-eval): platty skill
 ## 실행자 주의사항 (새 세션 핸드오프)
 
 - 작업 디렉토리: `/Users/uchangmin/Development/platty` (이 repo에서 세션을 열어야 Platty 스킬들이 로드됨).
-- 진행 중 막히면: 같은 명령이 글로벌·로컬 빌드 모두에서 `UNKNOWN_COMMAND`/`UNEXPECTED_ERROR` → 그 명령은 없는 것. 멈추고 보고. `PROJECT_AMBIGUOUS` → 사용자에게 물을 것. 대안 명령을 지어내지 말 것.
+- 진행 중 막히면: 글로벌 `platty`가 `UNKNOWN_COMMAND`/`UNEXPECTED_ERROR`를 반환하면 전역 CLI가 stale이거나 명령이 없는 것. 멈추고 보고. `PROJECT_AMBIGUOUS` → 사용자에게 물을 것. 대안 명령을 지어내거나 다른 실행 경로로 우회하지 말 것.
 - 한 단계가 FAIL이어도 같은 프로젝트의 다음 단계가 독립적으로 가능하면 finding 기록 후 계속, 불가능하면 그 열은 ⏹ 처리하고 다음 프로젝트로.
 - 토큰/시간이 길어지는 작업(분석, 문서 생성)은 스킬이 안내하는 폴링 절차를 따른다 — 임의 sleep 루프 금지.

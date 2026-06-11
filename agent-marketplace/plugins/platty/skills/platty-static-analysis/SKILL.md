@@ -40,6 +40,16 @@ platty runs cancel --run-id <run-id> --project <project> --reason "<reason>" --j
 
 Keep calling `platty status --project <project> --json` between phases. When status reports `build_docs`, switch to `platty-docs-target-curation` or `platty-docs-generation`.
 
+## Handoff
+
+At every pause or completion, use the `Platty handoff` card. Include the
+latest `status --json` nextAction and any run ids inspected. Recommended `Next`
+values:
+
+- `confirm_required`: `platty confirm --project <project> --json`
+- `run_static_analysis`: `platty run --step-only --project <project> --json`
+- `build_docs`: route to `platty-docs-target-curation` or `platty-docs-generation`
+
 ## Stop Conditions
 
 - The same `nextAction` (`type`, `repoId`, `stage`) repeats across 2+ `run --step-only` calls without `completedRepositoryIds` advancing: the loop is stalled — stop looping and debug with `runs list` / `runs show`.

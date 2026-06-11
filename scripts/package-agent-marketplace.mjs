@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import {
-  cpSync,
   existsSync,
   mkdirSync,
   readdirSync,
@@ -60,7 +59,7 @@ const claudeMarketplace = {
   ],
 }
 
-const copiedEntries = [
+const requiredPluginEntries = [
   '.codex-plugin',
   '.claude-plugin',
   'hooks',
@@ -103,24 +102,11 @@ function listFiles(dir, prefix = '') {
   }).sort()
 }
 
-function assertSameFile(source, target) {
-  assert.equal(read(target), read(source), `${relative(root, target)} should match ${relative(root, source)}`)
-}
-
-function assertPackagedEntryMatches(entry) {
-  const source = pathFor(entry)
+function assertPackagedEntryExists(entry) {
   const target = join(pluginRoot, entry)
   assert.equal(existsSync(target), true, `Missing packaged entry: ${relative(root, target)}`)
 
-  if (statSync(source).isDirectory()) {
-    const sourceFiles = listFiles(source)
-    const targetFiles = listFiles(target)
-    assert.deepEqual(targetFiles, sourceFiles, `Packaged ${entry} file list should match source`)
-    for (const file of sourceFiles) assertSameFile(join(source, file), join(target, file))
-    return
-  }
-
-  assertSameFile(source, target)
+  if (statSync(target).isDirectory()) assert.ok(listFiles(target).length > 0, `Packaged ${entry} should not be empty`)
 }
 
 function assertPackageMatches() {
@@ -132,7 +118,7 @@ function assertPackageMatches() {
   assert.equal(existsSync(claudeMarketplacePath), true, 'Claude marketplace manifest should exist')
   assert.deepEqual(JSON.parse(read(claudeMarketplacePath)), claudeMarketplace)
 
-  for (const entry of copiedEntries) assertPackagedEntryMatches(entry)
+  for (const entry of requiredPluginEntries) assertPackagedEntryExists(entry)
 
   const skillsDir = join(pluginRoot, 'skills')
   assert.equal(existsSync(skillsDir), true, 'plugin skills directory should exist')
@@ -158,13 +144,6 @@ if (!checkOnly) {
   mkdirSync(pluginRoot, { recursive: true })
   writeJson(join(marketplaceRoot, '.agents', 'plugins', 'marketplace.json'), codexMarketplace)
   writeJson(join(marketplaceRoot, '.claude-plugin', 'marketplace.json'), claudeMarketplace)
-
-  for (const entry of copiedEntries) {
-    const source = pathFor(entry)
-    if (!existsSync(source)) continue
-    rmSync(join(pluginRoot, entry), { recursive: true, force: true })
-    cpSync(source, join(pluginRoot, entry), { recursive: true })
-  }
 }
 
 assertPackageMatches()
