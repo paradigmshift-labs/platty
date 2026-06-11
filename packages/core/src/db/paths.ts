@@ -8,6 +8,8 @@ const packageRoot = resolve(dbModuleDir, '../..')
 
 export function getMigrationsPath(): string {
   const candidates = [
+    resolve(dbModuleDir, 'migrations'),
+    resolve(dbModuleDir, 'db/migrations'),
     resolve(packageRoot, 'dist/db/migrations'),
     resolve(packageRoot, 'src/db/migrations'),
   ]

@@ -5,22 +5,47 @@ description: Use when initializing a Platty workspace, creating or selecting a P
 
 # Platty Project Setup
 
-Use this for setup before analysis.
+Use this for setup before analysis. Platty stores CLI state in the user-global
+Platty home by default (`~/.platty` on macOS/Linux, `%APPDATA%\Platty` on
+Windows). `PLATTY_HOME` overrides that location. The CLI config field named
+`projectRoot` refers to this Platty home/workspace root, not to a repository
+being analyzed.
 
 ## Flow
 
-1. Initialize workspace:
+1. Initialize the global Platty home:
 
 ```bash
 platty init --json
 ```
 
-2. Create or select a project:
+2. Create or select a project. A project is the Platty work container; a
+   repository path is added only after a project is selected.
 
 ```bash
 platty project list --json
 platty project create "<name>" --description "<description>" --json
 platty project use <project-id-or-name> --json
+```
+
+Use this decision order:
+
+- If `project list` returns zero projects, ask for a project name or create the
+  requested project.
+- If exactly one project is clearly the intended target, run `project use`.
+- If multiple projects exist or a selector is ambiguous, ask the user which
+  project to use.
+- After `project use`, run `repo list` before any `repo add`.
+
+Use this setup notice when context is missing:
+
+```text
+Platty: setup needed
+- State root: ~/.platty or PLATTY_HOME
+- Step 1: Create or select a project.
+- Step 2: Register repositories inside that selected project.
+- First command: platty project list --json
+- Next: platty project use <project> --json or platty project create "<name>" --json
 ```
 
 ## Invariants
@@ -30,6 +55,8 @@ platty project use <project-id-or-name> --json
    the JSON output of project list / project create / project use.
 2. On an existing project, run repo list BEFORE repo add. repo add does not
    warn about duplicate names or dead repoPath entries — you must check.
+3. Do not infer state location from cwd or the repository path. Run `platty init`
+   once to create the global Platty home, then register repositories explicitly.
 ```
 
 ## Project Scoping
@@ -38,9 +65,10 @@ platty project use <project-id-or-name> --json
 - For existing-project setup, select the existing project before `repo add`.
 - Use the resolved project id/name consistently as `<project>` for `repo add`, `repo list`, and `status`.
 
-3. Add repositories:
+3. Add repositories inside the selected project:
 
 ```bash
+platty repo list --project <project> --json
 platty repo add <path> --project <project> --json
 platty repo list --project <project> --json
 ```
@@ -69,4 +97,14 @@ Run:
 
 ```bash
 platty status --project <project> --json
+```
+
+## Handoff
+
+End setup with the `Platty handoff` card. The `State` line must include the
+selected project and registered repository count from JSON. The `Recommended
+next` line should normally be:
+
+```text
+Recommended next: platty status --project <project> --json, then route to platty-static-analysis
 ```

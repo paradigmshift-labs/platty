@@ -1,6 +1,7 @@
-import { execFileSync } from 'node:child_process'
 import { access } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
+import { resolve } from 'node:path'
+import { getPlattyHomeDir } from '@platty/core'
+import { configPath } from './config-store.js'
 
 async function exists(path: string) {
   try {
@@ -12,34 +13,14 @@ async function exists(path: string) {
 }
 
 export async function findPlattyRoot(cwd = process.cwd()): Promise<string | null> {
-  let current = resolve(cwd)
-  while (true) {
-    if (await exists(resolve(current, '.platty', 'config.json'))) return current
-    const parent = dirname(current)
-    if (parent === current) return null
-    current = parent
-  }
-}
-
-export function findGitRoot(cwd = process.cwd()): string | null {
-  try {
-    const prefix = execFileSync('git', ['rev-parse', '--show-prefix'], {
-      cwd,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim()
-    if (!prefix) return resolve(cwd)
-    return resolve(cwd, ...prefix.split('/').filter(Boolean).map(() => '..'))
-  } catch {
-    return null
-  }
+  void cwd
+  const root = getPlattyHomeDir()
+  return await exists(configPath(root)) ? root : null
 }
 
 export async function resolveProjectRootForInit(cwd = process.cwd(), requestedRoot?: string) {
   if (requestedRoot?.trim()) return resolve(cwd, requestedRoot)
-  const existingRoot = await findPlattyRoot(cwd)
-  if (existingRoot) return existingRoot
-  return findGitRoot(cwd) ?? resolve(cwd)
+  return getPlattyHomeDir()
 }
 
 export async function requirePlattyRoot(cwd = process.cwd()) {

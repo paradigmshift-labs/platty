@@ -67,6 +67,7 @@ function projectNotSelected(): PlattyCommandResponse {
     nextAction: {
       type: 'select_project',
       command: ['platty', 'project', 'list'],
+      message: 'Create or select a Platty project, then register repositories inside that project.',
     },
   })
   return { exitCode: 2, result, stdout: '', stderr: '' }

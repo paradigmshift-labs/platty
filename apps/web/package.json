@@ -1,6 +1,6 @@
 {
   "name": "@platty/web",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@platty/sdk": "0.1.0"
+    "@platty/sdk": "0.0.1"
   },
   "engines": {
     "node": ">=20"

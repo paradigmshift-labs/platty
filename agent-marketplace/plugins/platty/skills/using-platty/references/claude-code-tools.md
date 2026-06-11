@@ -23,13 +23,14 @@ Claude Code is one of two equal Platty runtimes. Use this file when working in C
 | Detect git worktree state | Use `Bash` with `git rev-parse --git-dir`, `git rev-parse --git-common-dir`, and `git branch --show-current`. |
 | Stage, commit, branch, push, or create PRs | Use `Bash` for git commands and the available GitHub/PR tooling in the Claude Code environment. |
 
-Use the local built CLI when available:
+Use the installed global CLI by default:
 
 ```bash
-node packages/cli/dist/main.js <command> --json
+platty <command> --json
 ```
 
-Use installed `platty <command> --json` when the binary is on `PATH`.
+If global `platty` appears stale, report that it needs reinstall/rebuild before
+continuing. Keep the workflow on the global CLI.
 
 ## Compatibility Rule
 

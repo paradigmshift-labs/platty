@@ -28,7 +28,7 @@ import {
   type BusinessDocsTaskInvoker,
   type OpenPlattyDbResult,
 } from '@platty/core'
-import { readProjectConfig } from '../config-store.js'
+import { plattyDir, readProjectConfig } from '../config-store.js'
 import { openCliDb } from '../db.js'
 import { failure, success, type PlattyCommandResponse } from '../output.js'
 import { requirePlattyRoot } from '../project-root.js'
@@ -280,7 +280,7 @@ export async function runBusinessDocsCommand(
           stderr: '',
         }
       }
-      const workDir = optionValue(argv, '--work-dir') ?? `${root.projectRoot}/.platty/tmp/build_business_docs_runs`
+      const workDir = optionValue(argv, '--work-dir') ?? resolve(plattyDir(root.projectRoot), 'tmp', 'build_business_docs_runs')
       let data: unknown
       try {
         data = await runBusinessDocsWorkerQueue({

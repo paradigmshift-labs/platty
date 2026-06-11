@@ -1,14 +1,19 @@
 import { createTestPlattyDb, schema } from '@platty/core'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { runPlattyCommand } from '../src/main.js'
 
 describe('runs command', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('lists, shows, and cancels selected project runs', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'platty-runs-command-'))
     const db = createTestPlattyDb()
+    vi.stubEnv('PLATTY_HOME', join(cwd, '.platty'))
 
     try {
       await runPlattyCommand(['init'], { cwd, db: db.db })

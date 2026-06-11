@@ -87,7 +87,7 @@ export function leaseBusinessDocsTasks(db: DB, input: LeaseInput): BusinessDocsL
       return {
         ok: false,
         code: 'BUSINESS_DOCS_RUN_NOT_LEASEABLE',
-        message: 'Business docs generation run is not leaseable.',
+        message: 'This business-docs run is not ready to assign more work. Check the run status before continuing.',
       }
     }
 
@@ -157,7 +157,7 @@ export function leaseBusinessDocsTasks(db: DB, input: LeaseInput): BusinessDocsL
       return {
         ok: false,
         code: 'BUSINESS_DOCS_RUN_NOT_LEASEABLE',
-        message: 'Business docs generation run is not leaseable.',
+        message: 'This business-docs run is not ready to assign more work. Check the run status before continuing.',
       }
     }
 
@@ -216,7 +216,7 @@ export function heartbeatBusinessDocsTask(db: DB, input: HeartbeatInput): Busine
     return {
       ok: false,
       code: 'BUSINESS_DOCS_LEASE_TOKEN_REQUIRED',
-      message: 'Lease token is required.',
+      message: 'A current task token is required. Get or resume the task before continuing.',
     }
   }
 
@@ -458,7 +458,7 @@ function authorizeContextRead(
     return {
       ok: false,
       code: 'BUSINESS_DOCS_LEASE_TOKEN_REQUIRED',
-      message: 'Lease token is required.',
+      message: 'A current task token is required. Get or resume the task before continuing.',
     }
   }
 
@@ -544,7 +544,7 @@ function leaseConflict(): { ok: false; code: 'BUSINESS_DOCS_LEASE_CONFLICT'; mes
   return {
     ok: false,
     code: 'BUSINESS_DOCS_LEASE_CONFLICT',
-    message: 'Business docs lease token does not authorize this operation.',
+    message: 'This task is no longer assigned to this worker. Get the task again to continue with a fresh token.',
   }
 }
 

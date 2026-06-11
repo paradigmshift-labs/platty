@@ -62,11 +62,14 @@ or ask the user for the project.
 
 ## Core CLI
 
-Use the local CLI available in the repo, for example:
+Use the installed global CLI by default:
 
 ```bash
-node packages/cli/dist/main.js <command> --json
+platty <command> --json
 ```
+
+If the installed global CLI appears stale, follow `using-platty`: stop and
+report that the global CLI needs reinstall/rebuild before continuing.
 
 Preferred retrieval commands:
 
@@ -311,6 +314,16 @@ When answering:
 - If evidence is weak, say which command or regeneration step should run next.
 
 Keep the final answer concise unless the user asks for a full trace.
+
+## Handoff
+
+End retrieval with the `Platty handoff` card after the answer. The `Evidence`
+line should list the document ids and commands used. The `Recommended next`
+line should be one of:
+
+- ask a sharper follow-up question from the same evidence graph
+- regenerate stale/orphaned docs with `platty-docs-generation`
+- generate epics or business docs if the user needs planning/output artifacts
 
 ## Fallback Inventory
 

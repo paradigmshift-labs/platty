@@ -3,7 +3,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createTestPlattyDb, schema, STATIC_PIPELINE_STAGES } from '@platty/core'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { runPlattyCommand, type StaticPipelineRunnerInput } from '../src/main.js'
 import { eq } from 'drizzle-orm'
 
@@ -16,11 +16,16 @@ function gitRepo() {
 }
 
 describe('static analysis shortcuts', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('reports selected project status and calls static runner for run --step-only', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'platty-run-next-'))
     const repoPath = gitRepo()
     const db = createTestPlattyDb()
     const calls: StaticPipelineRunnerInput[] = []
+    vi.stubEnv('PLATTY_HOME', join(cwd, '.platty'))
 
     try {
       await runPlattyCommand(['init'], { cwd, db: db.db })
@@ -55,6 +60,7 @@ describe('static analysis shortcuts', () => {
     const cwd = mkdtempSync(join(tmpdir(), 'platty-status-build-docs-'))
     const repoPath = gitRepo()
     const db = createTestPlattyDb()
+    vi.stubEnv('PLATTY_HOME', join(cwd, '.platty'))
 
     try {
       await runPlattyCommand(['init'], { cwd, db: db.db })

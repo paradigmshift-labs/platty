@@ -3,13 +3,18 @@ import { eq } from 'drizzle-orm'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { runPlattyCommand } from '../src/main.js'
 
 describe('confirm command', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('confirms pending analyze_repo gates for the selected project', async () => {
     const cwd = mkdtempSync(join(tmpdir(), 'platty-confirm-command-'))
     const db = createTestPlattyDb()
+    vi.stubEnv('PLATTY_HOME', join(cwd, '.platty'))
 
     try {
       await runPlattyCommand(['init'], { cwd, db: db.db })

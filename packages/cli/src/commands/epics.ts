@@ -18,7 +18,7 @@ import {
   resolveProjectSelector,
   schema,
 } from '@platty/core'
-import { readProjectConfig } from '../config-store.js'
+import { plattyDir, readProjectConfig } from '../config-store.js'
 import { openCliDb } from '../db.js'
 import { failure, success, type PlattyCommandResponse } from '../output.js'
 import { requirePlattyRoot } from '../project-root.js'
@@ -142,7 +142,7 @@ export async function runEpicsCommand(argv: string[], options: EpicsCommandOptio
             stderr: '',
           }
         }
-        const workDir = optionValue(argv, '--work-dir') ?? join(root.config.projectRoot, '.platty', 'tmp', 'build_epics_sync_runs')
+        const workDir = optionValue(argv, '--work-dir') ?? join(plattyDir(root.config.projectRoot), 'tmp', 'build_epics_sync_runs')
         return ok(await runBuildEpicsSyncWorkerQueue({
           runtime: syncRuntime,
           projectId,
@@ -225,7 +225,7 @@ export async function runEpicsCommand(argv: string[], options: EpicsCommandOptio
         }
       }
       const policy = await readJsonPolicy(optionValue(argv, '--policy'))
-      const workDir = optionValue(argv, '--work-dir') ?? join(root.config.projectRoot, '.platty', 'tmp', 'build_epics_runs')
+      const workDir = optionValue(argv, '--work-dir') ?? join(plattyDir(root.config.projectRoot), 'tmp', 'build_epics_runs')
       return ok(await runBuildEpicsWorkerQueue({
         runtime,
         projectId,

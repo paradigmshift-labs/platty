@@ -21,6 +21,21 @@ platty epics draft confirm --run-id <run-id> --json
 
 Use `platty epics run --project <project> --provider codex_cli --json` only when the user wants the automatic worker queue.
 
+## Handoff
+
+At completion, pause, or any stop condition, use the `Platty handoff` card.
+Include `runId`, draft validation status, confirmed epic count when
+available, and any failing task id. Recommended `Next` values:
+
+- draft not ready: `platty epics worker next --run-id <run-id> --out packet.json --json`
+- draft confirmed: route to `platty-business-docs-generation` or `platty-retrieval`
+- sync run complete: inspect synced epics or continue business docs
+
+Translate task-token errors for the user. If a submit/context command returns
+`INVALID_LEASE_TOKEN` or `LEASE_EXPIRED`, say "this task is no longer assigned
+to this worker" or "the task assignment expired"; include the exact code in
+parentheses for debugging.
+
 ## Sync Flow
 
 ```bash

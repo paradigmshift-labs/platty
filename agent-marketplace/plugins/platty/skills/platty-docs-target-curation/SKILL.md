@@ -50,3 +50,13 @@ platty docs shared-segments list --project <project> --json
 ## Next Step
 
 Switch to `platty-docs-generation` after target scope is accepted.
+
+## Handoff
+
+End curation with the `Platty handoff` card. The `State` line must include the
+accepted/included target count or the exact reason no targets are available. The
+`Recommended next` line should be:
+
+```text
+Recommended next: platty-docs-generation with platty docs start --project <project> --json
+```

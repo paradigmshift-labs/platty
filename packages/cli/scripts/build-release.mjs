@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url'
 
 const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const coreDist = resolve(cliRoot, '../core/dist')
+const coreSrc = resolve(cliRoot, '../core/src')
 const releaseDir = resolve(cliRoot, 'release')
 const bundlePath = resolve(releaseDir, 'main.js')
 
@@ -57,7 +58,8 @@ const obfuscated = obfuscatorPkg.obfuscate(withoutShebang, {
 
 await writeFile(bundlePath, `#!/usr/bin/env node\n${obfuscated}`, { mode: 0o755 })
 
+await cp(resolve(coreSrc, 'db/migrations'), resolve(releaseDir, 'db/migrations'), { recursive: true })
 await cp(resolve(coreDist, 'pipeline_modules/build_graph/adapters/wasm'), resolve(releaseDir, 'wasm'), { recursive: true })
 
 const { size } = await import('node:fs').then((fs) => fs.statSync(bundlePath))
-console.log(`release/main.js written (${(size / 1024 / 1024).toFixed(2)} MB), wasm assets copied`)
+console.log(`release/main.js written (${(size / 1024 / 1024).toFixed(2)} MB), migrations and wasm assets copied`)

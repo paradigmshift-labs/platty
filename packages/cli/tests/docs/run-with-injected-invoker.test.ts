@@ -28,7 +28,7 @@ afterEach(async () => {
 
 describe('platty docs CLI worker runtime', () => {
   it('runs build_docs through an injected invoker without spawning Codex', async () => {
-    const calls: Array<{ taskId: string; documentType: string; provider: string }> = []
+    const calls: Array<{ taskId: string; documentType: string; provider: string; workDir: string }> = []
 
     const command = await runPlattyCommand([
       'docs',
@@ -45,8 +45,8 @@ describe('platty docs CLI worker runtime', () => {
     ], {
       cwd: rootDir,
       db,
-      docsTaskInvoker: async ({ taskId, documentType, model }) => {
-        calls.push({ taskId, documentType, provider: model.provider })
+      docsTaskInvoker: async ({ taskId, documentType, model, workDir }) => {
+        calls.push({ taskId, documentType, provider: model.provider, workDir })
         return {
           title: 'List Orders API',
           summary: 'Lists orders from the OrdersController handler.',
@@ -65,8 +65,13 @@ describe('platty docs CLI worker runtime', () => {
       taskStats: { saved: 1 },
     })
     expect(calls).toEqual([
-      expect.objectContaining({ documentType: 'api_spec', provider: 'codex_cli' }),
+      expect.objectContaining({
+        documentType: 'api_spec',
+        provider: 'codex_cli',
+        workDir: expect.stringContaining(join(rootDir, '.platty', 'tmp', 'build_docs_runs')),
+      }),
     ])
+    expect(calls[0]?.workDir).not.toContain(join('.platty', '.platty'))
   })
 })
 
