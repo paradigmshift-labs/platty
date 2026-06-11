@@ -31,6 +31,11 @@ available, and any failing task id. Recommended `Next` values:
 - draft confirmed: route to `platty-business-docs-generation` or `platty-retrieval`
 - sync run complete: inspect synced epics or continue business docs
 
+Translate task-token errors for the user. If a submit/context command returns
+`INVALID_LEASE_TOKEN` or `LEASE_EXPIRED`, say "this task is no longer assigned
+to this worker" or "the task assignment expired"; include the exact code in
+parentheses for debugging.
+
 ## Sync Flow
 
 ```bash

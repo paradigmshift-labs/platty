@@ -90,6 +90,17 @@ Follow this communication shape for every Platty workflow. Keep it short,
 consistent, and easy to scan. The user should always know what work started,
 what changed, and what to do next.
 
+Use user-facing words in progress and blocker messages. Internal queue terms may
+appear in commands or JSON, but explain them in plain language:
+
+| Internal term | User-facing phrase |
+| --- | --- |
+| lease / leased task | assigned task / task assignment |
+| lease token | task token |
+| lease expired | task assignment expired |
+| lease conflict / invalid lease token | this task is no longer assigned to this worker |
+| no leaseable tasks | no task is currently ready to assign |
+
 ### Start Notice
 
 Before running commands, announce the work with this card:
@@ -124,7 +135,7 @@ Platty handoff
 - State: <latest verified JSON state, not a guess>
 - Evidence: <commands, run ids, task ids, or document ids inspected>
 - Recommended next: <one command or skill>
-- Blocker: <none or exact blocker/error code>
+- Blocker: <none, or plain-language blocker with exact error code in parentheses>
 ```
 
 Do not bury the next action in prose. If a CLI response includes `nextAction`,

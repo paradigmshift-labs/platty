@@ -550,7 +550,10 @@ describe('platty business-docs CLI', () => {
     expect(command.exitCode).toBe(2)
     expect(command.result).toMatchObject({
       ok: false,
-      errors: [{ code: 'BUSINESS_DOCS_LEASE_CONFLICT' }],
+      errors: [{
+        code: 'BUSINESS_DOCS_LEASE_CONFLICT',
+        message: 'This task is no longer assigned to this worker. Get the task again to continue with a fresh token.',
+      }],
     })
   })
 

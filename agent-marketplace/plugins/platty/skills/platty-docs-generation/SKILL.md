@@ -116,6 +116,10 @@ task id when applicable. Recommended `Next` values:
 - all docs complete: route to `platty-retrieval`, `platty-epics-generation`, or `platty-business-docs-generation` depending on the user's goal
 - failed task/run: stop and list the failing code/message from JSON
 
+Phrase task-token problems for users. Do not say "not leased" or "lease하지 않음".
+Say "this task is no longer assigned to this worker; get the task again for a
+fresh token" and include the exact code in parentheses.
+
 ## Draft Safety Rules
 
 Always produce source-backed content.
@@ -199,5 +203,5 @@ STOP if you catch yourself thinking any of these:
 
 - Submit returns `failed`: stop, report the error from the response — never invent a successful document or restart the run to hide the failure.
 - The same task returns `repair_requested` twice with the same validation errors: stop and report the errors verbatim instead of resubmitting another variation.
-- `worker next` returns `no_task_available` while `docs status` still reports pending or repair counts above zero: report the blocking state to the user — do not poll `worker next` in a loop.
-- Submit fails with `LEASE_EXPIRED` or `INVALID_LEASE_TOKEN`: lease again via `worker next` once; if the fresh token also fails, stop and report.
+- `worker next` returns `no_task_available` while `docs status` still reports pending or repair counts above zero: report "no task is currently ready to assign" to the user — do not poll `worker next` in a loop.
+- Submit fails with `LEASE_EXPIRED` or `INVALID_LEASE_TOKEN`: get the task again via `worker next` once for a fresh task token; if the fresh token also fails, stop and report the plain-language blocker plus the exact error code.

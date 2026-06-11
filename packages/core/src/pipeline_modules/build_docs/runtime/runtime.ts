@@ -1339,14 +1339,14 @@ export class BuildDocsGenerationRuntime {
     if (!task) throw new BuildDocsGenerationRuntimeError('BUILD_DOCS_TASK_NOT_FOUND', `Build docs generation task not found: ${taskId}`)
     this.requireRun(task.runId)
     if (task.status !== 'leased' || task.leaseToken !== leaseToken) {
-      throw new BuildDocsGenerationRuntimeError('INVALID_LEASE_TOKEN', `Lease token is not valid for task: ${taskId}`)
+      throw new BuildDocsGenerationRuntimeError('INVALID_LEASE_TOKEN', `This task is no longer assigned to this worker: ${taskId}`)
     }
     if (task.leaseExpiresAt && new Date(task.leaseExpiresAt).getTime() <= Date.now()) {
       this.input.db.update(generationTasks)
         .set({ status: 'expired', leaseToken: null, leasedBy: null, leaseExpiresAt: null, updatedAt: timestamp() })
         .where(eq(generationTasks.id, task.id))
         .run()
-      throw new BuildDocsGenerationRuntimeError('LEASE_EXPIRED', `Lease expired for task: ${taskId}`)
+      throw new BuildDocsGenerationRuntimeError('LEASE_EXPIRED', `The task assignment expired before it was submitted: ${taskId}`)
     }
     return task
   }

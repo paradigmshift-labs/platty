@@ -21,6 +21,13 @@ Use the `using-platty` Operator UX at workflow start and handoff. Business-docs
 runs are long and task-heavy, so every handoff must include run id, run status,
 task counts, active lease count, and the next command or stop reason.
 
+When writing to the user, translate internal queue terms:
+
+- "leased task" -> "assigned task"
+- "lease token" -> "task token"
+- "lease expired" -> "task assignment expired"
+- `BUSINESS_DOCS_LEASE_CONFLICT` -> "this task is no longer assigned to this worker; get it again for a fresh token"
+
 To run the automatic worker queue, pick the path for the runtime you are working in. Both produce the same documents through the same CLI contract — the only difference is who drives the worker loop.
 
 ## Choose The Worker Queue For Your Runtime
@@ -67,7 +74,7 @@ STOP if you catch yourself thinking any of these:
 
 | Excuse | Reality |
 | --- | --- |
-| "I still hold the lease token from before the repair — reuse it to re-read context" | A submit that returns `repair_requested` RELEASES the lease. The old token no longer authorizes context reads (`BUSINESS_DOCS_LEASE_CONFLICT`). Lease again: the same task returns with a fresh token plus a `validation_errors` page. |
+| "I still hold the task token from before the repair — reuse it to re-read context" | A submit that returns `repair_requested` releases the task assignment. The old token no longer authorizes context reads (`BUSINESS_DOCS_LEASE_CONFLICT`). Get the task again: the same task returns with a fresh token plus a `validation_errors` page. |
 | "There must be a `repair` subcommand for this" | There is none. Repair is lease -> read `validation_errors` -> fix -> submit with `--attempt <nextRepairAttemptNo>` from the repair response. |
 | "Business rules need precision — keep the `/api/...` path in the rule text" | Technical identifiers in business prose fail validation with `BUSINESS_LANGUAGE_CONTAMINATION (TECH_API_PATH)`. Keep business language clean; sources link via `source_mapping` `sourceRef` labels. |
 | "I'll write the prose in the language the user spoke to me" | Write in the language the `target` page declares in `outputLanguage`. Do not assume a fixed language. |
@@ -91,7 +98,7 @@ platty business-docs context page --context <context-handle> --page <page-token>
 platty business-docs tasks submit --project <project> --task <task-id> --lease-token <token> --attempt <n> --document-json '<json>' --json
 ```
 
-If submit returns `repair_requested`, lease again — the repair submit released the old lease, and the fresh lease returns the same task with a new lease token plus a `validation_errors` context page:
+If submit returns `repair_requested`, get the task again — the repair submit released the old task assignment, and the fresh assignment returns the same task with a new task token plus a `validation_errors` context page:
 
 ```bash
 platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json
@@ -105,14 +112,14 @@ platty business-docs tasks retry --project <project> --task <task-id> --json
 platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json
 ```
 
-Do not invent a repair subcommand, and never reuse an old lease token — after any submit the prior token stops authorizing context reads (`BUSINESS_DOCS_LEASE_CONFLICT`).
+Do not invent a repair subcommand, and never reuse an old task token — after any submit the prior token stops authorizing context reads (`BUSINESS_DOCS_LEASE_CONFLICT`).
 
 ## Stop Conditions
 
 - `status --json` shows the run `status` as `failed`, or `counts.failed > 0` with `activeLeases == 0`: STOP the worker loop (Codex parity) and report the final task counts.
-- `tasks lease` returns 0 tasks with `activeLeases == 0`, or fails with `BUSINESS_DOCS_RUN_NOT_LEASEABLE`: the run is finished or blocked — stop leasing and report `status` output.
+- `tasks lease` returns 0 tasks with `activeLeases == 0`, or fails with `BUSINESS_DOCS_RUN_NOT_LEASEABLE`: no task is currently ready to assign, or the run is finished/blocked — stop requesting work and report `status` output.
 - A task fails validation twice (`repair_requested`, then `failed` — `maxRepairAttempts` defaults to 1): stop authoring that task. Use `tasks retry` only when the user wants another attempt; `BUSINESS_DOCS_TASK_NOT_RETRYABLE` means stop for good.
-- A context read fails with `BUSINESS_DOCS_LEASE_CONFLICT`: the old lease token is dead — lease again for a fresh token; never retry the old token.
+- A context read fails with `BUSINESS_DOCS_LEASE_CONFLICT`: this task is no longer assigned to this worker — get the task again for a fresh token; never retry the old token.
 
 ## Handoff
 

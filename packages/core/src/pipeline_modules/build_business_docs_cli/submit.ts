@@ -123,7 +123,7 @@ export function submitBusinessDocsTask(db: DB, input: SubmitInput): BusinessDocs
       return failure('BUSINESS_DOCS_SUBMIT_NOT_IDEMPOTENT', 'Submit replay content does not match the stored submit hash.')
     }
     if (idempotency === 'lease_conflict') {
-      return failure('BUSINESS_DOCS_LEASE_CONFLICT', 'Business docs lease token does not authorize this submit.')
+      return failure('BUSINESS_DOCS_LEASE_CONFLICT', 'This task is no longer assigned to this worker. Get the task again to continue with a fresh token.')
     }
     if (idempotency === 'attempt_conflict') {
       return failure('BUSINESS_DOCS_ATTEMPT_CONFLICT', 'Business docs submit attempt does not match the stored submit attempt.')
@@ -140,7 +140,7 @@ export function submitBusinessDocsTask(db: DB, input: SubmitInput): BusinessDocs
       !context.task.leaseExpiresAt ||
       context.task.leaseExpiresAt <= nowIso
     ) {
-      return failure('BUSINESS_DOCS_LEASE_CONFLICT', 'Business docs lease token does not authorize this submit.')
+      return failure('BUSINESS_DOCS_LEASE_CONFLICT', 'This task is no longer assigned to this worker. Get the task again to continue with a fresh token.')
     }
     if (context.task.attemptNo !== input.attemptNo) {
       return failure('BUSINESS_DOCS_ATTEMPT_CONFLICT', 'Business docs submit attempt does not match the current task attempt.')
