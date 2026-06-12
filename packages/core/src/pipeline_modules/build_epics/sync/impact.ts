@@ -14,6 +14,8 @@ export interface EpicSyncDocumentImpact {
   kind: EpicSyncImpactKind
   oldHash: string | null
   newHash: string | null
+  domainHints?: string[]
+  relationTargets?: string[]
 }
 
 export interface EpicSyncImpactResult {

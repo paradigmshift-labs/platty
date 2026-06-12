@@ -438,11 +438,12 @@ function buildDefaultMerkleSnapshot(context: StaticMapStageContext): StaticMapSn
   const frameworkHashes = hashRows(frameworkRows, (row) => `${row.repoId}:${row.framework}`, stableFrameworkDetection)
   const relationHashes = hashRows(relationRows, (row) => row.id, stableCodeRelation)
   const serviceNodeHashes = hashRows(serviceNodeRows, (row) => row.id, stableServiceMapNode)
-  const serviceEdgeHashes = hashRows(serviceEdgeRows, (row) => `${row.repoId}:${row.sourceType}:${row.sourceId}:${row.targetType}:${row.targetId}:${row.kind}:${row.canonicalTarget}`, stableServiceMapEdge)
+  const serviceEdgeHashes = hashRows(serviceEdgeRows, serviceMapEdgeStableKey, stableServiceMapEdge)
 
   const nodeHashById = new Map(nodeHashes.map((entry) => [entry.key, entry.hash]))
   const modelHashById = new Map(modelHashes.map((entry) => [entry.key, entry.hash]))
   const relationHashById = new Map(relationHashes.map((entry) => [entry.key, entry.hash]))
+  const serviceEdgeHashByKey = new Map(serviceEdgeHashes.map((entry) => [entry.key, entry.hash]))
   const routeDocumentSourceHashes = entryPointRows
     .map((entryPoint) => routeDocumentHashEntry({
       entryPoint,
@@ -450,10 +451,12 @@ function buildDefaultMerkleSnapshot(context: StaticMapStageContext): StaticMapSn
       edgeRows,
       modelRows,
       relationRows,
+      serviceEdgeRows,
       entryPointHash: entryPointHashes.find((entry) => entry.key === entryPoint.id)?.hash ?? hashValue(stableEntryPoint(entryPoint)),
       nodeHashById,
       relationHashById,
       modelHashById,
+      serviceEdgeHashByKey,
     }))
     .sort(byKey)
   const modelDocumentSourceHashes = modelRows
@@ -631,10 +634,12 @@ function routeDocumentHashEntry(input: {
   edgeRows: Array<typeof codeEdges.$inferSelect>
   modelRows: Array<typeof models.$inferSelect>
   relationRows: Array<typeof codeRelations.$inferSelect>
+  serviceEdgeRows: Array<typeof serviceMapEdges.$inferSelect>
   entryPointHash: string
   nodeHashById: Map<string, string>
   relationHashById: Map<string, string>
   modelHashById: Map<string, string>
+  serviceEdgeHashByKey: Map<string, string>
 }): {
   key: string
   hash: string
@@ -660,6 +665,17 @@ function routeDocumentHashEntry(input: {
   const relatedModelHashes = findRelatedModels(input.modelRows, reachableRelations)
     .map((model) => ({ key: model.id, hash: input.modelHashById.get(model.id) ?? hashValue(stableModel(model)) }))
     .sort(byKey)
+  const serviceMapSourceType = entryPointServiceMapType(input.entryPoint)
+  const relatedServiceMapEdgeHashes = input.serviceEdgeRows
+    .filter((row) =>
+      (row.sourceType === serviceMapSourceType && row.sourceId === input.entryPoint.id)
+      || (row.targetType === serviceMapSourceType && row.targetId === input.entryPoint.id),
+    )
+    .map((row) => {
+      const key = serviceMapEdgeStableKey(row)
+      return { key, hash: input.serviceEdgeHashByKey.get(key) ?? hashValue(stableServiceMapEdge(row)) }
+    })
+    .sort(byKey)
   const target = entryPointTarget(input.entryPoint)
   const key = `${target.scope}:${input.entryPoint.id}`
   return {
@@ -670,6 +686,7 @@ function routeDocumentHashEntry(input: {
       reachableEdgeHashes,
       reachableRelationHashes,
       relatedModelHashes,
+      relatedServiceMapEdgeHashes,
     }),
     target,
   }
@@ -718,6 +735,17 @@ function entryPointTarget(entryPoint: typeof entryPoints.$inferSelect): {
     return { track: 'technical', type: 'event_spec', scope: 'event', scopeId: entryPoint.id, repoId: entryPoint.repoId }
   }
   return { track: 'technical', type: 'api_spec', scope: 'route', scopeId: entryPoint.id, repoId: entryPoint.repoId }
+}
+
+function entryPointServiceMapType(entryPoint: typeof entryPoints.$inferSelect): string {
+  if (entryPoint.kind === 'page') return 'screen'
+  if (entryPoint.kind === 'job') return 'job'
+  if (entryPoint.kind === 'event') return 'event'
+  return 'api'
+}
+
+function serviceMapEdgeStableKey(row: typeof serviceMapEdges.$inferSelect): string {
+  return `${row.repoId}:${row.sourceType}:${row.sourceId}:${row.targetType}:${row.targetId}:${row.kind}:${row.canonicalTarget}`
 }
 
 function buildBusinessDocumentHashes(input: {

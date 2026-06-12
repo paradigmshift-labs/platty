@@ -141,6 +141,50 @@ describe('createDocSyncPlan', () => {
       }),
     ])
   })
+
+  it('classifies backend repo addition as new API plus service-map-impacted screen only', () => {
+    seedSnapshot('snap:frontend', {
+      technicalDocumentSourceHashes: [
+        screenHash('screen:orders', 'hash:screen:orders:v1', 'r-front'),
+        screenHash('screen:profile', 'hash:screen:profile:v1', 'r-front'),
+      ],
+    })
+    seedSnapshot('snap:frontend-backend', {
+      technicalDocumentSourceHashes: [
+        screenHash('screen:orders', 'hash:screen:orders:v2-service-map', 'r-front'),
+        screenHash('screen:profile', 'hash:screen:profile:v1', 'r-front'),
+        routeHash('api:orders', 'hash:api:orders:v1', 'r-back'),
+      ],
+    })
+    seedDocument('doc:orders-screen', screenTarget('screen:orders', 'r-front'), 'hash:screen:orders:v1')
+    seedDocument('doc:profile-screen', screenTarget('screen:profile', 'r-front'), 'hash:screen:profile:v1')
+
+    const result = createDocSyncPlan({ db, projectId: 'p1', fromSnapshotId: 'snap:frontend', toSnapshotId: 'snap:frontend-backend' })
+    const candidates = listDocSyncCandidates({ db, planId: result.planId }).candidates
+
+    expect(candidates.map((candidate) => ({
+      kind: candidate.kind,
+      type: candidate.target.type,
+      scopeId: candidate.target.scopeId,
+      oldHash: candidate.oldHash,
+      newHash: candidate.newHash,
+    })).sort(byScopeId)).toEqual([
+      {
+        kind: 'new_document',
+        type: 'api_spec',
+        scopeId: 'api:orders',
+        oldHash: null,
+        newHash: 'hash:api:orders:v1',
+      },
+      {
+        kind: 'stale',
+        type: 'screen_spec',
+        scopeId: 'screen:orders',
+        oldHash: 'hash:screen:orders:v1',
+        newHash: 'hash:screen:orders:v2-service-map',
+      },
+    ])
+  })
 })
 
 describe('doc sync candidate decisions', () => {
@@ -499,6 +543,10 @@ function routeHash(scopeId: string, hash: string, repoId = 'r1') {
   return { key: scopeId, hash, target: routeTarget(scopeId, repoId) }
 }
 
+function screenHash(scopeId: string, hash: string, repoId = 'r1') {
+  return { key: `screen:${scopeId}`, hash, target: screenTarget(scopeId, repoId) }
+}
+
 function modelHash(scopeId: string, hash: string, repoId: string) {
   return { key: `model:${scopeId}`, hash, target: modelTarget(scopeId, repoId) }
 }
@@ -509,6 +557,10 @@ function businessHash(scopeId: string, hash: string) {
 
 function routeTarget(scopeId: string, repoId = 'r1') {
   return { track: 'technical', type: 'api_spec', scope: 'route', scopeId, repoId }
+}
+
+function screenTarget(scopeId: string, repoId = 'r1') {
+  return { track: 'technical', type: 'screen_spec', scope: 'screen', scopeId, repoId }
 }
 
 function modelTarget(scopeId: string, repoId = 'r1') {

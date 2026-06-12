@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { and, asc, eq, inArray, isNull } from 'drizzle-orm'
 import type { DB } from '@/db/client.js'
 import {
+  documents,
   generationContextBundles,
   generationContextPages,
   generationEvents,
@@ -12,6 +13,7 @@ import {
   type GenerationTaskStatus,
 } from '@/db/schema/build_docs.js'
 import { buildEpicsDrafts } from '@/db/schema/build_epics.js'
+import { serviceMapEdges } from '@/db/schema/build_service_map.js'
 import { repositories } from '@/db/schema/core.js'
 import { loadDocIndex } from '@/pipeline_modules/build_epics/core/f1_load_doc_index.js'
 import { validateEpicPlan } from '@/pipeline_modules/build_epics/core/f9_validate_plan.js'
@@ -27,13 +29,15 @@ import { applyEpicSyncCleanup } from './cleanup.js'
 import { applyEpicSyncCrossPatch, type EpicSyncCrossSubmission } from './cross_patch.js'
 import { deriveEpicSyncImpact, type EpicSyncDocumentImpact } from './impact.js'
 import { loadPersistedBuildEpicsPlan } from './persisted_plan.js'
+import { deriveEpicRestructureAudit, type EpicRestructureReason, type EpicRestructureTopologyLink } from './restructure_audit.js'
+import { applyEpicSyncRestructurePatch, type EpicSyncRestructureSubmission } from './restructure_patch.js'
 
 const SCHEMA_VERSION = 'build_epics_sync_runtime_v1'
 const LEASE_TTL_MS = 15 * 60 * 1000
 const DEFAULT_ASSIGNMENT_BATCH_SIZE = 10
 const RELEASABLE_TASK_STATUSES: GenerationTaskStatus[] = ['pending', 'expired', 'repair_requested']
 const FINAL_TASK_STATUSES: GenerationTaskStatus[] = ['completed', 'failed']
-const SYNC_TASK_TYPES = new Set(['epic_sync_assignment', 'epic_sync_cross_links'])
+const SYNC_TASK_TYPES = new Set(['epic_sync_assignment', 'epic_sync_restructure', 'epic_sync_cross_links'])
 
 export interface BuildEpicsSyncMetadata {
   docSyncPlanId: string
@@ -194,19 +198,28 @@ export class BuildEpicsSyncRuntime {
   async getContext(input: { taskId: string; leaseToken: string }) {
     const task = this.requireTaskLease(input.taskId, input.leaseToken)
     const run = this.requireBuildEpicsRun(task.runId)
-    const target = task.targetJson as { task_type?: string; impactedDocumentIds?: string[]; affectedDocumentIds?: string[] }
+    const target = task.targetJson as {
+      task_type?: string
+      impactedDocumentIds?: string[]
+      affectedDocumentIds?: string[]
+      reasons?: EpicRestructureReason[]
+      topologyLinks?: EpicRestructureTopologyLink[]
+    }
     const draft = this.requireDraft(task.runId)
     const docIndex = await loadDocIndexOrEmpty({ db: this.input.db, projectId: task.projectId })
-    const taskDocumentIds = new Set(target.task_type === 'epic_sync_cross_links'
-      ? target.affectedDocumentIds ?? []
-      : target.impactedDocumentIds ?? [])
-    const impactedCards = packBuildEpicsDocumentCards(docIndex).filter((card) => taskDocumentIds.has(card.documentId))
     const taskType = target.task_type ?? 'epic_sync_assignment'
+    const taskDocumentIds = new Set(
+      taskType === 'epic_sync_cross_links' || taskType === 'epic_sync_restructure'
+        ? target.affectedDocumentIds ?? []
+        : target.impactedDocumentIds ?? [],
+    )
+    const impactedCards = packBuildEpicsDocumentCards(docIndex).filter((card) => taskDocumentIds.has(card.documentId))
     const content = {
       taskType,
       outputLanguage: run.outputLanguage,
       impactedCards,
       ...(taskType === 'epic_sync_cross_links' ? { affectedCards: impactedCards } : {}),
+      ...(taskType === 'epic_sync_restructure' ? { restructureReasons: target.reasons ?? [], topologyLinks: target.topologyLinks ?? [] } : {}),
       existingEpics: (draft.draftJson as unknown as BuildEpicsSyncDraftPlan).epics.map((epic) => ({
         tempEpicId: epic.tempEpicId,
         stableKey: epic.stableKey,
@@ -275,6 +288,7 @@ export class BuildEpicsSyncRuntime {
     const taskType = (task.targetJson as { task_type?: string }).task_type
     const result = asRecord(input.result)
     if (taskType === 'epic_sync_cross_links') return this.submitCrossLinksTask({ task, runId: run.id, result })
+    if (taskType === 'epic_sync_restructure') return this.submitRestructureTask({ task, runId: run.id, result })
 
     if (!Array.isArray(result.assignments)) {
       return this.rejectTask(task, [{ severity: 'fatal', code: 'INVALID_SYNC_ASSIGNMENT_RESULT', message: 'assignments array is required' }])
@@ -314,10 +328,12 @@ export class BuildEpicsSyncRuntime {
       .where(eq(generationTasks.id, task.id))
       .run()
     if (status === 'building' && this.isAssignmentPhaseComplete(run.id)) {
-      this.insertCrossLinksTask({
+      this.insertPostAssignmentTask({
         runId: run.id,
         projectId: task.projectId,
         repositoryId: task.repositoryId,
+        plan: nextPlan,
+        impacts: this.assignmentImpactsForRun(run.id),
         affectedDocumentIds: currentPlan.syncMetadata.affectedDocumentIds,
         now,
         maxRetries: task.maxRetries,
@@ -338,6 +354,70 @@ export class BuildEpicsSyncRuntime {
       .run()
     this.recordEvent(run.id, task.id, 'task_completed', { task_type: 'epic_sync_assignment' })
     if (status !== 'building') this.recordEvent(run.id, null, 'run_failed', { draft_status: status })
+    return { status: 'completed' as const, validationErrors: [] }
+  }
+
+  private submitRestructureTask(input: { task: GenerationTask; runId: string; result: Record<string, unknown> }) {
+    const { task, runId, result } = input
+    if (!Array.isArray(result.actions)) {
+      return this.rejectTask(task, [{ severity: 'fatal', code: 'INVALID_SYNC_RESTRUCTURE_RESULT', message: 'actions array is required' }])
+    }
+    const draft = this.requireDraft(runId)
+    const currentPlan = draft.draftJson as unknown as BuildEpicsSyncDraftPlan
+    const patch = applyEpicSyncRestructurePatch({
+      plan: currentPlan,
+      submission: result as unknown as EpicSyncRestructureSubmission,
+    })
+    if (patch.validationIssues.some((issue) => issue.severity === 'fatal')) {
+      return this.rejectTask(task, patch.validationIssues as unknown as Array<Record<string, unknown>>, result)
+    }
+
+    const nextPlan: BuildEpicsSyncDraftPlan = {
+      ...patch.plan,
+      version: currentPlan.version ?? 1,
+      syncMetadata: currentPlan.syncMetadata,
+    }
+    const validation = validateBuildEpicsDraft(nextPlan, validationPolicy())
+    const status = validation.fatal.length > 0 ? 'invalid' : 'building'
+    const now = timestamp()
+
+    this.input.db.update(generationTasks)
+      .set({
+        status: 'completed',
+        submittedDocument: result,
+        leaseToken: null,
+        leasedBy: null,
+        leaseExpiresAt: null,
+        lastValidationErrors: [],
+        updatedAt: now,
+      })
+      .where(eq(generationTasks.id, task.id))
+      .run()
+    if (status === 'building' && !this.hasCrossLinksTask(runId)) {
+      this.insertCrossLinksTask({
+        runId,
+        projectId: task.projectId,
+        repositoryId: task.repositoryId,
+        affectedDocumentIds: currentPlan.syncMetadata.affectedDocumentIds,
+        now,
+        maxRetries: task.maxRetries,
+      })
+    }
+    this.input.db.update(buildEpicsDrafts)
+      .set({
+        status,
+        draftJson: nextPlan as unknown as Record<string, unknown>,
+        validationJson: validation as unknown as Record<string, unknown>,
+        updatedAt: now,
+      })
+      .where(eq(buildEpicsDrafts.runId, runId))
+      .run()
+    this.input.db.update(generationRuns)
+      .set({ status: status === 'building' ? 'running' : 'failed', finishedAt: status === 'building' ? null : now, updatedAt: now })
+      .where(eq(generationRuns.id, runId))
+      .run()
+    this.recordEvent(runId, task.id, 'task_completed', { task_type: 'epic_sync_restructure' })
+    if (status !== 'building') this.recordEvent(runId, null, 'run_failed', { draft_status: status })
     return { status: 'completed' as const, validationErrors: [] }
   }
 
@@ -544,6 +624,68 @@ export class BuildEpicsSyncRuntime {
     }).run()
   }
 
+  private insertPostAssignmentTask(input: {
+    runId: string
+    projectId: string
+    repositoryId: string
+    plan: BuildEpicsSyncDraftPlan
+    impacts: EpicSyncDocumentImpact[]
+    affectedDocumentIds: string[]
+    now: string
+    maxRetries: number
+  }): void {
+    const topologyLinks = buildTopologyLinksForProject(this.input.db, input.projectId)
+    const audit = deriveEpicRestructureAudit({ plan: input.plan, impacts: input.impacts, topologyLinks })
+    if (audit.taskRequired) {
+      this.insertRestructureTask({
+        runId: input.runId,
+        projectId: input.projectId,
+        repositoryId: input.repositoryId,
+        affectedDocumentIds: input.affectedDocumentIds,
+        reasons: audit.reasons,
+        topologyLinks,
+        now: input.now,
+        maxRetries: input.maxRetries,
+      })
+      return
+    }
+    this.insertCrossLinksTask(input)
+  }
+
+  private insertRestructureTask(input: {
+    runId: string
+    projectId: string
+    repositoryId: string
+    affectedDocumentIds: string[]
+    reasons: EpicRestructureReason[]
+    topologyLinks: EpicRestructureTopologyLink[]
+    now: string
+    maxRetries: number
+  }): void {
+    const targetKey = 'sync:restructure:1'
+    this.input.db.insert(generationTasks).values({
+      id: `task:${randomUUID()}`,
+      runId: input.runId,
+      projectId: input.projectId,
+      repositoryId: input.repositoryId,
+      documentType: 'document_assignment',
+      targetKey,
+      targetDocumentId: targetKey,
+      primaryEntryPointId: targetKey,
+      targetJson: {
+        task_type: 'epic_sync_restructure',
+        affectedDocumentIds: input.affectedDocumentIds,
+        reasons: input.reasons,
+        topologyLinks: input.topologyLinks,
+      },
+      status: 'pending',
+      retryCount: 0,
+      maxRetries: input.maxRetries,
+      createdAt: input.now,
+      updatedAt: input.now,
+    }).run()
+  }
+
   private rejectTask(task: GenerationTask, validationErrors: Array<Record<string, unknown>>, submittedDocument?: Record<string, unknown>) {
     const retryCount = task.retryCount + 1
     const status: GenerationTaskStatus = retryCount > task.maxRetries ? 'failed' : 'repair_requested'
@@ -591,8 +733,21 @@ export class BuildEpicsSyncRuntime {
   private isAssignmentPhaseComplete(runId: string): boolean {
     const tasks = this.tasksForRun(runId)
     const assignmentTasks = tasks.filter((task) => (task.targetJson as { task_type?: string }).task_type === 'epic_sync_assignment')
-    const hasCrossTask = tasks.some((task) => (task.targetJson as { task_type?: string }).task_type === 'epic_sync_cross_links')
-    return !hasCrossTask && assignmentTasks.length > 0 && assignmentTasks.every((task) => task.status === 'completed')
+    const hasFollowupTask = tasks.some((task) => ['epic_sync_restructure', 'epic_sync_cross_links'].includes((task.targetJson as { task_type?: string }).task_type ?? ''))
+    return !hasFollowupTask && assignmentTasks.length > 0 && assignmentTasks.every((task) => task.status === 'completed')
+  }
+
+  private hasCrossLinksTask(runId: string): boolean {
+    return this.tasksForRun(runId).some((task) => (task.targetJson as { task_type?: string }).task_type === 'epic_sync_cross_links')
+  }
+
+  private assignmentImpactsForRun(runId: string): EpicSyncDocumentImpact[] {
+    return this.tasksForRun(runId)
+      .filter((task) => (task.targetJson as { task_type?: string }).task_type === 'epic_sync_assignment')
+      .flatMap((task) => {
+        const impacts = (task.targetJson as { impacts?: unknown }).impacts
+        return Array.isArray(impacts) ? impacts as EpicSyncDocumentImpact[] : []
+      })
   }
 
   private requireBuildEpicsRun(runId: string) {
@@ -721,6 +876,63 @@ function validateAssignmentCoverage(task: GenerationTask, assignments: unknown[]
     }
   }
   return errors
+}
+
+function buildTopologyLinksForProject(db: DB, projectId: string): EpicRestructureTopologyLink[] {
+  const documentRows = db.select()
+    .from(documents)
+    .where(eq(documents.projectId, projectId))
+    .all()
+  const documentByServiceNode = new Map<string, string>()
+  for (const document of documentRows) {
+    const serviceType = serviceNodeTypeForDocumentType(document.type)
+    if (!serviceType || !document.scopeId) continue
+    documentByServiceNode.set(`${serviceType}:${document.scopeId}`, document.id)
+  }
+
+  return db.select()
+    .from(serviceMapEdges)
+    .where(eq(serviceMapEdges.projectId, projectId))
+    .all()
+    .flatMap((edge) => {
+      const sourceDocumentId = documentByServiceNode.get(`${edge.sourceType}:${edge.sourceId}`)
+      const targetDocumentId = documentByServiceNode.get(`${edge.targetType}:${edge.targetId}`)
+      if (!sourceDocumentId || !targetDocumentId) return []
+      return [{
+        sourceDocumentId,
+        targetDocumentId,
+        kind: edge.kind,
+        clusterHints: clusterHintsForServiceEdge(edge.canonicalTarget, edge.sourceLabel, edge.targetLabel),
+        sourceRepoId: edge.sourceRepoId,
+        targetRepoId: edge.targetRepoId,
+      }]
+    })
+}
+
+function serviceNodeTypeForDocumentType(documentType: string): string | null {
+  if (documentType === 'api_spec') return 'api'
+  if (documentType === 'screen_spec') return 'screen'
+  if (documentType === 'event_spec') return 'event'
+  if (documentType === 'schedule_spec') return 'job'
+  return null
+}
+
+function clusterHintsForServiceEdge(...values: Array<string | null | undefined>): string[] {
+  const hints = new Set<string>()
+  for (const value of values) {
+    if (!value) continue
+    const pathSegments = value
+      .toLowerCase()
+      .split(/[/?#\s:]+/g)
+      .flatMap((part) => part.split(/[^a-z0-9_-]+/g))
+      .filter(Boolean)
+    for (const segment of pathSegments) {
+      if (segment === 'get' || segment === 'post' || segment === 'put' || segment === 'patch' || segment === 'delete' || segment === 'api') continue
+      hints.add(segment)
+      break
+    }
+  }
+  return [...hints].sort()
 }
 
 function chunkImpacts(impacts: EpicSyncDocumentImpact[], batchSize: number): EpicSyncDocumentImpact[][] {

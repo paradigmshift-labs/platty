@@ -183,6 +183,47 @@ describe('BuildEpicsSyncRuntime', () => {
     ]))
   })
 
+  it('runs restructure audit after assignment and before cross links', async () => {
+    const db = createTestDb()
+    seedProject(db)
+    seedExistingOrdersEpic(db)
+    seedFourNewDocumentsSync(db)
+    const runtime = new BuildEpicsSyncRuntime({ db })
+    const started = await runtime.start({ projectId: 'p1', docSyncPlanId: 'plan:sync', requestedBy: 'user:test' })
+    const lease = await runtime.leaseTasks({ runId: started.runId, limit: 1, workerId: 'worker:sync' })
+    const task = lease.leasedTasks[0]!
+
+    await runtime.submitTask({
+      taskId: task.taskId,
+      leaseToken: task.leaseToken,
+      result: {
+        assignments: [
+          assignmentForExistingApi('doc:users', 'orders'),
+          assignmentForExistingApi('doc:roles', 'orders'),
+          assignmentForExistingApi('doc:permissions', 'orders'),
+          assignmentForExistingApi('doc:invitations', 'orders'),
+        ],
+      },
+    })
+
+    const tasks = db.select().from(generationTasks).where(eq(generationTasks.runId, started.runId)).all()
+    expect(tasks).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        targetKey: 'sync:restructure:1',
+        targetJson: expect.objectContaining({
+          task_type: 'epic_sync_restructure',
+          reasons: expect.arrayContaining([
+            expect.objectContaining({ code: 'BACKEND_APIS_EXPAND_SINGLE_EPIC', epicStableKey: 'orders' }),
+          ]),
+        }),
+        status: 'pending',
+      }),
+    ]))
+    expect(tasks).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ targetKey: 'sync:cross_links:1' }),
+    ]))
+  })
+
   it('rejects task access when the lease expires exactly now', async () => {
     const db = createTestDb()
     seedProject(db)
@@ -460,6 +501,19 @@ function assignmentForNewApi(documentId: string, stableKey: string) {
   }
 }
 
+function assignmentForExistingApi(documentId: string, epicStableKey: string) {
+  return {
+    documentId,
+    documentType: 'api_spec',
+    action: 'assign_existing',
+    epicStableKey,
+    role: 'owner',
+    confidence: 'high',
+    reason: `${documentId} belongs to ${epicStableKey}.`,
+    newEpic: null,
+  }
+}
+
 function seedProject(db: DB) {
   const now = '2026-06-08T00:00:00.000Z'
   db.insert(projects).values({ id: 'p1', name: 'Project', createdAt: now, updatedAt: now }).run()
@@ -634,6 +688,31 @@ function seedManyNewDocumentsSync(db: DB) {
       newHash: 'hash:exchanges',
     }),
   ]).run()
+}
+
+function seedFourNewDocumentsSync(db: DB) {
+  const docs = [
+    ['doc:users', 'route:users', 'POST /users', 'Create a user.'],
+    ['doc:roles', 'route:roles', 'POST /roles', 'Create a role.'],
+    ['doc:permissions', 'route:permissions', 'POST /permissions', 'Create a permission.'],
+    ['doc:invitations', 'route:invitations', 'POST /invitations', 'Create an invitation.'],
+  ] as const
+  db.insert(documents).values(docs.map(([id, scopeId, title, summary]) => apiDoc({
+    id,
+    scopeId,
+    status: 'passed',
+    validity: 'fresh',
+    title,
+    summary,
+  }))).run()
+  seedDocSyncPlan(db)
+  db.insert(docSyncCandidates).values(docs.map(([id, scopeId]) => candidate({
+    id: `cand:${id}`,
+    kind: 'new_document',
+    scopeId,
+    oldHash: null,
+    newHash: `hash:${id}`,
+  }))).run()
 }
 
 function seedDeletedOrdersAndNewReturnsSync(db: DB) {

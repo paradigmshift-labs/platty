@@ -85,7 +85,7 @@ describe('repository_service', () => {
     client.close()
   })
 
-  it('marks project-level outputs stale when the repository inventory changes', () => {
+  it('marks project-level phases pending without blanket-staling documents when the repository inventory changes', () => {
     const client = createTestPlattyDb()
     const project = createProject(client.db, { name: 'My App' })
     const repoPath = gitRepo()
@@ -146,8 +146,8 @@ describe('repository_service', () => {
       'build_service_map:pending',
     ])
     expect(docsAfterAdd.map((doc) => `${doc.id}:${doc.validity}`).sort()).toEqual([
-      'doc:api:stale',
-      'doc:business:stale',
+      'doc:api:fresh',
+      'doc:business:fresh',
     ])
 
     client.db.update(projectPhaseStatus)
@@ -176,8 +176,8 @@ describe('repository_service', () => {
       'build_service_map:pending',
     ])
     expect(docsAfterRemove.map((doc) => `${doc.id}:${doc.validity}`).sort()).toEqual([
-      'doc:api:stale',
-      'doc:business:stale',
+      'doc:api:fresh',
+      'doc:business:fresh',
     ])
     client.close()
   })

@@ -4,7 +4,6 @@ import { basename, resolve } from 'node:path'
 import { and, eq, inArray, isNull } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import type { DB } from './db/client.js'
-import { documents } from './db/schema/build_docs.js'
 import { projectPhaseStatus, projects, repositories, repositoryPhaseStatus } from './db/schema/core.js'
 import { normalizeSourceRoot } from './repo/repository-paths.js'
 
@@ -234,14 +233,6 @@ function invalidateProjectRepositoryInventoryDependents(
       eq(projectPhaseStatus.projectId, input.projectId),
       inArray(projectPhaseStatus.phase, [...PROJECT_REPOSITORY_INVENTORY_PHASES]),
     ))
-    .run()
-
-  db.update(documents)
-    .set({
-      validity: 'stale',
-      updatedAt: input.invalidatedAt,
-    })
-    .where(and(eq(documents.projectId, input.projectId), eq(documents.validity, 'fresh')))
     .run()
 }
 

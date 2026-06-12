@@ -1,0 +1,8 @@
+{
+  "name": "repo-topology-frontend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vitejs/plugin-react": "latest"
+  }
+}

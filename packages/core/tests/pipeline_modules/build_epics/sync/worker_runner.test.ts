@@ -136,6 +136,33 @@ describe('buildBuildEpicsSyncAgentWorkPacket', () => {
     expect(packet.agentInput.forbiddenFields).toEqual(['domains', 'epics', 'assignments', 'dependencies'])
   })
 
+  it('builds a restructure work packet with split merge move schema', () => {
+    const packet = buildBuildEpicsSyncAgentWorkPacket({
+      task: {
+        taskId: 'task:restructure',
+        leaseToken: 'lease:restructure',
+        taskType: 'epic_sync_restructure',
+        targetKey: 'sync:restructure:1',
+      },
+      context: {
+        taskType: 'epic_sync_restructure',
+        restructureReasons: [{ code: 'BACKEND_APIS_EXPAND_SINGLE_EPIC', epicStableKey: 'user_management' }],
+        existingEpics: [{ stableKey: 'user_management', name: 'User Management', apiDocIds: ['doc:users', 'doc:roles'] }],
+        impactedCards: [{ documentId: 'doc:roles', type: 'api_spec', title: 'POST /roles', summary: 'Manage roles.' }],
+      },
+    })
+
+    expect(packet.task.taskType).toBe('epic_sync_restructure')
+    expect(JSON.stringify(packet.agentInput.outputSchema)).toContain('split_epic')
+    expect(JSON.stringify(packet.agentInput.outputSchema)).toContain('merge_epics')
+    expect(JSON.stringify(packet.agentInput.outputSchema)).toContain('move_document')
+    expect(JSON.stringify(packet.agentInput.outputSchema)).toContain('doc:users')
+    expect(packet.agentInput.rules).toEqual(expect.arrayContaining([
+      expect.stringContaining('Do not auto-confirm'),
+    ]))
+    expect(packet.agentInput.forbiddenFields).toEqual(['domains', 'epics', 'assignments', 'links', 'dependencies'])
+  })
+
   it('uses a strict-compatible cross-link schema for Codex structured output', () => {
     const schema = crossOutputSchema() as any
     const itemSchema = schema.properties.links.items

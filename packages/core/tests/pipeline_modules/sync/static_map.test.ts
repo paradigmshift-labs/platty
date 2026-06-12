@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm'
 import { models } from '@/db/schema/build_models.js'
 import { codeRelations } from '@/db/schema/build_relations.js'
 import { entryPoints, codeBundles } from '@/db/schema/build_route.js'
+import { serviceMapEdges } from '@/db/schema/build_service_map.js'
 import { codeEdges, codeNodes, fileCache } from '@/db/schema/code_graph.js'
 import { projects, repositories } from '@/db/schema/core.js'
 import { pipelineRuns } from '@/db/schema/pipeline_runs.js'
@@ -386,7 +387,157 @@ describe('syncStaticMap', () => {
       expect.objectContaining({ id: 'r1:Order', tableName: 'orders' }),
     ])
   })
+
+  it('includes only relevant service-map edges in technical document hashes', async () => {
+    seedReadyRepo('r-front')
+    seedReadyRepo('r-back')
+
+    const beforeResult = await syncStaticMap({
+      db,
+      projectId: 'p1',
+      stagingRoot,
+      hooks: {
+        getRepoPin: async (repo) => `commit:${repo.id}:before`,
+        ...noopStaticStages(),
+        initializeStagingDb: ({ stagingDb }) => {
+          seedServiceMapHashScenario(stagingDb, 'static_map_run:before', false)
+        },
+      },
+    })
+    const beforeSnapshot = db.select().from(staticMerkleSnapshots).where(eq(staticMerkleSnapshots.id, beforeResult.snapshotId)).get()
+
+    const afterResult = await syncStaticMap({
+      db,
+      projectId: 'p1',
+      stagingRoot,
+      hooks: {
+        getRepoPin: async (repo) => `commit:${repo.id}:after`,
+        ...noopStaticStages(),
+        initializeStagingDb: ({ stagingDb }) => {
+          seedServiceMapHashScenario(stagingDb, 'static_map_run:after', true)
+        },
+      },
+    })
+    const afterSnapshot = db.select().from(staticMerkleSnapshots).where(eq(staticMerkleSnapshots.id, afterResult.snapshotId)).get()
+
+    const beforeOrderScreenHash = technicalDocumentHash(beforeSnapshot?.hashSetJson, 'screen_spec', 'screen:orders', 'r-front')
+    const beforeProfileScreenHash = technicalDocumentHash(beforeSnapshot?.hashSetJson, 'screen_spec', 'screen:profile', 'r-front')
+    const beforeOrdersApiHash = technicalDocumentHash(beforeSnapshot?.hashSetJson, 'api_spec', 'api:orders', 'r-back')
+
+    expect(technicalDocumentHash(afterSnapshot?.hashSetJson, 'screen_spec', 'screen:orders', 'r-front'))
+      .not.toBe(beforeOrderScreenHash)
+    expect(technicalDocumentHash(afterSnapshot?.hashSetJson, 'api_spec', 'api:orders', 'r-back'))
+      .not.toBe(beforeOrdersApiHash)
+    expect(technicalDocumentHash(afterSnapshot?.hashSetJson, 'screen_spec', 'screen:profile', 'r-front'))
+      .toBe(beforeProfileScreenHash)
+  })
 })
+
+function seedServiceMapHashScenario(stagingDb: DB, runId: string, includeServiceEdge: boolean): void {
+  stagingDb.insert(codeNodes).values([
+    {
+      id: 'node:orders-screen',
+      repoId: 'r-front',
+      type: 'function',
+      filePath: 'src/orders.tsx',
+      name: 'OrdersScreen',
+      normalizedCodeHash: 'orders-screen:v1',
+      parseStatus: 'ok',
+    },
+    {
+      id: 'node:profile-screen',
+      repoId: 'r-front',
+      type: 'function',
+      filePath: 'src/profile.tsx',
+      name: 'ProfileScreen',
+      normalizedCodeHash: 'profile-screen:v1',
+      parseStatus: 'ok',
+    },
+    {
+      id: 'node:orders-api',
+      repoId: 'r-back',
+      type: 'function',
+      filePath: 'src/orders.controller.ts',
+      name: 'createOrder',
+      normalizedCodeHash: 'orders-api:v1',
+      parseStatus: 'ok',
+    },
+  ]).run()
+  stagingDb.insert(entryPoints).values([
+    {
+      id: 'screen:orders',
+      repoId: 'r-front',
+      framework: 'nextjs',
+      kind: 'page',
+      path: '/orders',
+      fullPath: '/orders',
+      handlerNodeId: 'node:orders-screen',
+      detectionSource: 'rule:nextjs',
+      confidence: 'high',
+    },
+    {
+      id: 'screen:profile',
+      repoId: 'r-front',
+      framework: 'nextjs',
+      kind: 'page',
+      path: '/profile',
+      fullPath: '/profile',
+      handlerNodeId: 'node:profile-screen',
+      detectionSource: 'rule:nextjs',
+      confidence: 'high',
+    },
+    {
+      id: 'api:orders',
+      repoId: 'r-back',
+      framework: 'nestjs',
+      kind: 'api',
+      httpMethod: 'POST',
+      path: '/api/orders',
+      fullPath: '/api/orders',
+      handlerNodeId: 'node:orders-api',
+      detectionSource: 'rule:nestjs',
+      confidence: 'high',
+    },
+  ]).run()
+  stagingDb.insert(codeBundles).values([
+    { entryPointId: 'screen:orders', nodeId: 'node:orders-screen', depth: 0, edgePath: [] },
+    { entryPointId: 'screen:profile', nodeId: 'node:profile-screen', depth: 0, edgePath: [] },
+    { entryPointId: 'api:orders', nodeId: 'node:orders-api', depth: 0, edgePath: [] },
+  ]).run()
+
+  if (!includeServiceEdge) return
+
+  stagingDb.insert(serviceMapEdges).values({
+    id: 'service-edge:orders-screen-api',
+    projectId: 'p1',
+    repoId: 'r-front',
+    sourceRepoId: 'r-front',
+    targetRepoId: 'r-back',
+    runId,
+    sourceType: 'screen',
+    sourceId: 'screen:orders',
+    targetType: 'api',
+    targetId: 'api:orders',
+    kind: 'calls_api',
+    canonicalTarget: 'POST /api/orders',
+    confidence: 'high',
+    source: 'deterministic',
+    evidence: { screen: 'screen:orders', api: 'api:orders' },
+  }).run()
+}
+
+function technicalDocumentHash(
+  hashSet: unknown,
+  type: string,
+  scopeId: string,
+  repoId: string,
+): string | undefined {
+  const entries = (hashSet as { technicalDocumentSourceHashes?: Array<{
+    hash: string
+    target: { type: string; scopeId: string; repoId: string }
+  }> } | undefined)?.technicalDocumentSourceHashes ?? []
+  return entries.find((entry) => entry.target.type === type && entry.target.scopeId === scopeId && entry.target.repoId === repoId)?.hash
+}
 
 function seedReadyRepo(id: string): void {
   db.insert(repositories).values({

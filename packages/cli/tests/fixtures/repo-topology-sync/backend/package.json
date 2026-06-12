@@ -1,0 +1,8 @@
+{
+  "name": "repo-topology-backend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@nestjs/common": "latest"
+  }
+}

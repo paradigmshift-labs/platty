@@ -6,7 +6,7 @@ import type { BuildEpicsSyncRuntime } from './runtime.js'
 
 export type BuildEpicsSyncRunnerProvider = 'codex_cli' | 'claude_code'
 export type BuildEpicsSyncRunnerEffort = 'low' | 'medium' | 'high'
-export type BuildEpicsSyncTaskType = 'epic_sync_assignment' | 'epic_sync_cross_links'
+export type BuildEpicsSyncTaskType = 'epic_sync_assignment' | 'epic_sync_restructure' | 'epic_sync_cross_links'
 
 export interface BuildEpicsSyncRunnerModel {
   provider: BuildEpicsSyncRunnerProvider
@@ -361,16 +361,26 @@ function createBuildEpicsSyncTaskInvoker(provider: BuildEpicsSyncRunnerProvider)
 }
 
 function promptForTaskContext(taskType: BuildEpicsSyncTaskType, content: Record<string, any>): string {
-  return taskType === 'epic_sync_cross_links'
-    ? promptForCrossContext(content)
-    : promptForAssignmentContext(content)
+  if (taskType === 'epic_sync_cross_links') return promptForCrossContext(content)
+  if (taskType === 'epic_sync_restructure') return promptForRestructureContext(content)
+  return promptForAssignmentContext(content)
 }
 
 function outputSchemaForTask(taskType: BuildEpicsSyncTaskType, content?: Record<string, any>) {
-  return taskType === 'epic_sync_cross_links' ? crossOutputSchema(content) : assignmentOutputSchema(content)
+  if (taskType === 'epic_sync_cross_links') return crossOutputSchema(content)
+  if (taskType === 'epic_sync_restructure') return restructureOutputSchema(content)
+  return assignmentOutputSchema(content)
 }
 
 function rulesForTask(taskType: BuildEpicsSyncTaskType): string[] {
+  if (taskType === 'epic_sync_restructure') {
+    return [
+      'Use only the provided context. Do not inspect files or call tools.',
+      'Do not auto-confirm the final EPIC plan; return only reviewable restructure actions.',
+      'Use split_epic, merge_epics, move_document, or no_change only when the supplied reasons and cards support it.',
+      'Do not invent document ids, EPIC stable keys, dependencies, or code behavior.',
+    ]
+  }
   if (taskType === 'epic_sync_cross_links') {
     return [
       'Use only the provided context. Do not inspect files or call tools.',
@@ -387,9 +397,106 @@ function rulesForTask(taskType: BuildEpicsSyncTaskType): string[] {
 }
 
 function forbiddenFieldsForTask(taskType: BuildEpicsSyncTaskType): string[] {
+  if (taskType === 'epic_sync_restructure') return ['domains', 'epics', 'assignments', 'links', 'dependencies']
   return taskType === 'epic_sync_cross_links'
     ? ['domains', 'epics', 'assignments', 'dependencies']
     : ['domains', 'epics', 'links', 'dependencies']
+}
+
+export function restructureOutputSchema(content?: Record<string, any>) {
+  const impactedCards = Array.isArray(content?.impactedCards) ? content.impactedCards : []
+  const existingEpics = Array.isArray(content?.existingEpics) ? content.existingEpics : []
+  const documentIds = uniqueStrings([
+    ...impactedCards.map((card: any) => String(card.documentId)).filter(Boolean),
+    ...existingEpics.flatMap((epic: any) => [
+      ...(Array.isArray(epic.apiDocIds) ? epic.apiDocIds : []),
+      ...(Array.isArray(epic.screenDocIds) ? epic.screenDocIds : []),
+      ...(Array.isArray(epic.eventDocIds) ? epic.eventDocIds : []),
+      ...(Array.isArray(epic.scheduleDocIds) ? epic.scheduleDocIds : []),
+    ].map((documentId) => String(documentId)).filter(Boolean)),
+  ])
+  const documentTypes = Array.from(new Set(impactedCards.map((card: any) => String(card.type)).filter(Boolean)))
+  const epicKeys = stableKeys(content?.existingEpics)
+  const newEpicSchema = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['stableKey', 'name', 'abbr', 'summary'],
+    properties: {
+      stableKey: { type: 'string' },
+      name: { type: 'string' },
+      abbr: { type: 'string' },
+      summary: { type: 'string' },
+    },
+  }
+  const moveSchema = {
+    type: 'object',
+    additionalProperties: false,
+    required: ['documentId', 'documentType', 'fromEpicStableKey', 'toEpicStableKey', 'role', 'reason'],
+    properties: {
+      documentId: documentIds.length > 0 ? { enum: documentIds } : { type: 'string' },
+      documentType: documentTypes.length > 0 ? { enum: documentTypes } : { enum: ['api_spec', 'screen_spec', 'event_spec', 'schedule_spec'] },
+      fromEpicStableKey: epicKeys.length > 0 ? { anyOf: [{ enum: epicKeys }, { type: 'null' }] } : { type: ['string', 'null'] },
+      toEpicStableKey: { type: 'string' },
+      role: { enum: ['owner', 'primary', 'supporting', 'event_owner', 'job_owner'] },
+      reason: { type: 'string' },
+    },
+  }
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['actions'],
+    properties: {
+      actions: {
+        type: 'array',
+        items: {
+          anyOf: [
+            {
+              type: 'object',
+              additionalProperties: false,
+              required: ['type', 'reason'],
+              properties: {
+                type: { enum: ['no_change'] },
+                reason: { type: 'string' },
+              },
+            },
+            {
+              type: 'object',
+              additionalProperties: false,
+              required: ['type', 'sourceEpicStableKey', 'newEpics', 'moves', 'reason'],
+              properties: {
+                type: { enum: ['split_epic'] },
+                sourceEpicStableKey: epicKeys.length > 0 ? { enum: epicKeys } : { type: 'string' },
+                newEpics: { type: 'array', items: newEpicSchema },
+                moves: { type: 'array', items: moveSchema },
+                reason: { type: 'string' },
+              },
+            },
+            {
+              type: 'object',
+              additionalProperties: false,
+              required: ['type', 'sourceEpicStableKeys', 'targetEpic', 'moves', 'reason'],
+              properties: {
+                type: { enum: ['merge_epics'] },
+                sourceEpicStableKeys: { type: 'array', items: epicKeys.length > 0 ? { enum: epicKeys } : { type: 'string' } },
+                targetEpic: newEpicSchema,
+                moves: { type: 'array', items: moveSchema },
+                reason: { type: 'string' },
+              },
+            },
+            {
+              type: 'object',
+              additionalProperties: false,
+              required: ['type', ...moveSchema.required],
+              properties: {
+                type: { enum: ['move_document'] },
+                ...moveSchema.properties,
+              },
+            },
+          ],
+        },
+      },
+    },
+  }
 }
 
 async function runCodexCli(input: BuildEpicsSyncTaskInvokerInput & { schemaPath: string; resultPath: string; logPath: string }) {
@@ -436,6 +543,19 @@ function promptForCrossContext(content: Record<string, any>): string {
     'Never invent document ids, EPIC stable keys, or code behavior. Reasons must be concrete and grounded in the card summary, relation hints, and existing EPIC summaries.',
     '\nContext JSON:',
     JSON.stringify(compactCrossContext(content), null, 2),
+  ].join('\n')
+}
+
+function promptForRestructureContext(content: Record<string, any>): string {
+  return [
+    'You are reviewing whether incremental build_epics assignments need a split, merge, or document move.',
+    outputLanguageInstruction(outputLanguageForContent(content)),
+    'Use only the provided JSON context. Do not call tools or inspect files.',
+    'Return no_change when the supplied reasons do not prove a split, merge, or move is needed.',
+    'Do not auto-confirm the EPIC plan. The runtime will keep your result as a reviewable draft.',
+    'Never invent document ids, EPIC stable keys, or code behavior. Reasons must be concrete and grounded in the restructure reasons, cards, and existing EPIC summaries.',
+    '\nContext JSON:',
+    JSON.stringify(compactRestructureContext(content), null, 2),
   ].join('\n')
 }
 
@@ -513,8 +633,52 @@ function compactCrossContext(content: Record<string, any>) {
   }
 }
 
+function compactRestructureContext(content: Record<string, any>) {
+  const impactedCards = content.impactedCards ?? content.affectedCards ?? []
+  return {
+    taskType: content.taskType,
+    restructureReasons: content.restructureReasons ?? [],
+    topologyLinks: Array.isArray(content.topologyLinks)
+      ? content.topologyLinks.slice(0, 60).map((link: any) => ({
+          sourceDocumentId: link.sourceDocumentId,
+          targetDocumentId: link.targetDocumentId,
+          kind: link.kind,
+          clusterHints: takeStrings(link.clusterHints, 8, 80),
+        }))
+      : [],
+    impactedCards: impactedCards.map((card: any) => ({
+      documentId: card.documentId,
+      type: card.type,
+      title: truncate(card.title, 200),
+      summary: truncate(card.summary, 500),
+      method: card.method,
+      path: card.path,
+      routePath: card.routePath,
+      domainHints: takeStrings(card.domainHints, 12, 80),
+      relationHints: (card.relationHints ?? []).slice(0, 16).map((hint: any) => ({
+        kind: hint.kind,
+        target: truncate(hint.target, 120),
+        operation: truncate(hint.operation, 80),
+      })),
+    })),
+    existingEpics: (content.existingEpics ?? []).map((epic: any) => ({
+      stableKey: epic.stableKey,
+      name: truncate(epic.name, 120),
+      abbr: truncate(epic.abbr, 20),
+      summary: truncate(epic.summary, 400),
+      apiDocIds: takeStrings(epic.apiDocIds, 30, 120),
+      screenDocIds: takeStrings(epic.screenDocIds, 30, 120),
+      eventDocIds: takeStrings(epic.eventDocIds, 20, 120),
+      scheduleDocIds: takeStrings(epic.scheduleDocIds, 20, 120),
+    })),
+    repair: content.repair,
+  }
+}
+
 function syncTaskType(taskType: string): BuildEpicsSyncTaskType {
-  return taskType === 'epic_sync_cross_links' ? 'epic_sync_cross_links' : 'epic_sync_assignment'
+  if (taskType === 'epic_sync_cross_links') return 'epic_sync_cross_links'
+  if (taskType === 'epic_sync_restructure') return 'epic_sync_restructure'
+  return 'epic_sync_assignment'
 }
 
 function contextPayload(context: Record<string, unknown>): Record<string, unknown> {
@@ -576,6 +740,10 @@ function truncate(value: unknown, maxLength: number): string | undefined {
 
 function takeStrings(values: unknown, limit: number, maxLength: number): string[] {
   return Array.isArray(values) ? values.slice(0, limit).map((value) => truncate(value, maxLength) ?? '') : []
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values)]
 }
 
 function sleep(ms: number): Promise<void> {
