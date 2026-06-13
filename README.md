@@ -36,9 +36,29 @@ Check your local environment:
 ```bash
 node --version
 npm --version
-command -v platty
-platty version --json
+platty version
 ```
+
+To confirm the global binary is on `PATH`, use the command for your shell:
+
+```bash
+# macOS, Linux, or Git Bash
+command -v platty
+```
+
+```powershell
+# PowerShell
+Get-Command platty
+```
+
+```cmd
+:: Command Prompt
+where platty
+```
+
+New to Platty? Start with [GETTING_STARTED.md](GETTING_STARTED.md). It walks
+through CLI installation, agent plugin installation, and your first Platty
+project.
 
 ## Install The Platty CLI
 
@@ -51,8 +71,24 @@ npm install -g @pshift/platty
 Verify the global binary:
 
 ```bash
+# macOS, Linux, or Git Bash
 command -v platty
-platty version --json
+```
+
+```powershell
+# PowerShell
+Get-Command platty
+```
+
+```cmd
+:: Command Prompt
+where platty
+```
+
+Then run:
+
+```bash
+platty version
 platty --help
 ```
 
@@ -97,17 +133,15 @@ Start with `platty:using-platty` when you are not sure which workflow applies.
 Initialize Platty, create or select a project, register repositories, and ask Platty what comes next:
 
 ```bash
-platty init --json
-platty project list --json
-platty project create "My Project" --description "Repository analysis workspace" --json
-platty project use <project-id-or-name> --json
-platty repo add <repository-path> --project <project> --json
-platty status --project <project> --json
+platty init
+platty project list
+platty project create "My Project" --description "Repository analysis workspace"
+platty project use <project>
+platty repo add <repository-path> --project <project>
+platty status --project <project>
 ```
 
-Follow the `nextAction.command` returned by `platty status --json` or by the previous command response.
-
-Use `--json` for commands that an agent will inspect.
+Follow the `Next:` line returned by `platty status` or by the previous command response.
 
 ## Repository Layout
 
@@ -146,6 +180,6 @@ For plugin installation issues, include:
 
 - your agent runtime and version,
 - your operating system,
-- the output of `platty version --json`,
+- the output of `platty version`,
 - the exact command that failed,
-- the full JSON error payload when available.
+- the full error output when available.
