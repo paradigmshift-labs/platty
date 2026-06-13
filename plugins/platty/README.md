@@ -40,6 +40,10 @@ platty version --json
 platty --help
 ```
 
+## Output Contract
+
+Agents must use `--json` for Platty CLI commands. The default non-JSON output is for humans and intentionally summarizes state, recommended next commands, and evidence. Do not parse the human output. If a JSON response contains `nextAction.command` at the top level or inside `data.nextAction`, follow that command unless a skill Stop Condition says to pause.
+
 All examples below assume the global `platty` binary. If the global binary is
 missing or stale, rebuild and reinstall the package globally before continuing:
 
