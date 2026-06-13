@@ -36,8 +36,24 @@ Check your local environment:
 ```bash
 node --version
 npm --version
-command -v platty
 platty version
+```
+
+To confirm the global binary is on `PATH`, use the command for your shell:
+
+```bash
+# macOS, Linux, or Git Bash
+command -v platty
+```
+
+```powershell
+# PowerShell
+Get-Command platty
+```
+
+```cmd
+:: Command Prompt
+where platty
 ```
 
 New to Platty? Start with [GETTING_STARTED.md](GETTING_STARTED.md). It walks
@@ -55,7 +71,23 @@ npm install -g @pshift/platty
 Verify the global binary:
 
 ```bash
+# macOS, Linux, or Git Bash
 command -v platty
+```
+
+```powershell
+# PowerShell
+Get-Command platty
+```
+
+```cmd
+:: Command Prompt
+where platty
+```
+
+Then run:
+
+```bash
 platty version
 platty --help
 ```
@@ -104,7 +136,7 @@ Initialize Platty, create or select a project, register repositories, and ask Pl
 platty init
 platty project list
 platty project create "My Project" --description "Repository analysis workspace"
-platty project use <project-id-or-name>
+platty project use <project>
 platty repo add <repository-path> --project <project>
 platty status --project <project>
 ```

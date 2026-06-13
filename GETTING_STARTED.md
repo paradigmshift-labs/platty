@@ -24,12 +24,28 @@ Platty requires Node.js 20 or newer.
 Confirm that your shell can find and run `platty`:
 
 ```bash
+# macOS, Linux, or Git Bash
 command -v platty
+```
+
+```powershell
+# PowerShell
+Get-Command platty
+```
+
+```cmd
+:: Command Prompt
+where platty
+```
+
+Then run:
+
+```bash
 platty version
 platty --help
 ```
 
-If `command -v platty` prints nothing, the CLI is not on your `PATH`.
+If your shell cannot find `platty`, the CLI is not on your `PATH`.
 
 ## 3. Install The Agent Plugin
 
@@ -64,7 +80,7 @@ Platty what to do next:
 platty init
 platty project list
 platty project create "My Project" --description "Repository analysis workspace"
-platty project use <project-id-or-name>
+platty project use <project>
 platty repo add <repository-path> --project <project>
 platty status --project <project>
 ```
@@ -96,7 +112,23 @@ what it is doing.
 Run:
 
 ```bash
+# macOS, Linux, or Git Bash
 command -v platty
+```
+
+```powershell
+# PowerShell
+Get-Command platty
+```
+
+```cmd
+:: Command Prompt
+where platty
+```
+
+Then reinstall if needed:
+
+```bash
 npm install -g @pshift/platty
 ```
 
