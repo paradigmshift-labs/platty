@@ -45,6 +45,8 @@ The stored `level` is derived from the anchor (`epic` for epic anchors, otherwis
 
 Find the anchor before adding:
 
+Advanced memory retrieval commands:
+
 ```bash
 platty epics list --project <project> --compact --json
 platty epics show --project <project> --epic <epic-id> --include-docs --json
@@ -52,7 +54,7 @@ platty docs search --project <project> "<term>" --json
 platty docs show --project <project> --document <doc-id> --json
 ```
 
-For a document-item anchor (for example one UCL item), open the document with `docs show` and copy the item's `itemType` and `stableKey` into `--item-type`/`--item-key`.
+For a document-item anchor (for example one UCL item), use advanced memory retrieval with `docs show` and copy the item's `itemType` and `stableKey` into `--item-type`/`--item-key`.
 
 If `memory list` shows `anchorStatus: "orphaned"`, the anchor was removed or orphaned by sync. Re-anchor by adding a new memory on the live anchor and deleting the orphaned one (add + delete, not update — update cannot move an anchor).
 
@@ -65,7 +67,7 @@ platty memory list --project <project> --document <doc-id> --json
 platty memory list --project <project> --epic <epic-id> --json
 ```
 
-(or read the `memories` field already returned by `docs show`.)
+(or use advanced memory retrieval and read the `memories` field already returned by `docs show`.)
 
 - New knowledge on the anchor → `memory add`.
 - Same topic as an existing memory → `memory update --reason`.

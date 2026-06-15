@@ -28,7 +28,7 @@ The CLI does not understand natural language and must not be treated like an LLM
 
 - Do not use or invent `docs ask`.
 - Do not use or invent `docs investigate`.
-- Do not pass a natural-language question to `epics search`.
+- Advanced retrieval: do not pass a natural-language question to `epics search`.
 - Do not expect CLI commands to synthesize the final answer.
 
 You, the agent, read the glossary, rewrite terms, plan branches, choose commands, and synthesize the answer.
@@ -39,9 +39,9 @@ STOP if you catch yourself thinking any of these:
 
 | Excuse | Reality |
 | --- | --- |
-| "One `epics search` hit looks relevant — answer from it" / "the user complained I run too many commands, so answer from what I have" | Retrieval is an EPIC-centered graph walk. A search hit is a term match, not evidence — read the catalog and traverse `epics show --include-docs` -> `docs show` before answering. Answering from titles and a score is fabrication. |
+| "One advanced retrieval command `epics search` hit looks relevant — answer from it" / "the user complained I run too many commands, so answer from what I have" | Retrieval is an EPIC-centered graph walk. A search hit is a term match, not evidence — read the catalog and traverse advanced retrieval commands `epics show --include-docs` -> `docs show` before answering. Answering from titles and a score is fabrication. |
 | "The question terms are clear, skip the glossary" | The user may ask in Korean while docs use English, Japanese, or code identifiers. The glossary maps aliases — skipping it is how you pick the wrong EPIC. |
-| "The search score is high, trust it over the catalog" | `epics search` is a term-matching helper, not semantic RAG. If it disagrees with the catalog, inspect both candidates. |
+| "The search score is high, trust it over the catalog" | Advanced retrieval command `epics search` is a term-matching helper, not semantic RAG. If it disagrees with the catalog, inspect both candidates. |
 | "The doc is stale but probably still right — present it as fact" | State `freshness.isStale` / `validity` and recommend regeneration. Do not hide stale evidence. |
 
 ## Required Inputs
@@ -71,28 +71,28 @@ platty <command> --json
 If the installed global CLI appears stale, follow `using-platty`: stop and
 report that the global CLI needs reinstall/rebuild before continuing.
 
-Preferred retrieval commands:
+Advanced retrieval commands:
 
 ```bash
-docs list --project <project> --type glossary --track business --scope project --compact --json
-docs show --project <project> --document <project-glossary-doc-id> --json
-epics list --project <project> --compact --json
-epics show --project <project> --epic <epic-id> --include-docs --json
-epics related --project <project> --epic <epic-id> --json
-docs show --project <project> --document <doc-id> --json
-docs related --project <project> --document <doc-id> --json
-docs targets list --project <project> --search "<route-or-code-term>" --json
+platty docs list --project <project> --type glossary --track business --scope project --compact --json
+platty docs show --project <project> --document <project-glossary-doc-id> --json
+platty epics list --project <project> --compact --json
+platty epics show --project <project> --epic <epic-id> --include-docs --json
+platty epics related --project <project> --epic <epic-id> --json
+platty docs show --project <project> --document <doc-id> --json
+platty docs related --project <project> --document <doc-id> --json
+platty targets list --project <project> --search "<route-or-code-term>" --json
 ```
 
-Fallback retrieval commands:
+Advanced fallback retrieval command:
 
 ```bash
-epics search --project <project> --terms "<term1,term2,term3>" --json
+platty epics search --project <project> --terms "<term1,term2,term3>" --json
 ```
 
-`epics search` is a term-matching helper. It is not semantic RAG, and it must not replace reading the EPIC catalog.
+Advanced retrieval command `epics search` is a term-matching helper. It is not semantic RAG, and it must not replace reading the EPIC catalog.
 
-`docs list` is fallback/debug inventory. It is not the normal entry point after the project glossary.
+Advanced retrieval command `docs list` is fallback/debug inventory. Use the project glossary flow before falling back to inventory.
 
 ## Freshness Rule
 
@@ -120,8 +120,8 @@ Do not hide stale evidence.
 
 Retrieval outputs may include human-recorded memories alongside SOT content:
 
-- `docs show`, `epics show`, and `business-docs document show --document <id>` return a `memories` array with `memoryId`, `level`, `kind`, `content`, `revision`, `updatedBy`, `updatedAt`. In `docs show`, item-anchored memories attach to the matching item view; memories whose item anchor no longer matches a live item stay in the document-level `memories` array.
-- `docs list` and `docs search` document hits carry a per-document `memoryCount`; `epics show` grouped documents carry `memoryCount` per document; `epics list` carries an epic-level `memoryCount`.
+- Advanced retrieval commands `docs show`, `epics show`, and `business-docs document show --document <id>` return a `memories` array with `memoryId`, `level`, `kind`, `content`, `revision`, `updatedBy`, `updatedAt`. In advanced retrieval command `docs show`, item-anchored memories attach to the matching item view; memories whose item anchor no longer matches a live item stay in the document-level `memories` array.
+- Advanced retrieval commands `docs list` and `docs search` document hits carry a per-document `memoryCount`; advanced retrieval command `epics show` grouped documents carry `memoryCount` per document; advanced retrieval command `epics list` carries an epic-level `memoryCount`.
 
 Synthesis rules:
 
@@ -145,9 +145,11 @@ Classify the question as one or more:
 
 Find and open the project glossary:
 
+Advanced retrieval commands:
+
 ```bash
-docs list --project <project> --type glossary --track business --scope project --compact --json
-docs show --project <project> --document <project-glossary-doc-id> --json
+platty docs list --project <project> --type glossary --track business --scope project --compact --json
+platty docs show --project <project> --document <project-glossary-doc-id> --json
 ```
 
 Extract:
@@ -182,8 +184,10 @@ Subquestions:
 
 Always read the compact EPIC catalog before choosing candidates:
 
+Advanced retrieval command:
+
 ```bash
-epics list --project <project> --compact --json
+platty epics list --project <project> --compact --json
 ```
 
 Use the catalog like a table of contents. Compare the normalized terms and subquestions against:
@@ -200,7 +204,7 @@ Do not skip this step. String matching can be wrong when the user asks in Korean
 
 ### 5. Optional Term Search For Disambiguation
 
-Use `epics search` only after reading the EPIC catalog, and only when one of these is true:
+Use advanced retrieval command `epics search` only after reading the EPIC catalog, and only when one of these is true:
 
 - The catalog is too large to confidently narrow candidates.
 - The glossary exposes useful aliases, code identifiers, or translated terms.
@@ -209,18 +213,22 @@ Use `epics search` only after reading the EPIC catalog, and only when one of the
 
 Example:
 
+Advanced retrieval command:
+
 ```bash
-epics search --project <project> --terms "campaign,exclusion,group" --json
+platty epics search --project <project> --terms "campaign,exclusion,group" --json
 ```
 
-Treat the result as a hint. If `epics search` disagrees with the catalog, inspect both candidates instead of trusting the score.
+Treat the result as a hint. If advanced retrieval command `epics search` disagrees with the catalog, inspect both candidates instead of trusting the score.
 
 ### 6. Traverse The EPIC Graph
 
 For each candidate EPIC:
 
+Advanced retrieval command:
+
 ```bash
-epics show --project <project> --epic <epic-id> --include-docs --json
+platty epics show --project <project> --epic <epic-id> --include-docs --json
 ```
 
 Use the grouped documents as the retrieval index:
@@ -244,10 +252,12 @@ Do not open every document. Choose the likely documents based on type, title, su
 
 Open relevant documents and then traverse their graph:
 
+Advanced retrieval commands:
+
 ```bash
-docs show --project <project> --document <doc-id> --json
-docs related --project <project> --document <doc-id> --json
-docs search --project <project> "<ucl-item-stable-key>" --json
+platty docs show --project <project> --document <doc-id> --json
+platty docs related --project <project> --document <doc-id> --json
+platty docs search --project <project> "<ucl-item-stable-key>" --json
 ```
 
 Expected paths:
@@ -266,24 +276,26 @@ UCL documents are use-case lists. Do not treat a UCL document as the final use-c
 
 To find one UCS:
 
-1. Open the candidate EPIC's UCL document with `docs show`.
+1. Open the candidate EPIC's UCL document with advanced retrieval command `docs show`.
 2. Select the relevant UCL item by title, summary, or `stableKey`.
 3. Search the item `stableKey` exactly:
 
+Advanced retrieval command:
+
 ```bash
-docs search --project <project> "<ucl-item-stable-key>" --json
+platty docs search --project <project> "<ucl-item-stable-key>" --json
 ```
 
 4. From the results, choose the document where `type === "ucs"`.
 
-The UCS document is linked by scope identity, not necessarily by a visible `docs related` document edge:
+The UCS document is linked by scope identity, not necessarily by a visible advanced retrieval command `docs related` document edge:
 
 ```text
 UCL item stableKey: ucl:<epic-id>:<use-case-key>
 UCS scopeId: epic:<epic-id>:use_case:ucl:<epic-id>:<use-case-key>
 ```
 
-`docs search` may return the parent UCL document, UCL item, UCS document, and UCS items together. For specific UCS retrieval, filter to the UCS document before opening it with `docs show`.
+Advanced retrieval command `docs search` may return the parent UCL document, UCL item, UCS document, and UCS items together. For specific UCS retrieval, filter to the UCS document before opening it with advanced retrieval command `docs show`.
 
 ### 8. Inspect Data Evidence
 
@@ -310,7 +322,7 @@ Look for:
 - `code.primaryNode.filePath`
 - `code.primaryNode.startLine`
 - `code.relatedNodes`
-- target results from `docs targets list`
+- target results from `platty targets list`
 
 `nodeId` is graph identity. `filePath` and line numbers are what you use when source inspection is needed.
 
@@ -366,15 +378,17 @@ line should be one of:
 
 ## Fallback Inventory
 
-Use `docs list` only when the EPIC index is missing, you need a type-specific audit, or you are debugging generated inventory:
+Use advanced retrieval command `docs list` only when the EPIC index is missing, you need a type-specific audit, or you are debugging generated inventory:
+
+Advanced retrieval commands:
 
 ```bash
-docs list --project <project> --type br --track business --compact --json
-docs list --project <project> --type api_spec --track technical --compact --json
+platty docs list --project <project> --type br --track business --compact --json
+platty docs list --project <project> --type api_spec --track technical --compact --json
 ```
 
 ## Stop Conditions
 
-- The project has no glossary (`docs list ... --type glossary` returns nothing) AND `epics list` returns no epics: stop retrieval and report that docs/EPICs have not been generated for this project — route to the generation skills instead of answering from guesses.
-- Two full graph walks (catalog -> `epics show` -> `docs show`/`docs related`) surface no evidence for a subquestion: answer "no evidence found", listing the commands tried — do not fabricate an answer and do not keep widening the search indefinitely.
+- The project has no glossary (advanced retrieval command `docs list ... --type glossary` returns nothing) AND advanced retrieval command `epics list` returns no epics: stop retrieval and report that docs/EPICs have not been generated for this project — route to the generation skills instead of answering from guesses.
+- Two full graph walks (catalog -> advanced retrieval command `epics show` -> advanced retrieval commands `docs show`/`docs related`) surface no evidence for a subquestion: answer "no evidence found", listing the commands tried — do not fabricate an answer and do not keep widening the search indefinitely.
 - Every candidate document reports `freshness.validity === "orphaned"`: stop treating their content as evidence; report that the documents no longer map to analyzed sources and recommend regeneration before answering.
