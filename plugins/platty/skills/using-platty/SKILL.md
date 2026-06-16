@@ -1,6 +1,6 @@
 ---
 name: using-platty
-description: Use when starting Platty repository work, choosing Platty CLI skills, or operating Platty agent skills across Codex and Claude Code.
+description: Use when any request is about Platty, the Platty CLI, Platty agent skills, project or repository setup, repo/project analysis, static analysis, generated docs, retrieval/search over Platty outputs, epics, business docs, memory, sync, or choosing the right Platty workflow across Codex and Claude Code.
 ---
 
 # Using Platty Skills
@@ -26,7 +26,7 @@ Use `platty-cli-router` when deciding which Platty root command or skill applies
 
 Common routes:
 
-- New workspace/project/repo setup: `platty-project-setup`
+- Human setup workflow and project management dashboard state: `platty-setup`
 - Static analysis progress: `platty-static-analysis`
 - Technical docs target review: `platty-docs-target-curation`
 - Technical docs worker authoring: `platty-docs-generation`
@@ -39,6 +39,17 @@ Common routes:
 ## Core Rules
 
 - Prefer `--json` for CLI commands so results can be inspected precisely.
+- Start with bare `platty setup` for human-guided project management. Use
+  `Manage current project` to inspect repository, analysis, docs, EPIC,
+  business-doc, sync, and active-job state before choosing a workflow action.
+  For agents, inspect with `platty setup --json` or
+  `platty status --project <project> --json`, then explain the next action in
+  plain language. Do not ask users to run `--json` unless debugging
+  machine-readable output.
+- Treat public README workflow text as orientation, not as a static command
+  checklist. The CLI owns current state and next-action hints; routed Platty
+  skills own exact command selection, approval gates, stop conditions, and
+  recovery rules.
 - Platty CLI state lives in the user-global Platty home by default (`~/.platty`
   on macOS/Linux, `%APPDATA%\Platty` on Windows). `PLATTY_HOME` overrides that
   location. The CLI config field `projectRoot` refers to this state root, not to
@@ -49,6 +60,40 @@ Common routes:
 - Use `platty status --json` when the next action is unclear.
 - Follow `nextAction.command` from JSON output unless there is a specific reason not to. Check both the top level and `data.nextAction` — responses place it in either spot. Re-add `--project <project>` and `--json` if the suggested command omits them.
 - Do not use generation skills for retrieval-only questions.
+
+## Main-Aligned Public Workflow
+
+For humans, describe the workflow as these stages and start with bare
+`platty setup` as the project-management entry point:
+
+```text
+setup -> analyze -> targets -> generate-docs -> EPIC approval -> business documents -> sync
+```
+
+Do not present that stage list as a required shell script. `platty setup` and
+`platty status` surface the next state-derived action.
+
+For agents, inspect state with JSON output and explain the next action in plain
+language:
+
+1. `platty setup --json` to inspect setup and current project dashboard state.
+2. `platty analyze --project <project> --json` to converge static analysis.
+3. `platty targets list --project <project> --json` to inspect documentation targets.
+4. `platty targets deprecate --project <project> --ids <target-id> --json` to exclude unwanted targets.
+5. `platty generate-docs run --project <project> --json` to run docs and EPIC generation.
+6. Stop for explicit user approval when an EPIC draft is ready.
+7. After approval only, run `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json`.
+8. `platty sync static-map --project <project> --json` to sync generated outputs after generated work is complete.
+
+Use these advanced recovery commands only: `platty run`, `platty docs`,
+`platty epics`, and `platty business-docs`. Do not route public workflows through
+`platty confirm`; compatibility recovery note: if a stale global CLI asks for
+`platty confirm`, use this recovery rule: stop and tell the user to rebuild or
+reinstall the global CLI.
+
+Inside the Platty monorepo, repo-local agents must run the local build form
+`node packages/cli/dist/main.js <command> --json` instead of the global installed
+binary.
 
 ## Project Context Gate
 

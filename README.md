@@ -9,7 +9,7 @@ Platty helps agents operate the Platty CLI for repository analysis, technical do
 - A Codex-compatible plugin manifest.
 - A Claude Code-compatible plugin manifest.
 - Platty agent skills under `plugins/platty/skills/`.
-- Session-start hooks that load the Platty entry skill.
+- Claude Code session-start hooks that load the Platty entry skill. Codex uses native skill loading without plugin hooks.
 - Marketplace metadata for installing the plugin from this repository.
 
 ## What This Repository Does Not Contain
@@ -108,7 +108,7 @@ For Claude Code:
 /plugin install platty@platty
 ```
 
-After installing or updating the plugin, start a new agent session so the latest skills and hooks are loaded.
+After installing or updating the plugin, start a new agent session so the latest skills are loaded. Claude Code also loads the latest hook.
 
 ## Included Skills
 
@@ -116,7 +116,7 @@ The plugin includes these Platty skills:
 
 - `platty:using-platty`
 - `platty:platty-cli-router`
-- `platty:platty-project-setup`
+- `platty:platty-setup`
 - `platty:platty-static-analysis`
 - `platty:platty-docs-target-curation`
 - `platty:platty-docs-generation`
@@ -128,17 +128,57 @@ The plugin includes these Platty skills:
 
 Start with `platty:using-platty` when you are not sure which workflow applies.
 
-## Typical Workflow
+## Recommended First Run
 
-Initialize Platty, create or select a project, register repositories, and ask Platty what comes next:
+From the repository you want Platty to analyze, run:
+
+```bash
+platty setup
+```
+
+`platty setup` helps you choose or create a Platty project, register
+repositories, inspect current progress, and see the next action.
+
+Use plain `platty setup` for human-guided setup.
+
+Use JSON output when an agent, script, or automation needs to inspect CLI state exactly,
+for example `platty setup --json`.
+
+## Workflow
+
+Most users should start with `platty setup`.
+
+The full Platty workflow is:
+
+```text
+setup -> analyze -> targets -> generate-docs -> EPIC approval -> business documents -> sync
+```
+
+The CLI shows the next action based on project state. The agent plugin skills
+explain when to continue, pause for approval, or recover from a failed run.
+
+## Choose A Platty Project
+
+A Platty project is a workspace for related repositories and generated
+knowledge.
+
+Create a new project for a new product, app, customer workspace, or system area.
+Reuse an existing project when the repository already belongs to registered
+work. Add multiple repositories to the same project when they are part of one
+architecture.
+
+## Manual Setup
+
+If you prefer explicit commands, initialize Platty, create or select a project,
+register repositories, and ask Platty what comes next:
 
 ```bash
 platty init
 platty project list
 platty project create "My Project" --description "Repository analysis workspace"
-platty project use <project>
-platty repo add <repository-path> --project <project>
-platty status --project <project>
+platty project use PROJECT
+platty repo add REPOSITORY_PATH --project PROJECT
+platty status --project PROJECT
 ```
 
 Follow the `Next:` line returned by `platty status` or by the previous command response.

@@ -7,14 +7,17 @@ description: Use when generating, syncing, validating, reviewing, resuming, canc
 
 Use this for business document generation and lifecycle operations.
 
+When running as part of the end-to-end document workflow, prefer `platty generate-docs ...` agent commands over lower-level stage commands. Use lower-level `business-docs` commands only for debugging, manual review/validation, sync operations, or recovery.
+
 ## Generation Flow
 
+Business docs are reached through `platty generate-docs confirm-epics` after the
+EPIC draft is approved. Use `platty business-docs ...` only for recovery,
+inspection, repair, or worker-level operations.
+
 ```bash
-platty business-docs preview --project <project> --json
-platty business-docs start --project <project> --json
-platty business-docs status --project <project> --run <run-id> --json
-platty business-docs validate --project <project> --run <run-id> --json
-platty business-docs review --project <project> --run <run-id> --json
+platty generate-docs confirm-epics --project <project> --run-id <run-id> --json
+platty sync static-map --project <project> --json
 ```
 
 Use the `using-platty` Operator UX at workflow start and handoff. Business-docs
@@ -28,12 +31,12 @@ When writing to the user, translate internal queue terms:
 - "lease expired" -> "task assignment expired"
 - `BUSINESS_DOCS_LEASE_CONFLICT` -> "this task is no longer assigned to this worker; get it again for a fresh token"
 
-To run the automatic worker queue, pick the path for the runtime you are working in. Both produce the same documents through the same CLI contract — the only difference is who drives the worker loop.
+To run an advanced recovery worker queue, pick the path for the runtime you are working in. Both produce the same documents through the same CLI contract — the only difference is who drives the worker loop.
 
 ## Choose The Worker Queue For Your Runtime
 
-- **Working in Codex** → use the built-in headless queue:
-  `platty business-docs run --project <project> --provider codex_cli --json`
+- **Working in Codex** → use the built-in advanced worker-level headless queue:
+  advanced worker-level recovery command: `platty business-docs run --project <project> --provider codex_cli --json`
   This spawns `codex exec` per task and runs lease -> generate -> submit automatically.
 - **Working in Claude Code** → use the dynamic workflow below.
   `--provider claude_code` for `run` is intentionally rejected (`CLAUDE_CODE_HEADLESS_UNSUPPORTED`): Platty has no headless Claude invoker, so Claude Code drives the same loop natively with parallel worker subagents instead.
@@ -50,13 +53,13 @@ Under Claude Code, reproduce the worker queue with a dynamic workflow that fans 
 
 It starts/resumes the run, loops in rounds (lease -> parallel generate -> submit), repairs once per task, stops on terminal failure, and returns the final task counts. The CLI owns task state, the DAG, lease concurrency, idempotency, and the v3 quality gate, so the workflow only coordinates lease -> generate -> submit. The loop it runs is:
 
-Start the run, then loop in rounds until the run is no longer leaseable:
+Start the advanced recovery run, then loop in rounds until the run is no longer leaseable:
 
 ```text
-1. start (once):  platty business-docs start --project <p> --json   -> runId
+1. advanced recovery start (once):  platty business-docs start --project <p> --json   -> runId
 2. each round:
    a. status --json. If run.status is "failed" OR counts.failed > 0 and activeLeases == 0: STOP (Codex parity).
-   b. lease (limit <= 6):  platty business-docs tasks lease --project <p> --run <runId> --worker <id> --limit 6 --json
+   b. advanced worker-level recovery lease (limit <= 6):  platty business-docs tasks lease --project <p> --run <runId> --worker <id> --limit 6 --json
       The CLI only returns tasks whose dependencies are satisfied (DAG gate), so never order tasks yourself.
    c. if 0 leased and activeLeases == 0: STOP. Otherwise fan out one worker per leased task.
    d. after the wave, re-run status (new use_case_spec tasks unlock after use_case_list_refine saves).
@@ -82,6 +85,7 @@ STOP if you catch yourself thinking any of these:
 ## Lifecycle Recovery
 
 ```bash
+# Advanced recovery
 platty business-docs resume --project <project> --run <run-id> --json
 platty business-docs cancel --project <project> --run <run-id> --json
 platty business-docs cleanup --project <project> --run <run-id> --json
@@ -90,6 +94,7 @@ platty business-docs cleanup --project <project> --run <run-id> --json
 ## Manual Task Operations
 
 ```bash
+# Advanced worker-level recovery
 platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json
 platty business-docs tasks heartbeat --project <project> --task <task-id> --lease-token <token> --json
 platty business-docs tasks retry --project <project> --task <task-id> --json
@@ -101,6 +106,7 @@ platty business-docs tasks submit --project <project> --task <task-id> --lease-t
 If submit returns `repair_requested`, get the task again — the repair submit released the old task assignment, and the fresh assignment returns the same task with a new task token plus a `validation_errors` context page:
 
 ```bash
+# Advanced worker-level recovery
 platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json
 platty business-docs context page --context <context-handle> --page validation_errors --lease-token <new-token> --json
 ```
@@ -108,6 +114,7 @@ platty business-docs context page --context <context-handle> --page validation_e
 If the task has already become `failed` (repair attempts exhausted), retry it first, then lease again:
 
 ```bash
+# Advanced worker-level recovery
 platty business-docs tasks retry --project <project> --task <task-id> --json
 platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json
 ```
@@ -125,12 +132,14 @@ Do not invent a repair subcommand, and never reuse an old task token — after a
 
 Use this `Next` selection:
 
-- leaseable run with pending tasks: `platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json`
-- validation ready: `platty business-docs validate --project <project> --run <run-id> --json`
-- review ready: `platty business-docs review --project <project> --run <run-id> --json`
+- leaseable run with pending tasks: advanced worker-level recovery command `platty business-docs tasks lease --project <project> --run <run-id> --worker <worker-id> --json`
+- validation ready: advanced recovery command `platty business-docs validate --project <project> --run <run-id> --json`
+- review ready: advanced recovery command `platty business-docs review --project <project> --run <run-id> --json`
 - terminal failure: stop and report the failing code plus task counts
 
 ## Sync Flow
+
+Advanced recovery commands:
 
 ```bash
 platty business-docs sync preview --project <project> --json
