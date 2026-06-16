@@ -7,19 +7,19 @@ description: Use when generating, validating, editing, confirming, or syncing Pl
 
 Use this after static analysis when the user wants product or business epics.
 
+When running as part of the end-to-end document workflow, prefer `platty generate-docs ...` agent commands over lower-level stage commands. Use lower-level `epics` commands only for debugging, manual draft inspection, sync operations, or recovery.
+
 ## Main Flow
 
 ```bash
-platty epics preview --project <project> --json
-platty epics start --project <project> --json
-platty epics worker next --run-id <run-id> --out packet.json --json
-platty epics tasks submit --task-id <task-id> --lease-token <lease-token> --input result.json --json
-platty epics draft show --run-id <run-id> --json
-platty epics validate --run-id <run-id> --json
-platty epics draft confirm --run-id <run-id> --json
+platty generate-docs run --project <project> --json
+platty generate-docs confirm-epics --project <project> --run-id <run-id> --json
 ```
 
-Use `platty epics run --project <project> --provider codex_cli --json` only when the user wants the automatic worker queue.
+Use `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json`
+after the user approves the EPIC draft. Advanced internal EPIC worker commands
+remain available only for recovery, inspection, repair, or worker-level
+operations.
 
 ## Handoff
 
@@ -27,7 +27,7 @@ At completion, pause, or any stop condition, use the `Platty handoff` card.
 Include `runId`, draft validation status, confirmed epic count when
 available, and any failing task id. Recommended `Next` values:
 
-- draft not ready: `platty epics worker next --run-id <run-id> --out packet.json --json`
+- draft not ready: use the advanced internal worker-level EPIC recovery flow
 - draft confirmed: route to `platty-business-docs-generation` or `platty-retrieval`
 - sync run complete: inspect synced epics or continue business docs
 
@@ -39,6 +39,7 @@ parentheses for debugging.
 ## Sync Flow
 
 ```bash
+# Advanced internal worker-level recovery
 platty epics sync preview --project <project> --doc-sync-plan-id <id> --json
 platty epics sync start --project <project> --doc-sync-plan-id <id> --json
 platty epics sync worker next --run-id <run-id> --out packet.json --json
@@ -47,6 +48,8 @@ platty epics sync draft confirm --run-id <run-id> --json
 ```
 
 ## Stop Conditions
+
+Advanced internal recovery stop conditions:
 
 - `epics start` fails with `BUILD_EPICS_REPOSITORY_REQUIRED`: static analysis is incomplete — switch to `platty-static-analysis`; do not retry `epics start` in a loop.
 - `draft confirm` fails with `BUILD_EPICS_DRAFT_NOT_READY`, or `validate` reports errors: do not force-confirm — finish remaining worker tasks first. If `worker next` returns `no_task_available` and the draft is still not ready, stop and report the run state.

@@ -5,7 +5,7 @@ This guide takes you from a fresh machine to a Platty-ready agent session.
 Platty has two parts:
 
 1. **Platty CLI** — the `platty` terminal command.
-2. **Platty Agent Plugin** — skills and hooks that teach Codex or Claude Code how to use the CLI.
+2. **Platty Agent Plugin** — skills for Codex, plus Claude Code hooks that teach agents how to use the CLI.
 
 Install both parts before asking an agent to run Platty workflows.
 
@@ -69,30 +69,62 @@ codex plugin add platty@platty
 ## 4. Restart Your Agent Session
 
 Open a new Codex or Claude Code session after installing or updating the plugin.
-This lets the Platty skills and session-start hook load cleanly.
+This lets Platty skills load cleanly; Claude Code also loads its session-start hook.
 
-## 5. Create Your First Platty Project
+## 5. Recommended First Run
 
-Initialize Platty, create or select a project, register a repository, and ask
-Platty what to do next:
+From the repository you want Platty to analyze, run:
+
+```bash
+platty setup
+```
+
+`platty setup` helps you choose or create a Platty project, register
+repositories, inspect current progress, and see the next action.
+
+Use plain `platty setup` for human-guided setup.
+
+Use JSON output when an agent, script, or automation needs to inspect CLI state exactly,
+for example `platty setup --json`.
+
+## Workflow
+
+Most users should start with `platty setup`.
+
+The full Platty workflow is:
+
+```text
+setup -> analyze -> targets -> generate-docs -> EPIC approval -> business documents -> sync
+```
+
+The CLI shows the next action based on project state. The agent plugin skills
+explain when to continue, pause for approval, or recover from a failed run.
+
+## Choose A Platty Project
+
+A Platty project is a workspace for related repositories and generated
+knowledge.
+
+Create a new project for a new product, app, customer workspace, or system area.
+Reuse an existing project when the repository already belongs to registered
+work. Add multiple repositories to the same project when they are part of one
+architecture.
+
+## Manual Setup
+
+If you prefer explicit commands, initialize Platty, create or select a project,
+register a repository, and ask Platty what to do next:
 
 ```bash
 platty init
 platty project list
 platty project create "My Project" --description "Repository analysis workspace"
-platty project use <project>
-platty repo add <repository-path> --project <project>
-platty status --project <project>
+platty project use PROJECT
+platty repo add REPOSITORY_PATH --project PROJECT
+platty status --project PROJECT
 ```
 
 Follow the `Next:` line printed by `platty status` or by the previous command.
-
-## Important: Project vs Repository
-
-A repository path is not a Platty project.
-
-Create or select a Platty project first, then add repositories inside that
-project with `platty repo add`.
 
 ## 6. Ask Your Agent
 
@@ -149,7 +181,8 @@ codex plugin list
 Run:
 
 ```bash
-platty status --project <project>
+platty setup
 ```
 
-Then follow the printed `Next:` line.
+If setup is already complete, run `platty status --project PROJECT` and follow
+the printed `Next:` line.
