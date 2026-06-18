@@ -48,7 +48,7 @@ platty <command> --json
 
 Before starting worker-backed generated-output work, ask which provider to use
 unless the user already chose one in the current conversation or the verified
-`nextCommand` already includes `--provider`.
+`nextAction.command` already includes `--provider`.
 
 Ask in the user's language. For Korean users, ask:
 
@@ -86,7 +86,7 @@ If the CLI returns `ANTHROPIC_API_KEY_REQUIRED`, follow the response's
 
 Keep the selected provider for the whole generated-docs workflow. If
 `generate-docs run` pauses for EPIC approval, include the same provider flags on
-`generate-docs confirm-epics` unless the response's `nextCommand` already
+`generate-docs confirm-epics` unless the response's `nextAction.command` already
 preserves them.
 
 ## Public Workflow
