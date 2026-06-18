@@ -54,7 +54,7 @@ existing automation, but public guidance should use top-level `platty targets`.
 
 ## Next Step
 
-Switch to `platty-docs-generation` after target scope is accepted.
+Switch to `platty-generated-docs` after target scope is accepted.
 
 ## Handoff
 
@@ -63,5 +63,5 @@ accepted/included target count or the exact reason no targets are available. The
 `Recommended next` line should be:
 
 ```text
-Recommended next: platty-docs-generation with platty generate-docs run --project <project> --json
+Recommended next: platty-generated-docs with platty generate-docs run --project <project> --json
 ```

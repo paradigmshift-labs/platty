@@ -94,11 +94,12 @@ Most users should start with `platty setup`.
 The full Platty workflow is:
 
 ```text
-setup -> analyze -> targets -> generate-docs -> EPIC approval -> business documents -> sync
+setup -> analyze -> targets -> generate-docs -> sync
 ```
 
 The CLI shows the next action based on project state. The agent plugin skills
-explain when to continue, pause for approval, or recover from a failed run.
+explain when to continue, pause for EPIC approval inside generate-docs, sync
+completed generated outputs, or recover from a failed run.
 
 ## Choose A Platty Project
 

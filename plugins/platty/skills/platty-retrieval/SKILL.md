@@ -1,37 +1,44 @@
 ---
 name: platty-retrieval
-description: Use when searching Platty-generated docs or static-analysis targets, or answering product, business, data, design, development, repo, or project questions from Platty outputs using deterministic Platty CLI primitives.
+description: Use when searching Platty-generated docs or static-analysis targets, or answering product, business, data, design, development, repo, or project questions from Platty outputs. Discovery is grep/read over the projected SOT Markdown folder (~/.platty/sot/<projectId>/); cross-layer service-map traversal, code search, and memory writes escalate to deterministic Platty CLI primitives.
 ---
 
 # Platty Retrieval
 
 Use this skill when a user asks a question that should be answered from Platty-generated project documents or static-analysis targets.
 
-Do not start with one broad search and stop. Retrieval is an EPIC-centered graph walk:
+Platty projects a single source of truth (the DB) into a read-only Markdown tree at
+`~/.platty/sot/<projectId>/`. **Discovery and static relations live in that folder
+(grep/read). Computation, cross-layer traversal, and writes escalate to the CLI.**
+The split is not "MD vs CLI" — it is **enumerable/static (MD wins) vs computed/traversed/mutated (CLI wins)**:
 
 ```text
 question
--> project glossary
--> optional clarification
--> subquestions
--> EPIC catalog
--> EPIC candidates
--> EPIC document graph
--> docs show/related
--> DD model evidence or API code evidence
--> answer with freshness
+-> resolve projectId -> ~/.platty/sot/<projectId>/   (folder is the map)
+-> read README.md + catalog/*.md                     (orient; solve unknown-unknowns)
+-> grep catalog/*.md by name/summary                 (discover candidates — ids are opaque)
+-> read epics/<id>/*.md and specs/<kind>/<fileId>.md (detail)
+-> follow frontmatter ids to the next MD             (static relations, no CLI hop)
+-> escalate to CLI ONLY for:                         (graph trace / code search / memory write)
+-> answer with validity (freshness)
 ```
+
+If the SOT folder does not exist yet, fall back to the **CLI graph walk** in
+"Fallback: CLI Graph Walk (no SOT folder)" below — do not guess.
 
 ## Boundary
 
-The CLI does not understand natural language and must not be treated like an LLM.
+- **The SOT Markdown is a read-only projection (`[regen]`).** Never edit a file under
+  `~/.platty/sot/`. To change knowledge, write to the DB with the CLI (`platty memory add ...`)
+  and re-run `platty sot export`. The next export regenerates the MD.
+- The CLI does not understand natural language and must not be treated like an LLM.
+  Do not use or invent `docs ask` / `docs investigate`, and do not pass a natural-language
+  question to `epics search`.
+- **Discovery is on `name`/`summary`, never on ids.** Frontmatter `id` values are opaque/large
+  (`doc:<projectId>:<type>:<hash16>`, `doc:<nanoid>`, nanoid epic ids). grep readable text;
+  follow ids only after you have the file.
 
-- Do not use or invent `docs ask`.
-- Do not use or invent `docs investigate`.
-- Advanced retrieval: do not pass a natural-language question to `epics search`.
-- Do not expect CLI commands to synthesize the final answer.
-
-You, the agent, read the glossary, rewrite terms, plan branches, choose commands, and synthesize the answer.
+You, the agent, read the catalog, grep terms, follow frontmatter links, choose escalations, and synthesize the answer.
 
 ## Red Flags
 
@@ -39,442 +46,190 @@ STOP if you catch yourself thinking any of these:
 
 | Excuse | Reality |
 | --- | --- |
-| "One advanced retrieval command `epics search` hit looks relevant — answer from it" / "the user complained I run too many commands, so answer from what I have" | Retrieval is an EPIC-centered graph walk. A search hit is a term match, not evidence — read the catalog and traverse advanced retrieval commands `epics show --include-docs` -> `docs show` before answering. Answering from titles and a score is fabrication. |
-| "The question terms are clear, skip the glossary" | The user may ask in Korean while docs use English, Japanese, or code identifiers. The glossary maps aliases — skipping it is how you pick the wrong EPIC. |
-| "The search score is high, trust it over the catalog" | Advanced retrieval command `epics search` is a term-matching helper, not semantic RAG. If it disagrees with the catalog, inspect both candidates. |
-| "The doc is stale but probably still right — present it as fact" | State `freshness.isStale` / `validity` and recommend regeneration. Do not hide stale evidence. |
+| "I'll just `epics search`/`LIKE` for the term and answer from the hit" | The SOT folder is right there. `grep` `catalog/*.md` for the concept (name/summary), then read the detail MD. A term-match hit is not evidence; answering from titles and a score is fabrication. |
+| "I can't read the catalog (folder missing / read failed), so I'll guess from memory" | Do not fabricate. Either run `platty sot export --project <p>` to (re)create the folder, or fall back to the CLI graph walk. If neither works, report that the SOT projection is unavailable and recommend `sync` + `sot export`. |
+| "The question terms are clear, skip the catalog/glossary" | The user may ask in Korean while docs use English, Japanese, or code identifiers. `catalog/glossary.md` and `summary` columns map aliases — skipping them is how you pick the wrong EPIC. |
+| "There are hundreds of MD files, I'll open them all to be safe" | Don't brute-force the tree. Use `catalog/*.md` to narrow, read only the named detail files, and for cross-layer reach use `graph trace` — high-cardinality code nodes are intentionally NOT in the MD (use `code search`). |
+| "The doc is stale/orphaned but probably still right — present it as fact" | State `validity` from frontmatter and recommend `sync` + `sot export`. Do not hide stale evidence. |
+| "I'll edit the MD file to fix the wrong value" | The MD is a `[regen]` projection. Edits are lost on next export. Write via `platty memory add` then `platty sot export`. |
+
+## Stop Conditions
+
+- **SOT folder missing AND `epics list` returns no epics**: docs/EPICs have not been generated. Route to the generation skills; do not answer from guesses.
+- **A frontmatter `id` you followed does not resolve** to any catalog entry or MD file (dangling link): stop, do not invent the target. Report the mismatch and recommend `platty sot export` (the projection may be stale relative to the DB).
+- **The same `id` appears in more than one document** (catalog or frontmatter): stop and report the ambiguity instead of picking one — the projection or DB is inconsistent.
+- **Every candidate document reports `validity: orphaned`** (or `status: deleted`): stop treating their content as evidence; report that the docs no longer map to analyzed sources and recommend regeneration + re-export.
+- **Two full discovery passes** (catalog grep -> detail read -> frontmatter follow) surface no evidence for a subquestion: answer "no evidence found", list what you grepped/read, and stop — do not widen indefinitely or fabricate.
 
 ## Required Inputs
 
-Resolve these before running retrieval commands:
+Resolve these before retrieval:
 
-- Project selector: `--project <project-id-or-name>`.
-- User question.
-- Question type: `business`, `data`, `development`, `design`, or `mixed`.
+- Project selector, then **projectId**: `platty project list --json` (or `platty project use <p>`). The SOT path is `~/.platty/sot/<projectId>/`.
+- User question, classified: `business`, `data`, `development`, `design`, or `mixed`.
 
-If the project is unknown, run:
+## Discovery Flow (SOT Markdown)
 
-```bash
-platty project list --json
-```
-
-or ask the user for the project.
-
-## Core CLI
-
-Use the installed global CLI by default:
+### 1. Resolve project and locate the SOT folder
 
 ```bash
-platty <command> --json
+platty project list --json     # or: platty project use <selector>
 ```
 
-If the installed global CLI appears stale, follow `using-platty`: stop and
-report that the global CLI needs reinstall/rebuild before continuing.
-
-Advanced retrieval commands:
+Build the absolute path `~/.platty/sot/<projectId>/`. If it does not exist, run:
 
 ```bash
-platty docs glossary digest --project <project> --json
-platty epics list --project <project> --compact --json
-platty epics show --project <project> --epic <epic-id> --include-docs --json
-platty epics related --project <project> --epic <epic-id> --json
-platty docs show --project <project> --document <doc-id> --json
-platty docs related --project <project> --document <doc-id> --json
-platty docs targets list --project <project> --search "<route-or-code-term>" --json
-platty docs targets show --project <project> --id <entry-point-id> --json
-platty code snippet --project <project> --repo <repo-id> --file <path> --lines <start>-<end> --json
-platty code search --project <project> --symbol "<identifier>" --json
-platty graph trace --project <project> --from <node-id> --direction downstream|upstream --json
+platty sot export --project <projectId> --json
 ```
 
-Advanced fallback retrieval commands:
+`sot export` writes the whole tree atomically (temp + rename) and prints
+`{ outDir, lastExportAt, sourceCommit, counts, skipped }`. If `sync` reports the
+DB is stale, run `sync` first; a failed `sync` means the existing MD stays — treat
+its `validity` as the freshness signal.
 
-```bash
-platty epics search --project <project> --terms "<term1,term2,term3>" --json
-platty docs list --project <project> --type glossary --track business --scope project --compact --json
-```
+### 2. Orient with README + catalog
 
-`docs glossary digest` is the term-unification entry point: it returns terms with
-definitions and aliases in one call. (`docs list --compact` returns only an item count,
-not the terms — use it only as fallback/debug inventory.)
-
-Advanced retrieval command `epics search` is a term-matching helper. It is not semantic RAG, and it must not replace reading the EPIC catalog.
-
-Advanced retrieval command `docs list` is fallback/debug inventory. Use the project glossary flow before falling back to inventory.
-
-`docs targets show --id <entry-point>` returns the reachable code bundle (BFS slice) for one
-API/screen entry point. `code snippet` reads a bounded source range without opening the whole
-file. `code search --symbol` finds code nodes by identifier — the static-only bridge when no
-docs/glossary exist yet.
-
-## Freshness Rule
-
-Retrieval outputs may include:
+Read these first to get the map and solve unknown-unknowns (you don't need to know the term yet):
 
 ```text
-freshness.validity
-freshness.isStale
-freshness.sourceCommit
-freshness.sourceRunId
-freshness.staticSnapshotId
-freshness.documentSourceHash
-freshness.updatedAt
+~/.platty/sot/<projectId>/README.md          # lastExportAt, sourceCommit, layout
+~/.platty/sot/<projectId>/catalog/epics.md    # epicId | name | summary | documentCount | memories | path
+~/.platty/sot/<projectId>/catalog/apis.md     # apiId | name | epicIds | validity | status | memories | path
+~/.platty/sot/<projectId>/catalog/screens.md  catalog/events.md  catalog/schedules.md
+~/.platty/sot/<projectId>/catalog/tables.md   # modelId | name | validity | repoId
+~/.platty/sot/<projectId>/catalog/external-services.md
+~/.platty/sot/<projectId>/catalog/glossary.md # project-scope terms + epic glossary pointers
 ```
 
-If `freshness.isStale === true` or `freshness.validity !== "fresh"`:
+`README.md`'s `lastExportAt` tells you how fresh the projection is. Each catalog
+row's `path` column points straight at the detail MD file — read it directly
+(don't try to reconstruct the hashed filename). The `memories` column tells you
+which entities carry human knowledge worth reading before you assert.
 
-- You may use the result as a clue.
-- State that the document may not reflect the latest analyzed source.
-- Recommend sync or regeneration before treating it as authoritative.
+### 3. Discover candidates with grep (name/summary)
 
-Do not hide stale evidence.
+grep the catalog for the user's concept, bridging language via `catalog/glossary.md`:
+
+```bash
+grep -in "환불\|refund" ~/.platty/sot/<projectId>/catalog/*.md
+```
+
+Pick 1-3 candidate epics/specs by the readable `name`/`summary` columns — not by a single matching word, and never by id (ids are opaque). The catalog is the table of contents; the `Excluded (orphaned/deleted)` section lists audit-only entries you must not treat as live.
+
+### 4. Read the detail Markdown
+
+Open the named files. Business docs nest under the epic; technical specs are pooled under `specs/`:
+
+```text
+epics/<epicId>/epic.md                         # epic body + relatedDocs (id + role + path)
+epics/<epicId>/br.md  design.md  data_dictionary.md  glossary.md
+epics/<epicId>/usecases/ucl.md  ucs.md
+epics/<epicId>/memory.md                        # human memories anchored here ([regen])
+specs/api/<fileId>.md  screen/<fileId>.md  event/<fileId>.md  schedule/<fileId>.md
+specs/memory/<fileId>.md                        # spec-anchored memories ([regen])
+```
+
+Each file's frontmatter carries `id`, `name`, `type`, `scope`, `scopeId`, `validity`, `status`, `sourceCommit`, `items[]`, `relatedDocs[]`, and `serviceMapNodes[]`.
+
+### 5. Follow static relations via frontmatter (no CLI hop)
+
+Static doc↔doc, item↔item, and item↔model relations are encoded in frontmatter — follow them by reading the next MD, not by calling the graph CLI:
+
+```text
+epic.md relatedDocs[]      -> {id, role, path}; read `path` directly (the spec filename is a hash)
+items[].docLinks           -> <docId>#<stableKey>
+items[].modelLinks         -> <modelId> (see catalog/tables.md) or <modelId>#<field>
+```
+
+`relatedDocs[].path` and the catalog `path` column give a direct file to read —
+the filename is a hash of the id you cannot recompute, so use the supplied path.
+The destination's frontmatter `id` confirms identity. If a supplied `path` (or a
+followed id) resolves to no file, that is a **Stop Condition** (dangling link) —
+do not invent it; re-run `platty sot export`.
+
+### 6. Escalate to the CLI (computation / cross-layer / writes)
+
+Only these need the CLI; everything static stays in MD:
+
+```bash
+# Cross-layer / multi-repo service-map traversal. --from is the spec frontmatter serviceMapNodes id.
+platty graph trace --project <p> --from <serviceMapNodes-id> --direction downstream|upstream --depth <n> --json
+
+# High-cardinality code symbols (intentionally omitted from MD).
+platty code search --project <p> --symbol "<identifier>" --json
+platty code snippet --project <p> --repo <repo-id> --file <path> --lines <start>-<end> --json
+
+# Record human knowledge, then re-project so the MD reflects it.
+platty memory add --project <p> --document <doc-id> [--item-type <t> --item-key <k>] --content "<text>" --kind why|correction|constraint|context --json
+platty sot export --project <p> --json
+```
+
+`graph trace` is **known static service-map impact, not complete impact**: it returns
+`omittedEdgeClasses` (ORM includes, indirect writes, event side effects, dynamic URLs) and
+`candidates` (unresolved edges). Assert only `confirmed` edges; treat `candidates` as
+leads to cross-check with `code search`; skip `omitted`. With `--depth N` it accumulates
+per hop and reports `truncated`/`truncatedBy` — never report a trace as an exhaustive blast radius.
+
+**Invariant:** the `serviceMapNodes` id in a spec's frontmatter is exactly the `--from`
+input `graph trace` expects. If they disagree, the projection is stale — re-export.
+
+### 7. Freshness
+
+Trust the frontmatter `validity` (`fresh` | `stale` | `orphaned`) and `status`:
+
+- `fresh`: assert normally, cite the file path + frontmatter `id`.
+- `stale`: usable as a clue; state it may not reflect the latest source; recommend `sync` + `sot export`.
+- `orphaned` / `status: deleted`: do not assert; these are excluded from the body tree and live only in catalog audit sections. Recommend regeneration.
 
 ## Memory Rule
 
-Retrieval outputs may include human-recorded memories alongside SOT content:
-
-- Advanced retrieval commands `docs show`, `epics show`, and `business-docs document show --document <id>` return a `memories` array with `memoryId`, `level`, `kind`, `content`, `revision`, `updatedBy`, `updatedAt`. In advanced retrieval command `docs show`, item-anchored memories attach to the matching item view; memories whose item anchor no longer matches a live item stay in the document-level `memories` array.
-- Advanced retrieval commands `docs list` and `docs search` document hits carry a per-document `memoryCount`; advanced retrieval command `epics show` grouped documents carry `memoryCount` per document; advanced retrieval command `epics list` carries an epic-level `memoryCount`.
-
-Synthesis rules:
-
-- SOT content is system-derived from analyzed code. `memories` are human-recorded knowledge (why, corrections, constraints) — see `platty-memory` for recording them.
-- Quote memories as human-recorded, for example "사람이 기록한 메모리에 따르면 …". Do not present memory content as system-derived fact.
-- When a memory contradicts SOT content, present both, flag the conflict, and recommend business-docs sync or regeneration. Never silently prefer either side.
-
-## Workflow
-
-### 1. Classify The Question
-
-Classify the question as one or more:
-
-- `business`: rules, user journeys, use cases, product behavior.
-- `data`: entities, tables, fields, persistence, model meaning.
-- `development`: route/API/screen behavior, handler, service, repository, source code.
-- `design`: system design, component responsibility, flow boundaries.
-- `mixed`: more than one of the above.
-
-If the question is a **development design question** — "where do I add X", "how should I
-change/structure Y", "what is the impact / blast radius of touching Z" — do not answer with a
-single retrieval path. Use the 4-axis flow in "Development Design Questions" below.
-
-### 2. Read The Project Glossary First
-
-Read the glossary digest in one call (it returns terms + definitions + aliases directly;
-`docs list --compact` does not return terms, only a count):
-
-Advanced retrieval commands:
-
-```bash
-platty docs glossary digest --project <project> --json
-```
-
-If the digest reports `truncated: true`, the glossary was too large to return whole — lower
-your confidence and warn the answer may miss a term that was cut.
-
-Extract:
-
-- canonical business terms
-- aliases
-- Korean/English/Japanese equivalents
-- code identifiers
-- API or route names
-- related EPIC hints
-
-If terms are ambiguous, ask the user one concise clarification question before continuing.
-
-### 3. Split Into Subquestions
-
-Rewrite the user question into 2-5 answerable subquestions.
-
-Example:
-
-```text
-User: 캠페인 제외 그룹은 어떤 API와 테이블을 거치니?
-
-Subquestions:
-1. Which EPIC owns campaign exclusion group behavior?
-2. Which BR/UCS documents define the business behavior?
-3. Which DD items describe the data entities?
-4. Which API specs implement the behavior?
-5. Which code nodes implement those APIs?
-```
-
-### 4. Read The EPIC Catalog
-
-Always read the compact EPIC catalog before choosing candidates:
-
-Advanced retrieval command:
-
-```bash
-platty epics list --project <project> --compact --json
-```
-
-Use the catalog like a table of contents. Compare the normalized terms and subquestions against:
-
-- EPIC title
-- EPIC summary
-- `terms`
-- `documentCounts`
-- freshness
-
-Select 1-3 likely EPICs. Prefer candidates whose summaries explain the user's concept, not candidates that merely contain one matching word.
-
-Do not skip this step. String matching can be wrong when the user asks in Korean and the generated docs use English, Japanese, code identifiers, or business aliases.
-
-### 5. Optional Term Search For Disambiguation
-
-Use advanced retrieval command `epics search` only after reading the EPIC catalog, and only when one of these is true:
-
-- The catalog is too large to confidently narrow candidates.
-- The glossary exposes useful aliases, code identifiers, or translated terms.
-- Several EPICs look plausible and need a quick term cross-check.
-- The first selected EPIC does not contain the expected document types.
-
-Example:
-
-Advanced retrieval command:
-
-```bash
-platty epics search --project <project> --terms "campaign,exclusion,group" --json
-```
-
-Treat the result as a hint. If advanced retrieval command `epics search` disagrees with the catalog, inspect both candidates instead of trusting the score.
-
-### 6. Traverse The EPIC Graph
-
-For each candidate EPIC:
-
-Advanced retrieval command:
-
-```bash
-platty epics show --project <project> --epic <epic-id> --include-docs --json
-```
-
-Use the grouped documents as the retrieval index:
-
-```text
-glossary
-ucl
-ucs
-br
-data_dictionary
-design
-api_spec
-screen_spec
-event_spec
-schedule_spec
-```
-
-Do not open every document. Choose the likely documents based on type, title, summary, links, and freshness.
-
-### 7. Follow Document Links
-
-Open relevant documents and then traverse their graph:
-
-Advanced retrieval commands:
-
-```bash
-platty docs show --project <project> --document <doc-id> --json
-platty docs related --project <project> --document <doc-id> --json
-platty docs search --project <project> "<ucl-item-stable-key>" --json
-```
-
-Expected paths:
-
-```text
-UCL item -> UCS document
-UCS -> BR / DD / design / source technical docs
-BR -> DD / source technical docs
-DD -> model/table/field evidence
-api_spec or screen_spec -> code node/file location
-```
-
-#### UCL Item To Specific UCS
-
-UCL documents are use-case lists. Do not treat a UCL document as the final use-case detail when the user asks for a specific UCS.
-
-To find one UCS:
-
-1. Open the candidate EPIC's UCL document with advanced retrieval command `docs show`.
-2. Select the relevant UCL item by title, summary, or `stableKey`.
-3. Search the item `stableKey` exactly:
-
-Advanced retrieval command:
-
-```bash
-platty docs search --project <project> "<ucl-item-stable-key>" --json
-```
-
-4. From the results, choose the document where `type === "ucs"`.
-
-The UCS document is linked by scope identity, not necessarily by a visible advanced retrieval command `docs related` document edge:
-
-```text
-UCL item stableKey: ucl:<epic-id>:<use-case-key>
-UCS scopeId: epic:<epic-id>:use_case:ucl:<epic-id>:<use-case-key>
-```
-
-Advanced retrieval command `docs search` may return the parent UCL document, UCL item, UCS document, and UCS items together. For specific UCS retrieval, filter to the UCS document before opening it with advanced retrieval command `docs show`.
-
-### 8. Inspect Data Evidence
-
-For data questions, use DD documents and item `modelLinks`.
-
-Look for:
-
-- `modelName`
-- `tableName`
-- `fieldName`
-- `linkType`: `describes_model`, `describes_field`, or `uses_model`
-- field metadata
-- model source file and lines when present
-
-If DD has a gap item such as `missing_model_evidence`, say that the generated evidence did not identify a backing model/table.
-
-### 9. Inspect Code Evidence
-
-For API/screen/development questions, use technical documents and `code`.
-
-Look for:
-
-- `code.primaryNode.nodeId`
-- `code.primaryNode.filePath`
-- `code.primaryNode.startLine`
-- `code.relatedNodes`
-- target results from `platty targets list`
-
-`nodeId` is graph identity. `filePath` and line numbers are what you use when source inspection is needed.
-
-When you must read actual source, prefer the bounded reader over opening whole files:
-
-```bash
-code snippet --project <project> --repo <repo-id> --file <path> --lines <start>-<end> --json
-```
-
-It returns only the requested range plus a freshness `contentHash`. To see everything an entry
-point reaches (handler + dependencies), pull its bundle:
-
-```bash
-docs targets show --project <project> --id <entry-point-id> --json
-```
-
-If the project has only static analysis (no generated docs/glossary), search code nodes by
-identifier — guess the English term yourself, since there is no glossary to bridge it:
-
-```bash
-code search --project <project> --symbol "<identifier>" --json
-```
-
-An empty `code search` result is a valid "no anchor here" answer: widen the identifier or stop.
-
-For cross-layer/multi-repo impact ("if I change this table/API/screen, what else breaks?"), trace
-service-map edges:
-
-```bash
-graph trace --project <project> --from <node-id> --direction downstream|upstream --json
-```
-
-`downstream` follows screen→API→DB; `upstream` reverses (which APIs write a table, which screens
-call an API). This is **known static service-map impact, not complete impact** — it returns
-`omittedEdgeClasses` (ORM includes, indirect writes, event side effects, dynamic URLs it cannot
-see), and `candidates` (unresolved edges) you must judge before claiming an impact set is complete.
-Never report a trace result as an exhaustive blast radius.
-
-## Retrieval Paths
-
-Business question:
-
-```text
-glossary -> EPIC candidates -> UCL -> UCS -> BR -> DD -> design -> source technical docs
-```
-
-Data question:
-
-```text
-glossary -> EPIC candidates -> DD -> model/table/field -> related BR/UCS -> api_spec -> code
-```
-
-Development question:
-
-```text
-glossary -> EPIC candidates if business scope matters -> targets list -> api_spec/screen_spec -> code -> related DD/BR/UCS
-```
-
-Design question:
-
-```text
-glossary -> EPIC candidates -> design -> UCS -> BR -> DD -> source technical docs
-```
-
-Mixed questions should run the relevant paths and merge evidence.
+Memories are human-recorded knowledge (why, corrections, constraints), projected to
+`epics/<id>/memory.md` and `specs/memory/<fileId>.md` as `[regen]` files:
+
+- Quote them as human-recorded, e.g. "사람이 기록한 메모리에 따르면 …". Do not present memory content as system-derived fact.
+- When a memory contradicts SOT content, present both, flag the conflict, and recommend `sync`/regeneration. Never silently prefer either side.
+- A memory entry with `anchorStale: true` is anchored to an item that no longer exists (renamed/dropped on regen) even though its parent doc may read `fresh` — do **not** assert it as current; surface it and recommend re-anchoring (`memory update`/re-add).
+- If `README.md` reports a `memory/unrouted.md` count (memories whose epic/doc anchor was deleted or regenerated), **read that file** — its memories are NOT reachable from any epic/spec `memory.md`. Surface them and recommend re-anchoring; do not assume the rest of the tree covers them.
+- The MD is a projection: a `memory add` is invisible here until the next `sot export`. If you just wrote memory, treat `memory.md` as behind until you re-export. To record, use `platty memory add` (with `--export-sot`) then never edit `memory.md` directly. See `platty-memory`.
 
 ## Development Design Questions (4-Axis)
 
 For "where do I add this", "how do I change this", or "what breaks if I touch this", a single
-retrieval path is not enough. Investigate four axes, then synthesize. When the runtime supports
-subagents, run the axes in parallel; otherwise run them in sequence. Each axis uses the same CLIs.
+read is not enough. Investigate four axes (parallel when the runtime supports subagents):
 
-1. **Current state** — what exists today around the feature.
-   `epics show` → `docs show` (api_spec/screen_spec) → `docs targets show --id` for the code bundle.
-2. **Constraints / background** — why it is the way it is, what must not break.
-   adjacent `memory` (correction/constraint/why) on the relevant doc/EPIC anchors.
-3. **Existing patterns** — what to reuse instead of inventing.
-   `code search --symbol` for similar handlers/utilities already in the repos.
-4. **Impact / blast radius** — what else is affected.
-   `graph trace --from <node> --direction upstream|downstream` and the entry-point bundle.
+1. **Current state** — `epics/<id>/*.md` + `specs/<kind>/<fileId>.md` for what exists today.
+2. **Constraints / background** — `epics/<id>/memory.md` / `specs/memory/<fileId>.md` (`constraint`/`correction`/`why`).
+3. **Existing patterns** — `platty code search --symbol` for similar handlers/utilities to reuse.
+4. **Impact / blast radius** — `platty graph trace --from <serviceMapNodes-id> --depth <n>` (carry `omittedEdgeClasses` + `candidates` forward).
 
-Then synthesize a design answer that:
-
-- lists the concrete **change points** (repo + file + node + layer), grounded in evidence;
-- names the **reusable pattern** found in axis 3;
-- gives an **impact map** from axis 4, explicitly labeled as known static impact, not complete
-  (carry `omittedEdgeClasses` and unresolved `candidates` forward — never claim an exhaustive
-  blast radius);
-- runs a **constraint check**: compare the proposed change against axis-2 memories and flag any
-  `constraint`/`correction` it would violate;
-- **separates "observed current structure" (evidence) from "recommended design" (proposal)** —
-  code shows what the system does, not what it should do.
-
-If docs/EPICs are missing for the area, fall back to static-only: `docs targets list` +
-`docs targets show` + `code search` + `code snippet`, and say the design rests on code evidence
-alone (no SOT/constraints available).
+Then synthesize: concrete **change points** (repo + file + node + layer), the **reusable pattern** (axis 3), an **impact map** labeled known-static-not-complete (axis 4), a **constraint check** against axis-2 memories, and a clear separation of **observed structure (evidence)** vs **recommended design (proposal)**.
 
 ## Answer Contract
 
-When answering:
-
-- State the normalized terms used.
-- Cite document ids, document types, and target file paths when available.
+- State the normalized terms used (and the alias bridge from `catalog/glossary.md`).
+- Cite MD file paths and frontmatter `id`s; for code, cite repo + file + line.
 - Separate direct evidence from inference.
-- Mention stale/freshness status for stale or orphaned evidence.
-- If evidence is weak, say which command or regeneration step should run next.
+- State `validity` for any stale/orphaned evidence.
+- If evidence is weak, name the next step (`sot export`, `sync`, `code search`, or regeneration).
 
-Keep the final answer concise unless the user asks for a full trace.
+End with the `Platty handoff` card. `Evidence` lists the MD paths / ids / commands used.
+`Recommended next` is one of: a sharper follow-up from the same SOT folder; `sync` + `sot export`
+to refresh; or `platty-generated-docs` if outputs need (re)generation.
 
-## Handoff
+## Fallback: CLI Graph Walk (no SOT folder)
 
-End retrieval with the `Platty handoff` card after the answer. The `Evidence`
-line should list the document ids and commands used. The `Recommended next`
-line should be one of:
-
-- ask a sharper follow-up question from the same evidence graph
-- regenerate stale/orphaned docs with `platty-docs-generation`
-- generate epics or business docs if the user needs planning/output artifacts
-
-## Fallback Inventory
-
-Use advanced retrieval command `docs list` only when the EPIC index is missing, you need a type-specific audit, or you are debugging generated inventory:
-
-Advanced retrieval commands:
+When `~/.platty/sot/<projectId>/` does not exist and you cannot/should not export it,
+retrieve directly from the CLI (this is the legacy EPIC-centered graph walk):
 
 ```bash
-platty docs list --project <project> --type br --track business --compact --json
-platty docs list --project <project> --type api_spec --track technical --compact --json
+platty docs glossary digest --project <p> --json     # term unification (aliases)
+platty epics list --project <p> --compact --json      # EPIC catalog (table of contents)
+platty epics show --project <p> --epic <id> --include-docs --json
+platty docs show --project <p> --document <id> --json
+platty docs related --project <p> --document <id> --json
+platty docs targets show --project <p> --id <entry-point-id> --json
 ```
 
-## Stop Conditions
-
-- The project has no glossary (advanced retrieval command `docs list ... --type glossary` returns nothing) AND advanced retrieval command `epics list` returns no epics: stop retrieval and report that docs/EPICs have not been generated for this project — route to the generation skills instead of answering from guesses.
-- Two full graph walks (catalog -> advanced retrieval command `epics show` -> advanced retrieval commands `docs show`/`docs related`) surface no evidence for a subquestion: answer "no evidence found", listing the commands tried — do not fabricate an answer and do not keep widening the search indefinitely.
-- Every candidate document reports `freshness.validity === "orphaned"`: stop treating their content as evidence; report that the documents no longer map to analyzed sources and recommend regeneration before answering.
+The same Red Flags, Stop Conditions, Freshness, and Memory rules apply. `epics search --terms`
+is a term-match hint only — read the catalog before trusting it; answering from a score is fabrication.
+Prefer running `platty sot export` and using the Markdown discovery flow above when possible.

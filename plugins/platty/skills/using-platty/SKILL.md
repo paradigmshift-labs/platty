@@ -29,11 +29,10 @@ Common routes:
 - Human setup workflow and project management dashboard state: `platty-setup`
 - Static analysis progress: `platty-static-analysis`
 - Technical docs target review: `platty-docs-target-curation`
-- Technical docs worker authoring: `platty-docs-generation`
+- Generated technical/product/business outputs: `platty-generated-docs`
+- Generated output synchronization: `platty-sync`
 - Existing docs search or answers: `platty-retrieval`
 - Recording or maintaining human knowledge (why, corrections, constraints) on epics or documents: `platty-memory`
-- Epic generation: `platty-epics-generation`
-- Business docs generation or sync: `platty-business-docs-generation`
 - Fixture corpus quality work: `platty-corpus-quality`
 
 ## Core Rules
@@ -58,7 +57,12 @@ Common routes:
 - If the shell reports `command not found: platty`, check command resolution once with `command -v platty`. If it returns a path, treat it as a transient shell/PATH issue and retry the original Platty command once. If it returns nothing, stop and report the missing global CLI.
 - Resolve the project before running project-scoped commands.
 - Use `platty status --json` when the next action is unclear.
-- Follow `nextAction.command` from JSON output unless there is a specific reason not to. Check both the top level and `data.nextAction` — responses place it in either spot. Re-add `--project <project>` and `--json` if the suggested command omits them.
+- Follow `nextAction.command` from JSON output unless a gate says to pause.
+  Gate precedence overrides blindly following `nextAction.command` for EPIC
+  approval, incomplete target review, active generated-output work before sync,
+  or recovery that must preserve an existing run. Check both the top level and
+  `data.nextAction` — responses place it in either spot. Re-add
+  `--project <project>` and `--json` if the suggested command omits them.
 - Do not use generation skills for retrieval-only questions.
 
 ## Main-Aligned Public Workflow
@@ -67,8 +71,12 @@ For humans, describe the workflow as these stages and start with bare
 `platty setup` as the project-management entry point:
 
 ```text
-setup -> analyze -> targets -> generate-docs -> EPIC approval -> business documents -> sync
+setup -> analyze -> targets -> generate-docs -> sync
 ```
+
+`generate-docs` includes technical document generation, EPIC draft generation,
+the explicit EPIC approval pause, and business-doc generation after approval.
+`sync` remains a separate public workflow after generated outputs are complete.
 
 Do not present that stage list as a required shell script. `platty setup` and
 `platty status` surface the next state-derived action.
@@ -85,11 +93,20 @@ language:
 7. After approval only, run `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json`.
 8. `platty sync static-map --project <project> --json` to sync generated outputs after generated work is complete.
 
-Use these advanced recovery commands only: `platty run`, `platty docs`,
-`platty epics`, and `platty business-docs`. Do not route public workflows through
-`platty confirm`; compatibility recovery note: if a stale global CLI asks for
-`platty confirm`, use this recovery rule: stop and tell the user to rebuild or
-reinstall the global CLI.
+Internal compatibility commands:
+
+Lower-level `platty run`, `platty docs`, `platty epics`, and
+`platty business-docs` commands exist only for internal compatibility,
+inspection, and recovery. Do not expose them as public workflows or route
+normal users to them. Use them only when `platty-generated-docs` explicitly
+requires a recovery action, a Platty maintainer asks for one, or repo-local
+debugging requires it.
+
+Compatibility recovery note:
+
+Do not route workflows through the legacy static-analysis confirm root.
+Compatibility recovery: if a stale global CLI asks for that legacy confirm
+command, stop and tell the user to rebuild or reinstall the global CLI.
 
 Inside the Platty monorepo, repo-local agents must run the local build form
 `node packages/cli/dist/main.js <command> --json` instead of the global installed

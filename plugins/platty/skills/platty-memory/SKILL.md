@@ -86,6 +86,26 @@ platty memory show --memory <memory-id> --json
 
 `--kind` is `why | correction | constraint | context` (default `context`).
 
+## Re-project The SOT After Writing (write-back loop)
+
+The SOT Markdown folder (`~/.platty/sot/<projectId>/`) is a **read-only projection**.
+A `memory add/update/delete` writes the DB but the projected `memory.md` files do
+**not** change until a re-export. Until then any agent reading the Markdown (the
+authoritative cross-session discovery surface) silently misses your write.
+
+Close the loop every time you mutate memory:
+
+```bash
+# one-shot: write + re-project in a single command
+platty memory add --project <project> --document <doc-id> --content "<text>" --kind correction --export-sot --json
+# or re-project explicitly after one or more writes
+platty sot export --project <project> --json
+```
+
+The `memory add` response's `nextAction` points at `sot export` whenever you did
+not pass `--export-sot` — follow it. Skipping the re-export is how a later session
+answers around a constraint/correction you recorded.
+
 ## Actor And Source Convention
 
 Agents must always pass `--source agent --actor <agent-name>`:
