@@ -47,7 +47,7 @@ STOP if you catch yourself thinking any of these:
 | Excuse | Reality |
 | --- | --- |
 | "I'll just `epics search`/`LIKE` for the term and answer from the hit" | The SOT folder is right there. `grep` `catalog/*.md` for the concept (name/summary), then read the detail MD. A term-match hit is not evidence; answering from titles and a score is fabrication. |
-| "I can't read the catalog (folder missing / read failed), so I'll guess from memory" | Do not fabricate. Either run `platty sot export --project <p>` to (re)create the folder, or fall back to the CLI graph walk. If neither works, report that the SOT projection is unavailable and recommend `sync` + `sot export`. |
+| "I can't read the catalog (folder missing / read failed), so I'll guess from memory" | Do not fabricate. Either run `platty sot export --project <project>` to (re)create the folder, or fall back to the CLI graph walk. If neither works, report that the SOT projection is unavailable and recommend `sync` + `sot export`. |
 | "The question terms are clear, skip the catalog/glossary" | The user may ask in Korean while docs use English, Japanese, or code identifiers. `catalog/glossary.md` and `summary` columns map aliases — skipping them is how you pick the wrong EPIC. |
 | "There are hundreds of MD files, I'll open them all to be safe" | Don't brute-force the tree. Use `catalog/*.md` to narrow, read only the named detail files, and for cross-layer reach use `graph trace` — high-cardinality code nodes are intentionally NOT in the MD (use `code search`). |
 | "The doc is stale/orphaned but probably still right — present it as fact" | State `validity` from frontmatter and recommend `sync` + `sot export`. Do not hide stale evidence. |
@@ -65,7 +65,7 @@ STOP if you catch yourself thinking any of these:
 
 Resolve these before retrieval:
 
-- Project selector, then **projectId**: `platty project list --json` (or `platty project use <p>`). The SOT path is `~/.platty/sot/<projectId>/`.
+- Project selector, then **projectId**: `platty project list --json` (or `platty project use <project>`). The SOT path is `~/.platty/sot/<projectId>/`.
 - User question, classified: `business`, `data`, `development`, `design`, or `mixed`.
 
 ## Discovery Flow (SOT Markdown)
@@ -79,7 +79,7 @@ platty project list --json     # or: platty project use <selector>
 Build the absolute path `~/.platty/sot/<projectId>/`. If it does not exist, run:
 
 ```bash
-platty sot export --project <projectId> --json
+platty sot export --project <project> --json
 ```
 
 `sot export` writes the whole tree atomically (temp + rename) and prints
@@ -153,15 +153,15 @@ Only these need the CLI; everything static stays in MD:
 
 ```bash
 # Cross-layer / multi-repo service-map traversal. --from is the spec frontmatter serviceMapNodes id.
-platty graph trace --project <p> --from <serviceMapNodes-id> --direction downstream|upstream --depth <n> --json
+platty graph trace --project <project> --from <serviceMapNodes-id> --direction downstream|upstream --depth <n> --json
 
 # High-cardinality code symbols (intentionally omitted from MD).
-platty code search --project <p> --symbol "<identifier>" --json
-platty code snippet --project <p> --repo <repo-id> --file <path> --lines <start>-<end> --json
+platty code search --project <project> --symbol "<identifier>" --json
+platty code snippet --project <project> --repo <repo-id> --file <path> --lines <start>-<end> --json
 
 # Record human knowledge, then re-project so the MD reflects it.
-platty memory add --project <p> --document <doc-id> [--item-type <t> --item-key <k>] --content "<text>" --kind why|correction|constraint|context --json
-platty sot export --project <p> --json
+platty memory add --project <project> --document <doc-id> [--item-type <item-type> --item-key <stable-key>] --content "<text>" --kind why|correction|constraint|context --json
+platty sot export --project <project> --json
 ```
 
 `graph trace` is **known static service-map impact, not complete impact**: it returns
@@ -222,12 +222,12 @@ When `~/.platty/sot/<projectId>/` does not exist and you cannot/should not expor
 retrieve directly from the CLI (this is the legacy EPIC-centered graph walk):
 
 ```bash
-platty docs glossary digest --project <p> --json     # term unification (aliases)
-platty epics list --project <p> --compact --json      # EPIC catalog (table of contents)
-platty epics show --project <p> --epic <id> --include-docs --json
-platty docs show --project <p> --document <id> --json
-platty docs related --project <p> --document <id> --json
-platty docs targets show --project <p> --id <entry-point-id> --json
+platty docs glossary digest --project <project> --json     # term unification (aliases)
+platty epics list --project <project> --compact --json      # EPIC catalog (table of contents)
+platty epics show --project <project> --epic <id> --include-docs --json
+platty docs show --project <project> --document <id> --json
+platty docs related --project <project> --document <id> --json
+platty docs targets show --project <project> --id <entry-point-id> --json
 ```
 
 The same Red Flags, Stop Conditions, Freshness, and Memory rules apply. `epics search --terms`

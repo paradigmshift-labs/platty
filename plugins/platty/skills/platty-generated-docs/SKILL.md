@@ -153,7 +153,7 @@ regenerating completed work. Inspect or resume through the facade:
 ```bash
 platty generate-docs status --project <project> --stage <stage> --run-id <run-id> --json
 platty generate-docs prepare --project <project> --stage <stage> --run-id <run-id> --json
-platty generate-docs approve-stage --project <project> --stage build_docs --run-id <run-id> --json
+platty generate-docs approve-stage --project <project> --stage <stage> --run-id <run-id> --json
 ```
 
 Do not use `--new-run` or `--force-regenerate` unless the user explicitly asks
