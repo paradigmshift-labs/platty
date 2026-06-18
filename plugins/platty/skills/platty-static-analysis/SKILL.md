@@ -32,7 +32,7 @@ platty runs cancel --run-id <run-id> --project <project> --reason "<reason>" --j
 
 ## Rule
 
-Keep calling `platty status --project <project> --json` between phases. When status reports `build_docs`, switch to `platty-docs-target-curation` or `platty-docs-generation`.
+Keep calling `platty status --project <project> --json` between phases. When status reports `build_docs`, switch to `platty-docs-target-curation` for target curation, then to `platty-generated-docs` after target scope is accepted.
 
 ## Public Gate Rule
 
@@ -47,7 +47,7 @@ latest `status --json` nextAction and any run ids inspected. Recommended `Next`
 values:
 
 - `run_static_analysis`: `platty analyze --project <project> --json`
-- `build_docs`: route to `platty-docs-target-curation` or `platty-docs-generation`
+- `build_docs`: route to `platty-docs-target-curation` for target curation, then to `platty-generated-docs` after target scope is accepted
 
 ## Stop Conditions
 

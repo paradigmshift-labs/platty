@@ -2,7 +2,7 @@
 
 This repository contains the public Platty agent plugin and skills for Codex and Claude Code.
 
-Platty helps agents operate the Platty CLI for repository analysis, technical documentation, epic generation, business-document generation, retrieval, and human-recorded memory workflows.
+Platty helps agents operate the Platty CLI for repository analysis, target review, generated documentation/business-output workflows, synchronization, retrieval, and human-recorded memory workflows.
 
 ## What This Repository Contains
 
@@ -119,11 +119,10 @@ The plugin includes these Platty skills:
 - `platty:platty-setup`
 - `platty:platty-static-analysis`
 - `platty:platty-docs-target-curation`
-- `platty:platty-docs-generation`
+- `platty:platty-generated-docs`
+- `platty:platty-sync`
 - `platty:platty-retrieval`
 - `platty:platty-memory`
-- `platty:platty-epics-generation`
-- `platty:platty-business-docs-generation`
 - `platty:platty-corpus-quality`
 
 Start with `platty:using-platty` when you are not sure which workflow applies.
@@ -151,11 +150,12 @@ Most users should start with `platty setup`.
 The full Platty workflow is:
 
 ```text
-setup -> analyze -> targets -> generate-docs -> EPIC approval -> business documents -> sync
+setup -> analyze -> targets -> generate-docs -> sync
 ```
 
 The CLI shows the next action based on project state. The agent plugin skills
-explain when to continue, pause for approval, or recover from a failed run.
+explain when to continue, pause for EPIC approval inside generate-docs, sync
+completed generated outputs, or recover from a failed run.
 
 ## Choose A Platty Project
 

@@ -1,6 +1,6 @@
 # Platty CLI Skill
 
-Run Platty repository analysis, documentation, epic, business-document, retrieval, and memory workflows from the terminal.
+Run Platty repository analysis, target review, generated documentation/business-output, sync, retrieval, and memory workflows from the terminal.
 
 This plugin is the public agent guidance surface for the Platty CLI. It works in Codex and Claude Code; Claude Code also ships session-start hooks, while Codex uses native skill loading without plugin hooks.
 
@@ -64,11 +64,10 @@ platty:platty-cli-router
 platty:platty-setup
 platty:platty-static-analysis
 platty:platty-docs-target-curation
-platty:platty-docs-generation
+platty:platty-generated-docs
+platty:platty-sync
 platty:platty-retrieval
 platty:platty-memory
-platty:platty-epics-generation
-platty:platty-business-docs-generation
 platty:platty-corpus-quality
 ```
 
@@ -91,8 +90,12 @@ Use `platty:platty-setup` to create or select a project and register repositorie
 The public workflow stages are:
 
 ```text
-setup -> analyze -> targets -> generate-docs -> EPIC approval -> business documents -> sync
+setup -> analyze -> targets -> generate-docs -> sync
 ```
+
+`generate-docs` includes technical docs, EPIC draft generation, the explicit
+EPIC approval pause, and business-doc generation after approval. `sync` remains
+a separate public workflow after generated outputs are complete.
 
 For humans, describe this as a state-aware flow surfaced through `platty setup`.
 For agents, inspect JSON and follow `nextAction.command` unless a skill-specific
@@ -103,11 +106,10 @@ Use the skills for stage-specific behavior:
 - `platty:platty-setup` for global state, projects, and repositories.
 - `platty:platty-static-analysis` for analysis progress and run inspection.
 - `platty:platty-docs-target-curation` before generation when target scope needs review.
-- `platty:platty-docs-generation` for technical documentation generation.
+- `platty:platty-generated-docs` for public technical docs, EPIC draft, EPIC approval, and business-doc generation.
+- `platty:platty-sync` for generated-output synchronization after generated work is complete.
 - `platty:platty-retrieval` for retrieval-only questions from existing docs.
 - `platty:platty-memory` for recording or maintaining human knowledge.
-- `platty:platty-epics-generation` for EPIC draft confirmation.
-- `platty:platty-business-docs-generation` for business-document recovery, inspection, repair, and sync guidance.
 - `platty:platty-corpus-quality` for fixture inspection, dry runs, reports, and self-improvement candidate selection.
 
 ## References
@@ -119,11 +121,10 @@ Open only what you need:
 - Setup: `skills/platty-setup/SKILL.md`
 - Static analysis: `skills/platty-static-analysis/SKILL.md`
 - Docs target curation: `skills/platty-docs-target-curation/SKILL.md`
-- Docs generation: `skills/platty-docs-generation/SKILL.md`
+- Generated docs: `skills/platty-generated-docs/SKILL.md`
+- Sync: `skills/platty-sync/SKILL.md`
 - Retrieval: `skills/platty-retrieval/SKILL.md`
 - Memory: `skills/platty-memory/SKILL.md`
-- Epics: `skills/platty-epics-generation/SKILL.md`
-- Business docs: `skills/platty-business-docs-generation/SKILL.md`
 - Corpus quality: `skills/platty-corpus-quality/SKILL.md`
 
 ## Guardrails
