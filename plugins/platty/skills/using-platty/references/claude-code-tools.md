@@ -29,7 +29,7 @@ Use the installed global CLI by default:
 platty <command> --json
 ```
 
-If global `platty` appears stale, report that the global @paradigmshift/platty package
+If global `platty` appears stale, report that the global @pshift/platty package
 needs to be reinstalled or updated before continuing. Keep the workflow on the
 global CLI.
 

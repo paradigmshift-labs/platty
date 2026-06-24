@@ -1,85 +1,55 @@
 ---
 name: platty-sync
-description: Use when refreshing existing Platty generated outputs after source, repository, branch, source-root, static-analysis, or static-map changes.
+description: Use when syncing Platty generated outputs into canonical static-map state or checking whether generated outputs are ready to sync.
 ---
 
 # Platty Sync
 
-Use this skill when source or repository state changed after generated outputs
-already exist: new Git commits, newly registered repositories, analysis branch
-changes, source-root changes, or static-analysis refreshes. Sync refreshes
-existing generated technical and business outputs against the latest analyzed
-static-map state.
+Use this skill for the public sync workflow after generated docs, EPICs, and
+business docs are complete.
 
-Sync is not the final step of the first-time happy path. First-time generation
-is:
+Sync is separate from generation:
 
 ```text
-setup -> analyze -> targets -> generate-docs
+generate-docs = create or update generated outputs
+sync static-map = reconcile generated outputs into canonical state
 ```
 
-Use sync for incremental refresh after source/repository changes and fresh
-static analysis.
+Do not use sync to start technical docs, EPIC generation, or business-doc
+generation.
 
 ## Required Inputs
 
 Resolve these before syncing:
 
 - project selector from `platty project list/create/use --json`;
-- current project state from `platty status --project <project> --json`;
-- fresh static analysis after the source/repository change;
-- no active failed generated-output recovery that must preserve an existing run.
+- generated-docs status showing no active generated-output work;
+- latest business-doc run state when business docs are part of the project
+  workflow.
 
-Business-doc sync includes glossary outputs. Treat `glossary`,
-`epic_glossary`, and `project_glossary` as part of the business-doc refresh
-surface.
+## Readiness Check
 
-## Public Workflow
-
-Create and inspect a sync plan:
+Before running sync, inspect generated-output state:
 
 ```bash
-platty sync plan --project <project> --json
+platty generate-docs status --project <project> --json
 ```
 
-Follow the returned `nextAction.command`, usually:
-
-```bash
-platty sync run --project <project> --plan-id <plan-id> --json
-```
-
-If `sync run` returns `epics_sync_confirmation_required`, run the returned
-`sync confirm` command automatically:
-
-```bash
-platty sync confirm --project <project> --plan-id <plan-id> --epics-run-id <run-id> --json
-```
-
-Pause only when the user explicitly asked to review EPIC sync changes before
-confirmation, or when the CLI response lacks `--plan-id`, `--epics-run-id`, or a
-concrete returned command.
-
-Compatibility/static-map-only command:
+Run sync only when generated-output work is complete and inactive:
 
 ```bash
 platty sync static-map --project <project> --json
 ```
 
-Use `sync static-map` directly only for maintainer/debugging cases where the
-user specifically wants to refresh the canonical static-map snapshot without
-running document sync.
+If generated-output work is active, incomplete, failed, or awaiting EPIC
+approval, stop and route back to `platty-generated-docs`.
 
 ## Stop Conditions
 
-- `platty status` says static analysis is stale or incomplete: route to
-  `platty-static-analysis` before sync.
-- Generated docs are missing: route to `platty-generated-docs`; sync refreshes
-  existing outputs.
-- Failed `build_docs` recovery is pending: route to `platty-generated-docs` and
-  preserve the existing run.
-- EPIC sync confirmation is required but the CLI returned no `sync confirm`
-  command, no plan id, or no EPIC run id: stop and report the missing field.
-- The user explicitly requested manual EPIC sync review before confirmation:
-  stop and ask whether to proceed.
-- Business-doc sync fails or leaves pending candidates: follow the returned
-  recovery command; do not apply the plan manually.
+- Generated docs are missing: route to `platty-generated-docs`.
+- EPIC draft is waiting for approval: stop for explicit approval through
+  `platty-generated-docs`.
+- Business-doc generation is running or has active leases: stop and report the
+  run id, counts, and active lease count.
+- Business-doc generation failed: route to generated-docs advanced recovery; do
+  not run sync to clean it up.
