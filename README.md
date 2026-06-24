@@ -65,7 +65,7 @@ project.
 When the public npm package is available:
 
 ```bash
-npm install -g @pshift/platty
+npm install -g @paradigmshift/platty
 ```
 
 Verify the global binary:
@@ -122,8 +122,9 @@ The plugin includes these Platty skills:
 - `platty:platty-generated-docs`
 - `platty:platty-sync`
 - `platty:platty-retrieval`
+- `platty:platty-sdd-spec`
+- `platty:platty-sdd-design`
 - `platty:platty-memory`
-- `platty:platty-corpus-quality`
 
 Start with `platty:using-platty` when you are not sure which workflow applies.
 
@@ -150,12 +151,44 @@ Most users should start with `platty setup`.
 The full Platty workflow is:
 
 ```text
-setup -> analyze -> targets -> generate-docs -> sync
+setup -> analyze -> targets -> generate-docs
 ```
 
 The CLI shows the next action based on project state. The agent plugin skills
-explain when to continue, pause for EPIC approval inside generate-docs, sync
-completed generated outputs, or recover from a failed run.
+explain when to continue, auto-confirm EPICs through returned CLI commands,
+refresh existing generated outputs after source changes, or recover from a
+failed run.
+
+## Generated Docs Providers
+
+Generated docs use Codex CLI by default:
+
+```bash
+platty generate-docs run --project PROJECT --json
+```
+
+You can choose another provider when starting generation:
+
+```bash
+platty generate-docs run --project PROJECT --provider claude_api --json
+```
+
+If generation reaches EPIC confirmation, preserve the same provider when running
+the returned confirmation command:
+
+```bash
+platty generate-docs confirm-epics --project PROJECT --run-id RUN --provider claude_api --json
+```
+
+Supported providers are `codex_cli`, `claude_code`, and `claude_api`.
+`claude_api` requires `ANTHROPIC_API_KEY` in your shell environment or
+`~/.platty/.env`.
+
+For advanced recovery, if `build_docs` failed, repair the same run with
+`platty generate-docs retry-failed --project PROJECT --stage build_docs --run-id RUN`,
+then follow the returned `nextCommand` or `nextAction.command`.
+Commands such as `generate-docs agent-next` and `generate-docs agent-submit`
+are for manual worker recovery flows, not the normal first-run path.
 
 ## Choose A Platty Project
 

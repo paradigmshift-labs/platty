@@ -32,8 +32,9 @@ Common routes:
 - Generated technical/product/business outputs: `platty-generated-docs`
 - Generated output synchronization: `platty-sync`
 - Existing docs search or answers: `platty-retrieval`
+- SDD product spec and user stories from an idea: `platty-sdd-spec`
+- SDD technical design and tasks from approved spec/stories: `platty-sdd-design`
 - Recording or maintaining human knowledge (why, corrections, constraints) on epics or documents: `platty-memory`
-- Fixture corpus quality work: `platty-corpus-quality`
 
 ## Core Rules
 
@@ -53,16 +54,27 @@ Common routes:
   on macOS/Linux, `%APPDATA%\Platty` on Windows). `PLATTY_HOME` overrides that
   location. The CLI config field `projectRoot` refers to this state root, not to
   an analyzed repository.
-- Use the installed global `platty` binary for Platty workflows. If the binary is missing or appears stale (`UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` for a command that should exist), stop and report that the global CLI needs reinstall/rebuild. Keep the workflow on the global CLI.
+- Use the installed global `platty` binary for Platty workflows. If the binary is missing or appears stale (`UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` for a command that should exist), stop and report that the global @paradigmshift/platty package needs to be reinstalled or updated. Keep the workflow on the global CLI.
+  Inside the private source checkout, maintainer verification uses the local
+  build, not the global binary:
+
+  ```bash
+  node packages/cli/dist/main.js <command> --json
+  ```
+
+  Public/plugin workflow examples still use the installed global `platty`
+  binary.
 - If the shell reports `command not found: platty`, check command resolution once with `command -v platty`. If it returns a path, treat it as a transient shell/PATH issue and retry the original Platty command once. If it returns nothing, stop and report the missing global CLI.
 - Resolve the project before running project-scoped commands.
 - Use `platty status --json` when the next action is unclear.
-- Follow `nextAction.command` from JSON output unless a gate says to pause.
-  Gate precedence overrides blindly following `nextAction.command` for EPIC
-  approval, incomplete target review, active generated-output work before sync,
-  or recovery that must preserve an existing run. Check both the top level and
-  `data.nextAction` — responses place it in either spot. Re-add
-  `--project <project>` and `--json` if the suggested command omits them.
+- Follow `nextCommand` or `nextAction.command` from JSON output unless a gate
+  says to pause. Check the top level, `data.nextCommand`, and `data.nextAction`.
+  Gate precedence overrides blindly following commands for malformed or missing
+  EPIC confirmation commands, incomplete target review, failed `build_docs`
+  recovery, active generated-output work before sync, or recovery that must
+  preserve an existing run. Preserve returned command arguments verbatim when possible. When
+  reconstructing a command, carry forward `--project`, `--stage`, `--run-id`,
+  existing `--provider`, and `--json` if the suggested command omits them.
 - Do not use generation skills for retrieval-only questions.
 
 ## Main-Aligned Public Workflow
@@ -71,12 +83,13 @@ For humans, describe the workflow as these stages and start with bare
 `platty setup` as the project-management entry point:
 
 ```text
-setup -> analyze -> targets -> generate-docs -> sync
+setup -> analyze -> targets -> generate-docs
 ```
 
 `generate-docs` includes technical document generation, EPIC draft generation,
-the explicit EPIC approval pause, and business-doc generation after approval.
-`sync` remains a separate public workflow after generated outputs are complete.
+automatic EPIC confirmation through the returned CLI command, and business-doc
+generation after confirmation. `sync` is a separate incremental refresh workflow
+after source/repository changes and fresh static analysis.
 
 Do not present that stage list as a required shell script. `platty setup` and
 `platty status` surface the next state-derived action.
@@ -88,10 +101,12 @@ language:
 2. `platty analyze --project <project> --json` to converge static analysis.
 3. `platty targets list --project <project> --json` to inspect documentation targets.
 4. `platty targets deprecate --project <project> --ids <target-id> --json` to exclude unwanted targets.
-5. `platty generate-docs run --project <project> --json` to run docs and EPIC generation.
-6. Stop for explicit user approval when an EPIC draft is ready.
-7. After approval only, run `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json`.
-8. `platty sync static-map --project <project> --json` to sync generated outputs after generated work is complete.
+5. `platty generate-docs run --project <project> --json` to run technical docs and EPIC generation.
+6. If the CLI returns `epics_confirmation_required`, run the returned
+   `platty generate-docs confirm-epics ... --json` command automatically unless
+   the user explicitly asked to review EPICs before confirmation.
+7. Use `platty sync ... --json` only for incremental refresh after source or
+   repository changes and fresh static analysis.
 
 Internal compatibility commands:
 
@@ -106,11 +121,7 @@ Compatibility recovery note:
 
 Do not route workflows through the legacy static-analysis confirm root.
 Compatibility recovery: if a stale global CLI asks for that legacy confirm
-command, stop and tell the user to rebuild or reinstall the global CLI.
-
-Inside the Platty monorepo, repo-local agents must run the local build form
-`node packages/cli/dist/main.js <command> --json` instead of the global installed
-binary.
+command, stop and tell the user to reinstall or update the global @paradigmshift/platty package.
 
 ## Project Context Gate
 
@@ -127,7 +138,29 @@ Before any project-scoped command, make the project/repository sequence explicit
 6. After selecting a project, inspect repositories with
    `platty repo list --project <project> --json`.
 7. Only then add repositories with
-   `platty repo add <path> --project <project> --json`.
+   `platty repo add <path> --project <project> --branch <branch> --json` when
+   the intended analysis branch is known.
+
+Branch rule:
+
+- If the user names an analysis branch, including `main`, `master`, `develop`,
+  or a feature branch, pass it through `--branch`. Do not rely on the source
+  checkout being on that branch.
+- If the user does not name a branch, inspect the repository's current checkout
+  and default-branch candidate before `repo add`. Prefer `origin/HEAD`, then
+  `main`, then `master` as the default-branch candidate.
+- If the default-branch candidate differs from the current checkout, ask the
+  user which branch Platty should analyze: the default branch, usually
+  `main`, or the current branch. Do not register the repository until the
+  branch choice is explicit.
+- After the user chooses, include the chosen branch in `repo add` or
+  `repo update` with `--branch <branch>`.
+- `platty analyze` uses the repository registration's stored analysis branch
+  and prepares an app-managed worktree from that branch. It does not repair an
+  omitted branch from `repo add`.
+- For an existing registration on the wrong branch, run
+  `platty repo update <repo-id-or-name> --branch <branch> --project <project> --json`
+  before running analysis again.
 
 Phrase setup guidance as "create or select a project, then register repositories
 inside that project." A filesystem repository path is never a project selector.
@@ -144,7 +177,7 @@ Platty state root (`~/.platty` or `PLATTY_HOME`). The global npm package still
 needs to be removed outside Platty with:
 
 ```bash
-npm uninstall -g @pshift/platty
+npm uninstall -g @paradigmshift/platty
 ```
 
 ## Operator UX
@@ -152,6 +185,13 @@ npm uninstall -g @pshift/platty
 Follow this communication shape for every Platty workflow. Keep it short,
 consistent, and easy to scan. The user should always know what work started,
 what changed, and what to do next.
+
+CLI output is evidence, not the user experience. Do not paste raw Platty JSON or
+full CLI output by default. Summarize verified CLI state in natural language:
+what was checked, what that state means, and what the next user decision or
+agent action is. Preserve exact project selectors, run ids, task ids, document
+ids, commands, and error codes when they matter for debugging, gates, or
+handoff.
 
 Use user-facing words in progress and blocker messages. Internal queue terms may
 appear in commands or JSON, but explain them in plain language:
@@ -172,8 +212,8 @@ Before running commands, announce the work with this card:
 Platty: starting <workflow>
 - Goal: <plain-language task>
 - Project: <project selector or "not selected yet">
-- State root: <~/.platty or PLATTY_HOME>
-- First check: <exact platty command>
+- Checking: <state to inspect first, or exact command when useful for handoff>
+- Next: <one user decision or agent action expected after inspection>
 ```
 
 ### Progress Checkpoint
@@ -184,8 +224,9 @@ natural checkpoints:
 ```text
 Platty: progress
 - Done: <completed action>
-- State: <status/run/task counts from JSON>
-- Next: <exact next command or skill>
+- State: <plain-language summary of verified JSON fields>
+- Evidence: <ids, counts, commands, or error codes inspected when useful>
+- Next: <one user decision, agent action, or routed skill>
 ```
 
 ### Handoff Card
@@ -195,19 +236,20 @@ At pause, stop condition, completion, or context handoff, end with this card:
 ```text
 Platty handoff
 - Workflow: <task/workflow name>
-- State: <latest verified JSON state, not a guess>
-- Evidence: <commands, run ids, task ids, or document ids inspected>
-- Recommended next: <one command or skill>
+- State: <plain-language summary of verified JSON fields, not a guess>
+- Evidence: <commands, ids, counts, or error codes inspected; no raw JSON unless debugging>
+- Recommended next: <one user decision, command, or skill>
 - Blocker: <none, or plain-language blocker with exact error code in parentheses>
 ```
 
 Do not bury the next action in prose. If a CLI response includes `nextAction`,
-the `Recommended next` line should use that command unless a Stop Condition says
-not to continue.
+the `Recommended next` line should use that command or explain the user decision
+that blocks it. Do not paste raw JSON unless the user is debugging or asks for
+machine-readable evidence.
 
 ## Stop Conditions
 
-- A command fails with `UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` on the global `platty` binary: stop and report that the installed global CLI may be stale or the command may not exist. Do not invent an alternative command or execution path.
+- A command fails with `UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` on the global `platty` binary: stop and tell the user to reinstall or update the global `@paradigmshift/platty` package before continuing. Do not invent an alternative command or execution path.
 - The shell reports `command not found: platty` and `command -v platty` returns no path: stop and report that the global CLI is not available in PATH.
 - The shell reports `command not found: platty` but `command -v platty` returns a path: retry the same Platty command once. If the retry fails the same way, stop with the exact PATH and resolved binary path as evidence.
 - A command fails with `PROJECT_AMBIGUOUS`: stop and ask the user which project to use. Never pick one of the matches yourself.
