@@ -8,13 +8,12 @@ description: Use when generating, validating, reviewing, resuming, or repairing 
 Use this skill for the public generated-output workflow:
 
 ```text
-targets -> generate-docs run -> EPIC auto-confirm -> generate-docs confirm-epics
+targets -> generate-docs run -> EPIC approval -> generate-docs confirm-epics
 ```
 
-This skill owns technical document generation, EPIC draft generation, automatic
-EPIC confirmation from returned CLI commands, business-doc generation after
-confirmation, generated-docs status, and advanced recovery for the three worker
-stages.
+This skill owns technical document generation, EPIC draft generation, the EPIC
+approval pause, business-doc generation after approval, generated-docs status,
+and advanced recovery for the three worker stages.
 
 Do not route public work directly through lower-level `docs`, `epics`, or
 `business-docs` commands. Those commands are internal compatibility surfaces for
@@ -28,8 +27,8 @@ Resolve these before running project-scoped commands:
 - project selector from `platty project list/create/use --json`;
 - target review state from `platty targets list --project <project> --json`;
 - generated-docs status or run id, if resuming;
-- EPIC run id or returned confirmation command when continuing past the EPIC
-  confirmation point.
+- EPIC run id, draft id, and explicit approval state when continuing past the
+  EPIC gate.
 - agent provider choice when a command will run generated-output workers, unless
   the user already specified one.
 
@@ -87,10 +86,9 @@ If the CLI returns `ANTHROPIC_API_KEY_REQUIRED`, follow the response's
 same command.
 
 Keep the selected provider for the whole generated-docs workflow. If
-`generate-docs run` reaches EPIC confirmation, run the returned
-`generate-docs confirm-epics` command automatically unless the user explicitly
-asked to review EPICs before confirmation. Preserve the same provider flags when
-reconstructing a command.
+`generate-docs run` pauses for EPIC approval, include the same provider flags on
+`generate-docs confirm-epics` unless the response's `nextCommand` or
+`nextAction.command` already preserves them.
 
 ## Public Workflow
 
@@ -112,18 +110,14 @@ With an explicit provider choice:
 platty generate-docs run --project <project> --provider claude_api --json
 ```
 
-If the response reports `epics_confirmation_required`, treat the returned
-`nextCommand` as the approval action and run it automatically. Summarize that
-EPIC generation reached confirmation, preserve returned `--project`, `--run-id`,
-provider/model flags, and `--json`, then execute:
+If the response reports `epics_confirmation_required`, stop. Validation is not
+approval. Summarize the EPIC draft state and ask the user whether to approve it.
+
+After explicit user approval only:
 
 ```bash
 platty generate-docs confirm-epics --project <project> --run-id <run-id> --json
 ```
-
-Pause before confirmation only when the user explicitly asked to review EPICs
-before approval in the current conversation, or when the CLI response lacks a
-run id or confirmation command.
 
 If a provider was selected earlier, preserve it:
 
@@ -145,8 +139,7 @@ Do not blindly follow `nextCommand` or `nextAction.command` across these gates:
 - `BUILD_DOCS_FAILED_BLOCKS_EPICS` or failed `build_docs` tasks require
   `generate-docs retry-failed`; do not continue to EPIC or business-doc
   generation from incomplete technical docs.
-- EPIC confirmation command is missing, malformed, or conflicts with the
-  current project/run id; stop instead of guessing a confirm command.
+- EPIC draft needs explicit user approval;
 - generated-output work is active and the user asks for sync;
 - recovery must preserve an existing run and avoid regeneration.
 
@@ -216,10 +209,7 @@ requires it. Do not present those roots as public workflows.
 
 ## Stop Conditions
 
-- EPIC confirmation is required but no concrete `confirm-epics` command or run
-  id is available: stop and report the missing command or run id.
-- The user explicitly requested manual EPIC review before confirmation: stop
-  and ask whether to proceed.
+- EPIC draft is valid but not explicitly approved: stop and ask for approval.
 - `targets list` shows target review is incomplete: stop and route target work
   through `platty targets ...`.
 - User asks for sync while generated work is active, failed, or incomplete:

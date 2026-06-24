@@ -20,8 +20,16 @@ question
 -> read epics/<id>/*.md and specs/<kind>/<fileId>.md (detail)
 -> follow frontmatter ids to the next MD             (static relations, no CLI hop)
 -> escalate to CLI ONLY for:                         (graph trace / code search / memory write)
+-> pass the Completeness Gate (3 axes) before STOP   (depth / width / macro — not a partial answer)
 -> answer with validity (freshness)
 ```
+
+When the evidence at a step is enough, STOP there; when it is not, go one step deeper.
+But before any STOP, run the **Completeness Gate (3 Axes)** (see Stop Conditions) so a plausible
+partial answer doesn't pass for the authoritative one — go down to code where the answer lives
+(depth), expose a split question instead of silently picking one branch (width), and for a
+multi-target question build the spec/BR map first and let code only verify it (macro). A pure
+definition / naming question is exempt.
 
 If the SOT folder does not exist yet, fall back to the **advanced recovery CLI
 graph walk** below — do not guess.
@@ -102,6 +110,9 @@ STOP if you catch yourself thinking any of these:
 | "Business docs exist, but graph trace feels faster, so I'll start there" | Wrong mode for business/planning/policy/journey/concept questions. When valid business docs exist, treat them as the semantic index first for those questions. For development/design-impact questions already anchored to implementation or asking code/impact, use the 4-axis path: targeted static catalog grep + graph traces first, with business docs as semantic scope/constraints. |
 | "Business docs are missing, so retrieval cannot answer anything" | Wrong mode. Static catalogs, graph trace, and code search still answer static-analysis questions; just avoid inventing business rules. |
 | "This domain term means business-doc mode should be active" | Wrong mode. Mode selection comes from generic SOT structure and catalog fields, never domain, fixture, repository, source-path, or EPIC-title terms. |
+| "The glossary/BR already lists them, so that's the complete set — STOP" | **Depth gap.** An enumeration / "what types/values exist" question answered from a glossary or BR list is an *abstraction or partial list*, not the authoritative set. The authoritative enum/constant usually lives in code. Verify against the code enum/constant once (`code search --symbol <EnumOrConstant>`) before STOP. |
+| "The question is clear enough, I'll answer the most likely reading and STOP" | **Width gap.** If a core noun is polysemous, or the intent level is undecided, or a cross-cutting flow spans several targets, the question reads two+ ways. **Expose the split first** ("this reads N ways: (a)… (b)…"); never silently pick one interpretation. For a cross-cutting flow, **count the applicable targets** (enum/grep) before answering. If the answer makes the discarded alternatives invisible, that is a width violation. |
+| "It's a multi-target question but one grep hit covers it, so STOP" | **Macro gap.** A single code grep matches *one mechanism* and misses the set boundary (missing pages, hidden call sites, other mechanisms). For "all / every / which screens / across / each / list of …" questions, build the full map from spec (`relations.navigation` / `relations.api_calls`) / BR **first**, then use code only to verify and fill that map. Going straight to code for a multi-target question is how you deep-dive one mechanism and falsely report "I saw everything". |
 
 ## Stop Conditions
 
@@ -110,6 +121,29 @@ STOP if you catch yourself thinking any of these:
 - **The same `id` appears in more than one document** (catalog or frontmatter): stop and report the ambiguity instead of picking one — the projection or DB is inconsistent.
 - **Every candidate document reports `validity: orphaned`** (or `status: deleted`): stop treating their content as evidence; report that the docs no longer map to analyzed sources and recommend regeneration + re-export.
 - **Two full discovery passes** (catalog grep -> detail read -> frontmatter follow) surface no evidence for a subquestion: answer "no evidence found", list what you grepped/read, and stop — do not widen indefinitely or fabricate.
+- **Completeness gate not yet passed**: do NOT STOP on a glossary/BR list, a single interpretation, or a single grep hit until you have run the **Completeness Gate (3 Axes)** below. A plausible partial answer is not an authoritative one. Only a pure definition / naming question ("what does X mean") may STOP at the glossary without the gate.
+
+## Completeness Gate (3 Axes) — Before STOP
+
+The core rule is: **when the evidence is enough, STOP; when it is not, go one step deeper.** But before any STOP, pass these three checks so a plausible partial answer doesn't pass for an authoritative one. The axes are **depth** (did you go down to code where the answer lives), **width** (did the question split and you answered only one branch), and **macro** (is it multi-target but you saw only part of the set). A pure definition / naming question is exempt from all three.
+
+1. **Depth — enumeration / exact-value / structure questions go to code.**
+   - "what types/values exist", "kinds of", "all of", "the list of": a glossary/BR list is an abstraction or partial list. The authoritative enum/constant lives in code — verify it **once** (`platty code search --project <project> --symbol "<EnumOrConstant>"` or worktree grep) before STOP.
+   - "how does it differ / exactly / by what criterion / where": don't STOP at a glossary definition — confirm the actual routing/branch/numeric value in code.
+   - structure / mapping ("tab↔section", "screen↔component"): a glossary's structural description may be abstracted or stale — cross-check the structure against code.
+
+2. **Width — expose ambiguity before answering (do not silently pick one).** A question is ambiguous if any of these hold:
+   - the core noun is polysemous (one word, two domains/meanings),
+   - the intent level is undecided ("tell me about X" = definition vs page/API vs code branch),
+   - a cross-cutting flow spans several targets (one "A→B flow" applies to several types/screens at once).
+
+   When ambiguous, in this fixed order: (a) **expose the split in one line first** ("this reads N ways: (a)… (b)…"); (b) for a cross-cutting flow, **count the applicable targets before answering** (enum/grep: is it one target or several?); (c) then either answer both briefly (if cheap) or answer the most likely reading while naming why it was chosen, naming the discarded reading, and offering to switch. **Forbidden:** silently choosing one branch and finishing. If the discarded interpretation is invisible in the answer, the width axis failed.
+
+3. **Macro — multi-target questions build the spec/BR map first, code verifies.** Triggers (any one ⇒ multi-target): "all / every / which screens / across / each / list of / the whole flow / categorize / …" — if the target set is **not exactly one**, it is multi-target. Mandatory order:
+   1. **Before** any code grep, build the full map from spec (`relations.navigation` / `relations.api_calls`) or BR — fix that as the expected target list.
+   2. Use code **only to verify and fill** that map (grep/snippet each listed item). That is: **spec/BR = map, code = verification.**
+   3. If spec/BR is missing or abstracted/stale, cross-reinforce with code — but never treat "one symbol grep = the whole set" (one grep catches one mechanism only).
+   - **Self-check before STOP:** "Did I check this answer's target set against the spec/BR map? Did I finish on a single grep? Are there other mechanisms / types / screens I haven't accounted for?" — a single page or single symbol is exempt.
 
 ## Required Inputs
 
@@ -505,3 +539,68 @@ generated business docs under `epics/<epicId>/`.
   implementation structure.
 - Reporting only "SOT path missing" without naming the business-doc absence boundary and the static
   surfaces that remain available.
+
+### Scenario: "what types/values exist" STOPped at the glossary list (Depth axis)
+
+**Input:** An enumeration question ("what kinds of X are there / list all X") for a project that
+has both a glossary/BR list of X and an authoritative enum/constant in code.
+
+**Trap:** The glossary or BR shows a readable list, so the answer STOPs there and reports that list
+as the complete set. The glossary list is an abstraction / partial list; the authoritative set lives
+in the code enum/constant, and the two can disagree.
+
+**PASS path:**
+
+1. Read the glossary/BR list as the candidate set.
+2. Before STOP, verify against the authoritative enum/constant once:
+   `platty code search --project <project> --symbol "<EnumOrConstant>"` (or worktree grep).
+3. Reconcile: report the code-authoritative set, flagging any item the glossary list missed or added.
+
+**Red (any of these is a failure):**
+
+- Presenting the glossary/BR list as the complete set without checking the code enum/constant.
+- Treating a partial list as authoritative because it "looked complete".
+
+### Scenario: polysemous core noun answered with one silent interpretation (Width axis)
+
+**Input:** A question whose core noun is polysemous (one word, two domains), or whose intent level is
+undecided, or whose flow is cross-cutting across several targets.
+
+**Trap:** The answer silently picks the single most likely reading and finishes, so the discarded
+interpretation never surfaces and the user can't tell a choice was made.
+
+**PASS path:**
+
+1. Expose the split in one line first: "this reads N ways: (a)… (b)…".
+2. For a cross-cutting flow, count the applicable targets (enum/grep) before answering — is it one
+   target or several?
+3. Either answer both briefly, or answer the most likely reading while naming why it was chosen,
+   naming the discarded reading, and offering to switch.
+
+**Red (any of these is a failure):**
+
+- Choosing one branch silently and finishing — the answer makes the discarded reading invisible.
+- For a cross-cutting flow, answering as if it applies to one target without counting the set.
+
+### Scenario: multi-target question answered by a single grep (Macro axis)
+
+**Input:** A multi-target question ("all / every / which screens / across / each / list of …") whose
+target set is spread across several pages / call sites / mechanisms.
+
+**Trap:** A single `code search` / grep matches one mechanism, returns hits, and the answer concludes
+"that's all" — missing the other pages, hidden call sites, and other mechanisms that make up the set.
+
+**PASS path:**
+
+1. Before any code grep, build the full map from spec (`relations.navigation` / `relations.api_calls`)
+   or BR — fix it as the expected target list.
+2. Use code only to verify and fill that map (grep/snippet each listed item): spec/BR = map,
+   code = verification.
+3. If spec/BR is absent or abstracted/stale, cross-reinforce with code, but do not treat one symbol
+   grep as the whole set.
+
+**Red (any of these is a failure):**
+
+- Going straight to code for a multi-target question and reporting the single grep's hits as the set.
+- Deep-diving one mechanism/type/screen and claiming the full set was covered.
+- Concluding "there are no others" from one grep without checking the spec/BR map for the boundary.

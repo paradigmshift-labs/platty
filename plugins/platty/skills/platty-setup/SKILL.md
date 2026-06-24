@@ -30,7 +30,7 @@ The setup hub should be described as covering:
 
 ```text
 project selection -> repository registration -> analysis -> target review ->
-technical docs -> EPIC auto-confirm -> business documents
+technical docs -> EPIC approval -> business documents -> sync handoff
 ```
 
 ## Project Dashboard Surface
@@ -71,9 +71,8 @@ platty status --project <project> --json
 After inspecting JSON, explain the state in user-friendly language and recommend
 one next action. If a response includes `nextAction.command`, treat that command
 as the next step unless a Stop Condition or workflow gate below applies. EPIC
-continuation should run the returned `confirm-epics` command automatically
-unless the user explicitly requested manual EPIC review, and business documents
-that are still running must not be synced yet.
+continuation still requires explicit user approval before `confirm-epics`, and
+business documents that are still running must not be synced yet.
 
 ## Setup Guidance Style
 
@@ -149,13 +148,12 @@ Analysis complete but target review pending:
 - Explain that target review decides which screens, APIs, events, schedules, and
   data models should be documented.
 
-EPIC confirmation pending:
+EPIC approval pending:
 
 - Say EPIC draft generation is complete.
-- State that the returned `confirm-epics` command continues into business docs.
+- State that business documents must not start without explicit approval.
 - Include the run id when available.
-- Run the returned confirmation command unless the user explicitly requested
-  manual EPIC review.
+- Ask for approval or requested changes.
 
 Business documents running or incomplete:
 
@@ -277,9 +275,9 @@ state:
 | Static analysis | In `Manage current project`, choose `Run static analysis`. | `platty status --project <project> --json` |
 | Target review | In `Manage current project`, review documentation targets before generating technical docs. | `platty targets list --project <project> --json` |
 | Technical docs | In `Manage current project`, choose `Generate technical docs`. | When a run id exists, `platty generate-docs status --project <project> --stage build_docs --run-id <run-id> --json` |
-| EPICs | In `Manage current project`, choose `Generate EPICs` or `Confirm EPICs`. Auto-run returned confirmation commands unless the user requested manual review. | Run the returned `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json` command |
+| EPICs | In `Manage current project`, choose `Generate EPICs` or `Confirm EPICs`. Ask before confirmation. | Stop and ask for explicit approval before `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json` |
 | Business docs | In `Manage current project`, choose `Generate business docs`. Inspect run state and ask before start. | When a run id exists, `platty generate-docs status --project <project> --stage build_business_docs --run-id <run-id> --json` |
-| Sync | In `Manage current project`, choose sync only after source/repository changes and fresh static analysis. | `platty sync plan --project <project> --json`, then returned `sync run` / `sync confirm` commands |
+| Sync | In `Manage current project`, choose `Sync generated outputs`. | `platty sync static-map --project <project> --json` |
 
 ## Worker Metrics Note
 

@@ -35,6 +35,7 @@ Common routes:
 - SDD product spec and user stories from an idea: `platty-sdd-spec`
 - SDD technical design and tasks from approved spec/stories: `platty-sdd-design`
 - Recording or maintaining human knowledge (why, corrections, constraints) on epics or documents: `platty-memory`
+- Fixture corpus quality work: `platty-corpus-quality`
 
 ## Core Rules
 
@@ -54,7 +55,7 @@ Common routes:
   on macOS/Linux, `%APPDATA%\Platty` on Windows). `PLATTY_HOME` overrides that
   location. The CLI config field `projectRoot` refers to this state root, not to
   an analyzed repository.
-- Use the installed global `platty` binary for Platty workflows. If the binary is missing or appears stale (`UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` for a command that should exist), stop and report that the global @paradigmshift/platty package needs to be reinstalled or updated. Keep the workflow on the global CLI.
+- Use the installed global `platty` binary for Platty workflows. If the binary is missing or appears stale (`UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` for a command that should exist), stop and report that the global @pshift/platty package needs to be reinstalled or updated. Keep the workflow on the global CLI.
   Inside the private source checkout, maintainer verification uses the local
   build, not the global binary:
 
@@ -69,10 +70,10 @@ Common routes:
 - Use `platty status --json` when the next action is unclear.
 - Follow `nextCommand` or `nextAction.command` from JSON output unless a gate
   says to pause. Check the top level, `data.nextCommand`, and `data.nextAction`.
-  Gate precedence overrides blindly following commands for malformed or missing
-  EPIC confirmation commands, incomplete target review, failed `build_docs`
-  recovery, active generated-output work before sync, or recovery that must
-  preserve an existing run. Preserve returned command arguments verbatim when possible. When
+  Gate precedence overrides blindly following commands for EPIC approval,
+  incomplete target review, failed `build_docs` recovery, active
+  generated-output work before sync, or recovery that must preserve an existing
+  run. Preserve returned command arguments verbatim when possible. When
   reconstructing a command, carry forward `--project`, `--stage`, `--run-id`,
   existing `--provider`, and `--json` if the suggested command omits them.
 - Do not use generation skills for retrieval-only questions.
@@ -83,13 +84,12 @@ For humans, describe the workflow as these stages and start with bare
 `platty setup` as the project-management entry point:
 
 ```text
-setup -> analyze -> targets -> generate-docs
+setup -> analyze -> targets -> generate-docs -> sync
 ```
 
 `generate-docs` includes technical document generation, EPIC draft generation,
-automatic EPIC confirmation through the returned CLI command, and business-doc
-generation after confirmation. `sync` is a separate incremental refresh workflow
-after source/repository changes and fresh static analysis.
+the explicit EPIC approval pause, and business-doc generation after approval.
+`sync` remains a separate public workflow after generated outputs are complete.
 
 Do not present that stage list as a required shell script. `platty setup` and
 `platty status` surface the next state-derived action.
@@ -101,12 +101,10 @@ language:
 2. `platty analyze --project <project> --json` to converge static analysis.
 3. `platty targets list --project <project> --json` to inspect documentation targets.
 4. `platty targets deprecate --project <project> --ids <target-id> --json` to exclude unwanted targets.
-5. `platty generate-docs run --project <project> --json` to run technical docs and EPIC generation.
-6. If the CLI returns `epics_confirmation_required`, run the returned
-   `platty generate-docs confirm-epics ... --json` command automatically unless
-   the user explicitly asked to review EPICs before confirmation.
-7. Use `platty sync ... --json` only for incremental refresh after source or
-   repository changes and fresh static analysis.
+5. `platty generate-docs run --project <project> --json` to run docs and EPIC generation.
+6. Stop for explicit user approval when an EPIC draft is ready.
+7. After approval only, run `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json`.
+8. `platty sync static-map --project <project> --json` to sync generated outputs after generated work is complete.
 
 Internal compatibility commands:
 
@@ -121,7 +119,7 @@ Compatibility recovery note:
 
 Do not route workflows through the legacy static-analysis confirm root.
 Compatibility recovery: if a stale global CLI asks for that legacy confirm
-command, stop and tell the user to reinstall or update the global @paradigmshift/platty package.
+command, stop and tell the user to reinstall or update the global @pshift/platty package.
 
 ## Project Context Gate
 
@@ -177,7 +175,7 @@ Platty state root (`~/.platty` or `PLATTY_HOME`). The global npm package still
 needs to be removed outside Platty with:
 
 ```bash
-npm uninstall -g @paradigmshift/platty
+npm uninstall -g @pshift/platty
 ```
 
 ## Operator UX
@@ -249,7 +247,7 @@ machine-readable evidence.
 
 ## Stop Conditions
 
-- A command fails with `UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` on the global `platty` binary: stop and tell the user to reinstall or update the global `@paradigmshift/platty` package before continuing. Do not invent an alternative command or execution path.
+- A command fails with `UNKNOWN_COMMAND` or `UNEXPECTED_ERROR` on the global `platty` binary: stop and tell the user to reinstall or update the global `@pshift/platty` package before continuing. Do not invent an alternative command or execution path.
 - The shell reports `command not found: platty` and `command -v platty` returns no path: stop and report that the global CLI is not available in PATH.
 - The shell reports `command not found: platty` but `command -v platty` returns a path: retry the same Platty command once. If the retry fails the same way, stop with the exact PATH and resolved binary path as evidence.
 - A command fails with `PROJECT_AMBIGUOUS`: stop and ask the user which project to use. Never pick one of the matches yourself.
