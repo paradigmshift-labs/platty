@@ -29,8 +29,9 @@ Use the installed global CLI by default:
 platty <command> --json
 ```
 
-If global `platty` appears stale, report that it needs reinstall/rebuild before
-continuing. Keep the workflow on the global CLI.
+If global `platty` appears stale, report that the global @paradigmshift/platty package
+needs to be reinstalled or updated before continuing. Keep the workflow on the
+global CLI.
 
 ## Compatibility Rule
 

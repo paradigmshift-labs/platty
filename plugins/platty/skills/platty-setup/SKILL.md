@@ -30,7 +30,7 @@ The setup hub should be described as covering:
 
 ```text
 project selection -> repository registration -> analysis -> target review ->
-technical docs -> EPIC approval -> business documents -> sync handoff
+technical docs -> EPIC auto-confirm -> business documents
 ```
 
 ## Project Dashboard Surface
@@ -71,8 +71,103 @@ platty status --project <project> --json
 After inspecting JSON, explain the state in user-friendly language and recommend
 one next action. If a response includes `nextAction.command`, treat that command
 as the next step unless a Stop Condition or workflow gate below applies. EPIC
-continuation still requires explicit user approval before `confirm-epics`, and
-business documents that are still running must not be synced yet.
+continuation should run the returned `confirm-epics` command automatically
+unless the user explicitly requested manual EPIC review, and business documents
+that are still running must not be synced yet.
+
+## Setup Guidance Style
+
+For agent automation, inspect setup state with JSON output, but explain the
+result as a user-friendly setup status. Setup is often the user's first Platty
+experience, so do not lead with raw JSON, raw CLI output, or a list of commands.
+
+Use these fields to populate the shared Operator UX cards from `using-platty`;
+they are not a replacement card format. Setup progress and handoff messages
+should still use the shared Start Notice, Progress Checkpoint, and Handoff Card
+labels when those cards apply.
+
+Setup-specific fields to include inside those cards or prose:
+
+```text
+Checked: <what setup/status state was inspected>
+State: <plain-language state with concrete fields>
+Next: <one decision or action>
+Evidence: <only the command/id/error code needed for handoff or debugging>
+```
+
+Natural language must still be precise. Include selected project, repository
+count, notable repository paths, analysis status, target-review status, run ids,
+or blocker codes when those fields explain the next step.
+
+### Setup State Patterns
+
+No project exists:
+
+- Say Platty needs a project workspace first.
+- Ask for the project name and description needed to create one.
+- Do not treat a repository path as a project selector.
+
+Projects exist but no project is selected:
+
+- Say a project must be selected before repositories can be registered.
+- Ask which existing project to use.
+- Do not treat a repository path as a project selector.
+
+Multiple projects or ambiguous project:
+
+- Say more than one project matches.
+- Ask which project to use.
+- Include `PROJECT_AMBIGUOUS` only as blocker evidence, not as the whole message.
+
+Project selected but no repositories:
+
+- Name the selected project when known.
+- State that repository count is zero.
+- Recommend registering the repository to analyze.
+
+Repository already registered or duplicate-looking registrations:
+
+- Summarize the registered entries.
+- Ask whether to use the existing registration, update it, or add another
+  repository.
+
+Registered repository path is missing or invalid:
+
+- Explain that the project exists but the stored repository path cannot be used.
+- Recommend updating/removing the registration or selecting a valid local Git
+  repository.
+- Include `NOT_A_GIT_REPO`, `NOT_A_DIRECTORY`, or the exact path as evidence.
+
+Repositories ready but analysis incomplete:
+
+- Say project and repositories are ready.
+- Explain that static analysis must run before target review and generated docs.
+
+Analysis complete but target review pending:
+
+- Say analysis is complete and documentation target candidates are ready.
+- Explain that target review decides which screens, APIs, events, schedules, and
+  data models should be documented.
+
+EPIC confirmation pending:
+
+- Say EPIC draft generation is complete.
+- State that the returned `confirm-epics` command continues into business docs.
+- Include the run id when available.
+- Run the returned confirmation command unless the user explicitly requested
+  manual EPIC review.
+
+Business documents running or incomplete:
+
+- Say generated work is still active or incomplete.
+- Do not recommend sync yet.
+- Recommend checking the run status or waiting for completion.
+
+CLI failure:
+
+- Translate the failure into plain language.
+- Include the exact error code in parentheses.
+- Do not paste the whole JSON response unless debugging was requested.
 
 ### Explicit JSON Setup Sequence
 
@@ -121,11 +216,38 @@ Add repositories inside the selected project:
 
 ```bash
 platty repo list --project <project> --json
-platty repo add <path> --project <project> --json
+platty repo add <path> --project <project> --branch <branch> --json
 platty repo list --project <project> --json
 ```
 
-Use `--source-root` when only a subdirectory should be analyzed. Use `--branch` when analysis should track a specific branch — without it, `repo add` tracks whatever branch the repository currently has checked out.
+Use `--source-root` when only a subdirectory should be analyzed. Use `--branch`
+when analysis should track a specific branch; without it, `repo add` tracks
+whatever branch the repository currently has checked out.
+
+Branch rule:
+
+- If the user says analysis should use `main`, the default branch, or any named
+  branch, include `--branch <branch>` in `repo add`; do not assume `analyze`
+  will move the source checkout.
+- If the user does not name a branch, inspect the repository's current checkout
+  and default-branch candidate before registering it. Prefer `origin/HEAD`,
+  then `main`, then `master` as the default-branch candidate.
+- If the default-branch candidate differs from the current checkout, ask the
+  user which branch Platty should analyze: the default branch, usually `main`,
+  or the current branch. Do not register the repository until the branch choice
+  is explicit.
+- After the user chooses, pass the chosen branch explicitly with
+  `--branch <branch>`.
+- If a repository is already registered on the wrong branch, fix the
+  registration before analysis:
+
+```bash
+platty repo update <repo-id-or-name> --branch <branch> --project <project> --json
+```
+
+- `analyze` creates or refreshes the app-managed analysis worktree from the
+  stored repository branch. It does not infer a new branch from the current
+  shell checkout.
 
 For an existing project, run `repo list` BEFORE `repo add` and inspect the registered entries:
 
@@ -155,9 +277,9 @@ state:
 | Static analysis | In `Manage current project`, choose `Run static analysis`. | `platty status --project <project> --json` |
 | Target review | In `Manage current project`, review documentation targets before generating technical docs. | `platty targets list --project <project> --json` |
 | Technical docs | In `Manage current project`, choose `Generate technical docs`. | When a run id exists, `platty generate-docs status --project <project> --stage build_docs --run-id <run-id> --json` |
-| EPICs | In `Manage current project`, choose `Generate EPICs` or `Confirm EPICs`. Ask before confirmation. | Stop and ask for explicit approval before `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json` |
+| EPICs | In `Manage current project`, choose `Generate EPICs` or `Confirm EPICs`. Auto-run returned confirmation commands unless the user requested manual review. | Run the returned `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json` command |
 | Business docs | In `Manage current project`, choose `Generate business docs`. Inspect run state and ask before start. | When a run id exists, `platty generate-docs status --project <project> --stage build_business_docs --run-id <run-id> --json` |
-| Sync | In `Manage current project`, choose `Sync generated outputs`. | `platty sync static-map --project <project> --json` |
+| Sync | In `Manage current project`, choose sync only after source/repository changes and fresh static analysis. | `platty sync plan --project <project> --json`, then returned `sync run` / `sync confirm` commands |
 
 ## Worker Metrics Note
 

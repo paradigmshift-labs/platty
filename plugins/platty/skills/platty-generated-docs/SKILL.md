@@ -8,12 +8,13 @@ description: Use when generating, validating, reviewing, resuming, or repairing 
 Use this skill for the public generated-output workflow:
 
 ```text
-targets -> generate-docs run -> EPIC approval -> generate-docs confirm-epics
+targets -> generate-docs run -> EPIC auto-confirm -> generate-docs confirm-epics
 ```
 
-This skill owns technical document generation, EPIC draft generation, the EPIC
-approval pause, business-doc generation after approval, generated-docs status,
-and advanced recovery for the three worker stages.
+This skill owns technical document generation, EPIC draft generation, automatic
+EPIC confirmation from returned CLI commands, business-doc generation after
+confirmation, generated-docs status, and advanced recovery for the three worker
+stages.
 
 Do not route public work directly through lower-level `docs`, `epics`, or
 `business-docs` commands. Those commands are internal compatibility surfaces for
@@ -27,36 +28,36 @@ Resolve these before running project-scoped commands:
 - project selector from `platty project list/create/use --json`;
 - target review state from `platty targets list --project <project> --json`;
 - generated-docs status or run id, if resuming;
-- EPIC run id, draft id, and explicit approval state when continuing past the
-  EPIC gate.
+- EPIC run id or returned confirmation command when continuing past the EPIC
+  confirmation point.
 - agent provider choice when a command will run generated-output workers, unless
   the user already specified one.
 
-Inside the Platty monorepo, run the local build form:
-
-```bash
-node packages/cli/dist/main.js <command> --json
-```
-
-Outside this repo, use the installed global CLI:
+Public/plugin workflows use the installed global CLI:
 
 ```bash
 platty <command> --json
 ```
 
+Repo-local maintainer execution is documented outside the public plugin skills;
+public/plugin workflows stay on the installed global CLI.
+
 ## Agent Provider Gate
+
+platty-generated-docs owns the provider gate. Other Platty skills should route
+here instead of asking duplicate provider questions.
 
 Before starting worker-backed generated-output work, ask which provider to use
 unless the user already chose one in the current conversation or the verified
-`nextAction.command` already includes `--provider`.
+`nextCommand` or `nextAction.command` already includes `--provider`.
 
 Ask in the user's language. For Korean users, ask:
 
 ```text
 어떤 실행 방식으로 생성할까요?
 
-1. Codex CLI - 기본값, `codex exec` headless 실행
-2. Claude Code CLI - Claude Code headless 실행
+1. Codex CLI - 기본값, PATH의 `codex exec` headless JSON 실행
+2. Claude Code CLI - PATH의 `claude` JSON 실행
 3. Claude API - Anthropic API 키 필요
 ```
 
@@ -64,12 +65,12 @@ Map the answer to command flags:
 
 | Choice | Flags |
 | --- | --- |
-| Codex CLI | omit `--provider` or use `--provider codex_cli` |
-| Claude Code CLI | `--provider claude_code` |
+| Codex CLI | omit `--provider` or use `--provider codex_cli`; requires installed Codex CLI available on `PATH` |
+| Claude Code CLI | `--provider claude_code`; requires installed Claude Code CLI available on `PATH` |
 | Claude API | `--provider claude_api` |
 
-If the user chooses Claude API, make sure they know where to add the key before
-running the command:
+If the user chooses Claude API, `claude_api` requires `ANTHROPIC_API_KEY`.
+The shell environment takes precedence; the CLI also loads `~/.platty/.env`.
 
 ```bash
 open ~/.platty/.env
@@ -82,12 +83,14 @@ ANTHROPIC_API_KEY=<anthropic-api-key>
 ```
 
 If the CLI returns `ANTHROPIC_API_KEY_REQUIRED`, follow the response's
-`nextAction.command`, let the user add the key, then retry the same command.
+`nextCommand` or `nextAction.command`, let the user add the key, then retry the
+same command.
 
 Keep the selected provider for the whole generated-docs workflow. If
-`generate-docs run` pauses for EPIC approval, include the same provider flags on
-`generate-docs confirm-epics` unless the response's `nextAction.command` already
-preserves them.
+`generate-docs run` reaches EPIC confirmation, run the returned
+`generate-docs confirm-epics` command automatically unless the user explicitly
+asked to review EPICs before confirmation. Preserve the same provider flags when
+reconstructing a command.
 
 ## Public Workflow
 
@@ -109,14 +112,18 @@ With an explicit provider choice:
 platty generate-docs run --project <project> --provider claude_api --json
 ```
 
-If the response reports `epics_confirmation_required`, stop. Validation is not
-approval. Summarize the EPIC draft state and ask the user whether to approve it.
-
-After explicit user approval only:
+If the response reports `epics_confirmation_required`, treat the returned
+`nextCommand` as the approval action and run it automatically. Summarize that
+EPIC generation reached confirmation, preserve returned `--project`, `--run-id`,
+provider/model flags, and `--json`, then execute:
 
 ```bash
 platty generate-docs confirm-epics --project <project> --run-id <run-id> --json
 ```
+
+Pause before confirmation only when the user explicitly asked to review EPICs
+before approval in the current conversation, or when the CLI response lacks a
+run id or confirmation command.
 
 If a provider was selected earlier, preserve it:
 
@@ -132,10 +139,14 @@ platty generate-docs status --project <project> --json
 
 ## Gate Precedence
 
-Do not blindly follow `nextAction.command` across these gates:
+Do not blindly follow `nextCommand` or `nextAction.command` across these gates:
 
 - target review is missing or incomplete;
-- EPIC draft needs explicit user approval;
+- `BUILD_DOCS_FAILED_BLOCKS_EPICS` or failed `build_docs` tasks require
+  `generate-docs retry-failed`; do not continue to EPIC or business-doc
+  generation from incomplete technical docs.
+- EPIC confirmation command is missing, malformed, or conflicts with the
+  current project/run id; stop instead of guessing a confirm command.
 - generated-output work is active and the user asks for sync;
 - recovery must preserve an existing run and avoid regeneration.
 
@@ -147,13 +158,40 @@ verified JSON state.
 Use the generated-docs facade first for recovery, inspection, debugging, and
 worker-level contexts.
 
+### Failed build_docs Gate
+
+If `generate-docs run`, `generate-docs confirm-epics`, or `generate-docs status`
+shows failed `build_docs` tasks, stop before EPIC or business-doc generation.
+The public workflow is repair-first.
+
+When the CLI returns `BUILD_DOCS_FAILED_BLOCKS_EPICS`, recommend:
+
+```bash
+platty generate-docs retry-failed --project <project> --stage build_docs --run-id <run-id> --json
+```
+
+Then follow the returned public `nextCommand`, usually:
+
+```bash
+platty generate-docs agent-next --project <project> --stage build_docs --run-id <run-id> --json
+```
+
+Do not suggest `--force` or lower-level `docs` commands for this public gate.
+Use lower-level commands only when a Platty maintainer explicitly asks for
+repo-local debugging.
+
 Known generated-output recovery should preserve the existing run and avoid
 regenerating completed work. Inspect or resume through the facade:
 
 ```bash
 platty generate-docs status --project <project> --stage <stage> --run-id <run-id> --json
 platty generate-docs prepare --project <project> --stage <stage> --run-id <run-id> --json
-platty generate-docs approve-stage --project <project> --stage <stage> --run-id <run-id> --json
+```
+
+Prepared-stage approval is only for `build_docs` prepared-stage recovery:
+
+```bash
+platty generate-docs approve-stage --project <project> --stage build_docs --run-id <run-id> --json
 ```
 
 Do not use `--new-run` or `--force-regenerate` unless the user explicitly asks
@@ -169,13 +207,19 @@ platty generate-docs agent-next --project <project> --stage <stage> --run-id <ru
 platty generate-docs agent-submit --project <project> --stage <stage> --run-id <run-id> --task-id <task-id> --lease-token <token> --document-json <json> --json
 ```
 
+For `--stage build_business_docs`, pass `--attempt <attemptNo>` from the assigned
+task packet when submitting the result.
+
 Use direct `docs`, `epics`, or `business-docs` roots only when a Platty
 maintainer explicitly asks for an internal command or repo-local debugging
 requires it. Do not present those roots as public workflows.
 
 ## Stop Conditions
 
-- EPIC draft is valid but not explicitly approved: stop and ask for approval.
+- EPIC confirmation is required but no concrete `confirm-epics` command or run
+  id is available: stop and report the missing command or run id.
+- The user explicitly requested manual EPIC review before confirmation: stop
+  and ask whether to proceed.
 - `targets list` shows target review is incomplete: stop and route target work
   through `platty targets ...`.
 - User asks for sync while generated work is active, failed, or incomplete:
