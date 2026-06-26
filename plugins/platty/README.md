@@ -23,7 +23,7 @@ Platty requires Node.js 20 or newer.
 Install the public npm package:
 
 ```bash
-npm install -g @pshift/platty
+npm install -g @paradigmshift/platty
 ```
 
 Then verify the global binary:
@@ -70,7 +70,6 @@ platty:platty-retrieval
 platty:platty-sdd-spec
 platty:platty-sdd-design
 platty:platty-memory
-platty:platty-corpus-quality
 ```
 
 Start with `platty:using-platty`, then route through `platty:platty-cli-router` when deciding which workflow applies.
@@ -92,12 +91,13 @@ Use `platty:platty-setup` to create or select a project and register repositorie
 The public workflow stages are:
 
 ```text
-setup -> analyze -> targets -> generate-docs -> sync
+setup -> analyze -> targets -> generate-docs
 ```
 
-`generate-docs` includes technical docs, EPIC draft generation, the explicit
-EPIC approval pause, and business-doc generation after approval. `sync` remains
-a separate public workflow after generated outputs are complete.
+`generate-docs` includes technical docs, EPIC draft generation, automatic EPIC
+confirmation through returned CLI commands, and business-doc generation after
+confirmation. `sync` is a separate incremental refresh workflow after source or
+repository changes and fresh static analysis.
 
 For humans, describe this as a state-aware flow surfaced through `platty setup`.
 For agents, inspect JSON and follow `nextCommand` or `nextAction.command` unless
@@ -109,13 +109,12 @@ Use the skills for stage-specific behavior:
 - `platty:platty-setup` for global state, projects, and repositories.
 - `platty:platty-static-analysis` for analysis progress and run inspection.
 - `platty:platty-docs-target-curation` before generation when target scope needs review.
-- `platty:platty-generated-docs` for public technical docs, EPIC draft, EPIC approval, and business-doc generation.
-- `platty:platty-sync` for generated-output synchronization after generated work is complete.
+- `platty:platty-generated-docs` for public technical docs, EPIC draft, EPIC auto-confirm, and business-doc generation.
+- `platty:platty-sync` for incremental refresh after source or repository changes.
 - `platty:platty-retrieval` for retrieval-only questions from existing docs.
 - `platty:platty-sdd-spec` for turning a rough idea into grounded `request.md` and `stories.md`.
 - `platty:platty-sdd-design` for turning approved SDD product docs into grounded `design.md` and `tasks.md`.
 - `platty:platty-memory` for recording or maintaining human knowledge.
-- `platty:platty-corpus-quality` for fixture inspection, dry runs, reports, and self-improvement candidate selection.
 
 ## References
 
@@ -132,7 +131,6 @@ Open only what you need:
 - SDD product spec: `skills/platty-sdd-spec/SKILL.md`
 - SDD technical design: `skills/platty-sdd-design/SKILL.md`
 - Memory: `skills/platty-memory/SKILL.md`
-- Corpus quality: `skills/platty-corpus-quality/SKILL.md`
 
 ## Guardrails
 

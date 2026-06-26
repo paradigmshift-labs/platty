@@ -18,9 +18,17 @@ Record a memory when the user:
 - states a constraint or exception the code does not show.
 - shares tacit knowledge about a table, field, API, screen, event, or schedule.
 
+Also record when retrieval + code verification surfaces a fact the generated SOT
+**missed** — a generation gap confirmed by reading the source (e.g. an access-control
+hole the docs only half-captured). Anchor it as a `correction`/`constraint`, cite the
+source (`file:line`), and note it is as-of the current code. This is a bridge so
+retrieval can surface the gap; when the miss is systemic, also fix generation so the
+SOT captures it durably and the bridge memory can retire.
+
 Do not record:
 
-- facts derivable from code — that is the SOT's job; regenerate or sync instead.
+- facts the SOT already captures — that is the SOT's job; regenerate or sync instead.
+  (A fact the SOT *failed* to capture is the gap case above, and is worth recording.)
 - secrets, credentials, tokens, or PII. Memory content is sent to LLM workers (redaction exists, but do not rely on it) and survives deletion inside the revision history.
 
 ## Abstraction-Level Routing
