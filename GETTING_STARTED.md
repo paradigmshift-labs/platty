@@ -14,7 +14,7 @@ Install both parts before asking an agent to run Platty workflows.
 Install the public npm package:
 
 ```bash
-npm install -g @pshift/platty
+npm install -g @paradigmshift/platty
 ```
 
 Platty requires Node.js 20 or newer.
@@ -94,12 +94,13 @@ Most users should start with `platty setup`.
 The full Platty workflow is:
 
 ```text
-setup -> analyze -> targets -> generate-docs -> sync
+setup -> analyze -> targets -> generate-docs
 ```
 
 The CLI shows the next action based on project state. The agent plugin skills
-explain when to continue, pause for EPIC approval inside generate-docs, sync
-completed generated outputs, or recover from a failed run.
+explain when to continue, auto-confirm EPICs through returned CLI commands,
+refresh existing generated outputs after source changes, or recover from a
+failed run.
 
 ## Generated Docs Providers
 
@@ -115,7 +116,8 @@ You can choose another provider when starting generation:
 platty generate-docs run --project PROJECT --provider claude_api --json
 ```
 
-If generation pauses for EPIC approval, preserve the same provider when confirming:
+If generation reaches EPIC confirmation, preserve the same provider when running
+the returned confirmation command:
 
 ```bash
 platty generate-docs confirm-epics --project PROJECT --run-id RUN --provider claude_api --json
@@ -192,7 +194,7 @@ where platty
 Then reinstall if needed:
 
 ```bash
-npm install -g @pshift/platty
+npm install -g @paradigmshift/platty
 ```
 
 Then open a new terminal and try `platty version` again.

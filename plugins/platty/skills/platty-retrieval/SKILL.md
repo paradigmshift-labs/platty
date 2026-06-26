@@ -433,6 +433,7 @@ Memories are human-recorded knowledge (why, corrections, constraints), projected
 - A memory entry with `anchorStale: true` is anchored to an item that no longer exists (renamed/dropped on regen) even though its parent doc may read `fresh` — do **not** assert it as current; surface it and recommend re-anchoring (`memory update`/re-add).
 - If `README.md` reports a `memory/unrouted.md` count (memories whose epic/doc anchor was deleted or regenerated), **read that file** — its memories are NOT reachable from any epic/spec `memory.md`. Surface them and recommend re-anchoring; do not assume the rest of the tree covers them.
 - The MD is a projection: a `memory add` is invisible here until the next `sot export`. If you just wrote memory, treat `memory.md` as behind until you re-export. To record, use `platty memory add` (with `--export-sot`) then never edit `memory.md` directly. See `platty-memory`.
+- When this skill's search → code verification confirms a fact the SOT **missed** (a generation gap — e.g. an access-control hole the docs only half-captured), that is worth recording, not duplicate SOT content. Route to `platty-memory` and add it as a `correction`/`constraint`, citing `file:line` and marking it as-of the current code. Recording a SOT-missed gap differs from duplicating a SOT-captured fact, which stays the SOT's job.
 
 ## Development Design Questions (4-Axis)
 
