@@ -108,6 +108,7 @@ STOP if you catch yourself thinking any of these:
 | "I found the `code_term` in glossary, I'll pass it straight to `graph trace --from`" | A `code_term` is a code identifier, NOT a service-map node id. `graph trace --from` needs a node id — first `code search --symbol <code_term>` to get the nodeId, then trace from that. Passing the raw `code_term` is a dangling-input error. |
 | "The query is Korean but I know the English word, I'll skip glossary and trace from my guess" | Cross the language bridge through `catalog/glossary.md` first. Guessing the English/code term skips the canonical/`code_term` mapping and traces the wrong (or non-existent) node. |
 | "Business docs exist, but graph trace feels faster, so I'll start there" | Wrong mode for business/planning/policy/journey/concept questions. When valid business docs exist, treat them as the semantic index first for those questions. For development/design-impact questions already anchored to implementation or asking code/impact, use the 4-axis path: targeted static catalog grep + graph traces first, with business docs as semantic scope/constraints. |
+| "The business doc says it, so I'll assert it as fact" | Business docs are an **index, not ground truth**. LLM-generated business docs (`usecases/ucs.md`, `design.md`, `br.md`, `glossary.md`) can overclaim — an `authenticated user` written up as `owner`/`member-only`/`participant-only`, a minimal `"ok"` response written up as a returned/created record — or lag the source. Before asserting a behavior, actor/permission, response shape, or rule from a business doc, drill into the **connected** `specs/api/<id>.md` / `specs/screen/<id>.md` (via `relatedDocs`/`serviceMapNodes`/`traceId`, **only the related ones**) — and code via `graph trace`/`code search` when the spec is thin — and confirm it there. Assert from the source-near spec/code; cite the business doc as the index that located it. If they disagree, surface the gap. |
 | "Business docs are missing, so retrieval cannot answer anything" | Wrong mode. Static catalogs, graph trace, and code search still answer static-analysis questions; just avoid inventing business rules. |
 | "This domain term means business-doc mode should be active" | Wrong mode. Mode selection comes from generic SOT structure and catalog fields, never domain, fixture, repository, source-path, or EPIC-title terms. |
 | "The glossary/BR already lists them, so that's the complete set — STOP" | **Depth gap.** An enumeration / "what types/values exist" question answered from a glossary or BR list is an *abstraction or partial list*, not the authoritative set. The authoritative enum/constant usually lives in code. Verify against the code enum/constant once (`code search --symbol <EnumOrConstant>`) before STOP. |
@@ -352,6 +353,8 @@ Trust the frontmatter `validity` (`fresh` | `stale` | `orphaned`) and `status`:
 ## Business Index Mode
 
 Use this when the State Gate finds live EPIC rows with generated business documents and the question is about business meaning, planning, policy/rules, user journeys, or concepts. Business docs are the semantic index: they define intent, scope, constraints, journeys, rules, and field meaning. Technical specs and graph/code are drill-down surfaces for implementation detail, impact analysis, or gaps.
+
+**Verify business-index claims against the connected spec (index ≠ ground truth).** A business doc routes you to the right entity; it does not certify its own wording. LLM-generated business docs can overclaim — an authentication-only guard written up as `owner`/`member-only`/`participant-only`, a minimal `"ok"` response written up as a returned/created record — or lag the source. So **do not assert a behavior, actor/permission, response shape, or rule from a business doc alone.** For each such claim, follow the doc's `relatedDocs`/`serviceMapNodes`/`traceId` into the **connected** `specs/api/<fileId>.md` or `specs/screen/<fileId>.md` (only the spec(s) related to that claim — never open specs in bulk) and confirm it there; drill to code via `graph trace`/`code search` when the spec itself is thin. Assert from the source-near spec/code, citing the business doc as the index that located it. If the connected spec contradicts the business doc, surface the gap and route a `correction` (see Memory Rule); never assert the index's wording over the source.
 
 For development/design-impact questions ("where do I add/change this", "what breaks", code location, precise screen/api/table impact), do not override **Development Design Questions (4-Axis)**. If the question is already anchored to an implementation entity or asks for code/impact, start with targeted static catalog grep + graph traces as that section requires, then read available business docs for semantic scope and constraints.
 
@@ -605,3 +608,27 @@ target set is spread across several pages / call sites / mechanisms.
 - Going straight to code for a multi-target question and reporting the single grep's hits as the set.
 - Deep-diving one mechanism/type/screen and claiming the full set was covered.
 - Concluding "there are no others" from one grep without checking the spec/BR map for the boundary.
+
+### Scenario: business-doc claim asserted without checking the connected spec
+
+**Input:** A business question whose answer touches a behavior, actor/permission, or response shape
+that a business doc (`usecases/ucs.md` / `design.md` / `br.md`) states more strongly than the source
+supports — e.g. the doc reads "only the workspace owner can manage members" while the connected API
+spec shows the route only checks an authentication guard, or the doc says an upload "returns the
+created record" while the endpoint returns `"ok"`.
+
+**Trap:** The business doc reads cleanly, so the answer asserts its wording verbatim as fact and STOPs,
+never opening the connected `specs/api|screen/<id>.md` the doc points to. Business docs are an index;
+their claims are LLM-generated and can overclaim or lag.
+
+**PASS path:**
+
+1. Use the business doc as the index to locate the relevant entity (`relatedDocs` / `serviceMapNodes` / `traceId`).
+2. Read the **connected** `specs/api/<fileId>.md` or `specs/screen/<fileId>.md` (only the related one), and when it is thin, drill to code via `graph trace` / `code search`.
+3. Assert the behavior / actor-permission / response shape from the source-near spec/code, citing the business doc only as the index that found it. If the spec and the business doc disagree, surface the gap and route a `correction` (Memory Rule).
+
+**Red (any of these is a failure):**
+
+- Asserting a behavior, actor/permission, or response shape from a business doc without confirming it in the connected spec/code.
+- Opening unrelated specs in bulk instead of only the connected one(s) the business doc points to.
+- Presenting the business doc's wording as ground truth when the connected spec shows a weaker reality.
