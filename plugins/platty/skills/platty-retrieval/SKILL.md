@@ -61,6 +61,33 @@ retrieved business intent, policy, priority, or a complete journey. If graph tra
 confirmed edge, say there is no confirmed graph evidence for that anchor/depth/kind set, not that
 there is no impact.
 
+## Source Confirmation Guard
+
+For exact behavior, permissions, response shape, DB writes, event emits, external calls, policy/rule enforcement, and negative source-absence claims, generated business docs are only the route map. Confirm through the connected source-near spec first (`specs/api`, `specs/screen`, `specs/event`, or `specs/schedule`), then inspect original source code using the spec path, `graph trace`, `code search`, `docs show` code evidence, or direct worktree reads. Assert from the source-near spec/code; cite business docs only as the index that located it.
+
+Before declaring that a handler, source file, permission check, response field, write, emit, or external call is absent, confirm the intended project repository id/path from the SOT catalog row, spec frontmatter, graph/code evidence, or `docs show` evidence. Do not search a sibling repo, tutorial variant, generated example, or adjacent monorepo package and conclude the project lacks the behavior.
+
+## Business Docs As Routers, With Bypass Gate
+
+Use business docs as detailed routers when the question is business-contextual,
+ambiguous, or asks about a capability, rule, data area, user journey, or design
+area. They narrow the search inside an EPIC:
+
+- **UCL:** user action / capability router.
+- **BR:** rule, permission, policy, and constraint router.
+- **DD:** data, model, table, and field router.
+- **Design:** component, API, DB, event, and service connection router.
+
+When using these docs, prefer item-level `docLinks`, `items[].docLinks`,
+`source_mapping[].documentId`, related specs, and linked catalog rows to choose
+the relevant `api_spec`, `screen_spec`, `event_spec`, `schedule_spec`, and source
+files. Business-doc prose is routing evidence, not final truth.
+
+Bypass business docs when the question is already anchored to a specific endpoint,
+specific file, specific symbol, specific model field, screen, event, schedule,
+trace id, or exact implementation fact. In those cases, go directly to the
+relevant catalog/spec and source code. In short: go directly to the relevant catalog/spec and source code when the question is already source-near, then use business docs only if semantic scope or cross-feature context is still needed.
+
 ## Query Class Routing
 
 After the State Gate, route by question shape before reading details. This keeps retrieval
@@ -109,6 +136,8 @@ STOP if you catch yourself thinking any of these:
 | "The query is Korean but I know the English word, I'll skip glossary and trace from my guess" | Cross the language bridge through `catalog/glossary.md` first. Guessing the English/code term skips the canonical/`code_term` mapping and traces the wrong (or non-existent) node. |
 | "Business docs exist, but graph trace feels faster, so I'll start there" | Wrong mode for business/planning/policy/journey/concept questions. When valid business docs exist, treat them as the semantic index first for those questions. For development/design-impact questions already anchored to implementation or asking code/impact, use the 4-axis path: targeted static catalog grep + graph traces first, with business docs as semantic scope/constraints. |
 | "The business doc says it, so I'll assert it as fact" | Business docs are an **index, not ground truth**. LLM-generated business docs (`usecases/ucs.md`, `design.md`, `br.md`, `glossary.md`) can overclaim — an `authenticated user` written up as `owner`/`member-only`/`participant-only`, a minimal `"ok"` response written up as a returned/created record — or lag the source. Before asserting a behavior, actor/permission, response shape, or rule from a business doc, drill into the **connected** `specs/api/<id>.md` / `specs/screen/<id>.md` (via `relatedDocs`/`serviceMapNodes`/`traceId`, **only the related ones**) — and code via `graph trace`/`code search` when the spec is thin — and confirm it there. Assert from the source-near spec/code; cite the business doc as the index that located it. If they disagree, surface the gap. |
+| "The connected spec says the handler persists/broadcasts/returns X, so I don't need to inspect the source" | Specs are source-near but still LLM-authored. If the source handler body is empty, only logs values, returns no value, or is a stub/TODO/not implemented shell, **source code wins**: report that the implementation is not confirmed. Do not trust a spec claim that a stub delegates to a service, persists data, emits events, enforces permissions, or returns a business result unless the code or included shared-module evidence shows it. |
+| "I grepped nearby repos and did not find it, so the project lacks it" | Wrong boundary. Before any absence claim, verify the repo id/path from SOT catalog/spec/code evidence and search only the intended project repository or explicitly state which repo scope was searched. Sibling examples or alternate implementations are not negative evidence for this project. |
 | "Business docs are missing, so retrieval cannot answer anything" | Wrong mode. Static catalogs, graph trace, and code search still answer static-analysis questions; just avoid inventing business rules. |
 | "This domain term means business-doc mode should be active" | Wrong mode. Mode selection comes from generic SOT structure and catalog fields, never domain, fixture, repository, source-path, or EPIC-title terms. |
 | "The glossary/BR already lists them, so that's the complete set — STOP" | **Depth gap.** An enumeration / "what types/values exist" question answered from a glossary or BR list is an *abstraction or partial list*, not the authoritative set. The authoritative enum/constant usually lives in code. Verify against the code enum/constant once (`code search --symbol <EnumOrConstant>`) before STOP. |
@@ -354,7 +383,7 @@ Trust the frontmatter `validity` (`fresh` | `stale` | `orphaned`) and `status`:
 
 Use this when the State Gate finds live EPIC rows with generated business documents and the question is about business meaning, planning, policy/rules, user journeys, or concepts. Business docs are the semantic index: they define intent, scope, constraints, journeys, rules, and field meaning. Technical specs and graph/code are drill-down surfaces for implementation detail, impact analysis, or gaps.
 
-**Verify business-index claims against the connected spec (index ≠ ground truth).** A business doc routes you to the right entity; it does not certify its own wording. LLM-generated business docs can overclaim — an authentication-only guard written up as `owner`/`member-only`/`participant-only`, a minimal `"ok"` response written up as a returned/created record — or lag the source. So **do not assert a behavior, actor/permission, response shape, or rule from a business doc alone.** For each such claim, follow the doc's `relatedDocs`/`serviceMapNodes`/`traceId` into the **connected** `specs/api/<fileId>.md` or `specs/screen/<fileId>.md` (only the spec(s) related to that claim — never open specs in bulk) and confirm it there; drill to code via `graph trace`/`code search` when the spec itself is thin. Assert from the source-near spec/code, citing the business doc as the index that located it. If the connected spec contradicts the business doc, surface the gap and route a `correction` (see Memory Rule); never assert the index's wording over the source.
+**Verify business-index claims against the connected spec (index ≠ ground truth).** A business doc routes you to the right entity; it does not certify its own wording. LLM-generated business docs can overclaim — an authentication-only guard written up as `owner`/`member-only`/`participant-only`, a minimal `"ok"` response written up as a returned/created record — or lag the source. So **do not assert a behavior, actor/permission, response shape, or rule from a business doc alone.** For each such claim, follow item-level links first: `items[].docLinks`, `items[].content.source_mapping[].documentId`, `items[].content.detailPath`, then document-level `relatedDocs`/`serviceMapNodes`/`traceId`. Read only the connected `specs/api/<fileId>.md` or `specs/screen/<fileId>.md` for that item — never open specs in bulk — and confirm it there; drill to code via `graph trace`/`code search` when the spec itself is thin. If item-level links are empty for the relevant claim, treat the business doc as an unverified index clue: say the item has no direct source link, use catalog/spec grep to find the nearest source-near evidence, and do not assert the business-doc wording as fact. Assert from the source-near spec/code, citing the business doc as the index that located it. If the connected spec contradicts the business doc, surface the gap and route a `correction` (see Memory Rule); never assert the index's wording over the source.
 
 For development/design-impact questions ("where do I add/change this", "what breaks", code location, precise screen/api/table impact), do not override **Development Design Questions (4-Axis)**. If the question is already anchored to an implementation entity or asks for code/impact, start with targeted static catalog grep + graph traces as that section requires, then read available business docs for semantic scope and constraints.
 
@@ -365,7 +394,7 @@ Discovery order:
 3. Use `catalog/epics.md` to identify candidate rows by readable terms, summaries, and `documentCount`.
 4. Read only 1-3 candidate `epics/<epicId>/epic.md` files on the first pass.
 5. Read purpose-selected business docs from those candidate EPIC folders.
-6. Follow `relatedDocs`, `detailPath`, `serviceMapNodes`, or `traceId` only when technical detail is required.
+6. Follow item-level links before document-level links: `items[].docLinks`, `items[].content.source_mapping[].documentId`, `items[].content.detailPath`, then `relatedDocs`, `serviceMapNodes`, or `traceId`, only when technical detail is required.
 7. Use graph/code only for implementation, impact radius, or unresolved coverage/freshness gaps.
 
 Purpose-to-document routing:
@@ -632,3 +661,20 @@ their claims are LLM-generated and can overclaim or lag.
 - Asserting a behavior, actor/permission, or response shape from a business doc without confirming it in the connected spec/code.
 - Opening unrelated specs in bulk instead of only the connected one(s) the business doc points to.
 - Presenting the business doc's wording as ground truth when the connected spec shows a weaker reality.
+
+### Scenario: connected spec overclaims an empty handler
+
+**Input:** A question about an API whose connected `specs/api/<fileId>.md` claims implemented behavior, but the source handler body is empty, only logs, returns nothing, or is a stub/TODO/not implemented shell.
+
+**PASS path:**
+
+1. Use the spec to locate the handler/source path.
+2. Inspect the handler source when the claim matters.
+3. If the source handler is empty or stub-like, **source code wins**: answer that the implementation is not confirmed, and name the spec/source mismatch.
+4. Continue with another source-backed implementation of the same capability only if the catalog/spec map shows one; keep the stub variant separate.
+
+**Red (any of these is a failure):**
+
+- Treating the spec's prose as authoritative when the handler body is empty.
+- Claiming a stub delegates to a service, persists data, emits events, checks permissions, or returns a business result without visible source evidence.
+- Merging a complete implementation from another file/repo variant into the stub route without saying they are different targets.
