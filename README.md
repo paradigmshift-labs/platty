@@ -20,9 +20,11 @@ breaking what's already there.
 
 ## Why Platty
 
-- **Specs from your real code, not guesses** — Platty extracts a source-of-truth from your live codebase (routes, data, integrations, behavior) and keeps it current.
-- **AI that understands your system** — agents plan and build against that spec, so brownfield changes stay grounded and reviewable, not hallucinated.
+- **Talk in features, not files** — say it the way you'd tell a teammate ("map everything our refund flow touches, then design partial refunds on top of it"), and Platty connects that to the code that actually implements it — across every service.
+- **Complete and grounded, not best-effort** — Platty works from a pre-extracted, evidence-linked map of your whole system, so the spec includes the downstream event, the entitlement sync, and the deprecated path a general agent would miss — and every line cites its source, so you can correct it when it's wrong.
 - **One source of truth for the whole team** — the same spec feeds technical *and* business docs, so engineers and leaders work from the same facts.
+
+*A general coding agent answers from whatever it happens to retrieve, and confidently misses what it didn't see. Platty starts from the full, source-grounded map of what your system already does — and lets you shape it in plain language.*
 
 **How it works:** analyze your codebase locally → extract a source-of-truth spec → your AI agents plan, spec, and build against it → docs stay in sync as the code changes. See **[guide/en/how-platty-works.md](guide/en/how-platty-works.md)** for the concepts and the local-first trust model.
 
