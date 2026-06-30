@@ -2,10 +2,14 @@
 
 **English** · [한국어](README.ko.md)
 
-Platty is a codebase reverse-engineering engine: it reads your repository,
-extracts a source-of-truth (SOT) of what the code actually does — routes, data
-models, database access, API calls, events, jobs, external services — and turns
-it into technical and business documentation you can search and trust.
+**Vibe coding — in brownfield.**
+
+AI coding shines on empty repos and breaks on real ones: it doesn't know your
+existing system. Platty reverse-engineers a living source-of-truth spec from
+your actual codebase, so AI agents can plan, spec, and ship changes without
+breaking what's already there.
+
+→ Spec-driven development that starts from the code you already have.
 
 **Proprietary (not open source) · local-first · this repo is the public Platty agent-plugin distribution surface.**
 
@@ -14,13 +18,13 @@ it into technical and business documentation you can search and trust.
 - New to Platty? **[GETTING_STARTED.md](GETTING_STARTED.md)** — CLI install, agent-plugin install, and your first project.
 - Full usage manual: **[guide/en/usage-guide.md](guide/en/usage-guide.md)** · 한국어 **[guide/ko/usage-guide.md](guide/ko/usage-guide.md)**
 
-## What Platty does
+## Why Platty
 
-- **Analyzes your code locally** — static analysis on your own machine; it never uploads or executes your source.
-- **Extracts a source-of-truth** — a searchable map of routes, models, data access, integrations, and events, grounded in real code.
-- **Generates and keeps docs fresh** — technical and business documentation, with every claim traceable back to source.
+- **Specs from your real code, not guesses** — Platty extracts a source-of-truth from your live codebase (routes, data, integrations, behavior) and keeps it current.
+- **AI that understands your system** — agents plan and build against that spec, so brownfield changes stay grounded and reviewable, not hallucinated.
+- **One source of truth for the whole team** — the same spec feeds technical *and* business docs, so engineers and leaders work from the same facts.
 
-See **[guide/en/how-platty-works.md](guide/en/how-platty-works.md)** for the concepts and the local-first trust model.
+**How it works:** analyze your codebase locally → extract a source-of-truth spec → your AI agents plan, spec, and build against it → docs stay in sync as the code changes. See **[guide/en/how-platty-works.md](guide/en/how-platty-works.md)** for the concepts and the local-first trust model.
 
 ## Quick install
 

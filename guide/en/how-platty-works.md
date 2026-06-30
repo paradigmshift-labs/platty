@@ -14,11 +14,14 @@
 
 ## What Platty is
 
-Platty is a **codebase reverse-engineering and source-of-truth (SOT) extraction
-engine**. It reads a real repository and produces a source-grounded map of what
-the software actually does — its routes, data models, database access, API
-calls, events, jobs, and external services — then turns that map into technical
-and business documentation you can search and trust.
+**Platty makes AI coding work in brownfield.** AI agents are great on empty repos
+but break on real ones — they don't know your existing system. Platty
+reverse-engineers a living **source-of-truth (SOT) spec** from your actual
+codebase — routes, data models, database access, API calls, events, jobs, and
+external services — so agents (and you) can plan, spec, and build against how the
+system *actually* works. It's spec-driven development that starts from the code
+you already have, and the same spec also powers technical and business
+documentation you can search and trust.
 
 The core idea: instead of asking people to hand-write documentation (which goes
 stale the moment code changes), Platty derives the documentation **from the
