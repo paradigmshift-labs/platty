@@ -94,6 +94,23 @@ platty memory show --memory <memory-id> --json
 
 `--kind` is `why | correction | constraint | context` (default `context`).
 
+### Alias memories for retrieval
+
+Use `context` memories for user-confirmed domain aliases that help retrieval
+normalize a raw question. Alias memories are search hints only; they are not
+source-grounded business facts and must not be used as proof of behavior.
+
+```bash
+platty memory add --project <project> --epic <epic-id> --kind context --content "alias: 응원친구 -> canonical: 친구; use only for retrieval query normalization, not as source-grounded business evidence" --export-sot --json
+```
+
+Prefer the narrowest confirmed anchor:
+
+- If the alias belongs to one EPIC, anchor it to that EPIC.
+- If the EPIC is not known, ask one clarifying question before recording it.
+- After export, retrieval should read the memory overlay before `catalog/glossary.md`
+  and EPIC `glossary.md`.
+
 ## Re-anchor Stranded Memory
 
 Sync regeneration drifts anchors: an epic is split/merged, a document is orphaned, or a use-case `stableKey` changes so the anchored item disappears. The memory row is never deleted — it becomes **stranded** (`needs_reanchor`). A stranded memory is still real human knowledge; your job is to move its anchor onto the regenerated target, not to recreate or drop it.

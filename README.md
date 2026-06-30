@@ -20,9 +20,9 @@ Those components are proprietary to Paradigm Shift Labs. This repository is the 
 
 ## Access
 
-Use of this plugin requires a Platty account. Some workflows may require an active paid plan, enabled workspace access, or a current Platty CLI installation.
+Platty runs as a local CLI with **no login, account, or sign-up required** — install it and run. The plugin simply teaches your agent how to drive that CLI; you also need the `platty` CLI installed and your own AI provider credentials for the documentation step.
 
-The plugin teaches agents how to use Platty. It does not grant access to the Platty SaaS service, private projects, paid features, or any repository data by itself.
+Platty is proprietary software (not open source); installation and use are governed by `LICENSE.md`. The plugin does not by itself grant access to private projects or any repository data.
 
 ## Requirements
 
@@ -127,6 +127,17 @@ The plugin includes these Platty skills:
 - `platty:platty-memory`
 
 Start with `platty:using-platty` when you are not sure which workflow applies.
+
+## Documentation
+
+Full product documentation lives in the [`guide/`](guide/) folder, in English
+and Korean:
+
+| Topic | English | 한국어 |
+| --- | --- | --- |
+| How Platty works (concepts, local-first, why you can trust it) | [EN](guide/en/how-platty-works.md) | [KO](guide/ko/how-platty-works.md) |
+| Usage guide (install, agent or CLI usage, commands) | [EN](guide/en/usage-guide.md) | [KO](guide/ko/usage-guide.md) |
+| Support matrix (languages, frameworks, ORMs, vendors) | [EN](guide/en/support-matrix.md) | [KO](guide/ko/support-matrix.md) |
 
 ## Recommended First Run
 
@@ -247,7 +258,7 @@ Suggested package metadata:
 
 ## Support
 
-For account access, billing, SaaS feature availability, or plan limits, use the official Platty support channel.
+For licensing, billing, or feature questions, use the official Platty support channel.
 
 For plugin installation issues, include:
 

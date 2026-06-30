@@ -2,11 +2,11 @@
 
 Copyright (c) Paradigm Shift Labs. All rights reserved.
 
-This repository is made available for installation, review, and use with the Platty SaaS service. It is not an open-source license grant.
+This repository is made available for installation, review, and use. It is not an open-source license grant.
 
 ## Permitted Use
 
-You may install and use the Platty agent plugin solely for your own Platty account or organization workspace, subject to the Platty Terms of Service and your active plan, trial, or written agreement with Paradigm Shift Labs.
+You may install and use the Platty agent plugin for your own internal use, subject to the Platty Terms of Service and any written agreement with Paradigm Shift Labs.
 
 ## Restrictions
 
