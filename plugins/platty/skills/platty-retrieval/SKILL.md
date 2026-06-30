@@ -16,6 +16,9 @@ The split is not "MD vs CLI" — it is **enumerable/static (MD wins) vs computed
 question
 -> resolve projectId -> ~/.platty/sot/<projectId>/   (folder is the map)
 -> read README.md + catalog/*.md                     (orient; solve unknown-unknowns)
+-> use overview/personas routing cards               (choose epic + purpose doc)
+-> read epics/<id>/epic.md Technical Index           (enumerate that epic's specs)
+-> use `sot resolve` when holding an id              (epic/doc/item/model -> specs/models/trace seeds)
 -> grep catalog/*.md by name/summary                 (discover candidates — ids are opaque)
 -> read epics/<id>/*.md and specs/<kind>/<fileId>.md (detail)
 -> follow frontmatter ids to the next MD             (static relations, no CLI hop)
@@ -34,18 +37,83 @@ definition / naming question is exempt.
 If the SOT folder does not exist yet, fall back to the **advanced recovery CLI
 graph walk** below — do not guess.
 
+## SOT Resolve Gate
+
+When you already have an EPIC id, document id, item key, or model id/name and
+need connected APIs, screens, events, schedules, models, or graph-trace seeds,
+use the resolver before graph traversal:
+
+```bash
+platty sot resolve --project <project> --epic <epicId> --json
+platty sot resolve --project <project> --document <documentId> --json
+platty sot resolve --project <project> --item <documentId#stableKey> --json
+platty sot resolve --project <project> --model <modelId-or-name> --json
+```
+
+Resolver output is a machine-readable routing layer. It does not prove business
+claims; it chooses connected specs, models, and safe next hops. After resolve,
+assert exact behavior only from source-near specs and, when needed, graph
+trace/source code. Treat source-near API/screen/event/schedule `traceId`s as
+the normal first trace seeds. Treat model `db:<table>` traces as broad impact
+tools, not as the default next hop for business/concept retrieval.
+
+Use the default resolver output first. It is intentionally compact for agents.
+For shared models such as `User`, `Workspace`, `Channel`, `Order`, or `Project`,
+model-only resolve may be too broad. If the question already has an EPIC or
+document context, scope the model resolve:
+
+```bash
+platty sot resolve --project <project> --model <modelId-or-name> --within-epic <epicId> --json
+```
+
+Use `--detail full` only when you truly need the complete machine inventory.
+Do not use full detail as the default search path.
+
+If a model-only resolve returns a shared-model warning, do not jump straight to
+`graph trace --from db:<table>`. First scope the model with `--within-epic`, read
+the connected source-near specs, then trace from the returned API/screen/event/
+schedule ids. Use `--detail full` or a DB-anchored trace only for explicit global
+table/field impact questions.
+
 ## State Gate: Choose the Retrieval Mode
 
 Before choosing a retrieval strategy, classify the project state from generic SOT structure.
 
 1. Resolve `projectId` and locate `~/.platty/sot/<projectId>/`.
 2. Read `README.md`, `catalog/epics.md`, and `catalog/glossary.md` when present.
-3. If live EPIC rows have `documentCount > 0` and generated files exist under `epics/<epicId>/` such as `br.md`, `design.md`, `data_dictionary.md`, `glossary.md`, `usecases/ucl.md`, or `usecases/ucs.md`, use **Business Index Mode** for business, planning, policy/rules, journey, and concept questions.
+   Treat `catalog/glossary.md` as a shallow grep/routing index, not a project-level
+   glossary narrative or final evidence. Its job is to bridge raw user terms and
+   aliases to candidate EPICs; details still live in EPIC docs, source-near specs,
+   and code.
+3. If live EPIC rows have `documentCount > 0` and generated files exist under `epics/<epicId>/` such as `br.md`, `design.md`, `data_dictionary.md`, `glossary.md`, `usecases/ucl.md`, or `usecases/ucs.md`, use **Business Index Mode** for business, planning, policy/rules, journey, and concept questions. Project `overview.md` / `personas.md` routing cards are coarse route maps: they choose an EPIC and purpose docs, not exhaustive API/screen/event/schedule evidence.
 4. If business docs are absent, incomplete, or not exported, use **Static Analysis Mode** for static catalogs and graph/code primitives.
 5. If the state is mixed, use Business Index Mode for valid business-doc evidence and explicitly state coverage or freshness gaps before drilling into static evidence.
 6. For development/design-impact questions ("where do I add/change this", "what breaks", code location, precise screen/api/table impact), follow **Development Design Questions (4-Axis)** even when business docs exist: start with targeted static catalog grep + graph traces when the question is already anchored to an implementation entity or asks for code/impact, then use business docs for semantic scope and constraints when available.
 
 Never use fixture names, repository names, source paths, EPIC titles, or domain-specific terms as activation conditions. The mode decision must be based on the generic SOT layout and catalog fields.
+
+## Alias Overlay Gate
+
+Before glossary routing, preserve the raw user phrase and check memory overlays for
+user-confirmed aliases. This handles domain slang, abbreviations, Korean/English
+mixes, and team-specific words that generated docs may never contain.
+
+1. Read alias memories when present:
+   - `epics/<epicId>/memory.md` after candidate EPICs are known.
+   - spec frontmatter `memories` when already on a source-near spec.
+   - document/item memories when a candidate document is already known.
+2. Treat alias memories only as query-normalization hints, not source-grounded
+   business facts. They may help search for `친구` when the user says `응원친구`,
+   but they do not prove a business rule.
+3. Search both raw and normalized terms. Example: if memory says
+   `alias: 응원친구 -> canonical: 친구`, grep/search `응원친구`, `친구`,
+   and likely code-language equivalents from glossary hits.
+4. If the raw term has no glossary/spec/code hit and fuzzy candidates are tied,
+   ask one clarifying question before answering.
+5. When the user confirms a new alias, recommend recording it with `platty memory add`
+   on the narrowest known EPIC/document/item scope. If no scope is known, ask one
+   clarifying question and find the candidate EPIC before recording. After export,
+   that memory should travel with the next retrieval pass.
 
 ## Boundary Declaration
 
@@ -73,15 +141,21 @@ Use business docs as detailed routers when the question is business-contextual,
 ambiguous, or asks about a capability, rule, data area, user journey, or design
 area. They narrow the search inside an EPIC:
 
+- **Project overview/personas:** pick the candidate EPIC and purpose docs
+  (`rules`, `design`, `data`, `terms`). They intentionally do not enumerate
+  every API/screen/event/schedule; use catalogs or the EPIC Technical Index for that.
+- **epic.md Technical Index:** lists that EPIC's source-near API, screen, event,
+  and schedule spec files with `traceId`. This is the preferred bridge from
+  business context to source-near detail.
 - **UCL:** user action / capability router.
 - **BR:** rule, permission, policy, and constraint router.
 - **DD:** data, model, table, and field router.
 - **Design:** component, API, DB, event, and service connection router.
 
 When using these docs, prefer item-level `docLinks`, `items[].docLinks`,
-`source_mapping[].documentId`, related specs, and linked catalog rows to choose
-the relevant `api_spec`, `screen_spec`, `event_spec`, `schedule_spec`, and source
-files. Business-doc prose is routing evidence, not final truth.
+`source_mapping[].documentId`, the EPIC Technical Index, and linked catalog rows
+to choose the relevant `api_spec`, `screen_spec`, `event_spec`, `schedule_spec`,
+and source files. Business-doc prose is routing evidence, not final truth.
 
 Bypass business docs when the question is already anchored to a specific endpoint,
 specific file, specific symbol, specific model field, screen, event, schedule,
@@ -133,6 +207,7 @@ STOP if you catch yourself thinking any of these:
 | "The doc is stale/orphaned but probably still right — present it as fact" | State `validity` from frontmatter and recommend `sync` + `sot export`. Do not hide stale evidence. |
 | "I'll edit the MD file to fix the wrong value" | The MD is a `[regen]` projection. Edits are lost on next export. Write via `platty memory add` then `platty sot export`. |
 | "I found the `code_term` in glossary, I'll pass it straight to `graph trace --from`" | A `code_term` is a code identifier, NOT a service-map node id. `graph trace --from` needs a node id — first `code search --symbol <code_term>` to get the nodeId, then trace from that. Passing the raw `code_term` is a dangling-input error. |
+| "I have an epicId/BR id/model id, so I'll pass it directly to graph trace" | EPIC ids, business document ids, item keys, and model ids are not necessarily graph node ids. Run `platty sot resolve` first. Prefer returned source-near `traceId`s. Use model `db:<table>` traces only after explicit scope/full-detail or when the question is a global table/field impact question. |
 | "The query is Korean but I know the English word, I'll skip glossary and trace from my guess" | Cross the language bridge through `catalog/glossary.md` first. Guessing the English/code term skips the canonical/`code_term` mapping and traces the wrong (or non-existent) node. |
 | "Business docs exist, but graph trace feels faster, so I'll start there" | Wrong mode for business/planning/policy/journey/concept questions. When valid business docs exist, treat them as the semantic index first for those questions. For development/design-impact questions already anchored to implementation or asking code/impact, use the 4-axis path: targeted static catalog grep + graph traces first, with business docs as semantic scope/constraints. |
 | "The business doc says it, so I'll assert it as fact" | Business docs are an **index, not ground truth**. LLM-generated business docs (`usecases/ucs.md`, `design.md`, `br.md`, `glossary.md`) can overclaim — an `authenticated user` written up as `owner`/`member-only`/`participant-only`, a minimal `"ok"` response written up as a returned/created record — or lag the source. Before asserting a behavior, actor/permission, response shape, or rule from a business doc, drill into the **connected** `specs/api/<id>.md` / `specs/screen/<id>.md` (via `relatedDocs`/`serviceMapNodes`/`traceId`, **only the related ones**) — and code via `graph trace`/`code search` when the spec is thin — and confirm it there. Assert from the source-near spec/code; cite the business doc as the index that located it. If they disagree, surface the gap. |

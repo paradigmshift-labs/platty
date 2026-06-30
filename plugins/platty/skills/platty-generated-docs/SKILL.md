@@ -224,18 +224,25 @@ On errors, retry — do not abandon the run:
   `generate-docs run` (it resumes and re-extracts only the failed/incomplete
   work). Bound the retry rounds; if tasks still fail after retrying, stop and
   report the failed tasks to the user rather than looping forever.
+- Stage status has failed tasks but `nextAction.type` is `lease_tasks` or
+  `repair_task`: active/incomplete work still exists. Continue the returned
+  `nextCommand` or `nextAction.command` for that same run instead of jumping to
+  `retry-failed`.
 
 ## Gate Precedence
 
 Do not blindly follow `nextCommand` or `nextAction.command` across these gates:
 
 - target review is missing or incomplete;
-- `BUILD_DOCS_FAILED_BLOCKS_EPICS` or failed `build_docs` tasks require
-  `generate-docs retry-failed`; do not continue to EPIC or business-doc
-  generation from incomplete technical docs.
-- any generated-docs stage status with `nextAction.type:
+- `BUILD_DOCS_FAILED_BLOCKS_EPICS` or failed `build_docs` tasks block EPIC and
+  business-doc generation from incomplete technical docs. Follow the primary
+  `nextAction`: continue active work for `lease_tasks` / `repair_task`, and use
+  `generate-docs retry-failed` only when the primary `nextAction.type` is
+  `retry_failed_tasks`.
+- any generated-docs stage status with primary `nextAction.type:
   retry_failed_tasks` requires `generate-docs retry-failed` for that same
-  `--stage` and `--run-id` before assigning more work.
+  `--stage` and `--run-id` before assigning more work. Do not treat
+  `alternateActions` as the primary recovery path.
 - EPIC confirmation command is missing, malformed, or conflicts with the
   current project/run id; stop instead of guessing a confirm command.
 - generated-output work is active and the user asks for sync;
@@ -257,8 +264,10 @@ tasks. The public workflow is repair-first.
 
 When the CLI returns `BUILD_DOCS_FAILED_BLOCKS_EPICS`, failed stage status, or
 `nextAction.type: retry_failed_tasks`, run the returned `nextCommand` when
-present. If you must reconstruct it, preserve the status response's `stage` and
-`runId`:
+present and the primary `nextAction.type` is `retry_failed_tasks`. If failed
+tasks are present but the primary action is `lease_tasks` or `repair_task`,
+continue that action first; the run is still active. If you must reconstruct a
+retry command, preserve the status response's `stage` and `runId`:
 
 ```bash
 platty generate-docs retry-failed --project <project> --stage <stage> --run-id <run-id> --json
@@ -279,6 +288,30 @@ the failed/incomplete work.
 Do not suggest `--force` or lower-level `docs` commands for this public gate.
 Use lower-level commands only when a Platty maintainer explicitly asks for
 repo-local debugging.
+
+### Explicitly Skip Failed build_docs Tasks
+
+`generate-docs skip-failed` is an explicit, audited recovery path for
+`build_docs` only. It is never the automatic primary `nextAction`; use it only
+when all of these are true:
+
+- the primary `nextAction.type` is `retry_failed_tasks`;
+- the response exposes `alternateActions` with `type: skip_failed_tasks`;
+- no active work remains (`pending`, `leased`, `expired`, or
+  `repair_requested` counts are zero);
+- the user explicitly chooses to continue without those technical docs and
+  provides a reason.
+
+Run the returned alternate command, replacing the placeholder reason with the
+user's reason:
+
+```bash
+platty generate-docs skip-failed --project <project> --stage build_docs --run-id <run-id> --reason "<why this target is intentionally excluded>" --json
+```
+
+Skipping marks only failed technical-doc tasks as skipped. It means downstream
+EPIC context may be missing those docs, so do not infer that skipped content was
+successfully extracted.
 
 Known generated-output recovery preserves the existing run and avoids
 regenerating completed work. Inspect through the facade, then re-run to resume:
