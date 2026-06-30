@@ -1,5 +1,7 @@
 # Platty
 
+**English** · [한국어](README.ko.md)
+
 Platty is a codebase reverse-engineering engine: it reads your repository,
 extracts a source-of-truth (SOT) of what the code actually does — routes, data
 models, database access, API calls, events, jobs, external services — and turns
