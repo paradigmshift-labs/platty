@@ -23,6 +23,8 @@
 - [Keeping docs fresh](#keeping-docs-fresh)
 - [Command reference](#command-reference)
 - [Troubleshooting](#troubleshooting)
+- [Support](#support)
+- [License](#license)
 
 ---
 
@@ -103,15 +105,27 @@ docs, so you choose a provider when you run it:
 > time — the three above are what's available today.
 
 ```bash
-# Example: generate docs with your own API key provider
+# Generated docs default to codex_cli; pass --provider to choose another
 platty generate-docs run --provider claude_api --model <model>
 ```
 
+`generate-docs` defaults to `codex_cli`. The `claude_api` provider reads your key
+from the `ANTHROPIC_API_KEY` environment variable (or `~/.platty/.env`). If
+generation pauses for EPIC confirmation, **keep the same `--provider`** on the
+follow-up `generate-docs confirm-epics` command.
+
 > 💡 **About cost:** the documentation phase sends your extracted map to an AI
 > model, so it consumes provider tokens and may incur cost on your AI provider
-> account.
-> The static-analysis phase does not. Start on a small repository to gauge usage
-> before running large projects.
+> account. The static-analysis phase does not — start on a small repository to
+> gauge usage before running large projects.
+
+### Recovery
+
+If a stage reports failed tasks, repair the same run with
+`platty generate-docs retry-failed --stage <stage> --run-id <id>`, then re-run
+`platty generate-docs run` (it resumes and re-extracts only the incomplete
+work). The `generate-docs agent-next` / `agent-submit` commands are for manual
+worker recovery, not the normal first run.
 
 ---
 
@@ -206,6 +220,12 @@ with every claim traceable to real code. From here you keep them fresh with
 > A repository path is **never** a project selector. Always resolve a project
 > first with `project create` / `project use` (or pass `--project <selector>`).
 
+> 💡 **What's a Platty project?** A project is a workspace for related
+> repositories and the knowledge generated from them. Create a new project for a
+> new product, app, or system area; reuse an existing one when the repository
+> already belongs to registered work; add several repositories to one project
+> when they form a single architecture.
+
 ---
 
 ## Output modes (human vs. agent)
@@ -217,6 +237,11 @@ Platty has two output modes:
 - **Agent / JSON mode (`--json`)** — machine-readable output. Automation,
   scripts, and AI agents should pass `--json` and read `data`, `nextAction`,
   `warnings`, `errors`, and `evidenceRefs`.
+
+The CLI owns the current state and the next action: most commands return a
+`Next:` hint (or `nextCommand` / `nextAction.command` in JSON). Following those
+returned commands is the intended way to drive Platty — the agent skills simply
+automate it.
 
 ```bash
 platty status
@@ -361,12 +386,32 @@ validation/user error.
 
 ---
 
+## Support
+
+For licensing, billing, or feature questions, use the official Platty support
+channel. When reporting an issue, include:
+
+- your runtime (and the agent runtime/version, if using one),
+- your operating system,
+- the output of `platty version`,
+- the exact command that failed,
+- the full error output.
+
+---
+
+## License
+
+Platty is **proprietary** software (not open source), licensed under the
+[PolyForm Internal Use License](../../LICENSE.md) for your own internal use.
+Unless expressly permitted there, you may not redistribute, sublicense, sell,
+host, or provide it to third parties, or use it to provide a competing product
+or service.
+
+---
+
 ## See also
 
 - **[How Platty Works](how-platty-works.md)** — concepts, two-phase model, and
   the local-first trust model.
 - **[Support Matrix](support-matrix.md)** — supported languages, frameworks,
   ORMs, HTTP clients, and SaaS vendors.
-
-Platty is proprietary software, licensed under the
-[PolyForm Internal Use License](../../LICENSE.md). It is not open source.
