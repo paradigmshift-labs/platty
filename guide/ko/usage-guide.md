@@ -24,6 +24,8 @@
 - [문서를 최신으로 유지하기](#문서를-최신으로-유지하기)
 - [명령어 레퍼런스](#명령어-레퍼런스)
 - [문제 해결](#문제-해결)
+- [지원](#지원)
+- [라이선스](#라이선스)
 
 ---
 
@@ -105,15 +107,28 @@ platty --help
 > 예정이며, 위 세 가지가 현재 사용 가능한 프로바이더입니다.
 
 ```bash
-# Example: generate docs with your own API key provider
+# Generated docs default to codex_cli; pass --provider to choose another
 platty generate-docs run --provider claude_api --model <model>
 ```
+
+`generate-docs`는 기본값으로 `codex_cli`를 사용합니다. `claude_api` 프로바이더는
+`ANTHROPIC_API_KEY` 환경 변수(또는 `~/.platty/.env`)에서 키를 읽습니다. EPIC
+확인을 위해 생성이 일시 중지되면, 후속 `generate-docs confirm-epics` 명령에서도
+**동일한 `--provider`를 유지하세요**.
 
 > 💡 **비용에 관하여:** 문서화 단계는 추출된 지도를 AI 모델로 보내므로,
 > 프로바이더 토큰을 소비하며 여러분의 AI 프로바이더 계정에 비용이 발생할 수
 > 있습니다. 정적
 > 분석 단계는 그렇지 않습니다. 대규모 프로젝트를 실행하기 전에 작은 저장소에서
 > 시작해 사용량을 가늠해 보세요.
+
+### 복구
+
+어떤 단계에서 실패한 작업이 보고되면, `platty generate-docs retry-failed
+--stage <stage> --run-id <id>`로 동일한 실행을 복구한 다음 `platty generate-docs
+run`을 다시 실행하세요(미완료된 작업만 재개해 다시 추출합니다). `generate-docs
+agent-next` / `agent-submit` 명령은 일반적인 첫 실행이 아니라 수동 워커 복구를
+위한 것입니다.
 
 ---
 
@@ -207,6 +222,12 @@ platty status
 > `project use`로 프로젝트를 먼저 확정하세요(또는 `--project <selector>`를
 > 전달하세요).
 
+> 💡 **Platty 프로젝트란 무엇인가요?** 프로젝트는 서로 관련된 저장소와 그로부터
+> 생성된 지식을 담는 워크스페이스입니다. 새로운 제품, 앱, 또는 시스템 영역에는
+> 새 프로젝트를 만드세요. 저장소가 이미 등록된 작업에 속한다면 기존 프로젝트를
+> 재사용하세요. 여러 저장소가 하나의 아키텍처를 이룬다면 그 저장소들을 하나의
+> 프로젝트에 추가하세요.
+
 ---
 
 ## 출력 모드 (사람 vs. 에이전트)
@@ -218,6 +239,11 @@ Platty에는 두 가지 출력 모드가 있습니다:
 - **에이전트 / JSON 모드 (`--json`)** — 기계가 읽을 수 있는 출력입니다. 자동화,
   스크립트, AI 에이전트는 `--json`을 전달하고 `data`, `nextAction`, `warnings`,
   `errors`, `evidenceRefs`를 읽어야 합니다.
+
+CLI가 현재 상태와 다음 동작을 책임집니다: 대부분의 명령어는 `Next:` 힌트(또는
+JSON에서는 `nextCommand` / `nextAction.command`)를 반환합니다. 반환된 그 명령어를
+따라가는 것이 Platty를 구동하는 의도된 방식이며, 에이전트 스킬은 단지 이를
+자동화할 뿐입니다.
 
 ```bash
 platty status
@@ -360,12 +386,32 @@ platty sot export                    # project the SOT to a Markdown tree for gr
 
 ---
 
+## 지원
+
+라이선스, 결제, 또는 기능 관련 문의는 공식 Platty 지원 채널을 이용하세요. 문제를
+신고할 때는 다음을 포함해 주세요:
+
+- 사용 중인 런타임(에이전트를 사용 중이라면 에이전트 런타임/버전도),
+- 운영 체제,
+- `platty version`의 출력,
+- 실패한 정확한 명령어,
+- 전체 오류 출력.
+
+---
+
+## 라이선스
+
+Platty는 **독점**(proprietary) 소프트웨어이며(오픈 소스가 아닙니다), 여러분의
+내부 사용을 위해 [PolyForm Internal Use License](../../LICENSE.md)에 따라
+라이선스가 부여됩니다. 거기에서 명시적으로 허용되지 않는 한, 이를 재배포,
+서브라이선스, 판매, 호스팅하거나 제3자에게 제공할 수 없으며, 경쟁 제품 또는
+서비스를 제공하는 데 사용할 수 없습니다.
+
+---
+
 ## 함께 보기
 
 - **[Platty의 동작 원리](how-platty-works.md)** — 개념, 2단계 모델, 그리고
   로컬 우선 신뢰 모델.
 - **[지원 매트릭스](support-matrix.md)** — 지원되는 언어, 프레임워크, ORM, HTTP
   클라이언트, SaaS 벤더.
-
-Platty는 [PolyForm Internal Use License](../../LICENSE.md)에 따라 라이선스가
-부여된 독점 소프트웨어입니다. 오픈 소스가 아닙니다.
