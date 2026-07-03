@@ -6,6 +6,7 @@ projectId: "<platty-project-id>"
 sourceCommit: "<sot-source-commit-or-unknown>"
 sotExportedAt: "<ISO timestamp>"
 evidenceBoundary: "<business-docs|static-only|mixed|stale>"
+outputLanguage: "<requested-output-language>"
 derivedFrom: ["request.md"]
 approvedAt:
 approvedBy:

@@ -12,7 +12,8 @@ This skill may author files only inside the selected SDD output directory. It mu
 ## Required Inputs
 
 - Platty project selector.
-- SDD folder containing `request.md` and `stories.md`.
+- SDD folder containing `request.md` and `stories.md`, normally under
+  `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`.
 - Optional target repos, APIs, screens, tables, EPICs, or business terms.
 
 ## Required Gates
@@ -32,7 +33,7 @@ Use the Platty CLI convention from `using-platty`. Inside this repository, `AGEN
 
 1. Read `request.md` and `stories.md`.
 2. Extract actors, rules, scenarios, data concepts, screens, APIs, and areas.
-3. Search `catalog/glossary.md` and `catalog/epics.md`.
+3. Search `catalog/epics.md`; use `sot glossary search --project <project> --query "<raw term>" --json` for raw terms, aliases, or translated concepts.
 4. Read relevant business docs:
    - `br.md`
    - `data_dictionary.md`

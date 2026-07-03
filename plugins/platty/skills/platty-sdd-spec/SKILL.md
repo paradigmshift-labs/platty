@@ -14,25 +14,24 @@ This skill is allowed to author files only inside the selected SDD output direct
 Default location:
 
 ```text
-docs/sdd/SPEC-<slug>-<YYYY-MM>/
+~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
 ├── request.md
 └── stories.md
 ```
 
-Use a private local draft path only when the user asks:
-
-```text
-.platty/sdd/SPEC-<slug>-<YYYY-MM>/
-```
+Do not write SDD documents to repository-local paths such as `docs/sdd/` or
+`.platty/sdd/`. The Platty web dashboard treats the global Platty home as the
+managed SDD source.
 
 ## Required Gates
 
 1. Resolve a Platty project before project-scoped commands.
 2. Locate `~/.platty/sot/<projectId>/`.
-3. Read SOT `README.md`, `catalog/glossary.md`, and `catalog/epics.md` before product claims.
+3. Read SOT `README.md` and `catalog/epics.md`; use `sot glossary search` for raw terms, aliases, or translated concepts before product claims.
 4. Declare the evidence boundary: `business-docs`, `static-only`, `mixed`, or `stale`.
 5. Ask SOT-informed questions before finalizing `request.md`.
 6. Do not generate `stories.md` until `request.md` is `approved`, unless the user explicitly accepts unresolved assumptions.
+7. Set the output language before authoring. Use the language the user requested for the spec; if no language is explicitly requested, infer it from the user's latest idea/request and confirm only when mixed-language intent is ambiguous.
 
 Use the Platty CLI convention from `using-platty`. Inside this repository, `AGENTS.md` overrides public plugin examples: run the local build with `node packages/cli/dist/main.js <command> --json`.
 
@@ -43,11 +42,11 @@ Use the Platty CLI convention from `using-platty`. Inside this repository, `AGEN
    - repo list
    - SOT `README.md` freshness: `lastExportAt`, `sourceCommit`
 2. Term bridge:
-   - grep/read `catalog/glossary.md`
-   - if a glossary row has `code_term`, resolve it with `code search` before any graph trace
+   - run `sot glossary search --project <project> --query "<raw term>" --json`
+   - if a match has `codeTerm`, resolve it with `code search` before any graph trace
 3. Product area:
    - read `catalog/epics.md`
-   - read 1-3 relevant epic docs: `glossary.md`, `br.md`, `usecases/ucl.md`, `usecases/ucs.md`, `data_dictionary.md`, `design.md`
+   - read 1-3 relevant epic docs: `br.md`, `usecases/ucl.md`, `usecases/ucs.md`, `data_dictionary.md`, `design.md`
 4. Implementation hints only when needed:
    - catalog API/screen/table rows
    - graph trace for confirmed relationships
@@ -76,6 +75,16 @@ Question categories:
 - success: measurable validation and release criteria.
 
 Confirmed answers go to `§6 Confirmed Decisions`. Unresolved items stay in `§7 Open Questions`.
+
+## Output Language
+
+Write user-facing `request.md` and `stories.md` content in the requested language.
+
+- If the user asks in Korean or requests Korean output, write titles, section prose, questions, rules, stories, scenarios, and validation notes in Korean.
+- If the SOT is English but the requested language is Korean, translate product explanations while preserving source identifiers, API paths, model names, field names, statuses, and quoted evidence exactly.
+- If the user requests English, write the documents in English even when the idea or glossary query includes Korean terms.
+- Use the same language for SOT-informed questions, recommended defaults, open questions, assumptions, and both SDD files.
+- Record the chosen language in frontmatter as `outputLanguage`.
 
 ## Authoring
 
@@ -109,8 +118,9 @@ Read reference templates only when writing the files:
 
 | Temptation | Required behavior |
 | --- | --- |
-| "I know the domain term." | Search `catalog/glossary.md` first. |
+| "I know the domain term." | Run `sot glossary search` first. |
 | "The user wants speed, skip questions." | Draft with named assumptions and use `draft-with-open-questions`. |
 | "Business docs are missing, so invent product intent from code." | Use static evidence only and state the boundary. |
 | "A code term can go directly to graph trace." | Resolve code term with `code search` first. |
 | "Fix the generated SOT markdown." | Never edit SOT projection; suggest memory or regeneration. |
+| "The SOT is English, so the spec should be English." | Follow the requested language; keep only identifiers and evidence labels unchanged. |

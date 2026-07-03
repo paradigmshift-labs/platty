@@ -17,8 +17,35 @@ Inside this repository, `AGENTS.md` overrides public examples: run `node package
 4. Treat the one-page summary's **⚠️ conflicts** and **❓ open questions** as the only things needing a human decision; everything else is auto-derived.
 5. **Honor the dialogue gate.** If `spec generate` returns `status: "needs_answers"`, **nothing was minted** — the spec does not exist yet. Relay the `blockingQuestions` to the human, get their answers, and re-run with `--answer "<question>=<answer>"` (repeatable). Pass `--accept-open-questions` ONLY when the human explicitly chooses to proceed without answering. Never answer blocking questions yourself.
 
+## Grounding the idea first (semantic, agent-driven)
+
+Before compiling, **ground the idea against the SOT** — this is where ultra-spec earns its
+"source-grounded" name and where a general LLM guesses. Grounding is an **agent** step, not a
+string match: domain synonyms ("favorite"/"bookmark", "친구"/"팔로우") only unify by *meaning*,
+and unmappable words must be **asked about**, not invented.
+
+Flow (driver orchestrates; CLI stays the deterministic half):
+
+1. **Spawn a grounding sub-agent** following `references/grounding-agent.md`. It reads the SOT
+   (`~/.platty/sot/<projectId>/` — glossary, business rules, data dictionary) via `platty-retrieval`
+   discipline and returns the strict `grounding.v1` JSON report (grounded / net-new / ambiguous
+   terms, conflicts incl. soft inherited constraints, premise validity, blocking questions).
+2. **Gate it deterministically:** `spec gate --report <file>` (or pipe the JSON on stdin). The CLI
+   strictly validates the report and returns `status: "clear"` or `"needs_answers"` with the exact
+   `questions` a human must answer. The agent judged the semantics; the gate only turns that verdict
+   into stop-or-go — it never re-judges meaning, and it **rejects malformed reports** rather than coercing them.
+3. **On `needs_answers`:** relay `questions` to the human, get answers — do NOT answer them yourself.
+   Then proceed to `generate` folding the answers in via `--answer "<q>=<a>"`.
+4. **On `clear`:** proceed to compile (`spec generate`) directly.
+
+`spec generate` still runs its own proposal-level dialogue gate; grounding is the *earlier*,
+SOT-aware gate that catches ungrounded/ambiguous/conflicting ideas before any facts are minted.
+
 ## Commands
 
+- **Ground before compiling (semantic gate):**
+  `spec gate --report <grounding.v1.json> --json` → `status: clear` (compile) or `needs_answers` with
+  the human `questions`. Stateless and deterministic; consumes the grounding sub-agent's report.
 - **Triage scope first for a broad idea:**
   `spec triage "<idea>" --project <p> --json` → `single` epic (proceed) or an ordered multi-epic map. For multi, spec one epic at a time.
 - **Generate a spec:**
@@ -43,6 +70,7 @@ Inside this repository, `AGENTS.md` overrides public examples: run `node package
 - A required provider is unavailable (e.g. missing API key for `claude_api`).
 - Validation reports an as-is contradiction the user has not chosen to override.
 - `spec generate` returned `status: "needs_answers"` and the blocking questions are neither answered (`--answer`) nor explicitly accepted (`--accept-open-questions`) — do NOT treat the spec as created; nothing was minted.
+- The grounding gate (`spec gate`) returned `status: "needs_answers"` and the human has not answered its `questions` — do NOT compile yet; the idea isn't grounded.
 
 ## Red Flags
 
@@ -55,3 +83,5 @@ Inside this repository, `AGENTS.md` overrides public examples: run `node package
 | "Just pass `--accept-open-questions` to get past the gate." | Only on the human's explicit call. Otherwise answer via `--answer`. |
 | "`needs_answers`, so the spec was partially created." | **Nothing was minted.** It mints only on `status: "completed"`. |
 | "Use platty-sdd-spec for this." | Ultra-spec compiles + diffs against SOT; sdd-spec writes request/stories. Pick by need. |
+| "Ground by grepping the SOT for the idea's literal words." | Ground by **meaning** via the grounding sub-agent; synonyms unify and unknown domain words get asked, not string-matched. |
+| "The grounding report looks off — I'll fix the JSON and pass the gate." | Never hand-edit the report to clear the gate; re-run grounding. The gate rejects malformed reports by design. |
