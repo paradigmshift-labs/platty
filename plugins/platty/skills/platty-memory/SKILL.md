@@ -101,15 +101,15 @@ normalize a raw question. Alias memories are search hints only; they are not
 source-grounded business facts and must not be used as proof of behavior.
 
 ```bash
-platty memory add --project <project> --epic <epic-id> --kind context --content "alias: 응원친구 -> canonical: 친구; use only for retrieval query normalization, not as source-grounded business evidence" --export-sot --json
+platty memory alias add --project <project> --epic <epic-id> --term "응원친구" --canonical "친구" --json
 ```
 
 Prefer the narrowest confirmed anchor:
 
 - If the alias belongs to one EPIC, anchor it to that EPIC.
 - If the EPIC is not known, ask one clarifying question before recording it.
-- After export, retrieval should read the memory overlay before `catalog/glossary.md`
-  and EPIC `glossary.md`.
+- Retrieval should use `sot glossary search --project <project> --query "<raw term>" --json`;
+  alias memories are included in that CLI result and are not projected as glossary Markdown.
 
 ## Re-anchor Stranded Memory
 

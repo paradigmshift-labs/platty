@@ -80,12 +80,11 @@ table/field impact questions.
 Before choosing a retrieval strategy, classify the project state from generic SOT structure.
 
 1. Resolve `projectId` and locate `~/.platty/sot/<projectId>/`.
-2. Read `README.md`, `catalog/epics.md`, and `catalog/glossary.md` when present.
-   Treat `catalog/glossary.md` as a shallow grep/routing index, not a project-level
-   glossary narrative or final evidence. Its job is to bridge raw user terms and
-   aliases to candidate EPICs; details still live in EPIC docs, source-near specs,
-   and code.
-3. If live EPIC rows have `documentCount > 0` and generated files exist under `epics/<epicId>/` such as `br.md`, `design.md`, `data_dictionary.md`, `glossary.md`, `usecases/ucl.md`, or `usecases/ucs.md`, use **Business Index Mode** for business, planning, policy/rules, journey, and concept questions. Project `overview.md` / `personas.md` routing cards are coarse route maps: they choose an EPIC and purpose docs, not exhaustive API/screen/event/schedule evidence.
+2. Read `README.md` and `catalog/epics.md`. For raw user terms, aliases,
+   abbreviations, Korean/English bridges, or domain slang, call
+   `platty sot glossary search --project <project> --query "<raw term>" --json`
+   instead of expecting a glossary Markdown file.
+3. If live EPIC rows have `documentCount > 0` and generated files exist under `epics/<epicId>/` such as `br.md`, `design.md`, `data_dictionary.md`, `usecases/ucl.md`, or `usecases/ucs.md`, use **Business Index Mode** for business, planning, policy/rules, journey, and concept questions. Project `overview.md` / `personas.md` routing cards are coarse route maps: they choose an EPIC and purpose docs, not exhaustive API/screen/event/schedule evidence.
 4. If business docs are absent, incomplete, or not exported, use **Static Analysis Mode** for static catalogs and graph/code primitives.
 5. If the state is mixed, use Business Index Mode for valid business-doc evidence and explicitly state coverage or freshness gaps before drilling into static evidence.
 6. For development/design-impact questions ("where do I add/change this", "what breaks", code location, precise screen/api/table impact), follow **Development Design Questions (4-Axis)** even when business docs exist: start with targeted static catalog grep + graph traces when the question is already anchored to an implementation entity or asks for code/impact, then use business docs for semantic scope and constraints when available.
@@ -110,10 +109,10 @@ mixes, and team-specific words that generated docs may never contain.
    and likely code-language equivalents from glossary hits.
 4. If the raw term has no glossary/spec/code hit and fuzzy candidates are tied,
    ask one clarifying question before answering.
-5. When the user confirms a new alias, recommend recording it with `platty memory add`
-   on the narrowest known EPIC/document/item scope. If no scope is known, ask one
-   clarifying question and find the candidate EPIC before recording. After export,
-   that memory should travel with the next retrieval pass.
+5. When the user confirms a new alias, recommend recording it with
+   `platty memory alias add --project <project> --epic <epicId> --term "<raw>" --canonical "<canonical>" --json`.
+   If no EPIC is known, ask one clarifying question and find the candidate EPIC
+   before recording. Alias memory is query normalization, not business proof.
 
 ## Boundary Declaration
 
@@ -169,14 +168,14 @@ bounded and prevents the "CLI is available, so trace first" failure mode.
 
 | Question shape | First hop | Drilldown gate | Stop rule |
 | --- | --- | --- | --- |
-| concept / term meaning | `catalog/glossary.md`, then `catalog/epics.md` | candidate epic `glossary.md` / `design.md` | stop before graph unless implementation is asked |
+| concept / term meaning | `sot glossary search`, then `catalog/epics.md` | candidate `epic.md` / `design.md` | stop before graph unless implementation is asked |
 | planning / product direction | `catalog/epics.md` | `design.md`, `br.md`, `usecases/ucl.md` | stop after business docs when supported |
 | policy / business rules | `catalog/epics.md` | `br.md`, `usecases/ucs.md`, `data_dictionary.md` | do not infer policy from code alone |
 | user journey / screen flow | `catalog/epics.md` plus `catalog/screens.md` | `design.md`, `usecases/ucl.md`, screen specs | separate journey from implementation |
 | precise API / screen / table impact | static catalog row (`apis.md`, `screens.md`, `tables.md`) | `graph trace` from `traceId` / `serviceMapNodes`, then source snippet | state graph limits and candidates |
 | data field / carrier impact | `catalog/tables.md` or field docs | DB-anchored upstream trace with `accesses_db,calls_api`, then source grep | check read carriers as well as writes |
-| code location | glossary `code_term` or static catalog | `code search` -> nodeId -> optional trace/snippet | never pass `code_term` directly to `graph trace` |
-| ambiguous domain term | `catalog/glossary.md` and `catalog/epics.md` | read 2-3 candidate epic folders | qualify or ask if candidates remain tied |
+| code location | glossary search `codeTerm` or static catalog | `code search` -> nodeId -> optional trace/snippet | never pass `codeTerm` directly to `graph trace` |
+| ambiguous domain term | `sot glossary search` and `catalog/epics.md` | read 2-3 candidate epic folders | qualify or ask if candidates remain tied |
 | negative evidence / missing graph links | static catalog anchor | targeted graph trace returning 0 confirmed | say "no confirmed graph evidence"; never say "no impact" |
 | business docs absent | static catalogs only | graph/code only for static structure | explicitly stop before business policy, journey, or intent |
 
@@ -202,15 +201,15 @@ STOP if you catch yourself thinking any of these:
 | --- | --- |
 | "I'll just use a legacy term-search command/`LIKE` for the term and answer from the hit" | The SOT folder is right there. `grep` `catalog/*.md` for the concept (name/summary), then read the detail MD. A term-match hit is not evidence; answering from titles and a score is fabrication. |
 | "I can't read the catalog (folder missing / read failed), so I'll guess from memory" | Do not fabricate. Either run `platty sot export --project <project>` to (re)create the folder, or fall back to the CLI graph walk. If neither works, report that the SOT projection is unavailable and recommend `sync` + `sot export`. |
-| "The question terms are clear, skip the catalog/glossary" | The user may ask in Korean while docs use English, Japanese, or code identifiers. `catalog/glossary.md` and `summary` columns map aliases — skipping them is how you pick the wrong EPIC. |
+| "The question terms are clear, skip glossary search" | The user may ask in Korean while docs use English, Japanese, or code identifiers. `sot glossary search` maps raw terms and aliases to candidate EPICs and code terms — skipping it is how you pick the wrong EPIC. |
 | "There are hundreds of MD files, I'll open them all to be safe" | Don't brute-force the tree. Use `catalog/*.md` to narrow, read only the named detail files, and for cross-layer reach use `graph trace` — high-cardinality code nodes are intentionally NOT in the MD (use `code search`). |
 | "The doc is stale/orphaned but probably still right — present it as fact" | State `validity` from frontmatter and recommend `sync` + `sot export`. Do not hide stale evidence. |
 | "I'll edit the MD file to fix the wrong value" | The MD is a `[regen]` projection. Edits are lost on next export. Write via `platty memory add` then `platty sot export`. |
-| "I found the `code_term` in glossary, I'll pass it straight to `graph trace --from`" | A `code_term` is a code identifier, NOT a service-map node id. `graph trace --from` needs a node id — first `code search --symbol <code_term>` to get the nodeId, then trace from that. Passing the raw `code_term` is a dangling-input error. |
+| "I found the `codeTerm` in glossary search, I'll pass it straight to `graph trace --from`" | A `codeTerm` is a code identifier, NOT a service-map node id. `graph trace --from` needs a node id — first `code search --symbol <codeTerm>` to get the nodeId, then trace from that. Passing the raw `codeTerm` is a dangling-input error. |
 | "I have an epicId/BR id/model id, so I'll pass it directly to graph trace" | EPIC ids, business document ids, item keys, and model ids are not necessarily graph node ids. Run `platty sot resolve` first. Prefer returned source-near `traceId`s. Use model `db:<table>` traces only after explicit scope/full-detail or when the question is a global table/field impact question. |
-| "The query is Korean but I know the English word, I'll skip glossary and trace from my guess" | Cross the language bridge through `catalog/glossary.md` first. Guessing the English/code term skips the canonical/`code_term` mapping and traces the wrong (or non-existent) node. |
+| "The query is Korean but I know the English word, I'll skip glossary and trace from my guess" | Cross the language bridge through `sot glossary search` first. Guessing the English/code term skips the canonical/`codeTerm` mapping and traces the wrong (or non-existent) node. |
 | "Business docs exist, but graph trace feels faster, so I'll start there" | Wrong mode for business/planning/policy/journey/concept questions. When valid business docs exist, treat them as the semantic index first for those questions. For development/design-impact questions already anchored to implementation or asking code/impact, use the 4-axis path: targeted static catalog grep + graph traces first, with business docs as semantic scope/constraints. |
-| "The business doc says it, so I'll assert it as fact" | Business docs are an **index, not ground truth**. LLM-generated business docs (`usecases/ucs.md`, `design.md`, `br.md`, `glossary.md`) can overclaim — an `authenticated user` written up as `owner`/`member-only`/`participant-only`, a minimal `"ok"` response written up as a returned/created record — or lag the source. Before asserting a behavior, actor/permission, response shape, or rule from a business doc, drill into the **connected** `specs/api/<id>.md` / `specs/screen/<id>.md` (via `relatedDocs`/`serviceMapNodes`/`traceId`, **only the related ones**) — and code via `graph trace`/`code search` when the spec is thin — and confirm it there. Assert from the source-near spec/code; cite the business doc as the index that located it. If they disagree, surface the gap. |
+| "The business doc says it, so I'll assert it as fact" | Business docs are an **index, not ground truth**. LLM-generated business docs (`usecases/ucs.md`, `design.md`, `br.md`) can overclaim — an `authenticated user` written up as `owner`/`member-only`/`participant-only`, a minimal `"ok"` response written up as a returned/created record — or lag the source. Before asserting a behavior, actor/permission, response shape, or rule from a business doc, drill into the **connected** `specs/api/<id>.md` / `specs/screen/<id>.md` (via `relatedDocs`/`serviceMapNodes`/`traceId`, **only the related ones**) — and code via `graph trace`/`code search` when the spec is thin — and confirm it there. Assert from the source-near spec/code; cite the business doc as the index that located it. If they disagree, surface the gap. |
 | "The connected spec says the handler persists/broadcasts/returns X, so I don't need to inspect the source" | Specs are source-near but still LLM-authored. If the source handler body is empty, only logs values, returns no value, or is a stub/TODO/not implemented shell, **source code wins**: report that the implementation is not confirmed. Do not trust a spec claim that a stub delegates to a service, persists data, emits events, enforces permissions, or returns a business result unless the code or included shared-module evidence shows it. |
 | "I grepped nearby repos and did not find it, so the project lacks it" | Wrong boundary. Before any absence claim, verify the repo id/path from SOT catalog/spec/code evidence and search only the intended project repository or explicitly state which repo scope was searched. Sibling examples or alternate implementations are not negative evidence for this project. |
 | "Business docs are missing, so retrieval cannot answer anything" | Wrong mode. Static catalogs, graph trace, and code search still answer static-analysis questions; just avoid inventing business rules. |
@@ -287,7 +286,7 @@ Read these first to get the map and solve unknown-unknowns (you don't need to kn
 ~/.platty/sot/<projectId>/catalog/screens.md  catalog/events.md  catalog/schedules.md  # 동일 스키마 (screenId/eventId/scheduleId | traceId | …)
 ~/.platty/sot/<projectId>/catalog/tables.md   # modelId | name | validity | repoId | traceId
 ~/.platty/sot/<projectId>/catalog/external-services.md
-~/.platty/sot/<projectId>/catalog/glossary.md # project-scope terms + epic glossary pointers
+~/.platty/sot/<projectId>/project/glossary.index.json # machine glossary index used by CLI/fallback only
 ```
 
 `README.md`'s `lastExportAt` tells you how fresh the projection is.
@@ -298,36 +297,37 @@ Read these first to get the map and solve unknown-unknowns (you don't need to kn
 
 ### 3. Discover candidates with grep (name/summary)
 
-grep the catalog for the user's concept, bridging language via `catalog/glossary.md`:
+grep the catalog for the user's concept, and use glossary search for raw terms or aliases:
 
 ```bash
 grep -in "환불\|refund" ~/.platty/sot/<projectId>/catalog/*.md
+platty sot glossary search --project <project> --query "환불" --json
 ```
 
 Pick 1-3 candidate epics/specs by the readable `name`/`summary` columns — not by a single matching word, and never by id (ids are opaque). The catalog is the table of contents; the `Excluded (orphaned/deleted)` section lists audit-only entries you must not treat as live.
 
 #### Glossary cross-lingual search protocol (run at search start)
 
-Before expanding or guessing terms, cross the language bridge through `catalog/glossary.md`:
+Before expanding or guessing terms, cross the language bridge through deterministic glossary search:
 
-1. **grep `catalog/glossary.md` for the query term first.** Its `Terms` index maps each
-   term to its `canonicalTerm`, `searchTerms` (aliases + synonyms + candidate aliases),
-   and **`code` (the `code_term` — the backend/code identifier bridge)**:
+1. **Run `sot glossary search` for the raw query term first.** Its matches map the
+   raw term to candidate EPICs, aliases, `canonicalTerm`, and **`codeTerm`** when
+   the generated glossary exposed a code identifier bridge:
 
    ```bash
-   grep -in "환불" ~/.platty/sot/<projectId>/catalog/glossary.md
+   platty sot glossary search --project <project> --query "환불" --json
    ```
 
-2. **If the term has a `code_term`, do NOT pass it to `graph trace --from`.** A `code_term`
+2. **If the match has a `codeTerm`, do NOT pass it to `graph trace --from`.** A `codeTerm`
    is a code identifier, **not a service-map node id** — `graph trace --from` expects a
    node id. Resolve the node id first, then trace:
 
    ```bash
-   platty code search --project <project> --symbol "<code_term>" --json   # -> get the nodeId
+   platty code search --project <project> --symbol "<codeTerm>" --json   # -> get the nodeId
    platty graph trace --project <project> --from <nodeId> --direction upstream|downstream --json
    ```
 
-3. **If there is no `code_term`, use `searchTerms` to expand `docs`/`code search`
+3. **If there is no `codeTerm`, use aliases/canonical terms from the matches to expand `docs`/`code search`
    candidates only — do not assert.** The aliases/synonyms widen discovery; they are not
    themselves evidence and do not bridge to a code node.
 
@@ -337,7 +337,7 @@ Open the named files. Business docs nest under the epic; technical specs are poo
 
 ```text
 epics/<epicId>/epic.md                         # epic body + relatedDocs (id + role + path)
-epics/<epicId>/br.md  design.md  data_dictionary.md  glossary.md
+epics/<epicId>/br.md  design.md  data_dictionary.md
 epics/<epicId>/usecases/ucl.md  epics/<epicId>/usecases/ucs.md
 epics/<epicId>/memory.md                        # human memories anchored here ([regen])
 specs/api/<fileId>.md  screen/<fileId>.md  event/<fileId>.md  schedule/<fileId>.md
@@ -465,7 +465,7 @@ For development/design-impact questions ("where do I add/change this", "what bre
 Discovery order:
 
 1. Start from the user question.
-2. Cross the glossary bridge with `catalog/glossary.md` and the relevant EPIC `glossary.md` when present.
+2. Cross the glossary bridge with `sot glossary search` when raw terms, aliases, or translated concepts may affect EPIC selection.
 3. Use `catalog/epics.md` to identify candidate rows by readable terms, summaries, and `documentCount`.
 4. Read only 1-3 candidate `epics/<epicId>/epic.md` files on the first pass.
 5. Read purpose-selected business docs from those candidate EPIC folders.
@@ -476,7 +476,7 @@ Purpose-to-document routing:
 
 | Purpose | Read first |
 | --- | --- |
-| concept | `catalog/glossary.md`, `glossary.md`, `epic.md`, `design.md` |
+| concept | `sot glossary search`, `epic.md`, `design.md` |
 | planning | `design.md`, `br.md`, `usecases/ucl.md`, `usecases/ucs.md` |
 | policy/rules | `br.md`, `usecases/ucs.md` |
 | user journey | `design.md`, `usecases/ucl.md` |
@@ -490,16 +490,16 @@ Token/speed budget:
 - Read at most 3 candidate EPIC folders on the first pass.
 - Open only docs matching the question intent.
 - For Business Index Mode answers, name the actual index path used before any
-  source/spec drill-down: `catalog/glossary.md` or alias terms checked,
+  source/spec drill-down: glossary search or alias terms checked,
   `catalog/epics.md` candidate rows, chosen `epics/<epicId>/`, and the selected
-  business docs (`br.md`, `design.md`, `usecases/*`, `data_dictionary.md`,
-  `glossary.md`) that support the answer.
+  business docs (`br.md`, `design.md`, `usecases/*`, `data_dictionary.md`)
+  that support the answer.
 - Read technical specs only after scope selection.
 - Run graph/code only when implementation, impact, or unresolved gaps require it.
 - Do not call graph/code just because the CLI is available. For business-only planning, policy, or journey answers, stop after the business docs once the answer is supported.
 - For business-index questions, graph/code is an escalation, not a validation ritual. Escalate only
   when the answer needs source location, confirmed implementation edges, graph-negative evidence, or
-  a code-level bridge from a `code_term`.
+  a code-level bridge from a `codeTerm`.
 - For static impact or DB questions, graph trace is worth the extra time/tokens only when it adds evidence grep cannot supply: confirmed DB/API/screen edges, source locations, candidates, or negative trace evidence.
 - If a graph/code call does not materially change the answer, treat that as a skill failure in later evals and tighten the routing rule rather than widening searches.
 
@@ -510,7 +510,7 @@ Use this when business docs are unavailable, incomplete, or not exported. Do not
 Discovery order:
 
 1. Start from the user question.
-2. Cross `catalog/glossary.md` if present.
+2. Use `sot glossary search` when raw terms, aliases, or translated concepts may affect candidate selection.
 3. Search static catalogs: `catalog/screens.md`, `catalog/apis.md`, `catalog/tables.md`, and `catalog/external-services.md` plus relevant static `events`/`schedules`.
 4. Pick candidate rows by readable `name`/`summary`/`repo` fields, not ids alone.
 5. Trace from `traceId` or `serviceMapNodes` when cross-layer relationships are needed.
@@ -568,7 +568,7 @@ Then synthesize: concrete **change points** (repo + file + node + layer), the **
 ## Answer Contract
 
 - Start with the evidence boundary when the project is static-only, mixed, stale, or docs are missing.
-- State the normalized terms used (and the alias bridge from `catalog/glossary.md`).
+- State the normalized terms used (and the alias bridge from `sot glossary search` when used).
 - Cite MD file paths and frontmatter `id`s; for code, cite repo + file + line.
 - Separate direct evidence from inference.
 - For docs-absent projects, explicitly say "business docs are absent/unavailable" and "static catalogs/graph/code can only support implementation structure." Do not merely imply this by saying "no SOT path."
@@ -612,19 +612,19 @@ PASS path and the Red (failure) paths it must prevent.
 
 **PASS path:**
 
-1. grep `catalog/glossary.md` for "환불" → hit on the `Terms` index row.
-2. Read that term's `code_term` from the `code` column (e.g. `refund`).
+1. Run `platty sot glossary search --project <project> --query "환불" --json`.
+2. Read the top match's `codeTerm` when present (e.g. `refund`) and candidate EPIC path.
 3. `platty code search --project <project> --symbol refund --json` → obtain the `nodeId`
    (with `filePath`/`lineStart`/`lineEnd`).
 4. `platty graph trace --project <project> --from <nodeId> ... --json` using that node id.
 
 **Red (any of these is a failure):**
 
-- Putting the `code_term` directly into `graph trace --from` (e.g. `--from refund`) — a
-  `code_term` is not a service-map node id.
-- Skipping `catalog/glossary.md` entirely and guessing an English term to search/trace.
-- The term has **no** `code_term`, yet the answer asserts a code location anyway instead of
-  using `searchTerms` only to widen `docs`/`code search` candidates without asserting.
+- Putting the `codeTerm` directly into `graph trace --from` (e.g. `--from refund`) — a
+  `codeTerm` is not a service-map node id.
+- Skipping `sot glossary search` entirely and guessing an English term to search/trace.
+- The term has **no** `codeTerm`, yet the answer asserts a code location anyway instead of
+  using aliases/canonical terms only to widen `docs`/`code search` candidates without asserting.
 
 ### Scenario: Product question but business docs are absent
 
