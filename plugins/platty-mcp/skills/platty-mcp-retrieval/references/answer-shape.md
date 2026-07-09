@@ -28,6 +28,9 @@ Default sections:
 ## 관련 위치
 - <Human-readable name + technical anchor; 2-5 entries>
 
+## Memory overlay
+- <Relevant corrections, constraints, why/context, or "none read">
+
 ## 더 확인할 후보
 - <Not yet source-confirmed>
 - <Product boundary to decide>
@@ -41,6 +44,8 @@ Rules:
 - Explain internal names before listing files, symbols, enums, APIs, or spec ids.
 - Use "확인됨" only for exact MCP spec, document-item, graph, code, or artifact
   content reads. Artifact paths alone are not proof.
+- Put memory notes under `Memory overlay`; do not mix them into generated SOT,
+  spec, or source-confirmed facts.
 - Use "후보", "근거상 보임", or "추가 확인 필요" for search hits, partial
   specs, or inferred behavior.
 - Keep every claim under the Answer Contract in `../SKILL.md`; this shape

@@ -23,6 +23,11 @@ Do not write SDD documents to repository-local paths such as `docs/sdd/` or
 `.platty/sdd/`. The Platty web dashboard treats the global Platty home as the
 managed SDD source.
 
+When this skill authors SDD product documents, write both `request.md` and `stories.md` in the same SDD directory.
+Do not leave `stories.md` as a chat-only gate or handoff note. If decisions are unresolved, keep both files in draft
+state and make those assumptions visible in `request.md` §7 and in
+`stories.md`.
+
 ## Required Gates
 
 1. Resolve a Platty project before project-scoped commands.
@@ -30,7 +35,7 @@ managed SDD source.
 3. Read SOT `README.md` and `catalog/epics.md`; use `sot glossary search` for raw terms, aliases, or translated concepts before product claims.
 4. Declare the evidence boundary: `business-docs`, `static-only`, `mixed`, or `stale`.
 5. Ask SOT-informed questions before finalizing `request.md`.
-6. Do not generate `stories.md` until `request.md` is `approved`, unless the user explicitly accepts unresolved assumptions.
+6. Generate `stories.md` with `request.md` as a draft even when open questions remain. Approval gates control `approved` status and design readiness, not whether the stories file exists.
 7. Set the output language before authoring. Use the language the user requested for the spec; if no language is explicitly requested, infer it from the user's latest idea/request and confirm only when mixed-language intent is ambiguous.
 
 Use the Platty CLI convention from `using-platty`. Inside this repository, `AGENTS.md` overrides public plugin examples: run the local build with `node packages/cli/dist/main.js <command> --json`.
@@ -76,6 +81,9 @@ Question categories:
 - success: measurable validation and release criteria.
 
 Confirmed answers go to `§6 Confirmed Decisions`. Unresolved items stay in `§7 Open Questions`.
+When unresolved items affect stories, write the stories from clearly named
+recommended defaults or assumptions and include an assumptions/impact section in
+`stories.md` so later edits know what must change.
 
 ## Output Language
 
@@ -114,6 +122,17 @@ Read reference templates only when writing the files:
 - `references/stories-template.md`
 - `references/spec-review-rubric.md`
 
+Authoring order:
+
+1. Create or update `request.md`.
+2. Create or update `stories.md` in the same directory from `request.md` §1 and
+   §5.
+3. When unresolved open questions remain, keep both documents as draft.
+4. Keep `request.md` as `draft-with-open-questions` and `stories.md` as `draft`
+   when unresolved open questions or assumptions remain.
+5. Include all unresolved assumptions that affect story splitting in
+   `stories.md`; do not silently close them.
+
 `request.md` status:
 
 - `draft` while being filled;
@@ -140,6 +159,7 @@ Read reference templates only when writing the files:
 | --- | --- |
 | "I know the domain term." | Run `sot glossary search` first. |
 | "The user wants speed, skip questions." | Draft with named assumptions and use `draft-with-open-questions`. |
+| "Stories need approval first." | Approval controls `approved` status. Still create `stories.md` as `draft` beside `request.md` and preserve assumptions. |
 | "Business docs are missing, so invent product intent from code." | Use static evidence only and state the boundary. |
 | "A code term can go directly to graph trace." | Resolve code term with `code search` first. |
 | "Fix the generated SOT markdown." | Never edit SOT projection; suggest memory or regeneration. |

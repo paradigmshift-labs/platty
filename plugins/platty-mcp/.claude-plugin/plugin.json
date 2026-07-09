@@ -1,6 +1,6 @@
 {
   "name": "platty-mcp",
-  "description": "Read-only Platty MCP retrieval skills for configured remote context servers.",
+  "description": "Platty MCP retrieval, memory, and SDD handoff skills for configured remote context servers.",
   "version": "0.0.3",
   "author": {
     "name": "Paradigm Shift Labs"

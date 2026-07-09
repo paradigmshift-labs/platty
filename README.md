@@ -121,9 +121,11 @@ Included full `platty` skills: `platty:using-platty`,
 `platty:platty-sync`, `platty:platty-sdd-spec`, `platty:platty-sdd-design`,
 `platty:platty-memory`.
 
-For remote read-only retrieval against an already configured Platty MCP server,
+For remote MCP retrieval, memory, and SDD handoffs against an already configured Platty MCP server,
 install `platty-mcp`, which includes `platty-mcp:using-platty-mcp`,
-`platty-mcp:platty-mcp-client-setup`, and `platty-mcp:platty-mcp-retrieval`.
+`platty-mcp:platty-mcp-client-setup`, `platty-mcp:platty-mcp-retrieval`,
+`platty-mcp:platty-mcp-memory`, `platty-mcp:platty-mcp-sdd-spec`, and
+`platty-mcp:platty-mcp-sdd-design`.
 The `platty-mcp` plugin remains skills-only and does not ship `.mcp.json` or
 `mcpServers`, because server URLs differ by deployment.
 
