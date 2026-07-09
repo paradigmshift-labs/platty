@@ -46,7 +46,8 @@ Use the Platty CLI convention from `using-platty`. Inside this repository, `AGEN
    - if a match has `codeTerm`, resolve it with `code search` before any graph trace
 3. Product area:
    - read `catalog/epics.md`
-   - read 1-3 relevant epic docs: `br.md`, `usecases/ucl.md`, `usecases/ucs.md`, `data_dictionary.md`, `design.md`
+   - read 1-3 relevant epic docs: `br.md`, `usecases/ucl.md`, `usecases/ucs.md` when present, `data_dictionary.md`, `design.md`
+   - for `usecases/ucl.md`, read the Use Case Index first and then only the relevant use-case sections
 4. Implementation hints only when needed:
    - catalog API/screen/table rows
    - graph trace for confirmed relationships
@@ -85,6 +86,25 @@ Write user-facing `request.md` and `stories.md` content in the requested languag
 - If the user requests English, write the documents in English even when the idea or glossary query includes Korean terms.
 - Use the same language for SOT-informed questions, recommended defaults, open questions, assumptions, and both SDD files.
 - Record the chosen language in frontmatter as `outputLanguage`.
+
+## Chat Response Contract
+
+When you author or update `request.md` or `stories.md` during a chat turn, the
+final chat response must show the created document content, not only the file
+paths.
+
+Do not answer with only file paths, a handoff summary, or "작성 완료" plus a
+location. Include enough content for the user to review without opening the file.
+
+Minimum final response when files are written:
+
+- `request.md`: status, path, outputLanguage, evidence boundary, confirmed
+  decisions, open questions, main request rules, and validation/release notes.
+- `stories.md`: status, path, outputLanguage, user stories, acceptance
+  scenarios, and unresolved assumptions.
+
+If a document is too long for chat, include its main sections and say which
+sections were abbreviated. Always include all open questions and assumptions.
 
 ## Authoring
 

@@ -58,7 +58,7 @@ npm install -g @paradigmshift/platty
 platty version
 ```
 
-Install the agent plugin for your runtime:
+Install the full agent plugin for your runtime:
 
 ```bash
 # Codex
@@ -72,8 +72,40 @@ codex plugin add platty@platty
 /plugin install platty@platty
 ```
 
-After installing the plugin, start a new agent session, then run `platty setup`
-from the repository you want to analyze.
+For the full `platty` operator plugin path, install `platty@platty` and then run
+`platty setup` from the repository you want to analyze.
+
+For direct HTTP MCP setup, split the responsibility by role:
+
+```text
+Server operator:
+  install/use full platty plugin -> platty:platty-mcp-server-setup
+
+MCP consumer:
+  install platty-mcp plugin -> platty-mcp:platty-mcp-client-setup
+```
+
+Supported MCP URL profiles:
+
+```text
+local  -> http://127.0.0.1:3027/api/mcp
+LAN    -> http://<host-ip>:3027/api/mcp
+remote -> https://<context-backend-domain>/api/mcp
+```
+
+For remote read-only retrieval against an already configured Platty MCP server,
+install the MCP-only `platty-mcp` plugin:
+
+```bash
+codex plugin add platty-mcp@platty
+```
+
+```text
+/plugin install platty-mcp@platty
+```
+
+After installing the full `platty` operator plugin, start a new agent session,
+then run `platty setup` from the repository you want to analyze.
 
 ## This repository
 
@@ -82,11 +114,18 @@ the skills that teach Codex and Claude Code how to drive the Platty CLI. It does
 not contain the Platty engine, CLI implementation, or backend (proprietary to
 Paradigm Shift Labs, Inc.).
 
-Included skills: `platty:using-platty`, `platty:platty-cli-router`,
-`platty:platty-setup`, `platty:platty-static-analysis`,
+Included full `platty` skills: `platty:using-platty`,
+`platty:platty-cli-router`, `platty:platty-setup`,
+`platty:platty-mcp-server-setup`, `platty:platty-static-analysis`,
 `platty:platty-docs-target-curation`, `platty:platty-generated-docs`,
-`platty:platty-sync`, `platty:platty-retrieval`, `platty:platty-sdd-spec`,
-`platty:platty-sdd-design`, `platty:platty-memory`.
+`platty:platty-sync`, `platty:platty-sdd-spec`, `platty:platty-sdd-design`,
+`platty:platty-memory`.
+
+For remote read-only retrieval against an already configured Platty MCP server,
+install `platty-mcp`, which includes `platty-mcp:using-platty-mcp`,
+`platty-mcp:platty-mcp-client-setup`, and `platty-mcp:platty-mcp-retrieval`.
+The `platty-mcp` plugin remains skills-only and does not ship `.mcp.json` or
+`mcpServers`, because server URLs differ by deployment.
 
 ## Requirements
 

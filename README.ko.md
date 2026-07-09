@@ -54,7 +54,7 @@ npm install -g @paradigmshift/platty
 platty version
 ```
 
-런타임에 맞는 에이전트 플러그인을 설치하세요:
+런타임에 맞는 전체 에이전트 플러그인을 설치하세요:
 
 ```bash
 # Codex
@@ -68,7 +68,40 @@ codex plugin add platty@platty
 /plugin install platty@platty
 ```
 
-플러그인 설치 후 새 에이전트 세션을 시작하고, 분석할 저장소에서 `platty setup`을 실행하세요.
+전체 `platty` 운영자 플러그인 경로를 사용할 경우에는
+`platty@platty`를 설치한 뒤, 분석할 저장소에서 `platty setup`을 실행하세요.
+
+직접 HTTP MCP 설정은 역할별로 나누세요:
+
+```text
+Server operator:
+  install/use full platty plugin -> platty:platty-mcp-server-setup
+
+MCP consumer:
+  install platty-mcp plugin -> platty-mcp:platty-mcp-client-setup
+```
+
+지원되는 MCP URL 프로필:
+
+```text
+local  -> http://127.0.0.1:3027/api/mcp
+LAN    -> http://<host-ip>:3027/api/mcp
+remote -> https://<context-backend-domain>/api/mcp
+```
+
+이미 구성된 Platty MCP 서버에 대해 원격 읽기 전용 조회만 필요하다면,
+대신 MCP 전용 `platty-mcp` 플러그인을 설치하세요:
+
+```bash
+codex plugin add platty-mcp@platty
+```
+
+```text
+/plugin install platty-mcp@platty
+```
+
+전체 `platty` 운영자 플러그인을 설치한 뒤 새 에이전트 세션을 시작하고,
+분석할 저장소에서 `platty setup`을 실행하세요.
 
 ## 이 저장소
 
@@ -76,11 +109,17 @@ codex plugin add platty@platty
 Code가 Platty CLI를 구동하는 법을 가르치는 스킬 모음입니다. Platty 엔진·CLI
 구현·백엔드는 포함하지 않습니다(주식회사 패러다임시프트 독점).
 
-포함 스킬: `platty:using-platty`, `platty:platty-cli-router`,
-`platty:platty-setup`, `platty:platty-static-analysis`,
-`platty:platty-docs-target-curation`, `platty:platty-generated-docs`,
-`platty:platty-sync`, `platty:platty-retrieval`, `platty:platty-sdd-spec`,
-`platty:platty-sdd-design`, `platty:platty-memory`.
+전체 `platty` 스킬: `platty:using-platty`, `platty:platty-cli-router`,
+`platty:platty-setup`, `platty:platty-mcp-server-setup`,
+`platty:platty-static-analysis`, `platty:platty-docs-target-curation`,
+`platty:platty-generated-docs`, `platty:platty-sync`,
+`platty:platty-sdd-spec`, `platty:platty-sdd-design`, `platty:platty-memory`.
+
+이미 구성된 Platty MCP 서버에 대한 원격 읽기 전용 조회에는
+`platty-mcp:using-platty-mcp`, `platty-mcp:platty-mcp-client-setup`,
+`platty-mcp:platty-mcp-retrieval`을 포함한 `platty-mcp` 플러그인을 설치하세요.
+`platty-mcp` 플러그인은 서버 URL이 배포마다 다르기 때문에 `.mcp.json`이나
+`mcpServers`를 포함하지 않는 skills-only 플러그인입니다.
 
 ## 요구 사항
 

@@ -18,40 +18,43 @@ guessing.
 - The projected SOT for the resolved project at `~/.platty/sot/<projectId>/` — a **routing index** into
   code-traced specs (it points to truth; it is not the truth itself):
   - **Catalog** (`catalog/apis.md`, `screens.md`, `events.md`, `tables.md`) plus `sot glossary search` — the
-    no-omission enumeration surface: discover every spec the idea could touch.
+    first routing surface. Generated spec catalogs enumerate exported source-near specs; static-only nodes may
+    require `sot resolve`, `graph trace`, `code search`, or source reads.
   - **Detail specs** (`specs/<kind>/<id>.md`: api_spec / screen_spec / event_spec) — code-traced, with
-    `traceId`/`detailPath` pointers down to the actual source.
+    catalog/resolve `traceId`s and spec `serviceMapNodes[]` pointers down to the actual source.
   - **Business rules** (`br`) — existing as-is behavior, incl. *soft inherited constraints*
     (e.g. "only signed-in users", "never increments unread") a new feature must not silently break.
   - **Data dictionary** (`dd` / entities + fields) — the data shapes that exist.
-  - The raw code, reached by following the routed specs' `traceId`s — the final ground truth.
+  - The raw code, reached by following catalog/resolve `traceId`s or spec `serviceMapNodes[]` — the final ground truth.
 
-### The SOT is a NO-OMISSION ROUTING PATH to code-traced specs — not shallow truth to read off
+### The SOT is a routing path to code-traced specs — not shallow truth to read off
 
 Do NOT treat the SOT folder as "the answer" you read off the glossary. The glossary/data-dictionary are
-the *index*, not the ground truth. The SOT is a **routing layer built by static analysis** that points —
-**without omission** — to the code-traced detail specs (`api_spec`, `screen_spec`, `event_spec`, business
-rules, data dictionary) and, through their `traceId`s/`detailPath`s, to the **actual code**. That is the
-whole edge over a general grep agent: a grep agent can MISS a relevant route/screen/event; the SOT routing
-enumerates them all. So **ground by routing through the SOT to the specs and the code it points at**, not
-by skimming the catalog.
+the *index*, not the ground truth. The SOT is a **routing layer built by static analysis** that points
+to exported code-traced detail specs (`api_spec`, `screen_spec`, `event_spec`, business rules, data
+dictionary) and, through catalog/resolve `traceId`s or spec `serviceMapNodes[]`, to the **actual code**.
+That is the edge over a general grep agent: catalog/spec routing narrows the relevant source-near
+neighbourhood, while `sot resolve`, `graph trace`, and `code search` cover static-only or deeper
+implementation surfaces. So **ground by routing through the SOT to the specs and the code it points at**,
+not by skimming the catalog.
 
-Follow `platty-retrieval` discipline:
+Follow map-first source-grounding discipline:
 
 1. **Scope by epic first — the epic list is already extracted.** Read `catalog/epics.md` and pick the
    epic(s) the idea touches, PLUS any adjacent epic you are unsure about. Epic scoping is for *efficiency*
    on a large SOT, NOT a licence to omit: a missed epic is a missed conflict, so when in doubt include it,
    and if the idea is genuinely cross-cutting, widen the scope. Specs are epic-linked, so this bounds the
    next steps to the relevant neighbourhood instead of re-reading the whole project every time.
-2. **Enumerate completely — within that scope.** Read `catalog/` (apis.md, screens.md, events.md,
-   tables.md) for the entries under the scoped epics, and run `sot glossary search` for raw terms,
-   aliases, or translated concepts to list EVERY spec the idea could touch — by meaning, not literal
-   words. This is the no-omission step (within the epic scope).
+2. **Enumerate the scoped neighbourhood.** Read `catalog/` (apis.md, screens.md, events.md,
+   tables.md) for entries under the scoped epics, and run `sot glossary search` for raw terms,
+   aliases, or translated concepts to list the specs and static anchors the idea could touch — by
+   meaning, not literal words. For static-only surfaces missing from generated spec catalogs, use
+   `sot resolve`, `graph trace`, or `code search`.
 3. **Resolve.** Use `sot resolve` (epic / document / item / model) to get the connected specs + `traceId`
    seeds for anything you're holding an id for.
 4. **Follow to the KEY CODE — the spec is a summary, not the truth.** An `api_spec`/`screen_spec` is a
    *summary*; do not stop at it. Each one points you at the exact code to read:
-   - **File**: the spec's `scopeId`/`traceId`/`serviceMapNodes` encode the source file (e.g.
+   - **File**: the spec's `scopeId`/`serviceMapNodes` and catalog/resolve `traceId` encode the source file (e.g.
      `…:<repo>:<path/to/handler.ext>`).
    - **Functions**: the spec summary names the key symbols (e.g. "runs `<authGuard>` before
      `<handler>` … which calls `<helper>(...)`").
@@ -59,8 +62,8 @@ Follow `platty-retrieval` discipline:
      connected code-node list. (It can be empty if those call edges weren't built — then fall back to the
      file+function names the spec already gives you.)
    Then **read just those key functions directly** in that file — a handful of targeted reads, not the
-   whole repo. That is the precise, no-omission grounding a blind grep can't match: the SOT told you the
-   exact functions; you verify the truth in them.
+   whole repo. That is the targeted grounding a blind grep can't match: the SOT told you the
+   likely functions; you verify the truth in them.
 
 Only conclude **net-new** or **premise invalid** when the routing turns up nothing AND the code the
 routing points to has no such surface. When the SOT routes you to a **thin handle** — a small piece of code
@@ -68,7 +71,7 @@ that delegates to an externally-owned capability (an SDK/library/service) rather
 handle IS the routing doing its job. Pull that thread into the code/deps it implicates and **verify** whether
 the app actually owns the state/schema or whether the external dependency does; if the dependency owns it,
 the surface may already work and need no app-side schema. Do not assume ownership either way — check.
-Reading code this way preserves the no-omission advantage while grounding on what is actually true. Never
+Reading code this way preserves the routing advantage while grounding on what is actually true. Never
 invent: if neither the routed specs nor the code support a claim, it is net-new or a question.
 
 ## Method (per meaningful concept in the idea)
@@ -98,7 +101,7 @@ Then, independent of the term mapping:
 
 ### Completeness: enumerate the SYSTEMIC neighbourhood, not just the one target
 
-The no-omission routing edge is wasted if you stop at the single spec the idea names. After grounding the
+The routing edge is wasted if you stop at the single spec the idea names. After grounding the
 target, use the catalog to enumerate its **whole neighbourhood** and surface what a single-target code
 reader structurally omits:
 
@@ -122,9 +125,9 @@ cross-route invariant. Put these in `conflicts` (systemic constraints), `ambiguo
 | --- | --- |
 | "The word appears in a rule, so it's grounded." | Confirm the *meaning* matches; a shared string is not grounding. |
 | "I don't see the exact word, so it's net-new." | Search synonyms/related concepts first; net-new only when meaning is truly absent. |
-| "It's not in the glossary, so it's net-new / premise invalid." | The glossary is an index, not the truth. Route through the catalog/specs and follow `traceId`s to code first. Net-new only when the routing turns up nothing AND the code it points to has no such surface. |
-| "I'll just read the catalog and decide." | The catalog enumerates; it doesn't prove. Follow the routed detail specs and their `traceId`s down to the code for ground truth — that no-omission routing is the edge over a grep agent. |
-| "The glossary lists no conflict, so the gate is clear." | Follow the routed specs/traceIds to the real runtime guard — an authorization/membership gap the index didn't spell out is a real blocking question. |
+| "It's not in the glossary, so it's net-new / premise invalid." | The glossary is an index, not the truth. Route through the catalog/specs and follow catalog/resolve `traceId`s or `serviceMapNodes[]` to code first. Net-new only when the routing turns up nothing AND the code it points to has no such surface. |
+| "I'll just read the catalog and decide." | The catalog routes; it doesn't prove. Follow the routed detail specs and their catalog/resolve `traceId`s or `serviceMapNodes[]` down to the code for ground truth. |
+| "The glossary lists no conflict, so the gate is clear." | Follow the routed specs, catalog/resolve `traceId`s, or `serviceMapNodes[]` to the real runtime guard — an authorization/membership gap the index didn't spell out is a real blocking question. |
 | "I grounded the one spec the idea named — done." | Enumerate its neighbourhood: sibling specs sharing the pattern, catch-alls, the cross-target invariant + regression surface. That systemic completeness is the edge a single-file grep can't match even on a small idea. |
 | "I'll pick the most likely mapping and move on." | If two mappings are plausible, it's **ambiguous** — ask, don't guess. |
 | "No rule literally mentions this, so no conflict." | Check soft/inherited constraints (auth, unread, visibility) the feature could break. |

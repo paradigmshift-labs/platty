@@ -20,6 +20,16 @@ When a runtime-specific tool name appears, translate it through the mapping for 
 
 Both mappings cover the same set of Platty actions. The runtimes differ only in tool surface, not in the Platty CLI command order, JSON inspection rules, approval gates, or document-generation safety rules — keep those identical across runtimes.
 
+Remote MCP retrieval is handled by the separate `platty-mcp` plugin. This
+operator plugin does not route MCP retrieval and must not fall back to MCP when a
+local lifecycle command is unavailable.
+
+Use `platty-mcp-server-setup` when the user is configuring, starting,
+validating, exposing, or troubleshooting the Platty context backend that serves
+direct HTTP MCP at `/api/mcp`. Use `platty-mcp` only when the user's runtime
+already exposes configured Platty MCP tools and the task is read-only retrieval
+or client registration.
+
 ## Skill Router
 
 Use `platty-cli-router` when deciding which Platty root command or skill applies.
@@ -27,11 +37,11 @@ Use `platty-cli-router` when deciding which Platty root command or skill applies
 Common routes:
 
 - Human setup workflow and project management dashboard state: `platty-setup`
+- Context-backend MCP server setup, host/port exposure, and `/api/mcp` validation: `platty-mcp-server-setup`
 - Static analysis progress: `platty-static-analysis`
 - Technical docs target review: `platty-docs-target-curation`
 - Generated technical/product/business outputs: `platty-generated-docs`
 - Generated output synchronization: `platty-sync`
-- Existing docs search or answers: `platty-retrieval`
 - SDD product spec and user stories from an idea: `platty-sdd-spec`
 - SDD technical design and tasks from approved spec/stories: `platty-sdd-design`
 - Recording or maintaining human knowledge (why, corrections, constraints) on epics or documents: `platty-memory`
@@ -67,6 +77,9 @@ Common routes:
 - If the shell reports `command not found: platty`, check command resolution once with `command -v platty`. If it returns a path, treat it as a transient shell/PATH issue and retry the original Platty command once. If it returns nothing, stop and report the missing global CLI.
 - Resolve the project before running project-scoped commands.
 - Use `platty status --json` when the next action is unclear.
+- For remote MCP retrieval or client-side MCP registration, use the separate
+  `platty-mcp` plugin. For context-backend server setup, use
+  `platty-mcp-server-setup` in this operator plugin.
 - For a known active generated-docs stage run, use
   `platty generate-docs status --project <project> --stage <stage> --run-id <run-id> --json`
   as the stable lifecycle check. Read top-level `status`,

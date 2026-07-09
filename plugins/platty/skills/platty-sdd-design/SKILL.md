@@ -38,17 +38,19 @@ Use the Platty CLI convention from `using-platty`. Inside this repository, `AGEN
    - `br.md`
    - `data_dictionary.md`
    - `design.md`
-   - `usecases/ucl.md`
-   - `usecases/ucs.md`
+   - `usecases/ucl.md` (read the Use Case Index first, then relevant sections)
+   - `usecases/ucs.md` when present
 5. Read relevant technical specs from catalog paths:
    - `specs/api/`
    - `specs/screen/`
    - `specs/event/`
-   - `specs/schedule/`
+   - `specs/schedule/` when present
 6. Trace only targeted anchors:
    - prefer spec frontmatter `serviceMapNodes[]`;
-   - use catalog `traceId` when present;
-   - if `traceId` is empty or trace has no confirmed edge, downgrade to risk and use `code search` or direct source reads.
+   - use catalog or `sot resolve` compact-row `traceId` when present;
+   - read default compact `graph trace` output from `.data.confirmed`, `.data.candidates`, `.data.relationCandidates`, and `.data.flags`;
+   - use `--detail full` only when raw hop/source-line metadata is required;
+   - if `traceId` is absent or trace has no confirmed edge, downgrade to risk and use `code search` or direct source reads.
 7. Read registered repository files from `repo list` paths for complex flows, DTOs, transactions, UI state, error handling, or tests.
 
 Do not report graph trace as exhaustive when it returns candidates, omitted edge classes, truncation, or no confirmed edge.

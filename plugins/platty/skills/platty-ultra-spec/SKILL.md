@@ -27,8 +27,8 @@ and unmappable words must be **asked about**, not invented.
 Flow (driver orchestrates; CLI stays the deterministic half):
 
 1. **Spawn a grounding sub-agent** following `references/grounding-agent.md`. It reads the SOT
-   (`~/.platty/sot/<projectId>/` — glossary, business rules, data dictionary) via `platty-retrieval`
-   discipline and returns the strict `grounding.v1` JSON report (grounded / net-new / ambiguous
+   (`~/.platty/sot/<projectId>/` — glossary, business rules, data dictionary) with map-first
+   source-grounding discipline and returns the strict `grounding.v1` JSON report (grounded / net-new / ambiguous
    terms, conflicts incl. soft inherited constraints, premise validity, blocking questions).
 2. **Gate it deterministically:** `spec gate --report <file>` (or pipe the JSON on stdin). The CLI
    strictly validates the report and returns `status: "clear"` or `"needs_answers"` with the exact

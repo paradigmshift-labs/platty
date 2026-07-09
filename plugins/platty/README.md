@@ -1,6 +1,6 @@
 # Platty CLI Skill
 
-Run Platty repository analysis, target review, generated documentation/business-output, sync, retrieval, and memory workflows from the terminal.
+Run Platty repository analysis, target review, generated documentation/business-output, sync, and memory workflows from the terminal.
 
 This plugin is the public agent guidance surface for the Platty CLI. It works in Codex and Claude Code; Claude Code also ships session-start hooks, while Codex uses native skill loading without plugin hooks.
 
@@ -62,17 +62,26 @@ User-scoped plugin installs expose these skills:
 platty:using-platty
 platty:platty-cli-router
 platty:platty-setup
+platty:platty-mcp-server-setup
 platty:platty-static-analysis
 platty:platty-docs-target-curation
 platty:platty-generated-docs
 platty:platty-sync
-platty:platty-retrieval
 platty:platty-sdd-spec
 platty:platty-sdd-design
 platty:platty-memory
 ```
 
-Start with `platty:using-platty`, then route through `platty:platty-cli-router` when deciding which workflow applies.
+Use `platty:platty-mcp-server-setup` when you operate the Platty context backend
+that exposes `/api/mcp`. Use the separate `platty-mcp` plugin for client-side
+MCP registration and remote read-only retrieval.
+
+## MCP-only retrieval
+
+Install the separate `platty-mcp` plugin when you already have Platty MCP tools
+configured and only need remote read-only retrieval. The full `platty` plugin is
+for operator workflows such as setup, analysis, generated docs, sync, and memory
+writes.
 
 ## Setup Model
 
@@ -111,7 +120,7 @@ Use the skills for stage-specific behavior:
 - `platty:platty-docs-target-curation` before generation when target scope needs review.
 - `platty:platty-generated-docs` for public technical docs, EPIC draft, EPIC auto-confirm, and business-doc generation.
 - `platty:platty-sync` for incremental refresh after source or repository changes.
-- `platty:platty-retrieval` for retrieval-only questions from existing docs.
+- `platty:platty-mcp-server-setup` for context-backend server setup and `/api/mcp` validation.
 - `platty:platty-sdd-spec` for turning a rough idea into grounded `request.md` and `stories.md`.
 - `platty:platty-sdd-design` for turning approved SDD product docs into grounded `design.md` and `tasks.md`.
 - `platty:platty-memory` for recording or maintaining human knowledge.
@@ -121,13 +130,13 @@ Use the skills for stage-specific behavior:
 Open only what you need:
 
 - Entry point: `skills/using-platty/SKILL.md`
+- MCP server setup: `skills/platty-mcp-server-setup/SKILL.md`
 - Router: `skills/platty-cli-router/SKILL.md`
 - Setup: `skills/platty-setup/SKILL.md`
 - Static analysis: `skills/platty-static-analysis/SKILL.md`
 - Docs target curation: `skills/platty-docs-target-curation/SKILL.md`
 - Generated docs: `skills/platty-generated-docs/SKILL.md`
 - Sync: `skills/platty-sync/SKILL.md`
-- Retrieval: `skills/platty-retrieval/SKILL.md`
 - SDD product spec: `skills/platty-sdd-spec/SKILL.md`
 - SDD technical design: `skills/platty-sdd-design/SKILL.md`
 - Memory: `skills/platty-memory/SKILL.md`
