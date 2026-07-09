@@ -53,6 +53,31 @@ choose project and epic context
 -> read spec or source-level evidence when exact usage is claimed
 ```
 
+## Scenario 2A: Korean Product Idea Needs English Search Candidates
+
+User asks:
+
+```text
+결제에서 쿠폰기능을 도입하려고해. 결제 쿠폰 할인 쿠폰 코드 프로모션 주문 결제 금액 적용 환불
+```
+
+Failure to prevent:
+
+- stopping after `glossary_translate(raw Korean phrase)` returns no terms;
+- hiding the Korean candidate terms or English candidate terms;
+- searching only Korean text when the generated SOT vocabulary is English-heavy.
+
+Expected route:
+
+```text
+Search Brief preserves raw phrase
+-> Korean candidate terms: 결제, 쿠폰, 할인, 쿠폰 코드, 프로모션, 주문, 결제 금액, 환불
+-> English candidate terms: payment, checkout, coupon, discount, coupon code, promotion, order, payment amount, refund
+-> glossary_translate on raw phrase plus both candidate lists
+-> search assist with raw Korean and English candidates after the required map exists
+-> keep Checkout, Coupon, Order Discount, and Refund candidates visible until exact evidence narrows them
+```
+
 ## Scenario 3: Policy Impact
 
 User asks:
@@ -327,4 +352,38 @@ Search Brief classifies the question as mixed domain-term, policy/rule, data-fie
 -> code_search then code_snippet for calculation/source confirmation
 -> Final Route Audit
 -> answer with confirmed type meanings, source-near behavior, implementation evidence, and remaining coverage gaps
+```
+
+## Scenario 13: Coupon Term Splits Between Point Coupon And Checkout Discount
+
+User asks:
+
+```text
+쿠폰 결제를 붙이려는데 기존 쿠폰/결제/할인 흐름 영향부터 찾아줘.
+```
+
+Failure to prevent:
+
+- choosing only the checkout/payment epic because discount/order evidence is easy to find;
+- saying coupon is a new feature before checking point/coupon issuance candidates;
+- treating `ShoppingOrderDiscountLine` as proof that coupon purchase behavior is absent;
+- treating empty `document_item_list` results from narrow `query` or `itemType`
+  filters as proof that the document has no matching item;
+- continuing confidently after `document_item_list` reports an item-tier gap.
+
+Expected route:
+
+```text
+Search Brief classifies the term as mixed coupon issuance, point spending, checkout payment, and discount accounting
+-> glossary_translate(raw terms: 쿠폰, coupon, 결제, 할인)
+-> project_overview_get
+-> epic_list / epic_get for both coupon/points and shopping checkout candidates
+-> document_list/document_item_list for BR, DESIGN, UCL, and DD under both candidate epics
+-> if item query returns empty but diagnostics show available rows, retry document_item_list without the query filter
+-> document_item_get exact coupon issuance and checkout discount items
+-> document_resolve linked specs
+-> spec_get for exact API/screen behavior
+-> code_search/code_snippet only if exact implementation or absence is claimed
+-> Final Route Audit
+-> answer separates confirmed coupon issuance, confirmed checkout discount/order validation, and proposed new coupling work
 ```

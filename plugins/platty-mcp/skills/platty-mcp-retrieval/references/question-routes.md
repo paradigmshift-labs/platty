@@ -8,6 +8,11 @@ chosen branch. The branch route may refine `Question branch`, `Candidate MCP
 route`, and `User decision needed`, but it must preserve the raw question and
 the ambiguity trigger that caused the gate to fire.
 
+Read attached memories on selected `epic_get` and `document_get` results before
+finalizing semantic answers. If only `memoryCount` or a `memoryId` is visible,
+use `memory_list` or `memory_get` when the memory overlay could affect the
+answer boundary. Keep memory separate from SOT/spec/source proof.
+
 ## Concept Or Domain Term
 
 Route:
@@ -51,8 +56,10 @@ project context
 -> document_get/document_item_list for rule maps
 -> document_item_get for exact business-rule items
 -> document_resolve
--> spec_list/spec_resolve when connected specs must be mapped
+-> rank linked api_spec and screen_spec candidates
+-> spec_list/spec_search only if the linked set is incomplete or the exact spec id is unknown
 -> spec_get before claiming enforcement
+-> spec_resolve for related docs/items, graph seeds, and code seeds
 -> code_search then code_snippet when claiming exact permission, validation, writes, emits, or absence
 ```
 
@@ -87,7 +94,9 @@ project context
 -> document_get/document_item_list for entity maps
 -> document_item_get for exact entity or field evidence
 -> document_resolve
+-> rank linked api_spec and screen_spec candidates
 -> spec_get for source-near usage
+-> spec_resolve for related docs/items, graph seeds, and code seeds
 -> code_search then code_snippet when claiming exact source usage
 ```
 
@@ -96,6 +105,9 @@ Completion:
 - name the entity or field item read;
 - state whether usage is documented, source-near, or source-confirmed;
 - do not treat whole-document search hits as field-level proof.
+- for exact API or screen usage, rank connected `api_spec` and `screen_spec`
+  candidates before opening details; direct document/spec links, same entity,
+  same field, same route/screen/API target, and same branch intent rank first.
 
 ## System Design Or Integration
 
@@ -109,8 +121,10 @@ project context
 -> document_get/document_item_list for design maps
 -> document_item_get for exact design items
 -> document_resolve
--> spec_list/spec_resolve for connected API, DB, event, service, screen, or spec evidence
+-> rank linked api_spec and screen_spec candidates for API/screen claims
+-> spec_list/spec_search only if the linked set is incomplete or the exact spec id is unknown
 -> spec_get
+-> spec_resolve for related docs/items, graph seeds, and code seeds
 -> code_search then code_snippet when asserting exact implementation behavior
 ```
 
@@ -132,7 +146,9 @@ project context
 -> document_get/document_item_list for capability maps
 -> document_item_get for exact UCL items
 -> document_resolve
+-> rank linked api_spec and screen_spec candidates
 -> spec_get for source-near behavior claims
+-> spec_resolve for related docs/items, graph seeds, and code seeds
 -> code_search then code_snippet when source-level confirmation is required
 ```
 
@@ -140,6 +156,9 @@ Completion:
 
 - identify the user action or capability item;
 - separate journey evidence from implementation evidence.
+- for exact API or screen behavior, rank connected `api_spec` and `screen_spec`
+  candidates before opening details, then read exact specs before source-near
+  claims.
 - for "difference between A/B/C" questions, treat this as an inventory until the
   relevant EPIC/document map is established;
 - do not answer from the first matching UCL item if adjacent candidate EPICs
@@ -153,6 +172,7 @@ Route:
 exact anchor
 -> spec_list/spec_search only if the exact spec id is unknown
 -> spec_get for exact source-near spec
+-> spec_resolve for related docs/items, graph seeds, and code seeds
 -> code_search then code_snippet when response shape, permission, writes, emits, or absence matters
 ```
 
@@ -170,7 +190,10 @@ Route:
 Search Brief
 -> semantic branch to map the policy/rule/data/design/capability target
 -> document_resolve for connected specs
--> spec_list/spec_get for source-near target map
+-> rank linked api_spec and screen_spec candidates for API/screen impact
+-> spec_list/spec_search only if the linked set is incomplete or the exact spec id is unknown
+-> spec_get for source-near target map
+-> spec_resolve for graph/code seeds and reverse anchors
 -> graph_trace/code_search only after the target map exists
 -> code_snippet when source-level impact evidence is required
 ```

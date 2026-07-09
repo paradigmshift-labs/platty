@@ -2,7 +2,9 @@
 
 Use this reference when the user asks for original stored SOT file content or a
 stored artifact path. Artifact access is read-only transport, not retrieval
-proof by itself. Download and bundle metadata tools are not exposed.
+proof by itself. Download and bundle metadata tools are not exposed. For the
+DB-backed retrieval order and SOT projection boundary, read
+`retrieval-architecture.md`.
 
 ## Storage Roots
 

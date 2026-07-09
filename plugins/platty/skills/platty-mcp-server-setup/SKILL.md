@@ -121,7 +121,7 @@ If stored SOT artifacts should be available, verify the artifact tier:
 curl -sS -X POST "$PLATTY_MCP_URL" \
   -H 'content-type: application/json' \
   -H 'accept: application/json, text/event-stream' \
-  -d '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"ssot_bundle_download","arguments":{"projectId":"<project-id>"}}}'
+  -d '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"sot_file_get","arguments":{"projectId":"<project-id>","path":"overview.md"}}}'
 ```
 
 ## Remote Security

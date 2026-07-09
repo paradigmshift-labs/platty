@@ -24,6 +24,12 @@ still applies.
 
 - Keep the Search Brief as runtime working context only. Do not store it in
   Platty memory, local files, DB tables, or MCP artifacts.
+- When Korean/English vocabulary may not line up, split the raw phrase into
+  Korean candidate terms and English candidate terms. Preserve both lists,
+  search both Korean candidate terms and English candidate terms, and record
+  which glossary/search-assist queries were attempted. A blank Korean
+  `glossary_translate` result is not a stop condition while plausible English
+  candidates remain.
 - Use configured read-only MCP tools to reduce ambiguity before asking the
   user. Start with `glossary_translate`, `project_overview_get`, `epic_list` /
   `epic_get`, `document_list` / `document_item_list`, `spec_list`, or

@@ -5,6 +5,9 @@ description: Use when registering, validating, or troubleshooting a Platty MCP e
 
 # Platty MCP Client Setup
 
+**Prerequisite:** Read `using-platty-mcp` before acting unless it has already
+been read in this turn.
+
 Use this skill for consumer-side setup when a Platty MCP server already exposes
 direct HTTP JSON-RPC at `/api/mcp`.
 

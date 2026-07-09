@@ -115,9 +115,11 @@ Code가 Platty CLI를 구동하는 법을 가르치는 스킬 모음입니다. P
 `platty:platty-generated-docs`, `platty:platty-sync`,
 `platty:platty-sdd-spec`, `platty:platty-sdd-design`, `platty:platty-memory`.
 
-이미 구성된 Platty MCP 서버에 대한 원격 읽기 전용 조회에는
+이미 구성된 Platty MCP 서버에 대한 원격 MCP 조회, 메모리, SDD handoff에는
 `platty-mcp:using-platty-mcp`, `platty-mcp:platty-mcp-client-setup`,
-`platty-mcp:platty-mcp-retrieval`을 포함한 `platty-mcp` 플러그인을 설치하세요.
+`platty-mcp:platty-mcp-retrieval`, `platty-mcp:platty-mcp-memory`,
+`platty-mcp:platty-mcp-sdd-spec`, `platty-mcp:platty-mcp-sdd-design`를
+포함한 `platty-mcp` 플러그인을 설치하세요.
 `platty-mcp` 플러그인은 서버 URL이 배포마다 다르기 때문에 `.mcp.json`이나
 `mcpServers`를 포함하지 않는 skills-only 플러그인입니다.
 
