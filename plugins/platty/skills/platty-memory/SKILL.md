@@ -214,9 +214,11 @@ platty memory questions answer --project <project> --id <q> --content "<human's 
 platty memory questions dismiss --project <project> --id <q> --reason "<why not askable>" --json
 ```
 
-The SOT projection also surfaces the backlog as a read file: `questions/open.md` (priority-ordered,
-with a count + pointer in `README.md`) — so an agent reading the SOT sees "what to ask" without
-querying the DB.
+The SOT projection also surfaces the backlog as a read file when backlog entries exist:
+`questions/open.md` (priority-ordered, with a count + pointer in `README.md`) — so an agent reading
+the SOT sees "what to ask" without querying the DB. `questions/coverage.md` is a generated
+coverage/quality surface for why/constraint/open-question coverage; use it for audit or memory
+planning, not as first-pass retrieval evidence and not as a confirmed fact source.
 
 Dialogue objective:
 

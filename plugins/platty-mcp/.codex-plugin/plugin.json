@@ -1,0 +1,35 @@
+{
+  "name": "platty-mcp",
+  "version": "0.0.3",
+  "description": "Read-only Platty MCP retrieval skills for configured remote context servers.",
+  "author": {
+    "name": "Paradigm Shift Labs"
+  },
+  "homepage": "https://github.com/paradigmshift-labs/platty",
+  "repository": "https://github.com/paradigmshift-labs/platty",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "keywords": [
+    "platty",
+    "mcp",
+    "retrieval",
+    "skills",
+    "codex",
+    "claude"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Platty MCP",
+    "shortDescription": "Read-only Platty MCP retrieval workflows",
+    "longDescription": "Use Platty MCP skills to search and read already configured remote Platty context, documents, specs, SSOT, glossary terms, and status without running local CLI lifecycle commands.",
+    "developerName": "Paradigm Shift Labs",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Search my configured Platty MCP context.",
+      "Answer from Platty MCP evidence."
+    ]
+  }
+}

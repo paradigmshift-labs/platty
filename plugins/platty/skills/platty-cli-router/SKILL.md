@@ -1,6 +1,6 @@
 ---
 name: platty-cli-router
-description: Use when deciding which Platty CLI root command, project workflow, repository workflow, analysis workflow, document workflow, search/retrieval workflow, or Platty skill should handle a request.
+description: Use when deciding which Platty CLI root command, project workflow, repository workflow, analysis workflow, document workflow, or Platty skill should handle a request.
 ---
 
 # Platty CLI Router
@@ -19,6 +19,11 @@ must be registered inside that selected project.
 
 ## Root Commands
 
+Remote read-only MCP retrieval belongs to the separate `platty-mcp` plugin. Do
+not route MCP workflows through this operator router. Context-backend server
+setup, host/port exposure, and `/api/mcp` validation stay in
+`platty-mcp-server-setup`.
+
 | Need | Command or skill |
 | --- | --- |
 | Initialize global Platty home (`~/.platty` or `PLATTY_HOME`) | `platty init` via `platty-setup` |
@@ -33,9 +38,9 @@ must be registered inside that selected project.
 | Check active generated-docs stage status | `platty generate-docs status --project <project> --stage <stage> --run-id <run-id> --json` via `platty-generated-docs` |
 | Recover failed generated docs | Inspect/recover through `platty-generated-docs`; use `retry-failed` for the failed `build_docs`, `build_epics`, or `build_business_docs` stage |
 | Retry failed generated-docs tasks | `platty generate-docs retry-failed --project <project> --stage <stage> --run-id <run-id> --json` via `platty-generated-docs` |
+| Configure or troubleshoot context-backend MCP server | `platty-mcp-server-setup` via `using-platty` |
 | Continue despite failed docs | Explain repair-first policy via `platty-generated-docs`; do not invent `--force` |
 | Incrementally refresh existing generated outputs after source/repository changes | `platty sync static-map/plan/run/confirm --project <project> --json` via `platty-sync` |
-| Search existing docs | `platty-retrieval` |
 | Turn a rough idea into request.md and stories.md | `platty-sdd-spec` |
 | Create design.md and tasks.md from approved SDD docs | `platty-sdd-design` |
 | Record/update/remove human knowledge on epics or docs | `platty memory ... --json` via `platty-memory` |
