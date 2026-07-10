@@ -29,7 +29,9 @@ files, read local SOT, mutate projects, generate documents, or write memory. Sto
 files are available only through MCP artifact tools and need exact evidence
 reads before behavior claims.
 
-Memory overlay reads: check `epic_get.memories`, `document_get.memories`, `memory_list`, and `memory_get` when overlays could affect the answer boundary.
+Memory overlay reads: read selected `project_overview_get.overview.memories`,
+`epic_get.memories`, and `document_get.memories`. Use `memory_list` or
+`memory_get` when only counts/ids are visible or overlays may affect the answer.
 
 ## When To Use
 
@@ -55,8 +57,8 @@ local cache changes, or local inspection. Report those as boundary gaps.
 8. Answer with evidence boundary, direct evidence, inference, memory overlay,
    and missing MCP surfaces separated.
 
-If the answer needs correction recording, memory re-anchoring, refresh, sync, or
-generation, stop and report a configuration/boundary gap.
+If the answer needs correction recording, re-anchoring, refresh, sync, or
+generation, report a boundary gap.
 
 ## Quick Rules
 
@@ -90,6 +92,7 @@ Search Brief
 - Raw terms:
 - Korean candidate terms:
 - English candidate terms:
+- Alias candidates:
 - Glossary searches attempted:
 - Search-assist queries attempted:
 - Candidate MCP route:
@@ -131,7 +134,7 @@ Branch criteria: `references/question-routes.md`.
 - Exact implementation, response shape, permission, DB write, event emit,
   external call, or negative source evidence requires source-level confirmation
   when the MCP server exposes it.
-- If `document_item_list` with `query` or `itemType` returns no rows but reports
+- If `document_item_list` with `itemType` returns no rows but reports
   available items or emits
   `DOCUMENT_ITEM_FILTER_EMPTY_WITH_AVAILABLE_ITEMS`, retry the same document
   without the narrowing filter before treating the item as absent.
@@ -158,9 +161,9 @@ If MCP evidence leaves tied interpretations, ask one clarifying question with a
 recommended interpretation. Stop only when ambiguity cannot be resolved within
 MCP evidence.
 
-If evidence is weak, name the next read-only MCP surface. If it requires
-refresh, export, sync, generation, memory write, or local file access, stop and
-report a configuration/boundary gap.
+If evidence is weak, name the next read-only MCP surface. If that requires
+refresh, export, sync, generation, memory write, or local files, report a
+configuration/boundary gap.
 
 ## Final Route Audit
 
@@ -181,8 +184,8 @@ uncertainty last. Full template: `references/answer-shape.md`.
 ```
 
 Explain internal names before technical ids. Use "확인됨" only for exact MCP
-content reads; use "후보", "근거상 보임", or "추가 확인 필요" for search hits,
-partial specs, or inferred behavior.
+content reads; use "후보", "근거상 보임", or "추가 확인 필요" for search hits or
+inferred behavior.
 
 ## Answer Contract
 

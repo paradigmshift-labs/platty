@@ -367,7 +367,7 @@ Failure to prevent:
 - choosing only the checkout/payment epic because discount/order evidence is easy to find;
 - saying coupon is a new feature before checking point/coupon issuance candidates;
 - treating `ShoppingOrderDiscountLine` as proof that coupon purchase behavior is absent;
-- treating empty `document_item_list` results from narrow `query` or `itemType`
+- treating empty `document_item_list` results from narrow `itemType`
   filters as proof that the document has no matching item;
 - continuing confidently after `document_item_list` reports an item-tier gap.
 
@@ -379,7 +379,7 @@ Search Brief classifies the term as mixed coupon issuance, point spending, check
 -> project_overview_get
 -> epic_list / epic_get for both coupon/points and shopping checkout candidates
 -> document_list/document_item_list for BR, DESIGN, UCL, and DD under both candidate epics
--> if item query returns empty but diagnostics show available rows, retry document_item_list without the query filter
+-> if itemType filtering returns empty but diagnostics show available rows, retry document_item_list without the itemType filter
 -> document_item_get exact coupon issuance and checkout discount items
 -> document_resolve linked specs
 -> spec_get for exact API/screen behavior

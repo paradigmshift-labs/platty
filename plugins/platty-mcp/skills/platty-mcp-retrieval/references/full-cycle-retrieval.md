@@ -6,21 +6,19 @@ detail second.
 
 ```text
 project_list/project_get/context_status
--> project_overview_get
--> glossary_translate when raw terms, Korean/English bridges, aliases, or ambiguity matter
+-> project_overview_get; read project_overview_get.overview.memories when present
+-> glossary_translate when raw terms, Korean/English bridges, aliases, or ambiguity matter; record matched terms and alias candidates
 -> epic_list
--> epic_get for each plausible candidate epic before discarding it
--> memory overlay check from epic_get.memories; use memory_list/memory_get if needed
+-> epic_get for each plausible candidate epic before discarding it; read epic_get.memories for selected candidate epics
 -> document_list for the selected branch:
    BR for policy/rule/eligibility
    DD for entity, table, field, or data-shape questions
-   DESIGN for system design, integration, data flow, or architecture questions
+   [MUST] DESIGN for system design, integration, data flow, or architecture questions
    UCL for capability, journey, screen, or user action questions
--> document_get/document_item_list to map candidate items
--> memory overlay check from document_get.memories and document_search.memoryCount
+-> document_get/document_item_list to map candidate items; read document_get.memories for selected documents
 -> document_item_get for exact BR/DD/DESIGN/UCL evidence
--> document_resolve to find connected API, screen, event, data, service, or spec anchors
--> rank linked api_spec and screen_spec candidates; use spec_list/spec_search only when the linked set is incomplete or the exact spec id is unknown
+-> document_resolve to find connected API, screen, event, data, service, or spec anchors and collect linked api_spec/screen_spec spec ids when returned
+-> rank linked api_spec and screen_spec candidates and keep the selected spec ids visible; use spec_list/spec_search only when the linked set is incomplete or the exact spec id is unknown
 -> when spec_search is used, select candidate specs before making claims
 -> spec_get for exact source-near behavior
 -> spec_resolve to expand selected specs to related documents, items, graph seeds, and code seeds
@@ -42,8 +40,8 @@ documents and items as the map, not as source-near proof:
 business question
 -> document_list/document_get/document_item_list
 -> document_item_get for exact business item
--> document_resolve to expose linked specs
--> rank linked api_spec and screen_spec candidates
+-> document_resolve to expose linked specs and collect linked api_spec/screen_spec spec ids when returned
+-> rank linked api_spec and screen_spec candidates and keep selected spec ids visible
 -> spec_list/spec_search only if linked specs are incomplete or the exact spec id is unknown
 -> when spec_search is used, select candidate specs before making claims
 -> spec_get for selected api_spec/screen_spec details
@@ -62,11 +60,13 @@ target, and same branch intent rank first. Do not open every connected spec up f
 read `spec_get` and then `spec_resolve` for the selected specs before
 source-near claims.
 
-Memory overlays are correction/constraint/why/context notes attached to epics
-or documents. Read attached overlays before final answers for the selected
-scope. If only `memoryCount` or `memoryId` is visible, use `memory_list` or
-`memory_get` when the overlay could change the answer boundary. Do not treat
-memory as generated SOT or source proof.
+Memory overlays are correction/constraint/why/context notes attached to the
+overview, epics, documents, items, or specs. Read attached memories at each
+selected surface: `project_overview_get.overview.memories`,
+`epic_get.memories`, `document_get.memories`, item memories, and spec memories
+when those surfaces return them. If only `memoryCount` or `memoryId` is visible,
+use `memory_list` or `memory_get` when the overlay could change the answer
+boundary. Do not treat memory as generated SOT or source proof.
 
 ## Retrieval Order
 
@@ -75,8 +75,8 @@ project context
 -> context status
 -> capability check
 -> Search Clarification Gate when triggers fire
--> project overview
--> vocabulary normalization when raw terms, Korean/English bridges, aliases, or ambiguity matter
+-> project overview with attached overview memories when present
+-> vocabulary normalization when raw terms, Korean/English bridges, aliases, or ambiguity matter; include alias candidates
 -> candidate epic
 -> candidate BR/DD/DESIGN/UCL document map
 -> question branch
@@ -99,12 +99,14 @@ confident answer:
 2. Raw terms, Korean candidate terms and English candidate terms are both visible
    when Korean/English vocabulary may not line up.
 3. Glossary/vocabulary output was used only for routing, not as behavior proof.
-4. Project overview and epic map were read before choosing the final scope.
+4. Project overview, attached overview memories when present, and epic map were
+   read before choosing the final scope.
 5. Relevant candidate EPICs were not discarded from one search miss, snippet, or
    weak score.
 6. Candidate BR/DD/DESIGN/UCL document maps were built for the selected branch.
-7. Relevant attached memory overlays were checked and separated from generated
-   SOT/source evidence.
+7. Relevant attached memory overlays on selected overview, epics, documents,
+   items, or specs were checked and separated from generated SOT/source
+   evidence.
 8. Exact document items were read before making business, data, design, or
    capability claims.
 9. If a selected document exposes item summaries but `document_item_list` returns
@@ -113,7 +115,8 @@ confident answer:
    the document body.
 10. Connected context was resolved before following source-near specs.
 11. Linked `api_spec` and `screen_spec` candidates were ranked before exact
-    source-near spec reads when starting from business docs.
+    source-near spec reads when starting from business docs, and returned spec
+    ids were kept visible for the selected candidates.
 12. Exact specs were read before source-near behavior claims.
 13. `spec_resolve` was run after selected spec reads to expose related
     docs/items, graph seeds, code seeds, and reverse anchors.

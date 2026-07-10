@@ -8,10 +8,11 @@ chosen branch. The branch route may refine `Question branch`, `Candidate MCP
 route`, and `User decision needed`, but it must preserve the raw question and
 the ambiguity trigger that caused the gate to fire.
 
-Read attached memories on selected `epic_get` and `document_get` results before
-finalizing semantic answers. If only `memoryCount` or a `memoryId` is visible,
-use `memory_list` or `memory_get` when the memory overlay could affect the
-answer boundary. Keep memory separate from SOT/spec/source proof.
+Read attached memories on selected `project_overview_get.overview.memories`,
+`epic_get.memories`, and `document_get.memories` results before finalizing
+semantic answers. If only `memoryCount` or a `memoryId` is visible, use
+`memory_list` or `memory_get` when the memory overlay could affect the answer
+boundary. Keep memory separate from SOT/spec/source proof.
 
 ## Concept Or Domain Term
 
@@ -19,14 +20,14 @@ Route:
 
 ```text
 project context
--> project overview
--> vocabulary normalization
+-> project overview and attached overview memories when present
+-> vocabulary normalization, including alias candidates
 -> epic_list
 -> epic_get for each plausible concept epic
 -> document_list for BR/DD/DESIGN/UCL candidates as the concept requires
 -> document_item_list
 -> document_item_get for exact concept evidence
--> document_resolve
+-> document_resolve; collect linked api_spec/screen_spec spec ids when returned
 -> spec_get when asserting source-near behavior
 ```
 
@@ -90,7 +91,7 @@ project context
 -> vocabulary normalization when needed
 -> epic_list
 -> epic_get for data candidate epics
--> document_list(documentType=DD, epicId=<candidate>, entityName=<entity when known>)
+-> document_list(documentType=DD, epicId=<candidate>)
 -> document_get/document_item_list for entity maps
 -> document_item_get for exact entity or field evidence
 -> document_resolve
@@ -117,10 +118,10 @@ Route:
 project context
 -> epic_list
 -> epic_get for design candidate epics
--> document_list(documentType=DESIGN, epicId=<candidate>)
+-> document_list(documentType=DESIGN, epicId=<candidate>) [MUST] for system design questions
 -> document_get/document_item_list for design maps
 -> document_item_get for exact design items
--> document_resolve
+-> document_resolve; collect linked api_spec/screen_spec spec ids when returned
 -> rank linked api_spec and screen_spec candidates for API/screen claims
 -> spec_list/spec_search only if the linked set is incomplete or the exact spec id is unknown
 -> spec_get
