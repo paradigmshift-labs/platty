@@ -1,7 +1,7 @@
 {
   "name": "platty",
   "description": "Shared Platty CLI and documentation workflow skills for Codex and Claude Code.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": {
     "name": "Paradigm Shift Labs"
   },
