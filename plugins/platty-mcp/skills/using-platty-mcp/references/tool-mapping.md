@@ -29,9 +29,9 @@ This is the MCP-only intent-to-tool map. It does not list local CLI equivalents.
 | Memory add | `memory_add` | `projectId`, `content`; optional `epicId`, `documentId`, `itemType`, `itemKey`, `memoryKind`, `actor`, `confidence` |
 | Memory update | `memory_update` | `projectId`, `memoryId`, `content`, `reason`; optional `actor` |
 | Memory delete | `memory_delete` | `projectId`, `memoryId`, `reason`; optional `actor` |
-| Document list | `document_list` | `projectId`; optional `documentType`, `epicId`, `entityName`, `status`, `limit`, `cursor` |
+| Document list | `document_list` | `projectId`; optional `documentType`, `epicId`, `status`, `limit`, `cursor` |
 | Document detail | `document_get` | `projectId`, `id` |
-| Business document items | `document_item_list` | `projectId`, `documentId`; optional `itemType`, `query`, `limit`, `cursor` |
+| Business document items | `document_item_list` | `projectId`, `documentId`; optional `itemType`, `limit`, `cursor` |
 | Business document item detail | `document_item_get` | `projectId`, `itemId` |
 | Document/item connected context | `document_resolve` | `projectId` plus `documentId` or `itemId` |
 | Spec list | `spec_list` | `projectId`; optional `specKind`, `scopeId`, `status`, `filters`, `limit`, `cursor` |
