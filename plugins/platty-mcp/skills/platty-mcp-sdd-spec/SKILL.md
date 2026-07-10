@@ -91,6 +91,8 @@ The selected `projectId` must come from MCP project context or the resolved
 Platty project. The slug should be stable and human-readable from the request
 title or raw idea. Use the current year-month for `<YYYY-MM>` unless the user
 provided a spec id or date.
+Resolve `~` to the current user's home directory before creating directories or
+writing files; do not pass a literal `~` path to filesystem tools.
 
 Persistence rules:
 

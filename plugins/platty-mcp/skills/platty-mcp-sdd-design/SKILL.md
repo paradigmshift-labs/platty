@@ -55,6 +55,8 @@ selected `request.md` and `stories.md`, then write only SDD draft outputs in:
 Rules:
 
 - Create the target directory if needed.
+- Resolve `~` to the current user's home directory before creating directories
+  or writing files; do not pass a literal `~` path to filesystem tools.
 - Confirm the directory project id matches the selected MCP project context.
 - Do not read local SOT, run local Platty CLI commands, or inspect unrelated
   local files.

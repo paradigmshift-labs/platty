@@ -1,6 +1,6 @@
 {
   "name": "platty-mcp",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Platty MCP retrieval, memory, and SDD handoff skills for configured remote context servers.",
   "author": {
     "name": "Paradigm Shift Labs"
