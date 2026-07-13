@@ -82,7 +82,7 @@ visible.
 8. If one project is available, use that `projectId`.
 9. If multiple projects are plausible, ask which project to use.
 10. Route retrieval and impact questions to `using-platty-mcp`; impact routing
-    requires a produced or reused Impact Seed Packet and may write `impact.md`
+    requires a produced or reused Impact Seed Packet and may write `prd.md §9`
     only through `platty-mcp-impact-analysis` in its selected SDD directory.
 
 ## Missing Server

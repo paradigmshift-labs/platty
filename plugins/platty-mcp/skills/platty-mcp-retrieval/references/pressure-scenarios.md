@@ -285,7 +285,7 @@ routeMode: answer
 routeOrigin: user
 skill transitions: direct impact -> impact -> retrieval(seed-only) -> impact, exactly once (`platty-mcp-impact-analysis` -> `platty-mcp-retrieval` -> `platty-mcp-impact-analysis`)
 packet identity: absent -> packet:<stable-id> -> same packet:<stable-id>
-local write attempts: [] outside SDD; selected impact.md only in an SDD context
+local write attempts: [] outside SDD; selected prd.md §9 only in an SDD context
 ```
 
 ### Trace 2: Retrieval Escalation Does Not Re-enter Retrieval
@@ -305,7 +305,7 @@ routeMode: answer
 routeOrigin: sdd-design
 skill transitions: impact + SDD design authoring -> sdd-design -> impact sub-route -> system_design.md only; no tasks.md write before approval (`platty-mcp-sdd-design` -> `platty-mcp-impact-analysis` -> `platty-mcp-retrieval(seed-only)` -> `platty-mcp-impact-analysis` -> `platty-mcp-sdd-design`)
 packet identity: absent -> packet:<stable-id> -> same packet:<stable-id>
-local write attempts: system_design.md only through platty-mcp-sdd-design; no tasks.md write before approval; impact.md only through platty-mcp-impact-analysis
+local write attempts: system_design.md only through platty-mcp-sdd-design; no tasks.md write before approval; prd.md §9 only through platty-mcp-impact-analysis
 ```
 
 ## Scenario 9: Stakeholder-Friendly Answer Shape

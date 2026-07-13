@@ -22,7 +22,7 @@ evidenceFingerprint: "sha256:<hex>"
 impactStatus: "<seeded | investigated | partial>"
 sourceParity: "<confirmed | partial | unavailable>"
 impactCoverageLimits: []
-derivedFrom: ["prd.md", "user_stories.md", "impact.md", "system_design.md"]
+derivedFrom: ["prd.md", "user_stories.md", "system_design.md"]
 ---
 ```
 
@@ -31,13 +31,13 @@ derivedFrom: ["prd.md", "user_stories.md", "impact.md", "system_design.md"]
 ```markdown
 # 구현 작업 — <요청 제목>
 
-> 승인된 설계 기준: [system_design.md](system_design.md). 근거 상세: [impact.md](impact.md).
+> 승인된 설계 기준: [system_design.md](system_design.md). 근거 상세: `prd.md` §9.
 
 ## 0. 작업 연결표
 
 | 작업 | 설계 결정/변경 | 규칙·시나리오 | 근거 | 준비 상태 |
 | --- | --- | --- | --- | --- |
-| TASK-01 | CHG-01 | R-01 / US-01-S01 | impact.md <id> | ready |
+| TASK-01 | CHG-01 | R-01 / US-01-S01 | prd.md §9 <id> | ready |
 
 ## 1. 구현 작업
 
@@ -57,7 +57,7 @@ derivedFrom: ["prd.md", "user_stories.md", "impact.md", "system_design.md"]
 - **필요한 MCP 도구**: `document_resolve` → `graph_trace` → `code_search` → `readonly_workspace_shell`
 - **다음 확인**: <좁은 대상과 질문>
 - **완료 조건**: <새 설계 revision에서 CHG/VER로 확정할 수 있는 근거>
-- **후속 처리**: impact owner가 `impact.md`를 갱신하고 새 design 승인 후 tasks를 재생성한다.
+- **후속 처리**: impact owner가 `prd.md §9`를 갱신하고 새 design 승인 후 tasks를 재생성한다.
 
 ## 2. 자동화 검증
 
@@ -85,6 +85,6 @@ derivedFrom: ["prd.md", "user_stories.md", "impact.md", "system_design.md"]
 - 승인 전에는 `tasks.md`를 만들거나 덮어쓰지 않는다.
 - `ready` 작업은 관련 코드 경로가 `confirmed-path`이고 파일·심볼·인터페이스·검증
   방식이 근거로 확인된 경우에만 쓴다.
-- 근거가 부족하면 Evidence-Resolution 작업으로 남기고, `impact.md` 갱신 → 새
+- 근거가 부족하면 Evidence-Resolution 작업으로 남기고, `prd.md §9` 갱신 → 새
   design revision → 재승인 → tasks 재생성 순서를 따른다.
 - 테스트 코드나 파일 경로를 템플릿에 미리 생성하지 않는다.

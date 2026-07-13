@@ -1,7 +1,7 @@
 # MCP SDD 사용자 스토리 형식
 
 `user_stories.md`는 한국어 사용자 시나리오 문서다. 구현 근거와 내부 검토 기록은
-`impact.md` 및 frontmatter에 둔다.
+`prd.md §9` 및 frontmatter에 둔다.
 
 ## Frontmatter
 

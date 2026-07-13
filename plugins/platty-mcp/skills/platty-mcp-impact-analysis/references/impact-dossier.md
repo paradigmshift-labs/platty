@@ -134,41 +134,30 @@ write-time timestamps. `retrievedAt` records freshness only, not impactRevision
 content. A refresh that changes only `retrievedAt` must retain the same
 `impactRevision`; evidence or coverage changes create a new revision.
 
-## Persisted `impact.md`
+## Persisted PRD Appendix
 
 Only the selected SDD directory may receive a write or read-back verification.
 Persist source evidence by reference only: repo id, source commit, file, symbol,
 line range, `matchedQuery`, and short `observedBehavior`; do not persist complete
 source files or unbounded snippets.
 
-```yaml
----
-id: "<impact-id>"
-type: "sdd-impact"
-status: "seeded | investigated | partial"
-impactRevision: "sha256:<hex>"
-sourceParity: "confirmed | partial | unavailable"
-projectId: "<projectId>"
-outputLanguage: "ko"
-contextStatus: "fresh | stale | unknown"
-sourceCommits: {}
-retrievedAt: "<ISO timestamp>"
-maxCrossEpicDepth: 2
----
-```
+Store `impactRevision`, `impactStatus`, `sourceParity`, `impactRetrievedAt`,
+`sourceCommits`, and `impactCoverageLimits` in `prd.md` frontmatter. The
+appendix begins after the completed §0–§8 product body and is the only part of
+the PRD this skill may replace.
 
 Use these headings verbatim:
 
 ```text
-# 영향도 및 근거 조사 — <요청 제목>
-## 1. 조사 기준과 문서 연결
-## 2. 최신성 및 근거 경계
-## 3. 관련 EPIC·문서·스펙
-## 4. 화면·API·데이터 후보
-## 5. 빠른 경로 지도 (Graph Trace)
-## 6. 교차 EPIC·저장소·원문 확인
-## 7. 영향 근거 매트릭스
-## 8. 조사 한계와 다음 확인
+## 9. 영향도 조사 및 근거
+### 9-1. 조사 기준과 문서 연결
+### 9-2. 최신성 및 근거 경계
+### 9-3. 관련 EPIC·문서·스펙
+### 9-4. 화면·API·데이터 후보
+### 9-5. 빠른 경로 지도 (Graph Trace)
+### 9-6. 교차 EPIC·저장소·원문 확인
+### 9-7. 영향 근거 매트릭스
+### 9-8. 조사 한계와 다음 확인
 ```
 
 `document_resolve`로 선택한 문서 항목과 연결 스펙을 확인한 뒤,
@@ -177,7 +166,7 @@ Use these headings verbatim:
 확인을 표로 남긴다. Graph trace만으로 쓰기, 권한, 트랜잭션, 계약, 영향 부재를
 확정하지 않는다.
 
-`## 6. 교차 EPIC·저장소·원문 확인`에는 앵커별 **영향 코드 경로 읽기 범위** 표를
+`### 9-6. 교차 EPIC·저장소·원문 확인`에는 앵커별 **영향 코드 경로 읽기 범위** 표를
 함께 둔다. 표에는 읽은 파일·심볼과 역할, 확인한 소비자, 미열람 후보와 이유,
 `confirmed-path | partial-path`, 다음 원문 확인을 기록한다.
 
