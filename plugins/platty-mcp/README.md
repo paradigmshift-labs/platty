@@ -32,7 +32,8 @@ by `platty-mcp:platty-mcp-memory`. The local SDD exceptions are:
 
 - `platty-mcp:platty-mcp-sdd-spec`, which writes `prd.md` and `user_stories.md`
   with a compact pointer to the selected impact work.
-- `platty-mcp:platty-mcp-impact-analysis`, which writes only `impact.md` under
+- `platty-mcp:platty-mcp-impact-analysis`, which updates only the final §9 of
+  `prd.md` under
   `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`.
 - `platty-mcp:platty-mcp-sdd-design`, which writes `system_design.md` first. Its design
   records technical AS-IS/TO-BE behavior, a canonical `CHG-*` change map, and a

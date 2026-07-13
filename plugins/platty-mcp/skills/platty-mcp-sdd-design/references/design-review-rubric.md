@@ -64,7 +64,7 @@ taskGate: "<open | gated, with reason>"
 
 - Audit all eight surfaces—API/contract, DB/data, business logic/state, UI/UX,
   jobs/events, external integrations, security/permissions, and
-  observability/release—against `impact.md` and the `CHG-*` map. Persist this
+  observability/release—against `prd.md §9` and the `CHG-*` map. Persist this
   audit in `system_design.md` frontmatter `review`, not as a reader-facing design section.
 - Every surface is exactly `yes`, `no`, or `unknown`, with reason, impact
   evidence, and `CHG-*` or N/A. A blank blocks readiness.
@@ -107,10 +107,10 @@ taskGate: "<open | gated, with reason>"
   configuration, and migrations when present were read. An unread known
   boundary is `partial-path`, never a confirmed claim.
 - Impact status, context status, source parity, source commits, traversal
-  status, and coverage limits match `impact.md`.
+  status, and coverage limits match `prd.md §9`.
 - Candidate-only evidence remains candidate; unsupported claims are assumptions,
   risks, or omitted.
-- The design footer references `impact.md` evidence without copying the dossier.
+- The design footer references `prd.md §9` evidence without copying the dossier.
 
 ### Delivery Safety
 

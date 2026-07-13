@@ -2,7 +2,7 @@
 
 `system_design.md`는 개발자가 구현 방향을 빠르게 파악하는 한국어 문서다. 승인·최신성·
 fingerprint·source parity 같은 기계 검증값은 frontmatter에 보존하고, 상세 근거는
-`impact.md`에 둔다.
+`prd.md`의 맨 아래 §9에 둔다.
 
 ## Frontmatter
 
@@ -19,7 +19,7 @@ requestRevision: "sha256:<hex>"
 storiesRevision: "sha256:<hex>"
 productInputFingerprint: "sha256:<hex>"
 impactRevision: "sha256:<hex>"
-impactArtifact: "impact.md"
+impactArtifact: "prd.md#impact-evidence"
 impactEvidenceSnapshot: []
 impactStatus: "<seeded | investigated | partial>"
 impactRefreshReason:
@@ -47,7 +47,7 @@ review:
   requirementCoverage: {}
   changeCoverage: {}
   verificationCoverage: {}
-derivedFrom: ["prd.md", "user_stories.md", "impact.md"]
+derivedFrom: ["prd.md", "user_stories.md"]
 ---
 ```
 
@@ -56,7 +56,7 @@ derivedFrom: ["prd.md", "user_stories.md", "impact.md"]
 ```markdown
 # 시스템 설계 — <요청 제목>
 
-> **DRAFT — 개발자 검토 필요.** 상세 조사 근거: [impact.md](impact.md).
+> **DRAFT — 개발자 검토 필요.** 상세 조사 근거: `prd.md` §9.
 
 ## 0. 시스템 설계 한눈에 보기
 
@@ -96,7 +96,7 @@ derivedFrom: ["prd.md", "user_stories.md", "impact.md"]
 | --- | --- | --- | --- | --- |
 
 `confirmed-path`만 현재 구현 사실 또는 정확한 변경 위치의 근거가 된다. `partial-path`는
-위험 또는 Evidence-Resolution으로 남긴다. 상세 근거는 `impact.md`를 따른다.
+위험 또는 Evidence-Resolution으로 남긴다. 상세 근거는 `prd.md` §9를 따른다.
 
 ## 3. 목표 구조와 설계 결정 (To-Be)
 
@@ -183,13 +183,22 @@ Mermaid로 작성한다. 단순 CRUD에는 표와 짧은 설명을 사용한다.
 
 ---
 
-**근거와 한계**: [impact.md](impact.md) — <evidence id 또는 한 줄 요약>.
+## 9. Evidence Boundary and Freshness
+
+| 항목 | 상태 | 설계에 미치는 영향 |
+| --- | --- | --- |
+| 근거 경계 | <business-docs | static-only | mixed | stale> | |
+| SOT/소스 최신성 | <fresh | stale | unknown> | |
+| source parity | <confirmed | partial | unavailable> | |
+| 미확인 범위와 다음 확인 | | |
+
+상세 근거와 영향 매트릭스는 `prd.md` §9를 따른다.
 ```
 
 ## 작성 규칙
 
 - `document_resolve`로 연결된 문서 근거, `graph_trace` 후보, 정확한 원문 읽기
-  범위는 `impact.md`를 SSOT로 삼는다.
+  범위는 `prd.md` §9를 SSOT로 삼는다.
 - design에는 구현에 필요한 경로 지도와 근거 ID만 싣고, 매트릭스·도구 로그·
   freshness 표를 복사하지 않는다.
 - `확인됨`, `후보`, `위험`을 구분한다. candidate-only 또는 빈 graph 결과는

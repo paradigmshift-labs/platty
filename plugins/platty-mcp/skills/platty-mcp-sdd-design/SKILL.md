@@ -1,6 +1,6 @@
 ---
 name: platty-mcp-sdd-design
-description: Use when creating locally saved MCP-grounded SDD technical design and implementation-task drafts from existing prd.md, user_stories.md, and impact.md.
+description: Use when creating locally saved MCP-grounded SDD technical design and implementation-task drafts from existing prd.md and user_stories.md.
 ---
 
 # Platty MCP SDD Design
@@ -10,8 +10,8 @@ been read in this turn.
 
 Create an evidence-gated system design from the approved product inputs and the
 persisted Impact Dossier. The design owns system boundaries, technical decisions,
-and the canonical change map; impact analysis owns impact discovery and
-`impact.md`.
+and the canonical change map; impact analysis owns impact discovery and the
+final §9 appendix of `prd.md`.
 Use `references/design-shape.md` for the design and
 `references/tasks-shape.md` for the approval-gated task plan.
 
@@ -24,21 +24,21 @@ paths, status values, and quoted evidence in their original form.
 2. Use `platty-mcp-impact-analysis` for impact, graph, cross-EPIC, repository,
    and source convergence. It invokes `platty-mcp-retrieval` with `routeMode:
    seed-only` when a packet is missing, then owns dossier-entry changes. In SDD
-   context it alone writes or refreshes only `impact.md`. Do not invoke retrieval
+   context it alone writes or refreshes only PRD §9. Do not invoke retrieval
    directly for that path.
 
 ## Inputs
 
 - Platty project context.
-- SDD directory id or spec slug containing `prd.md`, `user_stories.md`, and an
-  existing or refreshable `impact.md`.
+- SDD directory id or spec slug containing `prd.md` (including §9) and
+  `user_stories.md`.
 - Optional target repo, API, screen, table, event, or job areas.
 
 ## New-Session Context Recovery Gate
 
 `prd.md` is the product decision record; it is not a substitute for the SOT
 context that led to those decisions. Before inspecting code, decide whether the
-selected `impact.md` has a reusable SOT context: selected business documents,
+selected PRD §9 has a reusable SOT context: selected business documents,
 their `document_resolve` results, terminology/EPIC mapping, freshness, evidence
 boundary, and the scope limits that apply to this design.
 
@@ -48,33 +48,35 @@ session cannot show that it was read, do not jump from `prd.md` to code search.
 source read.** Its seed route must
 recover the SOT context through `platty-mcp-retrieval`, resolve the selected
 business documents with `document_resolve`, and preserve the recovered context
-and limits in `impact.md` before graph and bounded source reads begin. This is
+and limits in PRD §9 before graph and bounded source reads begin. This is
 required even when the user starts a new session with only the SDD folder path
 or `prd.md` as the handoff.
 
 ## Operating Flow
 
 1. Confirm MCP tools, project context, and context freshness.
-2. Read the selected local `prd.md`, `user_stories.md`, and `impact.md` when it
-   exists. Confirm all artifacts belong to the selected project and spec.
+2. Read the selected local `prd.md` (including §9) and `user_stories.md`.
+   Confirm both artifacts belong to the selected project and spec.
    Build `productInputMetadata` from their persisted metadata: validate canonical
    product metadata directly; adapt legacy product metadata only in this input
    packet and retain its source form. Never rewrite `prd.md` or `user_stories.md`
-   merely to migrate legacy metadata. The reader mapping is exact:
+   merely to migrate legacy metadata. Compute `requestRevision` from the PRD
+   product segment (§0–§8 and product metadata), excluding the mutable §9
+   appendix and `impact*` frontmatter fields; this prevents an evidence refresh
+   from changing approved product inputs. The reader mapping is exact:
    `spec-request -> sdd-request`, `spec-stories -> sdd-stories`, and
    `derived_from -> derivedFrom`. Apply aliases only in `productInputMetadata`;
    preserve both input files byte-for-byte and hash their original persisted
    content. When both canonical and legacy keys exist, both must have the same normalized value;
    then use the canonical key in `productInputMetadata`. A conflicting pair
    is a `NEEDS_WORK` input conflict; stop without choosing a value or rewriting
-   either file. Compute `requestRevision` and
-   `storiesRevision` from the complete persisted files, then compute the
+   either file. Compute `storiesRevision` from the complete persisted file, then compute the
    canonical `productInputFingerprint` from both revisions and statuses.
 3. Stop unless request/story inputs are approved, unless the user explicitly
    asks for draft-only technical design. A draft-only design remains
    `NEEDS_WORK`, is not approval-eligible, and must be regenerated as a new
    design revision after both product inputs become approved.
-4. Read `impact.md` first and inspect its Impact Dossier metadata and reusable
+4. Read PRD §9 first and inspect its Impact Dossier metadata and reusable
    SOT context before making a hard implementation claim. When it is missing,
    `seeded`, stale, source-commit-mismatched, lacks the context required by the
    New-Session Context Recovery Gate, or is `partial` in a required request or
@@ -82,7 +84,7 @@ or `prd.md` as the handoff.
    tool. Record the observed refresh condition and its affected evidence id or
    coverage limit before invoking. Do not rerun it when the existing dossier is
    sufficient.
-5. After impact analysis returns, reread `impact.md`. Record impact status,
+5. After impact analysis returns, reread `prd.md`. Record impact status,
    `impactRevision`, the sorted matrix `evidenceId` snapshot, source parity,
    commits, traversal status, and `impactCoverageLimits`. Never edit an Impact
    Dossier entry from this skill.
@@ -125,13 +127,13 @@ or `prd.md` as the handoff.
 
 ## Impact Ownership And Refresh Gate
 
-SDD design must not format or write impact.md. Missing SOT context is an
+SDD design must not format or write PRD §9. Missing SOT context is an
 impact-analysis call, not permission for the design skill to search code first.
 
 Delegate every missing, seeded, stale, source-commit-mismatched, or
 required-area partial dossier refresh to `platty-mcp-impact-analysis`. That
-sub-skill may update dossier entries and write `impact.md`; this skill only
-consumes the returned artifact. Read `impact.md` first; optionally invoke the
+sub-skill may update dossier entries and PRD §9; this skill only consumes the
+updated PRD. Read PRD §9 first; optionally invoke the
 impact skill only for those refresh conditions. Record the observed refresh
 condition and its affected evidence id or coverage limit before invoking.
 Persist that record as the `system_design.md` frontmatter `impactRefreshReason` (use
@@ -140,10 +142,10 @@ Persist that record as the `system_design.md` frontmatter `impactRefreshReason` 
 Do not always rerun impact.
 Record whether the SOT context was reused, recovered, or remains partial in the
 design's compact input/evidence summary; keep the detailed document list and
-retrieval transcript in `impact.md`.
+retrieval transcript in PRD §9.
 Do not copy its Impact Evidence Matrix or search transcript into `system_design.md`.
 Show only the compact path map needed for implementation, reference dossier
-evidence ids, and link to `impact.md` for detailed evidence.
+evidence ids, and reference PRD §9 for detailed evidence.
 
 Hard implementation claims require the relevant bounded evidence and source
 parity plus `confirmed-path` coverage. `document_resolve` selects connected
@@ -156,7 +158,7 @@ no impact. A candidate-only or `partial-path` result is not a confirmed claim.
 ## Local SDD File Access
 
 This is the only local file exception in the MCP SDD design route. Read only the
-selected `prd.md`, `user_stories.md`, and `impact.md`, then write only the design
+selected `prd.md` (including §9) and `user_stories.md`, then write only the design
 and approval-gated task outputs in:
 
 ```text
@@ -170,7 +172,7 @@ Rules:
 - Confirm the directory project id matches the selected MCP project context.
 - Do not read local SOT, run local Platty CLI commands, or inspect unrelated
   local files.
-- `platty-mcp-impact-analysis` owns every `impact.md` write and dossier edit.
+- `platty-mcp-impact-analysis` owns every PRD §9 update and dossier edit.
 - Write `designMarkdown` to `system_design.md`.
 - Read `system_design.md` back and verify its project/evidence metadata.
 - Reject approval and do not create or overwrite `tasks.md` while Self Review is
@@ -411,7 +413,7 @@ missing source parity.
 
 | Mistake | Required behavior |
 | --- | --- |
-| Editing dossier entries while designing | Delegate discovery and every `impact.md` update to `platty-mcp-impact-analysis`. |
+| Editing dossier entries while designing | Delegate discovery and every `prd.md §9` update to `platty-mcp-impact-analysis`. |
 | Treating empty output as no impact | Keep `unknown` and record the evidence gap. |
 | Describing AS-IS and TO-BE without a change id | Add exactly one canonical `CHG-*` row for each applicable delta. |
 | Leaving DB/data blank | Record `yes`, `no`, or `unknown`; add detailed DB design only when applicable. |
