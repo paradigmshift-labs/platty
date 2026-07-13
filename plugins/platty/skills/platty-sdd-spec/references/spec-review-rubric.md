@@ -33,6 +33,8 @@ Return `PASS` only when every required item is satisfied or explicitly accepted 
 
 - `impact.md` records SOT paths, freshness, evidence boundary, exact reads,
   candidate evidence, source references, coverage limits, and next reads.
+- When graph trace is used, `impact.md` separates confirmed screen/API/domain/DB
+  edges from candidates, omitted classes, truncation, and required source reads.
 - The Search Route Audit records map-first evidence, memory/human-knowledge
   overlays when available, unread surfaces, and the final route audit.
 - Do not store source bodies or raw command transcripts in the impact dossier.

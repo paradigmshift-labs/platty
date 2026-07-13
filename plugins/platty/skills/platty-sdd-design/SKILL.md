@@ -56,11 +56,17 @@ Use the Platty CLI convention from `using-platty`. Inside this repository, `AGEN
    - `specs/screen/`
    - `specs/event/`
    - `specs/schedule/` when present
-7. Trace only targeted anchors:
+7. Build a fast structural map from targeted anchors before detailed source
+   reads:
    - prefer spec frontmatter `serviceMapNodes[]`;
    - use catalog or `sot resolve` compact-row `traceId` when present;
-   - read default compact `graph trace` output from `.data.confirmed`, `.data.candidates`, `.data.relationCandidates`, and `.data.flags`;
+   - use `graph trace` to identify the candidate `screen ↔ API ↔ domain ↔ DB`
+     path and related event/job/external boundaries;
+   - read default compact output from `.data.confirmed`, `.data.candidates`,
+     `.data.relationCandidates`, and `.data.flags`;
    - use `--detail full` only when raw hop/source-line metadata is required;
+   - carry confirmed edges, candidates, omitted classes, truncation, and
+     unresolved hops into the As-Is map as **확인됨**, **가정**, or **위험**;
    - if `traceId` is absent or trace has no confirmed edge, downgrade to risk and use `code search` for incomplete addresses or bounded `readonly_workspace_shell` reads for exact source.
 8. Read registered repository files with bounded `readonly_workspace_shell` commands for complex flows, DTOs, transactions, UI state, error handling, or tests.
 
@@ -68,13 +74,19 @@ Do not report graph trace as exhaustive when it returns candidates, omitted edge
 
 ## Affected Code Path Gate
 
-Before writing a hard implementation claim, map and read the affected path from
-entry point to side effect. Read the applicable caller, API/handler or job,
-orchestration/domain code, persistence or external-service boundary, and nearby
-tests. For UI work, include the screen/state boundary; for asynchronous work,
-include the producer and consumer. Do not claim the entire repository was read:
-the requirement is complete coverage of the affected path and explicit disclosure
-of any remaining boundary.
+Before writing a hard implementation claim, use graph trace to sketch the
+affected `screen ↔ API ↔ domain ↔ DB` path when a trace anchor exists, then read
+the relevant path from entry point to side effect. Read the applicable caller,
+API/handler or job, orchestration/domain code, persistence or external-service
+boundary, and nearby tests. For UI work, include the screen/state boundary; for
+asynchronous work, include the producer and consumer. Do not claim the entire
+repository was read: the requirement is complete coverage of the affected path
+and explicit disclosure of any remaining boundary.
+
+Treat graph trace as a discovery and coverage aid, never as sole proof of
+behavior. Confirm writes, permissions, contracts, transactions, retries, and
+absence claims with bounded source reads. Preserve candidate or unresolved graph
+hops as named design risks rather than deleting them.
 
 If an address is incomplete, use `code search`; if it is a candidate, use a
 bounded `readonly_workspace_shell` read before naming a file, method, contract,
@@ -145,6 +157,7 @@ state its evidence or assumption boundary.
 | --- | --- |
 | "Business docs mention it, so implementation is obvious." | Trace or read code before asserting implementation details. |
 | "No graph edge means no impact." | Say there is no confirmed graph evidence; search code or list risk. |
+| "Graph trace proves the implementation behavior." | Use it to map the screen/API/domain/DB path quickly, then read source before asserting behavior-sensitive details. |
 | "The request is approved, so tasks are known." | Validate source/design before task generation. |
 | "Generated SOT has a typo." | Do not edit SOT; suggest memory or regeneration. |
 | "Tasks can be generic." | Map tasks and tests to request rules, stories, and design edge cases. |

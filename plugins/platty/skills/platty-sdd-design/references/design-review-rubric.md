@@ -14,7 +14,8 @@ Return `PASS` only when the draft is implementation-ready or clearly marked as a
 
 ## Technical Feasibility
 
-- Claims about implementation are grounded in graph trace, `code search` address resolution, or bounded `readonly_workspace_shell` source reads.
+- Graph trace is used as a bounded structural map for relevant screen/API/domain/DB or event/job paths; confirmed edges, candidates, and unresolved hops are distinguished.
+- Claims about implementation-sensitive behavior are grounded in bounded `readonly_workspace_shell` source reads after graph trace or `code search` address resolution.
 - Missing graph evidence is not treated as no impact.
 - Existing patterns in registered repositories are followed.
 - Stale SOT is declared and accepted before use.
