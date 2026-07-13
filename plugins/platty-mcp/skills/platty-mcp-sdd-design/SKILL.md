@@ -1,6 +1,6 @@
 ---
 name: platty-mcp-sdd-design
-description: Use when creating locally saved MCP-grounded SDD technical design and implementation-task drafts from existing request.md, stories.md, and impact.md.
+description: Use when creating locally saved MCP-grounded SDD technical design and implementation-task drafts from existing prd.md, user_stories.md, and impact.md.
 ---
 
 # Platty MCP SDD Design
@@ -30,18 +30,35 @@ paths, status values, and quoted evidence in their original form.
 ## Inputs
 
 - Platty project context.
-- SDD directory id or spec slug containing `request.md`, `stories.md`, and an
+- SDD directory id or spec slug containing `prd.md`, `user_stories.md`, and an
   existing or refreshable `impact.md`.
 - Optional target repo, API, screen, table, event, or job areas.
+
+## New-Session Context Recovery Gate
+
+`prd.md` is the product decision record; it is not a substitute for the SOT
+context that led to those decisions. Before inspecting code, decide whether the
+selected `impact.md` has a reusable SOT context: selected business documents,
+their `document_resolve` results, terminology/EPIC mapping, freshness, evidence
+boundary, and the scope limits that apply to this design.
+
+When that context is missing, stale, partial in a required product area, or the
+session cannot show that it was read, do not jump from `prd.md` to code search.
+Delegate an impact refresh to `platty-mcp-impact-analysis`. Its seed route must
+recover the SOT context through `platty-mcp-retrieval`, resolve the selected
+business documents with `document_resolve`, and preserve the recovered context
+and limits in `impact.md` before graph and bounded source reads begin. This is
+required even when the user starts a new session with only the SDD folder path
+or `prd.md` as the handoff.
 
 ## Operating Flow
 
 1. Confirm MCP tools, project context, and context freshness.
-2. Read the selected local `request.md`, `stories.md`, and `impact.md` when it
+2. Read the selected local `prd.md`, `user_stories.md`, and `impact.md` when it
    exists. Confirm all artifacts belong to the selected project and spec.
    Build `productInputMetadata` from their persisted metadata: validate canonical
    product metadata directly; adapt legacy product metadata only in this input
-   packet and retain its source form. Never rewrite `request.md` or `stories.md`
+   packet and retain its source form. Never rewrite `prd.md` or `user_stories.md`
    merely to migrate legacy metadata. The reader mapping is exact:
    `spec-request -> sdd-request`, `spec-stories -> sdd-stories`, and
    `derived_from -> derivedFrom`. Apply aliases only in `productInputMetadata`;
@@ -56,9 +73,11 @@ paths, status values, and quoted evidence in their original form.
    asks for draft-only technical design. A draft-only design remains
    `NEEDS_WORK`, is not approval-eligible, and must be regenerated as a new
    design revision after both product inputs become approved.
-4. Read `impact.md` first and inspect its Impact Dossier metadata before making
+4. Read `impact.md` first and inspect its Impact Dossier metadata and reusable
+   SOT context before making
    a hard implementation claim. Optionally invoke `platty-mcp-impact-analysis`
    only when it is missing, `seeded`, stale, source-commit-mismatched, or
+   lacks the context required by the New-Session Context Recovery Gate, or is
    `partial` in a required area of the request or stories. Record the observed
    refresh condition and its affected evidence id or coverage limit before
    invoking; must not always rerun impact when the existing dossier is sufficient.
@@ -75,13 +94,13 @@ paths, status values, and quoted evidence in their original form.
    and adjacent tests/configuration/migrations when present must have exact
    source reads. `partial-path` evidence becomes a risk or an
    Evidence-Resolution task, never a confirmed system fact.
-7. Draft `design.md` from `references/design-shape.md`.
-8. Persist and read back `design.md`, then report its path for user review.
+7. Draft `system_design.md` from `references/design-shape.md`.
+8. Persist and read back `system_design.md`, then report its path for user review.
 9. If Self Review is `blocked` or `NEEDS_WORK`, reject approval and stop without
    creating or overwriting `tasks.md`; refresh evidence or revise the design.
 10. If the current design is not explicitly approved, stop without creating or
    overwriting `tasks.md`.
-11. On explicit approval, reread `design.md`, `request.md`, and `stories.md`.
+11. On explicit approval, reread `system_design.md`, `prd.md`, and `user_stories.md`.
     Recompute both product input revisions and `productInputFingerprint`; reject
     approval when either status is not approved or any stored input value differs.
     Otherwise persist and read back `approvedRevision`, `approvedAt`, and
@@ -113,11 +132,14 @@ sub-skill may update dossier entries and write `impact.md`; this skill only
 consumes the returned artifact. Read `impact.md` first; optionally invoke the
 impact skill only for those refresh conditions. Record the observed refresh
 condition and its affected evidence id or coverage limit before invoking.
-Persist that record as the `design.md` frontmatter `impactRefreshReason` (use
+Persist that record as the `system_design.md` frontmatter `impactRefreshReason` (use
 `condition: not-needed` with empty lists when no refresh ran); it participates in
 `evidenceFingerprint`, so changing it creates a new unapproved design revision.
 Do not always rerun impact.
-Do not copy its Impact Evidence Matrix or search transcript into `design.md`.
+Record whether the SOT context was reused, recovered, or remains partial in the
+design's compact input/evidence summary; keep the detailed document list and
+retrieval transcript in `impact.md`.
+Do not copy its Impact Evidence Matrix or search transcript into `system_design.md`.
 Show only the compact path map needed for implementation, reference dossier
 evidence ids, and link to `impact.md` for detailed evidence.
 
@@ -132,7 +154,7 @@ no impact. A candidate-only or `partial-path` result is not a confirmed claim.
 ## Local SDD File Access
 
 This is the only local file exception in the MCP SDD design route. Read only the
-selected `request.md`, `stories.md`, and `impact.md`, then write only the design
+selected `prd.md`, `user_stories.md`, and `impact.md`, then write only the design
 and approval-gated task outputs in:
 
 ```text
@@ -147,14 +169,14 @@ Rules:
 - Do not read local SOT, run local Platty CLI commands, or inspect unrelated
   local files.
 - `platty-mcp-impact-analysis` owns every `impact.md` write and dossier edit.
-- Write `designMarkdown` to `design.md`.
-- Read `design.md` back and verify its project/evidence metadata.
+- Write `designMarkdown` to `system_design.md`.
+- Read `system_design.md` back and verify its project/evidence metadata.
 - Reject approval and do not create or overwrite `tasks.md` while Self Review is
   `blocked` or `NEEDS_WORK`.
 - Do not create or overwrite `tasks.md` before explicit design approval.
 - After approval, write `tasksMarkdown` to `tasks.md` and read it back.
 - If task write/read-back fails, report task generation as incomplete, include
-  the exact failed path, and state that the verified `design.md` remains valid.
+  the exact failed path, and state that the verified `system_design.md` remains valid.
 
 ## Evidence And Negative-Claim Gate
 
@@ -230,7 +252,7 @@ Apply the canonical hashing and frontmatter rules in `design-shape.md`. A new or
 revised design has `status: draft`; `approvedRevision`, `approvedAt`, and
 `approvedBy` are empty.
 
-Explicit approval must reread `design.md`, `request.md`, and `stories.md`, verify
+Explicit approval must reread `system_design.md`, `prd.md`, and `user_stories.md`, verify
 the current design revision, recompute the canonical design hash and
 `productInputFingerprint`, and require all stored values to match. Both product
 inputs must currently be approved. A non-approved status stops approval without
@@ -249,7 +271,7 @@ change creates another revision, resets `status: draft`, and clears approval met
 
 ## Design Approval And Task Creation
 
-`design.md` is created first. Persist it, read it back, and ask the user to
+`system_design.md` is created first. Persist it, read it back, and ask the user to
 review it. Do not create or overwrite `tasks.md` until the current design has
 `approvedRevision == designRevision` plus explicit `approvedAt` and
 `approvedBy` values.
@@ -297,7 +319,7 @@ Assign `executionReadiness` deterministically:
 
 | Condition | Readiness | Required behavior |
 | --- | --- | --- |
-| Design is not approved | no task artifact | Stop after verified `design.md`; do not create or overwrite `tasks.md`. |
+| Design is not approved | no task artifact | Stop after verified `system_design.md`; do not create or overwrite `tasks.md`. |
 | Design Self Review is `blocked` or `NEEDS_WORK` | no task artifact | Reject approval and resolve the blocking finding through MCP evidence or a revised design. |
 | Design is approved and only a task-level evidence-resolution gap remains | `partial` | Preserve the exact gap and next read; do not invent implementation detail. |
 | Design is approved and every required implementation claim is evidence-backed | `ready` | Persist the execution-ready TDD plan. |
@@ -307,7 +329,7 @@ Assign `executionReadiness` deterministically:
 | Evidence fingerprint changes after approval | no new task artifact | Create a new unapproved design revision and stop for reapproval. |
 
 If `tasks.md` cannot be written and read back after approval, report task
-generation as incomplete. The already verified `design.md` remains available
+generation as incomplete. The already verified `system_design.md` remains available
 for review.
 
 Recompute the canonical product-input, design, and evidence hashes during every task preflight;
@@ -326,11 +348,11 @@ blocks execution and returns to a new unapproved design revision.
 ## Approval Invariants
 
 ```text
-design.md is created and verified before tasks.md.
+system_design.md is created and verified before tasks.md.
 Blocked or NEEDS_WORK design revisions are not approval-eligible and never create or overwrite tasks.md.
 Do not create or overwrite `tasks.md` until the current design is explicitly approved.
 Current designRevision, approvedRevision, and tasks.md designRevision must match.
-Current productInputFingerprint must match design.md and tasks.md.
+Current productInputFingerprint must match system_design.md and tasks.md.
 Changed post-approval evidence creates a new unapproved design revision before tasks.
 If the approved design changes, the existing tasks.md is stale until reapproval and regeneration.
 ```
@@ -338,7 +360,7 @@ If the approved design changes, the existing tasks.md is stale until reapproval 
 ## Answer Contract
 
 ```text
-## design.md draft
+## system_design.md draft
 <full markdown>
 
 ## Self Review
@@ -352,7 +374,7 @@ If the approved design changes, the existing tasks.md is stale until reapproval 
 
 ## Local persistence
 Design saved and verified first:
-- ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/design.md
+- ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/system_design.md
 
 After approval, tasks saved and verified:
 - ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/tasks.md
@@ -392,7 +414,7 @@ missing source parity.
 | Describing AS-IS and TO-BE without a change id | Add exactly one canonical `CHG-*` row for each applicable delta. |
 | Leaving DB/data blank | Record `yes`, `no`, or `unknown`; add detailed DB design only when applicable. |
 | Claiming readiness without verification | Map every `CHG-*` row to at least one `VER-*` row and rerun Self Review. |
-| Creating tasks before design approval | Stop after writing and verifying `design.md`; do not create or overwrite `tasks.md`. |
+| Creating tasks before design approval | Stop after writing and verifying `system_design.md`; do not create or overwrite `tasks.md`. |
 | Treating user approval as an override for a blocked design | Reject approval and resolve the blocking finding before presenting a new approval-eligible revision. |
 | Treating a stale task plan as current | Compare design approval metadata and regenerate only after the revised design is approved. |
 | Inventing task details from partial source parity or `partial-path` coverage | Set readiness to `partial`, preserve the gap and next exact read, and omit unsupported hard claims. |

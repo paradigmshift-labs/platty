@@ -303,9 +303,9 @@ local write attempts: [] outside SDD; retrieval makes no local write attempt
 ```text
 routeMode: answer
 routeOrigin: sdd-design
-skill transitions: impact + SDD design authoring -> sdd-design -> impact sub-route -> design.md only; no tasks.md write before approval (`platty-mcp-sdd-design` -> `platty-mcp-impact-analysis` -> `platty-mcp-retrieval(seed-only)` -> `platty-mcp-impact-analysis` -> `platty-mcp-sdd-design`)
+skill transitions: impact + SDD design authoring -> sdd-design -> impact sub-route -> system_design.md only; no tasks.md write before approval (`platty-mcp-sdd-design` -> `platty-mcp-impact-analysis` -> `platty-mcp-retrieval(seed-only)` -> `platty-mcp-impact-analysis` -> `platty-mcp-sdd-design`)
 packet identity: absent -> packet:<stable-id> -> same packet:<stable-id>
-local write attempts: design.md only through platty-mcp-sdd-design; no tasks.md write before approval; impact.md only through platty-mcp-impact-analysis
+local write attempts: system_design.md only through platty-mcp-sdd-design; no tasks.md write before approval; impact.md only through platty-mcp-impact-analysis
 ```
 
 ## Scenario 9: Stakeholder-Friendly Answer Shape

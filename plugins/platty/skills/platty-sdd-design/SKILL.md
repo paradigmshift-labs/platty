@@ -6,14 +6,14 @@ description: Use when creating technical SDD design or implementation-task docum
 # Platty SDD Design
 
 Use this skill to create the technical half of an SDD workflow: developer-facing
-`design.md` and evidence-linked `tasks.md` or `tasks-<area>.md`.
+`system_design.md` and evidence-linked `tasks.md` or `tasks-<area>.md`.
 
 This skill may author files only inside the selected SDD output directory. It must never edit regenerated SOT markdown under `~/.platty/sot/<projectId>/`.
 
 ## Required Inputs
 
 - Platty project selector.
-- SDD folder containing `request.md`, `stories.md`, and `impact.md` when it has
+- SDD folder containing `prd.md`, `user_stories.md`, and `impact.md` when it has
   been created by the SDD spec workflow, normally under
   `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`.
 - Optional target repos, APIs, screens, tables, EPICs, or business terms.
@@ -25,38 +25,47 @@ This skill may author files only inside the selected SDD output directory. It mu
    - `projectId` matches;
    - referenced SOT paths still exist;
    - `sourceCommit` and `sotExportedAt` are compared with current SOT README.
-3. Hard-stop unless `request.md` and `stories.md` are `approved`, unless the user explicitly requests a draft-only design from unapproved inputs.
-4. Declare evidence boundary before design claims.
-5. Use source code or graph/code evidence before asserting implementation details.
-6. Complete the Affected Code Path Gate and Convention Discovery Gate before
+3. Hard-stop unless `prd.md` and `user_stories.md` are `approved`, unless the user explicitly requests a draft-only design from unapproved inputs.
+4. Complete the New-Session Context Recovery Gate before graph or code investigation.
+5. Declare evidence boundary before design claims.
+6. Use source code or graph/code evidence before asserting implementation details.
+7. Complete the Affected Code Path Gate and Convention Discovery Gate before
    finalizing an implementation-ready design.
-7. Carry `outputLanguage` forward from `request.md`; translate developer-facing
+8. Carry `outputLanguage` forward from `prd.md`; translate developer-facing
    prose while preserving source identifiers, paths, APIs, types, and statuses.
 
 Use the Platty CLI convention from `using-platty`. Inside this repository, `AGENTS.md` overrides public plugin examples: run the local build with `node packages/cli/dist/main.js <command> --json`.
 
 ## Evidence Flow
 
-1. Read `request.md` and `stories.md`. Read `impact.md` when it exists; reuse
-   its confirmed paths, freshness, limits, and next reads instead of recreating
+1. Read `prd.md` and `user_stories.md`. Treat a new-session handoff containing
+   only the SDD folder or `prd.md` as missing context until the selected SOT
+   documents, terminology/EPIC mapping, freshness, evidence boundary, and
+   scope limits can be shown from `impact.md`.
+2. When that reusable SOT context is absent, stale, or partial in a required
+   area, recover it before graph or code work: read SOT `README.md` and
+   `catalog/epics.md`, bridge raw product terms with `sot glossary search`,
+   resolve the relevant EPIC/business docs, and record the selected documents,
+   decisions, and limits in `impact.md`. `prd.md` alone never authorizes a
+   code-only design.
+3. When the impact dossier already has that context, reuse it; do not recreate
    its detailed evidence matrix in the design.
-2. Compare project, source-commit, freshness, and evidence-boundary metadata
+4. Compare project, source-commit, freshness, and evidence-boundary metadata
    across the input files. A missing or stale impact dossier is a named design
    risk until the affected evidence is refreshed.
-3. Extract actors, rules, scenarios, data concepts, screens, APIs, and areas.
-4. Search `catalog/epics.md`; use `sot glossary search --project <project> --query "<raw term>" --json` for raw terms, aliases, or translated concepts.
-5. Read relevant business docs:
+5. Extract actors, rules, scenarios, data concepts, screens, APIs, and areas.
+6. Read relevant business docs:
    - `br.md`
    - `data_dictionary.md`
    - `design.md`
    - `usecases/ucl.md` (read the Use Case Index first, then relevant sections)
    - `usecases/ucs.md` when present
-6. Read relevant technical specs from catalog paths:
+7. Read relevant technical specs from catalog paths:
    - `specs/api/`
    - `specs/screen/`
    - `specs/event/`
    - `specs/schedule/` when present
-7. Build a fast structural map from targeted anchors before detailed source
+8. Build a fast structural map from targeted anchors before detailed source
    reads:
    - prefer spec frontmatter `serviceMapNodes[]`;
    - use catalog or `sot resolve` compact-row `traceId` when present;
@@ -68,7 +77,7 @@ Use the Platty CLI convention from `using-platty`. Inside this repository, `AGEN
    - carry confirmed edges, candidates, omitted classes, truncation, and
      unresolved hops into the As-Is map as **확인됨**, **가정**, or **위험**;
    - if `traceId` is absent or trace has no confirmed edge, downgrade to risk and use `code search` for incomplete addresses or bounded `readonly_workspace_shell` reads for exact source.
-8. Read registered repository files with bounded `readonly_workspace_shell` commands for complex flows, DTOs, transactions, UI state, error handling, or tests.
+9. Read registered repository files with bounded `readonly_workspace_shell` commands for complex flows, DTOs, transactions, UI state, error handling, or tests.
 
 Do not report graph trace as exhaustive when it returns candidates, omitted edge classes, truncation, or no confirmed edge.
 
@@ -112,9 +121,9 @@ Read reference templates only when writing files:
 - `references/tasks-template.md`
 - `references/design-review-rubric.md`
 
-`design.md` must remain `draft` until user approval. `tasks.md` should be generated only after design approval unless the user explicitly asks for draft tasks.
+`system_design.md` must remain `draft` until user approval. `tasks.md` should be generated only after design approval unless the user explicitly asks for draft tasks.
 
-Use the requested output language consistently in `design.md` and `tasks.md`.
+Use the requested output language consistently in `system_design.md` and `tasks.md`.
 For Korean output, write headings, explanations, decisions, and task prose in
 Korean while preserving code identifiers and quoted source evidence exactly.
 
@@ -143,7 +152,7 @@ state its evidence or assumption boundary.
 
 ## Stop Conditions
 
-- `request.md` or `stories.md` is not approved and the user did not explicitly request draft-only design.
+- `prd.md` or `user_stories.md` is not approved and the user did not explicitly request draft-only design.
 - SOT documents referenced by the spec are stale or missing and the user has not accepted stale-evidence risk.
 - A critical implementation path has only graph candidates and no confirmed edge or bounded source read.
 - The affected code path or local conventions cannot be read and the user has not

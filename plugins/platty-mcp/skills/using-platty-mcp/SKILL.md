@@ -129,15 +129,15 @@ request, policy change, PRD need, or requirements discussion, use
 
 That skill must use `platty-mcp-retrieval` for evidence, invoke
 `platty-mcp-impact-analysis` for the Engineering Discovery Handoff, and verify
-the selected `impact.md` with the drafts. It writes `request.md` and
-`stories.md` directly to
+the selected `impact.md` with the drafts. It writes `prd.md` and
+`user_stories.md` directly to
 `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`, records a compact
-`impact.md` handoff pointer in `request.md`, and verifies all three files.
+`impact.md` handoff pointer in `prd.md`, and verifies all three files.
 
-For MCP-grounded SDD technical design from existing approved `request.md`,
-`stories.md`, and `impact.md` inputs, use `platty-mcp-sdd-design` after the
+For MCP-grounded SDD technical design from existing approved `prd.md`,
+`user_stories.md`, and `impact.md` inputs, use `platty-mcp-sdd-design` after the
 capability gate. It may read all three inputs from the selected SDD directory,
-writes `design.md`, and writes `tasks.md` only after explicit approval of the
+writes `system_design.md`, and writes `tasks.md` only after explicit approval of the
 current design. It delegates Impact Dossier creation
 or refresh to `platty-mcp-impact-analysis`, which alone writes or refreshes
 `impact.md` in this route.

@@ -20,7 +20,7 @@ Return `PASS` only when the draft is implementation-ready or clearly marked as a
 - Existing patterns in registered repositories are followed.
 - Stale SOT is declared and accepted before use.
 - `impact.md` is read when present; its detailed matrix is referenced rather than
-  copied into `design.md`.
+  copied into `system_design.md`.
 - Every implementation-sensitive claim is marked as confirmed, assumption, or
   risk and has the appropriate evidence boundary.
 

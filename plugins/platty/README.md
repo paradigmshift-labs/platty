@@ -121,8 +121,8 @@ Use the skills for stage-specific behavior:
 - `platty:platty-generated-docs` for public technical docs, EPIC draft, EPIC auto-confirm, and business-doc generation.
 - `platty:platty-sync` for incremental refresh after source or repository changes.
 - `platty:platty-mcp-server-setup` for context-backend server setup and `/api/mcp` validation.
-- `platty:platty-sdd-spec` for turning a rough idea into grounded `request.md` and `stories.md`.
-- `platty:platty-sdd-design` for turning approved SDD product docs into grounded `design.md` and `tasks.md`.
+- `platty:platty-sdd-spec` for turning a rough idea into grounded `prd.md` and `user_stories.md`.
+- `platty:platty-sdd-design` for turning approved SDD product docs into grounded `system_design.md` and `tasks.md`.
 - `platty:platty-memory` for recording or maintaining human knowledge.
 
 ## References

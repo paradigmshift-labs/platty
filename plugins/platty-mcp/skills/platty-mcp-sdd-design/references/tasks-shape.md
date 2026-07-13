@@ -1,6 +1,6 @@
 # MCP SDD 작업 계획 형식
 
-`tasks.md`는 승인된 `design.md`를 구현 작업으로 나눈 한국어 문서다. 상세
+`tasks.md`는 승인된 `system_design.md`를 구현 작업으로 나눈 한국어 문서다. 상세
 fingerprint와 readiness는 frontmatter로 검증하고, 본문은 실행 순서와 검증에 집중한다.
 
 ## Frontmatter
@@ -22,7 +22,7 @@ evidenceFingerprint: "sha256:<hex>"
 impactStatus: "<seeded | investigated | partial>"
 sourceParity: "<confirmed | partial | unavailable>"
 impactCoverageLimits: []
-derivedFrom: ["request.md", "stories.md", "impact.md", "design.md"]
+derivedFrom: ["prd.md", "user_stories.md", "impact.md", "system_design.md"]
 ---
 ```
 
@@ -31,7 +31,7 @@ derivedFrom: ["request.md", "stories.md", "impact.md", "design.md"]
 ```markdown
 # 구현 작업 — <요청 제목>
 
-> 승인된 설계 기준: [design.md](design.md). 근거 상세: [impact.md](impact.md).
+> 승인된 설계 기준: [system_design.md](system_design.md). 근거 상세: [impact.md](impact.md).
 
 ## 0. 작업 연결표
 
