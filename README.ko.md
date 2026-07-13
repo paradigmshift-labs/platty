@@ -115,11 +115,17 @@ Code가 Platty CLI를 구동하는 법을 가르치는 스킬 모음입니다. P
 `platty:platty-generated-docs`, `platty:platty-sync`,
 `platty:platty-sdd-spec`, `platty:platty-sdd-design`, `platty:platty-memory`.
 
-이미 구성된 Platty MCP 서버에 대한 원격 MCP 조회, 메모리, SDD handoff에는
+이미 구성된 Platty MCP 서버에 대한 원격 MCP 조회, 영향 분석, 메모리, SDD handoff에는
 `platty-mcp:using-platty-mcp`, `platty-mcp:platty-mcp-client-setup`,
-`platty-mcp:platty-mcp-retrieval`, `platty-mcp:platty-mcp-memory`,
-`platty-mcp:platty-mcp-sdd-spec`, `platty-mcp:platty-mcp-sdd-design`를
-포함한 `platty-mcp` 플러그인을 설치하세요.
+`platty-mcp:platty-mcp-retrieval`, `platty-mcp:platty-mcp-impact-analysis`,
+`platty-mcp:platty-mcp-retrieval-eval`, `platty-mcp:platty-mcp-memory`,
+`platty-mcp:platty-mcp-sdd-spec`,
+`platty-mcp:platty-mcp-sdd-design`를 포함한 `platty-mcp` 플러그인을 설치하세요.
+영향 분석은 선택된 스펙, 그래프 클래스, cross-EPIC 탐색, 저장소 범위, 제한된 소스
+증거를 하나의 dossier로 수렴하고 선택된 `impact.md` 예외를 소유합니다. SDD 요청
+흐름은 `request.md`에 compact engineering-discovery handoff pointer만 남기며,
+설계 흐름은 검토용 `design.md`를 먼저 작성하고 명시적 승인 후에만 해당 승인
+설계에서 readiness를 분류한 `tasks.md`를 생성합니다.
 `platty-mcp` 플러그인은 서버 URL이 배포마다 다르기 때문에 `.mcp.json`이나
 `mcpServers`를 포함하지 않는 skills-only 플러그인입니다.
 

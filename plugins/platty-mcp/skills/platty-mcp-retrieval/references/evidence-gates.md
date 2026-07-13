@@ -12,7 +12,8 @@ Use these gates before making factual claims from Platty MCP retrieval.
 | Document resolution | Connected specs and source-near anchors | Behavior without exact reads |
 | Source-near spec | API/screen/event/schedule behavior close to source | Source truth when spec is thin, stale, or contradicted |
 | Graph trace | Confirmed static edges for the chosen anchor/options | Exhaustive impact, especially when omitted/candidate edges exist |
-| Code snippet | Exact source evidence within the shown line range | Behavior outside the displayed scope |
+| `code_search` | Candidate files, symbols, routes, or source locations | Exact implementation behavior without bounded source reads |
+| Bounded `readonly_workspace_shell` source read | Exact source evidence within the shown line range | Behavior outside the displayed scope |
 
 ## Claim Gates
 
@@ -29,6 +30,10 @@ Use these gates before making factual claims from Platty MCP retrieval.
   does not fully establish the response.
 - Permission, DB write, event emit, external call, negative source evidence:
   requires source-level evidence when the MCP server exposes it.
+- Code behavior, scroll/timer accumulation, lifecycle handling, guard logic, or
+  exact implementation claims: use `code_search` for candidate locations, then
+  read the relevant bounded source with MCP `readonly_workspace_shell` before
+  claiming the behavior.
 - Broad inventory or impact: build the target map first; one hit is not enough.
 
 ## Negative Claim Gate

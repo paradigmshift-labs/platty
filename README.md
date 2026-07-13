@@ -121,11 +121,18 @@ Included full `platty` skills: `platty:using-platty`,
 `platty:platty-sync`, `platty:platty-sdd-spec`, `platty:platty-sdd-design`,
 `platty:platty-memory`.
 
-For remote MCP retrieval, memory, and SDD handoffs against an already configured Platty MCP server,
+For remote MCP retrieval, impact analysis, memory, and SDD handoffs against an already configured Platty MCP server,
 install `platty-mcp`, which includes `platty-mcp:using-platty-mcp`,
 `platty-mcp:platty-mcp-client-setup`, `platty-mcp:platty-mcp-retrieval`,
-`platty-mcp:platty-mcp-memory`, `platty-mcp:platty-mcp-sdd-spec`, and
-`platty-mcp:platty-mcp-sdd-design`.
+`platty-mcp:platty-mcp-retrieval-eval`,
+`platty-mcp:platty-mcp-impact-analysis`, `platty-mcp:platty-mcp-memory`,
+`platty-mcp:platty-mcp-sdd-spec`, and `platty-mcp:platty-mcp-sdd-design`.
+Impact analysis converges selected specs, graph classes, cross-EPIC traversal,
+repository scope, and bounded source evidence into one dossier and owns the
+selected `impact.md` exception. The SDD request flow keeps only a compact
+engineering-discovery handoff pointer in `request.md`; the design flow writes
+`design.md` first for review, requires explicit approval, and only then
+generates readiness-classified `tasks.md` from that approved design.
 The `platty-mcp` plugin remains skills-only and does not ship `.mcp.json` or
 `mcpServers`, because server URLs differ by deployment.
 

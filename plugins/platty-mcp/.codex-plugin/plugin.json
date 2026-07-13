@@ -1,7 +1,7 @@
 {
   "name": "platty-mcp",
-  "version": "0.0.4",
-  "description": "Platty MCP retrieval, memory, and SDD handoff skills for configured remote context servers.",
+  "version": "0.0.5",
+  "description": "Platty MCP retrieval, impact, memory, and SDD handoff skills for configured remote context servers.",
   "author": {
     "name": "Paradigm Shift Labs"
   },
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Platty MCP",
-    "shortDescription": "Platty MCP retrieval, memory, and SDD handoffs",
-    "longDescription": "Use Platty MCP skills to search and read already configured remote Platty context, documents, specs, SSOT, glossary terms, memory overlays, and status, explicitly manage Platty memories through MCP, or produce MCP-grounded SDD handoffs for local Platty SDD persistence, without running local CLI lifecycle commands.",
+    "shortDescription": "Platty MCP retrieval, impact, memory, and SDD handoffs",
+    "longDescription": "Use Platty MCP skills for read-only retrieval and impact analysis against configured remote Platty context, memory lifecycle requests, and local SDD handoffs that write impact.md and design.md for review before generating post-approval tasks.md, without running local CLI lifecycle commands.",
     "developerName": "Paradigm Shift Labs",
     "category": "Developer Tools",
     "capabilities": [
@@ -30,6 +30,8 @@
     "defaultPrompt": [
       "Search my configured Platty MCP context.",
       "Answer from Platty MCP evidence.",
+      "Draft design.md for review.",
+      "After I approve design.md, generate tasks.md.",
       "Manage Platty MCP memory.",
       "Draft an MCP-grounded SDD handoff."
     ]
