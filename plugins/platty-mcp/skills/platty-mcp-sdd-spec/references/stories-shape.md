@@ -1,8 +1,7 @@
-# MCP SDD Stories Shape
+# MCP SDD 사용자 스토리 형식
 
-Use this template reference whenever `platty-mcp-sdd-spec` drafts
-`stories.md`. Preserve this story/scenario/traceability shape so designers,
-planners, and implementation agents can review the same product behavior.
+`stories.md`는 한국어 사용자 시나리오 문서다. 구현 근거와 내부 검토 기록은
+`impact.md` 및 frontmatter에 둔다.
 
 ## Frontmatter
 
@@ -10,7 +9,7 @@ planners, and implementation agents can review the same product behavior.
 ---
 id: "SPEC-<slug>-<YYYY-MM>"
 type: "sdd-stories"
-status: "draft"       # draft -> approved
+status: "draft"
 projectId: "<projectId>"
 outputLanguage: "ko"
 sourceCommit: "<source commit or unknown>"
@@ -21,77 +20,40 @@ derivedFrom: "request.md"
 ---
 ```
 
-## Required Sections
+## 본문
 
 ```markdown
-# User Stories — <Request Title>
+# 사용자 스토리 — <요청 제목>
 
-> request.md의 §1 Customer Task + §5 Rules에서 파생.
-> 디자이너·기획자가 사용자 관점에서 시나리오를 검토할 수 있도록 Given-When-Then 형식으로 작성.
-> 내부 구현 방식보다 유저가 인지하는 결과와 제품팀이 검증해야 할 행동을 중심으로 기술한다.
+> 사용자 관점의 결과와 검증 가능한 시나리오만 적는다.
 
----
+## US-01. <스토리 제목>
 
-## US-01: <story title>
+**사용자로서** <사용자>는<br>
+**<목표>를 위해** <행동>하고 싶다.<br>
+**그래서** <기대 결과>를 얻는다.
 
-**As a** <actor><br>
-**I want** <goal><br>
-**So that** <outcome>
+### 시나리오 1: 정상 흐름
 
-### Scenario 1: US-01-S01 <scenario title> (정상)
+- **Given** <상태>
+- **When** <행동 또는 트리거>
+- **Then** <사용자/운영자가 확인하는 결과>
 
-- **Given** <user/system state>
-- **When** <user action or system trigger>
-- **Then** <visible or measurable result>
-- **And** <optional additional result>
+### 시나리오 2: 예외 흐름
 
-### Scenario 2: US-01-S02 <scenario title> (엣지)
+- **Given** <예외 상태>
+- **When** <행동 또는 트리거>
+- **Then** <기대 결과>
 
-- **Given** <edge state>
-- **When** <action or trigger>
-- **Then** <expected behavior>
+## 규칙·시나리오 연결
 
----
-
-## Traceability
-
-> 각 User Story가 어떤 Rule(§5)에서 파생됐는지 추적
-
-| User Story | Scenario | 관련 Rules | 비고 |
-|------------|----------|------------|------|
-| US-01 | US-01-S01 <scenario> | R-01 | <note> |
-
-**Rule 커버리지: R-01~R-<N> 전부 1개 이상 시나리오에 매핑 (<N>/<N>, 100%)**
-
-## Self Review
-
-- **Verdict**: <PASS | NEEDS_WORK>
-- **Blocking findings**: <count>
-
-| Check | Result | Evidence or finding |
-|----|----|----|
-| request.md consistency | <PASS|FAIL> | |
-| Rule-to-scenario coverage | <PASS|FAIL> | |
-| Every customer task has a story | <PASS|FAIL> | |
-| Scenarios describe user/operator-visible outcomes | <PASS|FAIL> | |
-| Assumptions and coverage gaps remain explicit | <PASS|FAIL> | |
+| 제품 규칙 | 사용자 스토리 | 시나리오 | 남은 가정 |
+| --- | --- | --- | --- |
+| R-01 | US-01 | US-01-S01 | |
 ```
 
-## Rules
+## 작성 규칙
 
-- Every story must map to a request rule or open assumption.
-- Give each new scenario an immutable `US-NN-SNN` id. Do not renumber an
-  existing id when stories or scenarios are reordered; allocate a new id only
-  for a genuinely new scenario.
-- Do not invent implementation detail that the request did not establish.
-- Preserve unresolved assumptions instead of silently closing them.
-- For every open question that shaped a scenario, retain its owner, affected ids,
-  status, and scenario-shaping assumption in the story or Traceability note.
-- If `request.md` is still draft, keep `stories.md` draft and include the
-  assumptions that were used to split stories.
-- Keep runtime-only metadata outside the markdown draft in the SDD packet.
-- If a request rule has no scenario, keep the coverage line below 100% and call
-  out the missing rule in Traceability.
-- Rule coverage measures authored rules only; do not present it as total
-  user-input or evidence coverage.
-- Self Review `PASS` does not approve the document.
+- 각 스토리는 규칙 또는 명시된 가정과 연결한다.
+- `US-NN-SNN` 식별자는 한 번 부여하면 순서 변경으로 다시 번호를 매기지 않는다.
+- 내부 구현 방식, MCP 도구 호출, 근거 매트릭스, Self Review는 본문에 넣지 않는다.

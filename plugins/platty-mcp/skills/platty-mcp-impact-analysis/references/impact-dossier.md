@@ -114,7 +114,7 @@ status: "seeded | investigated | partial"
 impactRevision: "sha256:<hex>"
 sourceParity: "confirmed | partial | unavailable"
 projectId: "<projectId>"
-outputLanguage: "<language>"
+outputLanguage: "ko"
 contextStatus: "fresh | stale | unknown"
 sourceCommits: {}
 retrievedAt: "<ISO timestamp>"
@@ -125,38 +125,22 @@ maxCrossEpicDepth: 2
 Use these headings verbatim:
 
 ```text
-# Impact Analysis - <Request title>
-## 1. Seed and Interpretation
-## 2. Freshness and Evidence Boundary
-## 3. Selected EPICs and Specs
-## 4. API and Screen Candidates
-## 5. Cross-EPIC Traversal
-## 6. Graph Impact
-## 7. Repository Search
-## 8. Source Evidence
-## 9. Impact Evidence Matrix
-## 10. Coverage Limits
-## 11. Next Exact Reads
+# 영향도 및 근거 조사 — <요청 제목>
+## 1. 조사 기준과 문서 연결
+## 2. 최신성 및 근거 경계
+## 3. 관련 EPIC·문서·스펙
+## 4. 화면·API·데이터 후보
+## 5. 빠른 경로 지도 (Graph Trace)
+## 6. 교차 EPIC·저장소·원문 확인
+## 7. 영향 근거 매트릭스
+## 8. 조사 한계와 다음 확인
 ```
 
-## Compact Request Handoff
-
-Keep this compact Engineering Discovery Handoff as an in-memory/reference
-contract that the SDD spec flow may copy later when it owns the request. Impact
-analysis must not mutate `request.md`:
-
-```markdown
-## Engineering Discovery Handoff
-
-- **Impact artifact**: `impact.md`
-- **Impact status**: <seeded | investigated | partial>
-- **Source parity**: <confirmed | partial | unavailable>
-- **Seed EPICs**: <ids and names>
-- **Seed specs**: <ids and kinds>
-- **Context freshness**: <fresh | stale | unknown>
-- **Source commits**: <repo id -> commit>
-- **Coverage limits**: <short summary or none>
-```
+`document_resolve`로 선택한 문서 항목과 연결 스펙을 확인한 뒤,
+`graph_trace`로 `화면 ↔ API ↔ 도메인 ↔ DB/외부 연동` 경로를 기록한다.
+경로 지도에는 시작 앵커, 확인된 홉, 후보/미확인 홉, 누락·절단 정보, 다음 원문
+확인을 표로 남긴다. Graph trace만으로 쓰기, 권한, 트랜잭션, 계약, 영향 부재를
+확정하지 않는다.
 
 ## Completion Gate And Boundary Outcomes
 

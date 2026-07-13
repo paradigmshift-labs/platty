@@ -1,8 +1,8 @@
-# MCP SDD Request Shape
+# MCP SDD 요청서 형식
 
-Use this template reference when `platty-mcp-sdd-spec` drafts `request.md`.
-Preserve this section order. Fill unknowns as open questions or assumptions
-instead of changing the template.
+`request.md`는 기획자·디자이너·QA가 읽는 한국어 문서다. MCP 조사 상세,
+최신성, source parity, 도구 호출, Self Review는 `impact.md`와 frontmatter에
+남기고 본문에 복사하지 않는다.
 
 ## Frontmatter
 
@@ -10,7 +10,7 @@ instead of changing the template.
 ---
 id: "SPEC-<slug>-<YYYY-MM>"
 type: "sdd-request"
-status: "draft"       # draft -> approved
+status: "draft"
 projectId: "<projectId>"
 outputLanguage: "ko"
 sourceCommit: "<source commit or unknown>"
@@ -22,173 +22,80 @@ created: "<YYYY-MM-DD>"
 ---
 ```
 
-## Required Sections
+## 본문
 
 ```markdown
-# <Request Title>
+# <요청 제목>
 
-> <One-paragraph product intent, grounded in MCP evidence and clearly marked assumptions.>
+> <무엇을, 왜 바꾸는지 2~4문장>
 
-## §0 Impact
+## 0. 변경 한눈에 보기
 
-- **영향 유저**
-  - <Affected users or actors>
-- **검색 기준**
-  - Raw terms: <raw user terms>
-  - Korean candidate terms: <Korean terms searched>
-  - English candidate terms: <English terms searched>
-- **영향 EPIC**
-  - <EPIC>: <affected product area>
-- **영향 화면**
-  - <screen/flow/API if known>
-- **관련 SOT**
-  - <MCP document/spec ids read>
-- **관련 코드 참조**
-  - <source confirmations or "추가 확인 필요">
+| 항목 | 내용 |
+| --- | --- |
+| 대상 사용자 | |
+| 바꾸는 경험/정책 | |
+| 영향 영역 | |
+| 이번에 하지 않는 것 | |
 
-## §1 Customer Task
+## 1. 사용자 과업과 현재 문제
 
-> 유저와 제품팀이 해결하려는 일
+### 사용자 과업
 
-- **<actor>**: "<job-to-be-done>"
+> **<사용자>**는 <목표>를 위해 <행동>할 수 있어야 한다.
 
-## §2 Current Situation
+### 현재 문제
 
-### 2-1. 관측된 문제
+- <관찰된 문제 또는 정책 충돌>
+- <현재 흐름의 한계>
 
-- <Observed problem, metric, workflow gap, or policy conflict>
+## 2. 범위
 
-### 2-2. 문제가 아닌 것으로 본 영역
+| 포함 | 제외 |
+| --- | --- |
+| | |
 
-- <Non-goal or area not treated as the bottleneck>
+## 3. 제안하는 해결 방향
 
-### 2-3. 데이터 해석 주의
+### <해결 영역>
 
-- <Data caveat, freshness caveat, source parity limit, or MCP coverage limit>
+- <사용자에게 보이는 변경>
 
-## §3 Limits
+## 4. 제품 규칙
 
-> 기존 해결책의 한계와 이번 변경의 범위
+| ID | 규칙 |
+| --- | --- |
+| R-01 | WHEN <조건>, 시스템은 <관찰 가능한 결과>를 제공한다. |
 
-- <Why existing behavior or workaround is insufficient>
+## 5. 확정 결정과 미결 질문
 
-### In Scope
-
-- <Behavior, actor, flow, or policy included in this request>
-
-### Out of Scope
-
-- <Adjacent behavior explicitly excluded from this request>
-
-### Non-Goals
-
-- <Outcome this request intentionally does not optimize or redesign>
-
-## §4 Solution
-
-> 제안하는 변경 내용
-
-### 4-1. <solution area>
-
-- <Requested product behavior>
-
-## §5 Rules
-
-> EARS 패턴 비즈니스 규칙
-
-| ID | EARS 텍스트 | 비고 |
-|----|------------|------|
-| R-01 | WHEN <trigger>, 시스템은 <observable behavior>. | <evidence or assumption> |
-
-## §6 Confirmed Decisions
-
-> 대화 중 확정된 의사결정
+### 확정 결정
 
 | ID | 결정 | 근거 |
-|----|------|------|
-| D1 | <Only user-approved or exact MCP evidence-backed decision> | <basis> |
+| --- | --- | --- |
+| D-01 | | |
 
-## §7 Open Questions
+### 미결 질문
 
-> 미결 사항 — design/tasks 단계 전 확인 필요
+| ID | 질문 | 영향 | 추천안 |
+| --- | --- | --- | --- |
+| O-01 | | | |
 
-| ID | 질문 | Owner | Affected ids | Status | Scenario-shaping assumption | 추천안 |
-|----|------|-------|--------------|--------|-----------------------------|--------|
-| O1 | <Question> | <decision owner> | <R-NN / US-NN-SNN> | <open or resolved> | <assumption carried into scenarios> | <Recommended default and implication> |
+## 6. 성공 검증
 
-## §8 Validation Hypotheses
+| ID | 확인할 결과 | 측정 또는 관찰 방법 |
+| --- | --- | --- |
+| H-01 | | |
 
-> 성공 검증 방법
+---
 
-| ID | 가설 | 측정 기준 | 목표 방향 |
-|----|------|----------|----------|
-| H1 | <Hypothesis> | <Metric or validation signal> | <Target direction> |
-
-## Engineering Discovery Handoff
-
-- **Impact artifact**: `impact.md`
-- **Impact status**: <seeded | investigated | partial>
-- **Source parity**: <confirmed | partial | unavailable>
-- **Seed EPICs**: <ids and names>
-- **Seed specs**: <ids and kinds>
-- **Context freshness**: <fresh | stale | unknown>
-- **Source commits**: <repo id -> commit>
-- **Coverage limits**: <short summary or none>
-
-## §9 Self Review
-
-- **Verdict**: <PASS | NEEDS_WORK>
-- **Blocking findings**: <count>
-- **Warnings**: <count>
-
-### Requirement Coverage
-
-| Input source or requirement | Result | Evidence or gap |
-|----|----|----|
-| <raw idea, provided requirement, confirmed answer, or MCP evidence> | <covered|partial|missing|conflict> | <request/story location or finding> |
-
-### Search Route Audit
-
-| Check | Result | Evidence or gap |
-|----|----|----|
-| Search Brief preserves raw, Korean, English, alias, and attempted-query fields | <PASS|FAIL|N/A> | |
-| Project overview, candidate EPIC map, and relevant Memory overlay were checked | <PASS|FAIL> | |
-| BR/DD/DESIGN/UCL maps and exact items were read for the selected branch | <PASS|FAIL> | |
-| `document_get`/`document_item_get` and `document_resolve` completed where required | <PASS|FAIL> | |
-| Selected specs received `spec_get` and `spec_resolve` | <PASS|FAIL|N/A> | |
-| Exact source claims use bounded `readonly_workspace_shell` evidence | <PASS|FAIL|N/A> | |
-| Direct evidence, inference, unread surfaces, freshness, and missing MCP surfaces are separated | <PASS|FAIL> | |
-| Final Route Audit completed before drafting factual claims | <PASS|FAIL> | |
-
-### Findings
-
-| Severity | Finding | Required action |
-|----|----|----|
-| <blocking|warning> | | |
+**조사 근거**: [impact.md](impact.md) — 상태: <investigated | partial>, 한계: <한 줄 또는 없음>.
 ```
 
-## MCP Grounding Slots
+## 작성 규칙
 
-- Put exact MCP reads in §0 `관련 SOT` and §6 decision bases.
-- Put source parity gaps, stale evidence, and data caveats in §2-3.
-- Put unresolved assumptions in §7, not in §6.
-- Append the compact Engineering Discovery Handoff after §8 from the verified
-  impact result. Do not include the full Impact Evidence Matrix, raw MCP
-  payload, shell transcript, or source bodies in `request.md`.
-- Keep MCP-only metadata such as project id, output language, evidence boundary,
-  context status, derived evidence ids, and local persistence target outside the
-  markdown draft in the SDD Handoff Packet.
-
-## Rules
-
-- Explain internal names before listing ids, symbols, APIs, or document keys.
-- Keep raw user terms, Korean candidate terms, English candidate terms, and
-  matched glossary terms visible when retrieval normalized vocabulary.
-- Do not promote open questions or assumptions into confirmed decisions.
-- Mark source-level impact as a coverage limit when source parity is missing.
-- Keep the handoff to its eight summary fields; `impact.md` owns the complete
-  impact dossier and evidence matrix.
-- Every §5 rule must be observable or testable.
-- Self Review `PASS` does not change frontmatter status to `approved`.
-- Missing required input or a required retrieval rung makes the verdict
-  `NEEDS_WORK`; preserve the gap instead of claiming completeness.
+- `document_resolve`로 연결한 제품 문서와 `graph_trace` 결과의 상세는
+  `impact.md`에 남긴다.
+- 확인되지 않은 구현 경로를 제품 결정처럼 쓰지 않는다.
+- 미결 가정은 `미결 질문`에 남기고 확정 결정으로 승격하지 않는다.
+- `impact.md`가 partial이면 본문의 범위 또는 검증에서 그 한계를 짧게 알린다.

@@ -1,272 +1,136 @@
-# MCP SDD Design Document Contract
+# MCP SDD 개발 설계 형식
 
-Use this as the single `design.md` shape. The Impact Dossier remains in
-`impact.md`; reference its entries instead of copying its matrix or transcript.
+`design.md`는 개발자가 구현 방향을 빠르게 파악하는 한국어 문서다. 승인·최신성·
+fingerprint·source parity 같은 기계 검증값은 frontmatter에 보존하고, 상세 근거는
+`impact.md`에 둔다.
 
-## Canonical Revision Rules
-
-- `designRevision` is `sha256:<hex>` over the UTF-8, LF-normalized complete
-  design content after removing the mutable frontmatter keys `status`,
-  `designRevision`, `approvedRevision`, `approvedAt`, and `approvedBy`.
-- `requestRevision` and `storiesRevision` are `sha256:<hex>` over the complete
-  persisted UTF-8, LF-normalized `request.md` and `stories.md` bytes, including
-  their current `status`. Any content or approval-status change therefore
-  changes the corresponding revision.
-- `productInputFingerprint` is `sha256:<hex>` over canonical JSON containing
-  `requestRevision`, `requestStatus`, `storiesRevision`, and `storiesStatus`.
-  Sort object keys lexically and encode as UTF-8. Approval and every task
-  preflight reread both product inputs and require this fingerprint to match.
-- `impactRevision` is the verified `impact.md` frontmatter revision. It is the
-  timestamp-independent canonical evidence snapshot defined by
-  `impact-dossier.md`; do not hash the complete persisted file or mutable
-  `retrievedAt` to recreate it.
-- `impactEvidenceSnapshot` is the lexically sorted list of stable Impact Dossier
-  matrix `evidenceId` values used by this design. It records exactly which
-  impact evidence the design consumed and remains unchanged when only
-  `impact.md.retrievedAt` changes.
-- `impactCoverageLimits` is the canonical persisted list. Copy the Impact
-  Dossier's `coverageLimits` into this frontmatter field; do not persist a
-  second `coverageLimits` alias. The fingerprint sorts this persisted list, so
-  source ordering cannot change approval-time recomputation.
-- `impactRefreshReason` records why this design invoked an optional impact
-  refresh. Persist `condition: not-needed` with empty lists when no refresh was
-  invoked; otherwise persist the observed refresh condition together with every
-  affected Impact Dossier `evidenceId` and coverage limit. It is audit evidence,
-  not a replacement for the Impact Dossier.
-- `evidenceFingerprint` is `sha256:<hex>` over canonical JSON containing
-  `impactRevision`, sorted `impactEvidenceSnapshot`, sorted `sourceCommits`,
-  `contextStatus`, `sourceParity`, `crossEpicTraversalStatus`, and sorted
-  `impactCoverageLimits`, and canonical `impactRefreshReason`. Sort object keys
-  lexically, represent `sourceCommits` as a lexically sorted list of repo/commit
-  pairs, sort the refresh evidence-id and coverage-limit lists lexically, encode
-  as UTF-8, and exclude timestamps.
-- On a new or revised design, keep `status: draft` and leave
-  `approvedRevision`, `approvedAt`, and `approvedBy` empty.
-- Explicit approval rereads the file, verifies its current hash, sets
-  `approvedRevision = designRevision`, fills `approvedAt` with the current ISO
-  timestamp and `approvedBy` with the authenticated actor id or `user`, changes
-  `status` to `approved`, persists, and reads back the transition.
-- Any later design-content, `productInputFingerprint`, or `evidenceFingerprint`
-  change creates another revision, resets `status: draft`, and clears all three
-  approval fields.
+## Frontmatter
 
 ```yaml
 ---
 id: "SPEC-<slug>-<YYYY-MM>"
 type: "sdd-design"
-status: draft
+status: "draft"
 projectId: "<projectId>"
 outputLanguage: "ko"
-contextStatus: "<fresh | stale | unknown>"
-sotExportedAt: "<ISO timestamp or unknown>"
-derivedFrom: ["request.md", "stories.md", "impact.md"]
 requestRevision: "sha256:<hex>"
-requestStatus: "<draft | approved>"
 storiesRevision: "sha256:<hex>"
-storiesStatus: "<draft | approved>"
 productInputFingerprint: "sha256:<hex>"
-impactArtifact: "impact.md"
 impactRevision: "sha256:<hex>"
-impactEvidenceSnapshot: []
 impactStatus: "<seeded | investigated | partial>"
-impactRefreshReason:
-  condition: "<not-needed | missing | seeded | stale | source-commit-mismatched | partial-required-area>"
-  evidenceIds: []
-  coverageLimits: []
 sourceParity: "<confirmed | partial | unavailable>"
-sourceCommits: {}
-impactRetrievedAt: "<ISO timestamp or unknown>"
-crossEpicTraversalStatus: "<complete | partial | unavailable>"
-impactCoverageLimits: []
-designRevision: "sha256:<hex>"
 evidenceFingerprint: "sha256:<hex>"
-approvedRevision:
-approvedAt:
-approvedBy:
+designRevision: "sha256:<hex>"
+approvedRevision: ""
+approvedAt: ""
+approvedBy: ""
+sourceCommits: {}
+coverageLimits: []
+review:
+  verdict: "PASS | NEEDS_WORK"
+  readiness: "ready | partial | blocked"
+  blockingFindings: []
+  warnings: []
+  impactAssessmentAudit: {}
+  requirementCoverage: {}
+  changeCoverage: {}
+  verificationCoverage: {}
+derivedFrom: ["request.md", "stories.md", "impact.md"]
 ---
 ```
 
-# Design - <Spec title>
+## 본문
 
-> DRAFT until explicitly approved. Evidence and readiness are audited below.
+```markdown
+# 개발 설계 — <요청 제목>
 
-## 1. One-Page Overview
+> **DRAFT — 개발자 검토 필요.** 상세 조사 근거: [impact.md](impact.md).
 
-- **Problem and outcome**: <request-backed summary>
-- **Scope and non-goals**: <in/out>
-- **Primary technical decision**: <TO-BE summary>
-- **Change ids**: <CHG-01, ...>
-- **Readiness**: <ready | partial | blocked>
+## 0. 설계 한눈에 보기
 
-## 2. Inputs, Evidence, Freshness, Assumptions, and Coverage
+| 항목 | 내용 |
+| --- | --- |
+| 변경 목적 | |
+| 영향 저장소/영역 | |
+| 주요 변경 경계 | <화면·API·도메인·데이터·이벤트> |
+| 구현 시작점 | |
+| 가장 큰 위험 | |
 
-Build `productInputMetadata` before validating the design input packet. Canonical
-product metadata is validated directly. Legacy product metadata is adapted only
-in `productInputMetadata` so the same validated design input packet can consume
-it without rewriting `request.md`, `stories.md`, or the input artifact.
+## 1. 현재 구조 (As-Is)
 
-| Input/evidence | Status or revision | Source parity / Confidence | Coverage and use |
+| 경계 | 파일/심볼 또는 문서 | 현재 역할 | 상태 |
 | --- | --- | --- | --- |
-| request.md | <approved revision/status> | <confidence> | <rules used> |
-| stories.md | <approved revision/status> | <confidence> | <scenarios used> |
-| impact.md | Impact status: <status> | Source parity: <status>; Confidence: <summary> | <coverage limits> |
 
-- **Optional impact refresh**: <not-needed, or condition with affected evidence ids / coverage limits>
-- **Source commits**: <repo -> commit>
-- **Impact retrieved at**: <timestamp>
-- **Cross-EPIC traversal status**: <status and retained frontier>
-- **Assumptions**: <explicit assumptions or none>
-- **Accepted risks**: <separately confirmed D-NN decisions or none>
+### 1-1. 빠른 경로 지도 (Graph Trace)
 
-## 3. Impact Assessment
+`graph_trace`는 빠르게 구조를 파악하는 보조 수단이다. 확정된 홉과 후보·미확인
+홉을 구분하며, 쓰기·권한·트랜잭션·응답 형식은 원문 근거가 있을 때만 확정한다.
 
-Every row is required. Assessment is `yes/no/unknown`; a blank is invalid. A
-`no` must pass the negative-claim gate. An implicated `unknown` blocks ready
-unless a separately confirmed `D-NN` risk-acceptance decision records its owner,
-rationale, affected ids, bounded scope, and revisit condition in a new design
-revision. Generic design approval does not accept the risk and must not remove
-the blocker.
-
-| Surface | Assessment (yes/no/unknown) | Reason | Impact evidence | CHG-* or N/A |
+| 시작 앵커 | 화면 → API → 도메인 → 데이터/외부 경로 | 확인됨 | 후보·미확인 | 다음 확인 |
 | --- | --- | --- | --- | --- |
-| API/contract | | | | |
-| DB/data | | | | |
-| Business logic/state | | | | |
-| UI/UX | | | | |
-| Jobs/events | | | | |
-| External integrations | | | | |
-| Security/permissions | | | | |
-| Observability/release | | | | |
 
-## 4. Technical AS-IS
+## 2. 변경 설계 (To-Be)
 
-Record only evidence-backed current facts. Keep candidates and unknowns out of
-hard factual prose and point to their evidence gaps.
-
-| Current area | Current behavior/path | Evidence | Confidence / limit |
-| --- | --- | --- | --- |
-
-## 5. Technical TO-BE
-
-Record technical decisions, constraints, and target behavior. Each decision
-must map to request rules/stories, impact evidence, and one or more `CHG-*` rows.
-
-| Decision | Target behavior | Rationale | Maps to |
-| --- | --- | --- | --- |
-
-## 6. Canonical Change Map
-
-This is the only canonical delta list. Do not create another area-change,
-module-change, migration-change, or implementation-delta list elsewhere.
-
-| CHG ID | Surface | AS-IS | TO-BE | Rationale | Owner/repo | Compatibility | Impact evidence | Maps to |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CHG-01 | DB/data | ... | ... | ... | ... | ... | impact.md evidence id | R-01 / US-01-S01 |
-
-Use stable ids `CHG-NN`. Every applicable impact row and every material AS-IS to
-TO-BE delta maps to a row; non-applicable surfaces use N/A only in the impact
-assessment.
-
-## 7. Conditional Detailed Modules
-
-Expand only applicable `CHG-*` rows and title each subsection with its ids.
-Omit non-applicable detailed modules; the Impact Assessment still remains
-complete.
-
-### API/Contract - <CHG-NN>
-
-Cover request/response/events, compatibility, consumers, errors, permissions,
-and versioning as applicable.
-
-### DB/Data - <CHG-NN>
-
-Detailed DB/data design is conditional, but the DB/data impact assessment is
-always required. When applicable, cover:
-
-- affected stores and source of truth;
-- current and target shape plus read/write paths;
-- schema, index, and constraint changes;
-- transaction, concurrency, and idempotency behavior;
-- data-backfill and reconciliation;
-- lock/load risk;
-- old/new reader-writer compatibility;
-- expand, compatible deploy, backfill, validate, switch, and contract phases;
-- rollback/restore or roll-forward-only behavior;
-- privacy, retention, and deletion;
-- production validation and telemetry.
-
-### Business Logic/State - <CHG-NN>
-
-Cover rules, state transitions, invariants, failure handling, and idempotency.
-
-### UI/UX - <CHG-NN>
-
-Cover states, transitions, errors, accessibility, and API dependencies.
-
-### Jobs/Events And External Integrations - <CHG-NN>
-
-Cover producers/consumers, ordering, retries, deduplication, timeouts, contracts,
-and operational ownership.
-
-### Security/Permissions And Observability - <CHG-NN>
-
-Cover authorization, sensitive data, auditability, metrics, logs, alerts, and
-release signals.
-
-## 8. Delivery Safety
-
-| CHG ID | Rollout/dependency order | Compatibility phase | Data safety | Rollback or roll-forward | Release signal |
+| CHG ID | 변경 경계 | As-Is → To-Be | 책임/저장소 | 호환성 | 규칙·시나리오 |
 | --- | --- | --- | --- | --- | --- |
+| CHG-01 | | | | | R-01 / US-01-S01 |
 
-Include migration/backfill sequencing, reversible boundaries, production
-validation, and explicit stop conditions where applicable.
+필요할 때만 여러 경계의 호출 순서, 비동기 처리, 트랜잭션, 재시도, 보상 흐름을
+Mermaid로 작성한다. 단순 CRUD에는 표와 짧은 설명을 사용한다.
 
-## 9. Verification and Traceability
+## 3. 계약·데이터·상세 모듈
 
-Every `CHG-*` row maps to at least one `VER-*` row. Every request rule and stable
-story scenario maps to verification or an explicit evidence gap.
+### API·화면·이벤트 계약
 
-| VER ID | Rule/scenario | CHG IDs | Test level | Expected evidence | Exact command or evidence gap |
-| --- | --- | --- | --- | --- | --- |
-| VER-01 | R-01 / US-01-S01 | CHG-01 | integration | <observable result> | `<command>` |
+| CHG ID | 계약 | 변경 | 호환성 | 근거 |
+| --- | --- | --- | --- | --- |
 
-Use stable ids `VER-NN`. Commands must be exact and runnable when known; do not
-invent commands when evidence is missing.
+### 데이터·상태·비즈니스 로직
 
-## 10. Risks, Open Decisions, Evidence Appendix, and Self Review
+| CHG ID | 대상 | 변경/전이 | 동시성·실패 처리 | 근거 |
+| --- | --- | --- | --- | --- |
 
-### Risks And Open Decisions
+### 작업·이벤트·외부 연동
 
-Use stable decision ids `D-NN`. Risk acceptance is a separate product/technical
-decision, not a side effect of approving the design. It must be confirmed before
-the new design revision is presented for approval.
-
-| ID | Type | Risk/decision | Affected ids | Owner | Rationale and bounded scope | Revisit condition | Confirmation |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| D-01 | risk_acceptance | <implicated unknown> | <R/US/CHG/evidence ids> | <owner> | <why and exact boundary> | <observable trigger/date> | <acceptedBy / acceptedAt> |
-
-### Evidence Appendix
-
-Reference `impact.md` dossier entry ids and bounded source references. Do not
-copy the dossier matrix, complete snippets, or search transcript.
-
-| Design claim / CHG | Dossier evidence id | Repo/commit/path/symbol | Confidence / limit |
+| CHG ID | 생산자/소비자 또는 연동 | 순서·재시도·타임아웃 | 운영 책임 |
 | --- | --- | --- | --- |
 
-### Self Review
+## 4. 코드 컨벤션과 구현 원칙
 
-Apply `design-review-rubric.md` as the single readiness owner and record:
+| 항목 | 확인한 기존 패턴 | 이번 적용 또는 예외 | 근거 |
+| --- | --- | --- | --- |
+| 모듈·파일 배치 | | | |
+| 이름·타입·DTO | | | |
+| 검증·오류 처리 | | | |
+| 트랜잭션·외부 호출 | | | |
+| 테스트 위치·스타일 | | | |
 
-```yaml
-verdict: PASS | NEEDS_WORK
-readiness: ready | partial | blocked
-blockingFindings: []
-warnings: []
-requirementCoverage: {}
-productInputAudit: {}
-impactAssessmentAudit: {}
-changeCoverage: {}
-verificationCoverage: {}
-sourceParityAudit: {}
-taskGate: "<blocked and NEEDS_WORK are not approval-eligible; otherwise open only after explicit approval of this current design revision>"
+## 5. 검증·배포·롤백
+
+| VER ID | 규칙/시나리오 | CHG ID | 검증 수준 | 기대 결과 | 명령 또는 근거 공백 |
+| --- | --- | --- | --- | --- | --- |
+| VER-01 | R-01 / US-01-S01 | CHG-01 | 통합 | | |
+
+| 변경 | 배포 순서 | 호환성/데이터 안전 | 롤백 또는 전진 복구 | 출시 신호 |
+| --- | --- | --- | --- | --- |
+
+## 6. 위험과 미결정 사항
+
+| ID | 위험 또는 결정 | 영향 | 소유자 | 다음 확인 또는 재검토 조건 |
+| --- | --- | --- | --- | --- |
+
+---
+
+**근거와 한계**: [impact.md](impact.md) — <evidence id 또는 한 줄 요약>.
 ```
+
+## 작성 규칙
+
+- `document_resolve`로 연결된 문서 근거와 `graph_trace`의 상세 결과는
+  `impact.md`를 SSOT로 삼는다.
+- design에는 구현에 필요한 경로 지도와 근거 ID만 싣고, 매트릭스·도구 로그·
+  freshness 표를 복사하지 않는다.
+- `확인됨`, `후보`, `위험`을 구분한다. candidate-only 또는 빈 graph 결과는
+  영향 없음의 근거가 아니다.
+- 승인·fingerprint·readiness 판단은 frontmatter의 `review`와 review rubric으로 수행하며
+  별도 독자용 섹션으로 만들지 않는다.

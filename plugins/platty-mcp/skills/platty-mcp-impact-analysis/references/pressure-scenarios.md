@@ -142,10 +142,10 @@ workspace_repo_list와 readonly_workspace_shell이 없다고 가정해. 로컬 P
 MCP 근거로 결제 쿠폰 기능 request.md와 stories.md를 남겨줘. 나중 설계에서 재사용할 코드·graph·cross-EPIC 검색 결과도 보존해줘.
 ```
 
-- **RED failure**: No impact artifact or compact handoff contract existed.
-- **Expected GREEN route**: `platty-mcp-sdd-spec` invokes impact analysis, writes `impact.md`, and adds a compact request handoff.
-- **Owner reference**: `impact-dossier.md` compact request handoff.
-- **Observable pass criteria**: `impact.md` retains the full evidence packet while `request.md` contains only the reference-oriented handoff.
+- **RED failure**: No impact artifact or planner-safe reference existed.
+- **Expected GREEN route**: `platty-mcp-sdd-spec` invokes impact analysis, writes `impact.md`, and adds a compact request link.
+- **Owner reference**: `impact-dossier.md` persisted impact artifact.
+- **Observable pass criteria**: `impact.md` retains the full evidence packet while `request.md` contains only the status link and a user-relevant limit.
 
 ## direct-vs-escalated
 

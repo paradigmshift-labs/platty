@@ -22,8 +22,11 @@ of confirmed impact, likely impact, candidates, unknowns, coverage, and next rea
    packet. Otherwise invoke retrieval with `routeMode: seed-only` and require it
    to return the packet to this caller without escalating back to impact. Read
    `references/impact-seed-packet.md`.
-3. Resolve selected specs and trace graph upstream/downstream while preserving
+3. Resolve selected business-document items with `document_resolve` before
+   graph tracing, then trace graph upstream/downstream while preserving
    confirmed edges, candidates, relation candidates, omissions, and truncation.
+   Use `graph_trace` as the fast structural map of `screen ↔ API ↔ domain ↔ DB`
+   plus related event/job/external paths; it never proves detailed behavior alone.
 4. Traverse confirmed cross-EPIC evidence through
    `references/cross-epic-traversal.md`.
 5. Follow the source ladder exactly: `workspace_repo_list -> select repo ->
@@ -36,7 +39,8 @@ of confirmed impact, likely impact, candidates, unknowns, coverage, and next rea
    a candidate until its source region is read. Never write, install, execute
    project code, read blocked secrets, or leave the selected repository root.
 7. Build one evidence-matrix entry per target and classify confirmed, likely,
-   candidate, or unknown.
+   candidate, or unknown. Add a compact path map that separates confirmed hops,
+   candidate/unknown hops, omitted classes, and required exact source reads.
 8. Apply `references/impact-dossier.md` and its completion gate.
 9. In an SDD context, write or refresh only `impact.md` under the selected
    `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/` and verify readability.

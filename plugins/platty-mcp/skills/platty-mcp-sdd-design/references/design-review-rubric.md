@@ -62,9 +62,10 @@ taskGate: "<open | gated, with reason>"
 
 ### Impact Assessment Audit
 
-- All eight surfaces are present: API/contract, DB/data, business logic/state,
-  UI/UX, jobs/events, external integrations, security/permissions, and
-  observability/release.
+- Audit all eight surfaces—API/contract, DB/data, business logic/state, UI/UX,
+  jobs/events, external integrations, security/permissions, and
+  observability/release—against `impact.md` and the `CHG-*` map. Persist this
+  audit in `design.md` frontmatter `review`, not as a reader-facing design section.
 - Every surface is exactly `yes`, `no`, or `unknown`, with reason, impact
   evidence, and `CHG-*` or N/A. A blank blocks readiness.
 - Every `no` passes the negative-claim gate. Empty, missing, omitted,
@@ -104,7 +105,7 @@ taskGate: "<open | gated, with reason>"
   status, and coverage limits match `impact.md`.
 - Candidate-only evidence remains candidate; unsupported claims are assumptions,
   risks, or omitted.
-- The Evidence Appendix references dossier entries without copying the dossier.
+- The design footer references `impact.md` evidence without copying the dossier.
 
 ### Delivery Safety
 

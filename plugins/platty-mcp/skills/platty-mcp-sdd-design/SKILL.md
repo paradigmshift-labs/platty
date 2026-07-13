@@ -14,6 +14,9 @@ canonical change map; impact analysis owns impact discovery and `impact.md`.
 Use `references/design-shape.md` for the design and
 `references/tasks-shape.md` for the approval-gated task plan.
 
+All reader-facing output is Korean. Keep code identifiers, API paths, file
+paths, status values, and quoted evidence in their original form.
+
 ## Required Sub-Skills
 
 1. Use `using-platty-mcp` for MCP capability and project context.
@@ -63,8 +66,11 @@ Use `references/design-shape.md` for the design and
    commits, traversal status, and `impactCoverageLimits`. Never edit an Impact
    Dossier entry from this skill.
 6. Derive evidence-backed Technical AS-IS facts and Technical TO-BE decisions
-   from request, stories, and impact. Unsupported hard implementation claims
-   become explicit assumptions or risks, or are omitted.
+   from request, stories, and impact. Use the dossier's `document_resolve`
+   links to connect product documents to selected specs, and use its
+   `graph_trace` result as a fast `screen ↔ API ↔ domain ↔ DB` path map.
+   Unsupported hard implementation claims become explicit assumptions or risks,
+   or are omitted.
 7. Draft `design.md` from `references/design-shape.md`.
 8. Persist and read back `design.md`, then report its path for user review.
 9. If Self Review is `blocked` or `NEEDS_WORK`, reject approval and stop without
@@ -107,14 +113,17 @@ Persist that record as the `design.md` frontmatter `impactRefreshReason` (use
 `condition: not-needed` with empty lists when no refresh ran); it participates in
 `evidenceFingerprint`, so changing it creates a new unapproved design revision.
 Do not always rerun impact.
-Do not copy its Impact Evidence Matrix or
-search transcript into `design.md`. Reference dossier evidence ids instead.
+Do not copy its Impact Evidence Matrix or search transcript into `design.md`.
+Show only the compact path map needed for implementation, reference dossier
+evidence ids, and link to `impact.md` for detailed evidence.
 
 Hard implementation claims require the relevant bounded evidence and source
-parity. Evidence references may identify `graph_trace` and `code_search`
-results plus bounded `readonly_workspace_shell` exact reads retained by the
-dossier. Empty graph/search results are not proof of no impact. A candidate-only
-result is not a confirmed claim.
+parity. `graph_trace` accelerates path discovery but does not prove writes,
+permissions, contracts, transactions, retries, or absence. `document_resolve`
+connects selected document items to their linked context; bounded source reads
+retained by the dossier confirm implementation-sensitive behavior. Empty
+graph/search results are not proof of no impact. A candidate-only result is not
+a confirmed claim.
 
 ## Local SDD File Access
 

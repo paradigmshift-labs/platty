@@ -42,7 +42,7 @@ Expected route:
 draft request.md and stories.md
 -> build/reuse impactSeedPacket
 -> platty-mcp-impact-analysis writes partial impact.md
--> append the compact handoff with sourceParity = partial
+-> add a compact impact.md link with partial status and the coverage limit
 -> carry source impact as coverage limit
 draft only product/spec claims supported by MCP evidence
 ```
@@ -240,8 +240,8 @@ Expected route:
 
 ```text
 keep assumptions in §7 and stories draft
--> append only the compact Engineering Discovery Handoff after §8
--> point to impact.md with status, source parity, seed ids, freshness, commits, and limits
+-> keep detailed discovery in impact.md and add only its compact status link to request.md
+-> point to impact.md with status and the user-relevant coverage limit
 -> keep Self Review verdict and approval state honest
 ```
 
