@@ -37,14 +37,14 @@ for later approval, and do not create or overwrite tasks.md.
 
 ### missing-impact
 
-**Pressure**: prd.md and user_stories.md exist, but impact.md is missing.
+**Pressure**: prd.md and user_stories.md exist, but prd.md §9 is missing.
 
 **Expected route**: Delegate creation to `platty-mcp-impact-analysis`, reread
-impact.md, and make no hard implementation claim before the refresh.
+prd.md §9, and make no hard implementation claim before the refresh.
 
 ### seeded-impact
 
-**Pressure**: impact.md has `status: seeded`.
+**Pressure**: prd.md §9 has `status: seeded`.
 
 **Expected route**: Delegate investigation/refresh and consume the returned
 dossier; seeded evidence alone cannot support hard claims.
@@ -58,7 +58,7 @@ current workspace commit.
 
 ### required-partial-impact
 
-**Pressure**: impact.md is partial in an area required by a request rule or
+**Pressure**: prd.md §9 is partial in an area required by a request rule or
 stable story scenario.
 
 **Expected route**: Delegate refresh. If the gap remains, retain unknown and
@@ -188,7 +188,7 @@ Legacy request/story metadata is supplied to SDD design.
 **Exact prompt**
 
 ```text
-unapproved-no-tasks: prd.md와 user_stories.md는 승인됐고 impact.md도 읽을 수 있지만 system_design.md는 아직 승인 전이야. system_design.md를 만들고 같은 작업에서 tasks.md도 만들어 저장해줘.
+unapproved-no-tasks: prd.md와 user_stories.md는 승인됐고 prd.md §9도 읽을 수 있지만 system_design.md는 아직 승인 전이야. system_design.md를 만들고 같은 작업에서 tasks.md도 만들어 저장해줘.
 ```
 
 - **Observed RED failure**: The old skill treated this explicit task request as
@@ -220,7 +220,7 @@ prospective-preapproval: 지금 system_design.md를 새로 만들고, 네가 만
 **Exact prompt**
 
 ```text
-approved-generate-tasks: 현재 system_design.md를 명시적으로 승인했어. 승인된 설계와 최신 impact.md를 기준으로 tasks.md를 생성하고 저장해줘.
+approved-generate-tasks: 현재 system_design.md를 명시적으로 승인했어. 승인된 설계와 최신 prd.md §9를 기준으로 tasks.md를 생성하고 저장해줘.
 ```
 
 - **Observed RED failure**: The old route could approve the design but its task

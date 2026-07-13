@@ -58,27 +58,18 @@ local Platty specs directory.
    assumptions used to split scenarios.
 9. Review the product requirements for policy, journey, data, EPIC, API, and
    screen impact. Build or reuse `impactSeedPacket` from the retrieval results,
-   then invoke `platty-mcp-impact-analysis`. The impact skill writes or refreshes
-   `impact.md` and returns `impactDossier`, `impactStatus`, `sourceParity`, and
-   the verified `impactArtifactPath`. Missing workspace parity creates partial
-   impact without erasing the product drafts.
-10. Add only a compact `impact.md` status link to `prd.md`; detailed
-    discovery, freshness, graph, and source evidence remain in `impact.md`.
+   then invoke `platty-mcp-impact-analysis`. It returns the formatted §9
+   appendix plus `impactRevision`, status, source parity, and coverage limits.
+   Missing workspace parity creates partial impact without erasing the product drafts.
+10. Append the returned appendix as the final §9 of `prd.md`; detailed
+    discovery, freshness, graph, and source evidence remain there.
 11. Run Self Review across the raw idea, all available requirement inputs, MCP
    evidence, `prd.md`, `user_stories.md`, and the impact result.
 12. Run `review -> revise -> review`; retain the final Requirement Coverage,
-    Search Route Audit, and cross-document findings in the review result and
-    `impact.md`, not in planner-facing document bodies.
+    Search Route Audit, and cross-document findings in §9, not in §0–§8.
 13. Persist the revised `prd.md` and `user_stories.md` under the same SDD
-    directory. SDD spec must not format or write impact.md.
-14. Verify all three files are readable. Confirm that the three artifacts share
-    `projectId` and `contextStatus`; use `impact.md`'s `sourceCommits` for
-    source metadata and its `retrievedAt` for
-    impact freshness. Derive the spec identity from the verified
-    `impactArtifactPath` and confirm that `impact.md`, `prd.md`, and
-    `user_stories.md` are in the same shared SDD directory before returning the final
-    response. Do not require `impact.md` to contain the request files' `sourceCommit`
-    or `sotExportedAt` fields.
+    directory, then verify both files are readable and their shared project and
+    freshness metadata agree.
 
 ## Template Contract
 
@@ -92,9 +83,9 @@ Persist durable workflow metadata needed by later SDD stages in frontmatter:
 `localPersistenceTarget`, raw MCP tool payloads, and transient candidate lists in
 the SDD packet, not in the drafted file frontmatter.
 
-Do not include an evidence table, self-review checklist, raw MCP payload, shell
-transcript, or source bodies in planner-facing documents. `impact.md` owns those
-details; the request only links to it with status and known limits.
+Do not include raw MCP payloads, shell transcripts, or source bodies. The
+evidence table, review findings, and source references belong only in the final
+§9 appendix; §0–§8 remain planner-facing.
 
 `prd.md` uses `references/request-shape.md` and includes these sections in
 order:
@@ -109,7 +100,7 @@ order:
 §6 Confirmed Decisions
 §7 Open Questions
 §8 Validation Hypotheses
-Impact reference
+§9 Impact evidence appendix
 ```
 
 `user_stories.md` uses `references/stories-shape.md`, starts with `# 사용자 스토리`,
@@ -118,7 +109,7 @@ Korean rule-to-scenario connection table.
 
 ## Local Persistence
 
-All three artifacts use this directory:
+Both artifacts use this directory:
 
 ```text
 ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
@@ -134,24 +125,18 @@ writing files; do not pass a literal `~` path to filesystem tools.
 Persistence rules:
 
 - Create the target directory if it does not exist.
-- The impact skill writes or refreshes `impact.md` first and returns its verified
-  `impactArtifactPath`, `impactStatus`, and `sourceParity`.
-- Write `requestMarkdown` to `prd.md`.
+- The impact skill formats the §9 appendix and returns its revision, status,
+  parity, commits, and coverage limits.
+- Write `requestMarkdown` with that appendix to `prd.md`.
 - Write `storiesMarkdown` to `user_stories.md`.
-- SDD spec writes only `prd.md` and `user_stories.md`; it does not format or
-  write `impact.md`.
 - Update the request and stories together when regenerating the same spec; do
   not leave either stale.
 - Do not delete unrelated files in the directory.
-- Verify all three files are readable after writing and share `projectId` and
-  `contextStatus`. Use `impact.md`'s `sourceCommits` and the Engineering
-  Discovery Handoff's Source commits for source metadata, and its `retrievedAt`
-  for impact freshness. Derive the spec identity from `impactArtifactPath` and
-  the shared SDD directory containing `impact.md`, `prd.md`, and
-  `user_stories.md`; do not require nonexistent `spec id`, `sourceCommit`, or
-  `sotExportedAt` fields in `impact.md`. Include all paths in the final response.
+- Verify both files are readable after writing and share `projectId` and
+  `contextStatus`. Use PRD frontmatter for source commits and impact freshness.
+  Include both paths in the final response.
 
-The MCP impact work is read-only except for the selected `impact.md`. Do not
+The MCP impact work is read-only except for the final §9 of the selected PRD. Do not
 read local SOT or run local Platty CLI commands, mutate projects, generate docs,
 sync, refresh caches, or write memory from this route.
 
@@ -191,7 +176,7 @@ SDD Packet
 - impactDossier
 - impactStatus
 - sourceParity
-- impactArtifactPath
+- impactAppendix
 - selfReview
   - verdict
   - blockingFindings
@@ -252,9 +237,9 @@ Apply this review sequence:
    contradictions or unsupported promotion from inference to decision.
 4. Check request-to-story coverage without treating rule-to-scenario coverage
    as total input-requirement coverage.
-5. Check that the compact impact link agrees with `impactArtifactPath`,
-   `impactStatus`, freshness, and coverage limits without copying impact
-   evidence into the request.
+5. Check that the final §9 appendix agrees with `impactRevision`,
+   `impactStatus`, freshness, and coverage limits, while §0–§8 remains free of
+   detailed impact evidence.
 6. Revise both drafts for every fixable blocking finding, then review the
    revised pair again.
 
@@ -277,9 +262,10 @@ Use this default response shape:
 
 ## Local persistence
 Saved:
-- ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/impact.md
 - ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/prd.md
 - ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/user_stories.md
+
+Impact evidence is the final §9 of `prd.md`; it is not a separate path.
 
 ## Self Review
 <verdict, blocking findings, warnings, and remaining coverage gaps>
@@ -296,7 +282,7 @@ missing source parity.
 - The selected retrieval branch reports a required MCP capability gap.
 - Local filesystem write access is unavailable or the target directory cannot be
   created.
-- The impact skill cannot write or verify the selected `impact.md` artifact.
+- The impact skill cannot write or verify the selected `prd.md §9` artifact.
 - The user asks for analysis, sync, generated-docs, export, project mutation, or
   memory writes from this MCP route.
 
@@ -308,8 +294,8 @@ missing source parity.
 | Recreating retrieval logic here | Keep retrieval in `platty-mcp-retrieval`; this skill converts evidence to SDD documents. |
 | Treating glossary normalization as proof | Use it only for routing; exact document/spec/source reads prove claims. |
 | Leaving stories behind a gate | Always draft `user_stories.md` with `prd.md`; keep it draft and preserve assumptions when approval is missing. |
-| Formatting the impact dossier here | Invoke `platty-mcp-impact-analysis`; the impact skill alone formats and writes `impact.md`. |
-| Returning only instructions | Persist all three artifacts locally in `~/.platty/specs/<projectId>/...` and verify all three files before final response. |
+| Formatting the impact dossier here | Invoke `platty-mcp-impact-analysis`; the impact skill alone formats and writes `prd.md §9`. |
+| Returning only instructions | Persist `prd.md` and `user_stories.md` locally in `~/.platty/specs/<projectId>/...`; verify both files and PRD §9 before final response. |
 | Returning a prose SDD summary | Apply the request/stories templates and include all required sections. |
 | Treating story Rule coverage as complete requirement coverage | Compare every user input and MCP evidence source in Requirement Coverage. |
 | Skipping retrieval audit because files are readable | Import the Final Route Audit and return `NEEDS_WORK` when a required rung is missing. |

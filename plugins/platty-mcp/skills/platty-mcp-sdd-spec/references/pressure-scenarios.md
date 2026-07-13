@@ -41,8 +41,8 @@ Expected route:
 ```text
 draft prd.md and user_stories.md
 -> build/reuse impactSeedPacket
--> platty-mcp-impact-analysis writes partial impact.md
--> add a compact impact.md link with partial status and the coverage limit
+-> platty-mcp-impact-analysis writes partial prd.md §9
+-> add a compact prd.md §9 link with partial status and the coverage limit
 -> carry source impact as coverage limit
 draft only product/spec claims supported by MCP evidence
 ```
@@ -102,11 +102,11 @@ Expected route:
 ```text
 produce prd.md and user_stories.md markdown
 resolve localPersistenceTarget
-impact skill writes or refreshes impact.md under ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
+impact skill writes or refreshes prd.md §9 under ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
 SDD spec writes prd.md and user_stories.md under the same directory
-verify all three files are readable and share `projectId` and `contextStatus`
+verify prd.md (including §9) and user_stories.md are readable and share `projectId` and `contextStatus`
 verify impact metadata uses `sourceCommits` and `retrievedAt`
-derive spec identity from `impactArtifactPath` and the shared SDD directory
+derive spec identity from the PRD path and the shared SDD directory
 ```
 
 ## Scenario 5: Retrieval Drift
@@ -191,7 +191,7 @@ The SDD request and stories drafts exist, and the route needs impact evidence.
 Failure to prevent:
 
 - formatting the Impact Dossier in `platty-mcp-sdd-spec`;
-- writing `impact.md` from `impactMarkdown` in the SDD spec skill;
+- writing `prd.md §9` from `impactMarkdown` in the SDD spec skill;
 - treating the impact artifact as an optional attachment.
 
 Expected route:
@@ -199,8 +199,8 @@ Expected route:
 ```text
 build/reuse impactSeedPacket
 -> invoke platty-mcp-impact-analysis
--> impact skill alone writes or refreshes impact.md
--> SDD spec receives impactArtifactPath, impactStatus, and sourceParity
+-> impact skill alone writes or refreshes prd.md §9
+-> SDD spec receives the formatted §9 appendix, impact status, and source parity
 -> SDD spec writes only prd.md and user_stories.md
 ```
 
@@ -213,15 +213,15 @@ Failure to prevent:
 
 - returning after verifying only prd.md and user_stories.md;
 - accepting mismatched project, spec, or freshness metadata;
-- omitting `impact.md` from the answer paths.
+- omitting `prd.md §9` from the answer paths.
 
 Expected route:
 
 ```text
-verify impact.md, prd.md, and user_stories.md are readable
+verify prd.md §9, prd.md, and user_stories.md are readable
 -> verify the three files share `projectId` and `contextStatus`
 -> verify impact source metadata uses `sourceCommits` and impact freshness uses `retrievedAt`
--> derive spec identity from `impactArtifactPath` and the shared SDD directory
+-> derive spec identity from the PRD path and the shared SDD directory
 -> return all three paths
 ```
 
@@ -240,8 +240,8 @@ Expected route:
 
 ```text
 keep assumptions in §7 and stories draft
--> keep detailed discovery in impact.md and add only its compact status link to prd.md
--> point to impact.md with status and the user-relevant coverage limit
+-> keep detailed discovery in prd.md §9 and add only its compact status link to prd.md
+-> point to prd.md §9 with status and the user-relevant coverage limit
 -> keep Self Review verdict and approval state honest
 ```
 

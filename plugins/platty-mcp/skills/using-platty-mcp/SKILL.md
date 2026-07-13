@@ -21,7 +21,7 @@ projects, refresh caches, run server-side document generation, or write memory
 except through `platty-mcp-memory` after explicit user intent.
 SOT files may be read only through configured MCP artifact tools. Local file
 access is allowed only for selected SDD draft files, including impact analysis's
-owned `impact.md`, under
+owned `prd.md §9`, under
 `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`.
 
 If a requested answer needs a missing MCP surface, report the capability gap.
@@ -94,7 +94,7 @@ affected surface, cross-EPIC effects, or design-change impact, use
 through `platty-mcp-retrieval`; an existing packet is reused rather than rebuilt.
 The impact skill owns graph/cross-EPIC/workspace source convergence and is the
 only MCP route with the selected SDD-directory local exception to write or
-refresh `impact.md`.
+refresh `prd.md §9`.
 
 Explicit SDD file authoring intent takes precedence over generic impact or
 design-change wording: request/story creation routes to `platty-mcp-sdd-spec`,
@@ -127,20 +127,19 @@ For MCP-grounded SDD request/story authoring from a product idea, feature
 request, policy change, PRD need, or requirements discussion, use
 `platty-mcp-sdd-spec` after the capability gate.
 
-That skill must use `platty-mcp-retrieval` for evidence, invoke
-`platty-mcp-impact-analysis` for the Engineering Discovery Handoff, and verify
-the selected `impact.md` with the drafts. It writes `prd.md` and
-`user_stories.md` directly to
-`~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`, records a compact
-`impact.md` handoff pointer in `prd.md`, and verifies all three files.
+That skill must use `platty-mcp-retrieval` for evidence and invoke
+`platty-mcp-impact-analysis` for the final §9 Engineering Discovery appendix.
+It writes `prd.md` and `user_stories.md` directly to
+`~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`, then verifies both files,
+including the final PRD §9 section.
 
-For MCP-grounded SDD technical design from existing approved `prd.md`,
-`user_stories.md`, and `impact.md` inputs, use `platty-mcp-sdd-design` after the
-capability gate. It may read all three inputs from the selected SDD directory,
+For MCP-grounded SDD technical design from existing approved `prd.md` (including
+§9) and `user_stories.md`, use `platty-mcp-sdd-design` after the capability gate.
+It may read both inputs from the selected SDD directory,
 writes `system_design.md`, and writes `tasks.md` only after explicit approval of the
 current design. It delegates Impact Dossier creation
-or refresh to `platty-mcp-impact-analysis`, which alone writes or refreshes
-`impact.md` in this route.
+or refresh to `platty-mcp-impact-analysis`, which alone updates PRD §9 in this
+route.
 
 ## Memory Lifecycle Routing
 

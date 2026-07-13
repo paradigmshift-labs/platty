@@ -51,8 +51,11 @@ of confirmed impact, likely impact, candidates, unknowns, coverage, and next rea
    Mark it `confirmed-path` only when every known bounded boundary was actually
    read; otherwise mark it `partial-path`.
 8. Apply `references/impact-dossier.md` and its completion gate.
-9. In an SDD context, write or refresh only `impact.md` under the selected
-   `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/` and verify readability.
+9. In an SDD context, format the final `## 9. 영향도 조사 및 근거` appendix.
+   When `prd.md` already exists, update only that appendix and its impact
+   frontmatter fields, preserving §0–§8 byte-for-byte; when it does not exist,
+   return `impactAppendixMarkdown` to `platty-mcp-sdd-spec`, which persists the
+   completed PRD. Verify the resulting `prd.md` is readable.
 
 ## Completion Gate
 
@@ -70,8 +73,9 @@ name the MCP capability gap and next exact read, and use no local fallback.
 
 ## Local SDD File Access
 
-The only local exception is selected `impact.md`. Do not read local SOT, run
-local Platty CLI commands, inspect unrelated files, or write request, stories,
+The only local exception is the selected `prd.md`: read it only to locate and
+replace §9 and the impact frontmatter fields. Do not read local SOT, run local
+Platty CLI commands, inspect unrelated files, or alter §0–§8, user stories,
 design, or task files.
 
 ## Stop Conditions
