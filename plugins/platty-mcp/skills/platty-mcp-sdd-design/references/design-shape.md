@@ -1,6 +1,6 @@
 # MCP SDD 개발 설계 형식
 
-`design.md`는 개발자가 구현 방향을 빠르게 파악하는 한국어 문서다. 승인·최신성·
+`system_design.md`는 개발자가 구현 방향을 빠르게 파악하는 한국어 문서다. 승인·최신성·
 fingerprint·source parity 같은 기계 검증값은 frontmatter에 보존하고, 상세 근거는
 `impact.md`에 둔다.
 
@@ -29,6 +29,7 @@ impactRefreshReason:
 sourceParity: "<confirmed | partial | unavailable>"
 impactRetrievedAt: "<ISO timestamp>"
 contextStatus: "<fresh | stale | unknown>"
+sotContextRecovery: "<reused | recovered | partial>"
 evidenceFingerprint: "sha256:<hex>"
 designRevision: "sha256:<hex>"
 approvedRevision: ""
@@ -46,7 +47,7 @@ review:
   requirementCoverage: {}
   changeCoverage: {}
   verificationCoverage: {}
-derivedFrom: ["request.md", "stories.md", "impact.md"]
+derivedFrom: ["prd.md", "user_stories.md", "impact.md"]
 ---
 ```
 
@@ -63,6 +64,7 @@ derivedFrom: ["request.md", "stories.md", "impact.md"]
 | --- | --- |
 | 변경 목적과 성공 기준 | |
 | 범위와 비목표 | |
+| SOT 맥락 | <재사용 | 새 세션에서 복원 | 부분 확인> |
 | 영향 시스템/저장소 | |
 | 주요 설계 결정 | |
 | 결정이 필요한 쟁점 | |

@@ -7,14 +7,14 @@ sourceCommit: "<sot-source-commit-or-unknown>"
 sotExportedAt: "<ISO timestamp>"
 evidenceBoundary: "<business-docs|static-only|mixed|stale>"
 outputLanguage: "<requested-output-language>"
-derivedFrom: ["request.md", "stories.md", "impact.md", "design.md"]
+derivedFrom: ["prd.md", "user_stories.md", "impact.md", "system_design.md"]
 approvedAt:
 approvedBy:
 ---
 
 # 구현 작업 — <스펙 제목>
 
-> 설계 참조: [design.md](design.md) · 상세 근거: [impact.md](impact.md)
+> 설계 참조: [system_design.md](system_design.md) · 상세 근거: [impact.md](impact.md)
 
 ## 0. 작업 연결표
 
@@ -26,7 +26,7 @@ approvedBy:
 의존성 순서대로 작성합니다: 데이터 → 도메인/백엔드 → API/진입점 → 화면/호출자 → 이벤트·잡 → 관측성.
 
 - [ ] 1.1 `<파일 경로 또는 확인 작업>` — <구체적 변경>
-  - 설계 결정: <design.md §n>
+  - 설계 결정: <system_design.md §n>
   - 규칙/시나리오: <R-01 / US-01>
   - 근거: <impact.md 참조 또는 파일 확인 필요>
 

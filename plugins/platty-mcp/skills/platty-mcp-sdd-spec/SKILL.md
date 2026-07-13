@@ -9,7 +9,7 @@ description: Use when creating locally saved MCP-grounded SDD request and story 
 been read in this turn.
 
 Produce MCP-grounded SDD documents and persist them locally. This skill gathers
-evidence through `platty-mcp-retrieval`, drafts `request.md` and `stories.md`,
+evidence through `platty-mcp-retrieval`, drafts `prd.md` and `user_stories.md`,
 then uses `platty-mcp-impact-analysis` to persist the impact snapshot under
 `~/.platty/specs/<projectId>/...`.
 
@@ -52,8 +52,8 @@ local Platty specs directory.
 6. Require the retrieval packet to distinguish document-map evidence resolved
    with `document_resolve` from candidates, then build an SDD packet from direct evidence, inference boundaries,
    coverage limits, assumptions, confirmed decisions, and open questions.
-7. Draft `request.md` content through §8 by applying the request template.
-8. Always draft `stories.md` with `request.md` by applying the stories template.
+7. Draft `prd.md` content through §8 by applying the request template.
+8. Always draft `user_stories.md` with `prd.md` by applying the stories template.
    If the request has unresolved questions, keep stories as draft and surface the
    assumptions used to split scenarios.
 9. Review the product requirements for policy, journey, data, EPIC, API, and
@@ -62,27 +62,27 @@ local Platty specs directory.
    `impact.md` and returns `impactDossier`, `impactStatus`, `sourceParity`, and
    the verified `impactArtifactPath`. Missing workspace parity creates partial
    impact without erasing the product drafts.
-10. Add only a compact `impact.md` status link to `request.md`; detailed
+10. Add only a compact `impact.md` status link to `prd.md`; detailed
     discovery, freshness, graph, and source evidence remain in `impact.md`.
 11. Run Self Review across the raw idea, all available requirement inputs, MCP
-   evidence, `request.md`, `stories.md`, and the impact result.
+   evidence, `prd.md`, `user_stories.md`, and the impact result.
 12. Run `review -> revise -> review`; retain the final Requirement Coverage,
     Search Route Audit, and cross-document findings in the review result and
     `impact.md`, not in planner-facing document bodies.
-13. Persist the revised `request.md` and `stories.md` under the same SDD
+13. Persist the revised `prd.md` and `user_stories.md` under the same SDD
     directory. SDD spec must not format or write impact.md.
 14. Verify all three files are readable. Confirm that the three artifacts share
     `projectId` and `contextStatus`; use `impact.md`'s `sourceCommits` for
     source metadata and its `retrievedAt` for
     impact freshness. Derive the spec identity from the verified
-    `impactArtifactPath` and confirm that `impact.md`, `request.md`, and
-    `stories.md` are in the same shared SDD directory before returning the final
+    `impactArtifactPath` and confirm that `impact.md`, `prd.md`, and
+    `user_stories.md` are in the same shared SDD directory before returning the final
     response. Do not require `impact.md` to contain the request files' `sourceCommit`
     or `sotExportedAt` fields.
 
 ## Template Contract
 
-`request.md` and `stories.md` are not free-form summaries. They must follow the
+`prd.md` and `user_stories.md` are not free-form summaries. They must follow the
 template references exactly enough that designers, planners, and implementation
 agents can review them without reshaping them.
 
@@ -96,7 +96,7 @@ Do not include an evidence table, self-review checklist, raw MCP payload, shell
 transcript, or source bodies in planner-facing documents. `impact.md` owns those
 details; the request only links to it with status and known limits.
 
-`request.md` uses `references/request-shape.md` and includes these sections in
+`prd.md` uses `references/request-shape.md` and includes these sections in
 order:
 
 ```text
@@ -112,7 +112,7 @@ order:
 Impact reference
 ```
 
-`stories.md` uses `references/stories-shape.md`, starts with `# 사용자 스토리`,
+`user_stories.md` uses `references/stories-shape.md`, starts with `# 사용자 스토리`,
 uses `US-NN` story blocks with Given/When/Then scenarios, and ends with the
 Korean rule-to-scenario connection table.
 
@@ -136,9 +136,9 @@ Persistence rules:
 - Create the target directory if it does not exist.
 - The impact skill writes or refreshes `impact.md` first and returns its verified
   `impactArtifactPath`, `impactStatus`, and `sourceParity`.
-- Write `requestMarkdown` to `request.md`.
-- Write `storiesMarkdown` to `stories.md`.
-- SDD spec writes only `request.md` and `stories.md`; it does not format or
+- Write `requestMarkdown` to `prd.md`.
+- Write `storiesMarkdown` to `user_stories.md`.
+- SDD spec writes only `prd.md` and `user_stories.md`; it does not format or
   write `impact.md`.
 - Update the request and stories together when regenerating the same spec; do
   not leave either stale.
@@ -147,8 +147,8 @@ Persistence rules:
   `contextStatus`. Use `impact.md`'s `sourceCommits` and the Engineering
   Discovery Handoff's Source commits for source metadata, and its `retrievedAt`
   for impact freshness. Derive the spec identity from `impactArtifactPath` and
-  the shared SDD directory containing `impact.md`, `request.md`, and
-  `stories.md`; do not require nonexistent `spec id`, `sourceCommit`, or
+  the shared SDD directory containing `impact.md`, `prd.md`, and
+  `user_stories.md`; do not require nonexistent `spec id`, `sourceCommit`, or
   `sotExportedAt` fields in `impact.md`. Include all paths in the final response.
 
 The MCP impact work is read-only except for the selected `impact.md`. Do not
@@ -225,13 +225,13 @@ of inventing closure.
 
 ## Stories Draft
 
-Always draft `stories.md` with `request.md`. Approval controls whether the files
+Always draft `user_stories.md` with `prd.md`. Approval controls whether the files
 can move from `draft` to `approved`; it does not control whether
-`stories.md` exists.
+`user_stories.md` exists.
 
 Read `references/stories-shape.md` before drafting stories content. If
-`request.md` has open questions or assumptions, make those visible in
-`stories.md` and trace which stories would change if the answers change.
+`prd.md` has open questions or assumptions, make those visible in
+`user_stories.md` and trace which stories would change if the answers change.
 
 ## Self Review Gate
 
@@ -269,17 +269,17 @@ does not mean user approval.
 Use this default response shape:
 
 ```text
-## request.md draft
+## prd.md draft
 <full markdown>
 
-## stories.md draft
+## user_stories.md draft
 <full markdown>
 
 ## Local persistence
 Saved:
 - ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/impact.md
-- ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/request.md
-- ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/stories.md
+- ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/prd.md
+- ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/user_stories.md
 
 ## Self Review
 <verdict, blocking findings, warnings, and remaining coverage gaps>
@@ -307,7 +307,7 @@ missing source parity.
 | Drafting from one search hit | Run `platty-mcp-retrieval` and its full-cycle ladder first. |
 | Recreating retrieval logic here | Keep retrieval in `platty-mcp-retrieval`; this skill converts evidence to SDD documents. |
 | Treating glossary normalization as proof | Use it only for routing; exact document/spec/source reads prove claims. |
-| Leaving stories behind a gate | Always draft `stories.md` with `request.md`; keep it draft and preserve assumptions when approval is missing. |
+| Leaving stories behind a gate | Always draft `user_stories.md` with `prd.md`; keep it draft and preserve assumptions when approval is missing. |
 | Formatting the impact dossier here | Invoke `platty-mcp-impact-analysis`; the impact skill alone formats and writes `impact.md`. |
 | Returning only instructions | Persist all three artifacts locally in `~/.platty/specs/<projectId>/...` and verify all three files before final response. |
 | Returning a prose SDD summary | Apply the request/stories templates and include all required sections. |

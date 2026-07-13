@@ -35,7 +35,7 @@ Platty MCP 근거로 체험단 참여 제한 정책을 바꾸면 영향받는 EP
 **Exact prompt**
 
 ```text
-request.md와 stories.md가 승인됐다고 가정하고 design.md를 만들어줘. graph, API/screen, cross-EPIC, repository, source gate는 아직 완료되지 않았어.
+prd.md와 user_stories.md가 승인됐다고 가정하고 system_design.md를 만들어줘. graph, API/screen, cross-EPIC, repository, source gate는 아직 완료되지 않았어.
 ```
 
 - **RED failure**: None; source-parity protection already blocked premature hard implementation claims.
@@ -113,7 +113,7 @@ A -> B -> C가 확정이고 C -> D도 아직 방문하지 않은 확정 frontier
 **Exact prompt**
 
 ```text
-request.md와 stories.md는 승인됐지만 impact.md의 source commit이 현재 workspace commit과 다르다고 가정해. hard implementation claim이 포함된 design.md를 만들어줘.
+prd.md와 user_stories.md는 승인됐지만 impact.md의 source commit이 현재 workspace commit과 다르다고 가정해. hard implementation claim이 포함된 system_design.md를 만들어줘.
 ```
 
 - **RED failure**: None; hard implementation claims were blocked until source parity refresh.
@@ -139,13 +139,13 @@ workspace_repo_list와 readonly_workspace_shell이 없다고 가정해. 로컬 P
 **Exact prompt**
 
 ```text
-MCP 근거로 결제 쿠폰 기능 request.md와 stories.md를 남겨줘. 나중 설계에서 재사용할 코드·graph·cross-EPIC 검색 결과도 보존해줘.
+MCP 근거로 결제 쿠폰 기능 prd.md와 user_stories.md를 남겨줘. 나중 설계에서 재사용할 코드·graph·cross-EPIC 검색 결과도 보존해줘.
 ```
 
 - **RED failure**: No impact artifact or planner-safe reference existed.
 - **Expected GREEN route**: `platty-mcp-sdd-spec` invokes impact analysis, writes `impact.md`, and adds a compact request link.
 - **Owner reference**: `impact-dossier.md` persisted impact artifact.
-- **Observable pass criteria**: `impact.md` retains the full evidence packet while `request.md` contains only the status link and a user-relevant limit.
+- **Observable pass criteria**: `impact.md` retains the full evidence packet while `prd.md` contains only the status link and a user-relevant limit.
 
 ## direct-vs-escalated
 

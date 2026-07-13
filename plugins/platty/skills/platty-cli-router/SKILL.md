@@ -41,8 +41,8 @@ setup, host/port exposure, and `/api/mcp` validation stay in
 | Configure or troubleshoot context-backend MCP server | `platty-mcp-server-setup` via `using-platty` |
 | Continue despite failed docs | Explain repair-first policy via `platty-generated-docs`; do not invent `--force` |
 | Incrementally refresh existing generated outputs after source/repository changes | `platty sync static-map/plan/run/confirm --project <project> --json` via `platty-sync` |
-| Turn a rough idea into request.md and stories.md | `platty-sdd-spec` |
-| Create design.md and tasks.md from approved SDD docs | `platty-sdd-design` |
+| Turn a rough idea into prd.md and user_stories.md | `platty-sdd-spec` |
+| Create system_design.md and tasks.md from approved SDD docs | `platty-sdd-design` |
 | Record/update/remove human knowledge on epics or docs | `platty memory ... --json` via `platty-memory` |
 | Uninstall or reset local Platty state | `platty uninstall --json`; use `--yes` only with explicit confirmation |
 

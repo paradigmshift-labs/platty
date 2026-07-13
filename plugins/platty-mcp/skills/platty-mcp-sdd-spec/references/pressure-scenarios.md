@@ -9,7 +9,7 @@ persistence boundaries.
 User asks:
 
 ```text
-MCP로 체험단 참여 제한 정책 변경 request.md 초안 만들어줘.
+MCP로 체험단 참여 제한 정책 변경 prd.md 초안 만들어줘.
 ```
 
 Failure to prevent:
@@ -39,7 +39,7 @@ Failure to prevent:
 Expected route:
 
 ```text
-draft request.md and stories.md
+draft prd.md and user_stories.md
 -> build/reuse impactSeedPacket
 -> platty-mcp-impact-analysis writes partial impact.md
 -> add a compact impact.md link with partial status and the coverage limit
@@ -52,7 +52,7 @@ draft only product/spec claims supported by MCP evidence
 User asks:
 
 ```text
-MCP로 결제 쿠폰 기능 request.md 초안 만들어줘.
+MCP로 결제 쿠폰 기능 prd.md 초안 만들어줘.
 ```
 
 Failure to prevent:
@@ -77,14 +77,14 @@ unresolved assumptions.
 
 Failure to prevent:
 
-- returning only `request.md` plus a stories gate;
+- returning only `prd.md` plus a stories gate;
 - hiding unresolved assumptions in generated stories.
 
 Expected route:
 
 ```text
-return request.md draft
-return stories.md draft
+return prd.md draft
+return user_stories.md draft
 show assumptions used to split stories
 state that approval remains pending
 ```
@@ -100,10 +100,10 @@ MCP 스킬에서 ~/.platty/specs에 저장해줘.
 Expected route:
 
 ```text
-produce request.md and stories.md markdown
+produce prd.md and user_stories.md markdown
 resolve localPersistenceTarget
 impact skill writes or refreshes impact.md under ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
-SDD spec writes request.md and stories.md under the same directory
+SDD spec writes prd.md and user_stories.md under the same directory
 verify all three files are readable and share `projectId` and `contextStatus`
 verify impact metadata uses `sourceCommits` and `retrievedAt`
 derive spec identity from `impactArtifactPath` and the shared SDD directory
@@ -127,12 +127,12 @@ only SDD conversion logic lives in platty-mcp-sdd-spec
 User asks:
 
 ```text
-MCP 근거로 request.md랑 stories.md 초안까지 만들어줘. 문서 양식은 SDD 템플릿으로 맞춰줘.
+MCP 근거로 prd.md랑 user_stories.md 초안까지 만들어줘. 문서 양식은 SDD 템플릿으로 맞춰줘.
 ```
 
 Failure to prevent:
 
-- returning a prose requirements summary instead of `request.md`;
+- returning a prose requirements summary instead of `prd.md`;
 - using generic numbered sections instead of `§0 Impact` through `§8 Validation Hypotheses`;
 - drafting stories without `US-NN`, Given/When/Then scenarios, and Traceability.
 
@@ -201,7 +201,7 @@ build/reuse impactSeedPacket
 -> invoke platty-mcp-impact-analysis
 -> impact skill alone writes or refreshes impact.md
 -> SDD spec receives impactArtifactPath, impactStatus, and sourceParity
--> SDD spec writes only request.md and stories.md
+-> SDD spec writes only prd.md and user_stories.md
 ```
 
 ## Scenario 10: Three-File Verification
@@ -211,14 +211,14 @@ written its drafts.
 
 Failure to prevent:
 
-- returning after verifying only request.md and stories.md;
+- returning after verifying only prd.md and user_stories.md;
 - accepting mismatched project, spec, or freshness metadata;
 - omitting `impact.md` from the answer paths.
 
 Expected route:
 
 ```text
-verify impact.md, request.md, and stories.md are readable
+verify impact.md, prd.md, and user_stories.md are readable
 -> verify the three files share `projectId` and `contextStatus`
 -> verify impact source metadata uses `sourceCommits` and impact freshness uses `retrievedAt`
 -> derive spec identity from `impactArtifactPath` and the shared SDD directory
@@ -233,14 +233,14 @@ Failure to prevent:
 
 - promoting the impact result to a confirmed decision;
 - copying the full impact matrix, raw payload, shell transcript, or source bodies
-  into request.md;
+  into prd.md;
 - hiding partial source parity or coverage limits.
 
 Expected route:
 
 ```text
 keep assumptions in §7 and stories draft
--> keep detailed discovery in impact.md and add only its compact status link to request.md
+-> keep detailed discovery in impact.md and add only its compact status link to prd.md
 -> point to impact.md with status and the user-relevant coverage limit
 -> keep Self Review verdict and approval state honest
 ```

@@ -16,7 +16,7 @@ Return `PASS` only when every required item is satisfied or explicitly accepted 
 - Status values, enums, thresholds, metrics, scope, and terminology match the
   user inputs or expose the conflict explicitly.
 - Numeric targets identify their source or remain recommendations/open questions.
-- `request.md` links to `impact.md` and keeps only a short investigation status,
+- `prd.md` links to `impact.md` and keeps only a short investigation status,
   freshness, and coverage-limit summary.
 
 ## Stories Review
@@ -26,7 +26,7 @@ Return `PASS` only when every required item is satisfied or explicitly accepted 
 - Every story has a happy path and at least one edge path.
 - Scenarios use Given-When-Then.
 - Then clauses describe user-visible or operator-visible results, not hidden implementation details.
-- Stories do not contradict `request.md`.
+- Stories do not contradict `prd.md`.
 - Rule coverage is not mislabeled as total input-requirement coverage.
 
 ## Impact Review

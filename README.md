@@ -130,8 +130,8 @@ install `platty-mcp`, which includes `platty-mcp:using-platty-mcp`,
 Impact analysis converges selected specs, graph classes, cross-EPIC traversal,
 repository scope, and bounded source evidence into one dossier and owns the
 selected `impact.md` exception. The SDD request flow keeps only a compact
-engineering-discovery handoff pointer in `request.md`; the design flow writes
-`design.md` first for review, requires explicit approval, and only then
+engineering-discovery handoff pointer in `prd.md`; the design flow writes
+`system_design.md` first for review, requires explicit approval, and only then
 generates readiness-classified `tasks.md` from that approved design.
 The `platty-mcp` plugin remains skills-only and does not ship `.mcp.json` or
 `mcpServers`, because server URLs differ by deployment.

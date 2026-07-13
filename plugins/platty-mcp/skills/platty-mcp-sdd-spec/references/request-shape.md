@@ -1,6 +1,6 @@
 # MCP SDD 요청서 형식
 
-`request.md`는 기획자·디자이너·QA가 읽는 한국어 문서다. MCP 조사 상세,
+`prd.md`는 기획자·디자이너·QA가 읽는 한국어 문서다. MCP 조사 상세,
 최신성, source parity, 도구 호출, Self Review는 `impact.md`와 frontmatter에
 남기고 본문에 복사하지 않는다.
 
