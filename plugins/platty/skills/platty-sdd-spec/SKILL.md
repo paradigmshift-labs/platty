@@ -70,13 +70,20 @@ Use the Platty CLI convention from `using-platty`. Inside this repository, `AGEN
    - read `catalog/epics.md`
    - read 1-3 relevant epic docs: `br.md`, `usecases/ucl.md`, `usecases/ucs.md` when present, `data_dictionary.md`, `design.md`
    - for `usecases/ucl.md`, read the Use Case Index first and then only the relevant use-case sections
-4. Implementation hints only when needed:
-   - catalog API/screen/table rows
-   - graph trace for confirmed relationships
-   - `code search` for source addresses when file/symbol identity is incomplete
-   - bounded `readonly_workspace_shell` reads for exact source evidence
+4. Structural impact map when implementation boundaries matter:
+   - choose known API, screen, table/model, event, or job anchors from the
+     catalog, SOT, or resolved code term;
+   - use `graph trace` as a fast, bounded map of `screen ↔ API ↔ domain ↔ DB`
+     and related event/job paths;
+   - record confirmed edges, candidates, omitted classes, truncation, and
+     unresolved hops in `impact.md`;
+   - use `code search` for incomplete file/symbol addresses and bounded
+     `readonly_workspace_shell` reads to confirm any behavior-sensitive claim.
 
-Do not brute-force all `epics/` or `specs/`. Narrow through catalogs and frontmatter paths.
+Do not brute-force all `epics/` or `specs/`. Narrow through catalogs and
+frontmatter paths. Graph trace accelerates scope discovery; it is not exhaustive
+proof and must not by itself establish a write, permission, transaction, response
+shape, or absence of impact.
 
 ## Question Loop
 
@@ -221,6 +228,7 @@ documents are ready.
 | "The user wants speed, skip questions." | Draft with named assumptions and use `draft-with-open-questions`. |
 | "Stories need approval first." | Approval controls `approved` status. Still create `stories.md` as `draft` beside `request.md` and preserve assumptions. |
 | "Business docs are missing, so invent product intent from code." | Use static evidence only and state the boundary. |
-| "A code term can go directly to graph trace." | Resolve code term with `code search` first when the file/symbol address is incomplete, then verify exact source with a bounded `readonly_workspace_shell` read. |
+| "A graph trace shows the whole impact." | Use it to map candidate screen/API/domain/DB paths, record omissions or unresolved hops in `impact.md`, and confirm behavior-sensitive parts from source. |
+| "A code term can go directly to graph trace." | Resolve code term with `code search` first when the file/symbol address is incomplete, then use graph trace as a structural map and verify exact source with a bounded `readonly_workspace_shell` read. |
 | "Fix the generated SOT markdown." | Never edit SOT projection; suggest memory or regeneration. |
 | "The SOT is English, so the spec should be English." | Follow the requested language; keep only identifiers and evidence labels unchanged. |
