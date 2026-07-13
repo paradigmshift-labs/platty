@@ -1,35 +1,62 @@
 # MCP Question Routes
 
-Use this reference after `platty-mcp-retrieval` chooses a branch. Tool names
-refer to intents in `../../using-platty-mcp/references/tool-mapping.md`.
+Use this reference after `platty-mcp-retrieval` chooses a branch. It adds
+branch-specific document families, requirements, and completion checks to the
+canonical ladder in `full-cycle-retrieval.md`. Do not duplicate or replace that
+ladder here.
+
+Tool names refer to intents in `../../using-platty-mcp/references/tool-mapping.md`.
+
+## Contents
+
+- Routing Precedence
+- Concept Or Domain Term
+- Policy, Rule, Permission, Eligibility
+- Data Entity Or Field
+- System Design Or Integration
+- Capability, Journey, User Action
+- Exact API, Screen, Event, Schedule
+- Impact Or Blast Radius
+- Code Location Or Source Absence
+- Mixed Questions
 
 When the Search Clarification Gate fires, carry the Search Brief into the
 chosen branch. The branch route may refine `Question branch`, `Candidate MCP
 route`, and `User decision needed`, but it must preserve the raw question and
 the ambiguity trigger that caused the gate to fire.
 
-Read attached memories on selected `project_overview_get.overview.memories`,
-`epic_get.memories`, and `document_get.memories` results before finalizing
-semantic answers. If only `memoryCount` or a `memoryId` is visible, use
-`memory_list` or `memory_get` when the memory overlay could affect the answer
-boundary. Keep memory separate from SOT/spec/source proof.
+Read attached memory summary cards on every selected
+`project_overview_get.overview.memories`, `epic_get.memories`,
+`document_get.memories`, document item, and spec result before discarding
+candidates or finalizing semantic answers. If a memory title/contentPreview,
+kind, level, trust, or alias relates to the user question, ambiguity,
+correction, constraint, why, naming, deprecated behavior, or operational caveat,
+call `memory_get` before the final answer. Keep memory separate from SOT/spec/
+source proof, but treat unread relevant memory as an incomplete route.
+
+Document family names such as BR, DD, DESIGN, and UCL are semantic labels in
+this guide. When passing them to `document_list.documentType`, use the MCP
+filter values (`br`, `data_dictionary`, `design`, `ucl`) unless the live tool
+schema says otherwise. DD maps to `data_dictionary`, not `dd`.
+
+## Routing Precedence
+
+SDD file authoring intent routes request/story creation to
+`platty-mcp-sdd-spec` and design/task creation to `platty-mcp-sdd-design`; it
+takes precedence over generic impact or design-change wording. The owning SDD
+skill may invoke impact as a sub-route, but retrieval must not bypass the
+file-authoring owner.
+
+Ordinary exact API, screen, event, schedule, and source-near questions remain
+retrieval-only. Do not invoke impact analysis unless the question asks what
+changes, what breaks, an affected surface, blast radius, cross-EPIC effect, or
+design-change impact.
 
 ## Concept Or Domain Term
 
-Route:
-
-```text
-project context
--> project overview and attached overview memories when present
--> vocabulary normalization, including alias candidates
--> epic_list
--> epic_get for each plausible concept epic
--> document_list for BR/DD/DESIGN/UCL candidates as the concept requires
--> document_item_list
--> document_item_get for exact concept evidence
--> document_resolve; collect linked api_spec/screen_spec spec ids when returned
--> spec_get when asserting source-near behavior
-```
+Use the Full-Cycle Retrieval Ladder. Include BR/DD/DESIGN/UCL only as the
+concept requires, then descend to connected specs only when asserting
+source-near behavior.
 
 Completion:
 
@@ -46,23 +73,11 @@ Completion:
 
 ## Policy, Rule, Permission, Eligibility
 
-Route:
-
-```text
-project context
--> vocabulary normalization when needed
--> epic_list
--> epic_get for policy candidate epics
--> document_list(documentType=BR, epicId=<candidate>)
--> document_get/document_item_list for rule maps
--> document_item_get for exact business-rule items
--> document_resolve
--> rank linked api_spec and screen_spec candidates
--> spec_list/spec_search only if the linked set is incomplete or the exact spec id is unknown
--> spec_get before claiming enforcement
--> spec_resolve for related docs/items, graph seeds, and code seeds
--> code_search then code_snippet when claiming exact permission, validation, writes, emits, or absence
-```
+Use the Full-Cycle Retrieval Ladder. Required document families: BR for the
+policy/rule/eligibility map; include DESIGN/DD/UCL when the rule depends on
+system flow, data shape, or user journey. Enforcement claims require connected
+spec evidence, and exact permission, validation, writes, emits, or absence
+claims require source-level confirmation when exposed.
 
 Completion:
 
@@ -84,22 +99,9 @@ Completion:
 
 ## Data Entity Or Field
 
-Route:
-
-```text
-project context
--> vocabulary normalization when needed
--> epic_list
--> epic_get for data candidate epics
--> document_list(documentType=DD, epicId=<candidate>)
--> document_get/document_item_list for entity maps
--> document_item_get for exact entity or field evidence
--> document_resolve
--> rank linked api_spec and screen_spec candidates
--> spec_get for source-near usage
--> spec_resolve for related docs/items, graph seeds, and code seeds
--> code_search then code_snippet when claiming exact source usage
-```
+Use the Full-Cycle Retrieval Ladder. Required document family:
+`data_dictionary` for entity/table/field meaning. Include connected specs only
+when claiming API/screen/source-near usage.
 
 Completion:
 
@@ -112,49 +114,33 @@ Completion:
 
 ## System Design Or Integration
 
-Route:
-
-```text
-project context
--> epic_list
--> epic_get for design candidate epics
--> document_list(documentType=DESIGN, epicId=<candidate>) [MUST] for system design questions
--> document_get/document_item_list for design maps
--> document_item_get for exact design items
--> document_resolve; collect linked api_spec/screen_spec spec ids when returned
--> rank linked api_spec and screen_spec candidates for API/screen claims
--> spec_list/spec_search only if the linked set is incomplete or the exact spec id is unknown
--> spec_get
--> spec_resolve for related docs/items, graph seeds, and code seeds
--> code_search then code_snippet when asserting exact implementation behavior
-```
+Use the Full-Cycle Retrieval Ladder. Required document family: DESIGN. For
+selected design items, use `document_resolve(itemId)` before search and rank
+linked API/screen/event/schedule candidates before exact spec reads.
 
 Completion:
 
 - state the design item or connection read;
+- prefer item-level `document_resolve` before `document_resolve(documentId)` or
+  search when a design item has been selected;
 - resolve connected source-near evidence before asserting exact implementation.
 
 ## Capability, Journey, User Action
 
-Route:
-
-```text
-project context
--> vocabulary normalization when needed
--> epic_list
--> epic_get for capability candidate epics
--> document_list(documentType=UCL, epicId=<candidate>)
--> document_get/document_item_list for capability maps
--> document_item_get for exact UCL items
--> document_resolve
--> rank linked api_spec and screen_spec candidates
--> spec_get for source-near behavior claims
--> spec_resolve for related docs/items, graph seeds, and code seeds
--> code_search then code_snippet when source-level confirmation is required
-```
+Use the Full-Cycle Retrieval Ladder. Required document families: UCL for user
+action/journey; DESIGN is required when the question asks about product flow,
+screen behavior, admin workflow, data flow, integration, architecture, or
+implementation-facing behavior. For selected DESIGN/UCL items, use
+`document_resolve(itemId)` before source-near search.
 
 Completion:
 
+- include DESIGN as the product/system map before UCL when the question asks
+  about product flow, capability, journey, screen, admin workflow, or
+  implementation-facing behavior;
+- use `document_resolve(itemId)` as the first bridge from selected design/UCL
+  items to screen/API specs; use `spec_search` only when linked context is
+  absent, incomplete, stale, too broad, or leaves the exact spec id unknown;
 - identify the user action or capability item;
 - separate journey evidence from implementation evidence.
 - for exact API or screen behavior, rank connected `api_spec` and `screen_spec`
@@ -167,15 +153,9 @@ Completion:
 
 ## Exact API, Screen, Event, Schedule
 
-Route:
-
-```text
-exact anchor
--> spec_list/spec_search only if the exact spec id is unknown
--> spec_get for exact source-near spec
--> spec_resolve for related docs/items, graph seeds, and code seeds
--> code_search then code_snippet when response shape, permission, writes, emits, or absence matters
-```
+Use the exact source-near branch of the Full-Cycle Retrieval Ladder. Start from
+`spec_get` when the exact spec id is known; use `spec_list/spec_search` only
+when the exact spec id is unknown. Follow selected specs with `spec_resolve`.
 
 Completion:
 
@@ -185,38 +165,25 @@ Completion:
 
 ## Impact Or Blast Radius
 
-Route:
-
-```text
-Search Brief
--> semantic branch to map the policy/rule/data/design/capability target
--> document_resolve for connected specs
--> rank linked api_spec and screen_spec candidates for API/screen impact
--> spec_list/spec_search only if the linked set is incomplete or the exact spec id is unknown
--> spec_get for source-near target map
--> spec_resolve for graph/code seeds and reverse anchors
--> graph_trace/code_search only after the target map exists
--> code_snippet when source-level impact evidence is required
-```
+Use the Full-Cycle Retrieval Ladder to map the semantic target first. Then
+resolve connected specs, read selected source-near specs, run `spec_resolve`,
+and produce an Impact Seed Packet for `platty-mcp-impact-analysis`.
 
 Completion:
 
 - build the target map before answering broad inventory questions;
 - for broad impact, record `Question branch: impact/blast radius` and the
   expected map source in the Search Brief before reading graph/source evidence;
-- report graph/source omissions and missing capability tiers;
+- hand the packet to `platty-mcp-impact-analysis`, which owns graph, cross-EPIC,
+  repository, and source convergence;
+- reuse an existing packet rather than returning to semantic discovery;
 - never convert empty graph evidence into "no impact".
 
 ## Code Location Or Source Absence
 
-Route:
-
-```text
-source-near spec or code term
--> spec_get when a source-near spec is known
--> code_search
--> code_snippet when configured
-```
+Use the source-near branch of the Full-Cycle Retrieval Ladder. Prefer a known
+spec id when available; otherwise use code search only after the semantic route
+has fixed the target scope.
 
 Completion:
 
@@ -237,13 +204,9 @@ Completion:
 
 ## Mixed Questions
 
-Route:
-
-```text
-Search Brief
--> semantic branch for vocabulary, EPIC, and document scope
--> source-near branch for exact spec, graph, code, or snippet confirmation
-```
+Use the Full-Cycle Retrieval Ladder twice as needed: semantic branch first for
+vocabulary, EPIC, and document scope; source-near branch second for exact spec,
+graph, code, or snippet confirmation.
 
 Completion:
 

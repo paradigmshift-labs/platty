@@ -124,7 +124,7 @@ project_overview_get
 -> use overview.id as documentId
 -> memory_list(documentId=overview.id)
 -> memory_add(documentId=overview.id)
--> verify through memory_list or project_overview_get.overview.memories
+-> verify presence through memory_list or project_overview_get.overview.memories; use memory_get or memoryMode=full for exact body checks
 ```
 
 If `project_overview_get.overview` is null:
@@ -154,5 +154,5 @@ Expected route:
 resolve document item
 -> memory_list(documentId, itemType, itemKey)
 -> memory_add(documentId, itemType, itemKey)
--> verify through memory_list
+-> verify presence through memory_list; use memory_get or memoryMode=full for exact body checks
 ```

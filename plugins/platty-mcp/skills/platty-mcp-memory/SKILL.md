@@ -75,13 +75,15 @@ id, the anchor used, the verification read, and any remaining user decision.
 
 | Intent | Tool | Required inputs |
 | --- | --- | --- |
-| List memory overlays | `memory_list` | `projectId`; optional `epicId`, `documentId`, `level`, `includeDeleted` |
+| List memory overlays | `memory_list` | `projectId`; optional `epicId`, `documentId`, `level`, `includeDeleted`, `memoryMode=summary|full` |
 | Read one memory | `memory_get` | `projectId`, `memoryId` |
 | Add memory | `memory_add` | `projectId`, `content`; optional `epicId`, `documentId`, `itemType`, `itemKey`, `memoryKind`, `actor`, `confidence` |
 | Update memory | `memory_update` | `projectId`, `memoryId`, `content`, `reason`; optional `actor` |
 | Delete memory | `memory_delete` | `projectId`, `memoryId`, `reason`; optional `actor` |
 
 `memoryKind` is `context`, `correction`, `constraint`, or `why`.
+`memory_list` defaults to summary cards; use `memory_get` or
+`memoryMode=full` only when exact memory bodies are required.
 
 ## Mutation Gate
 

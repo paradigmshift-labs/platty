@@ -6,35 +6,50 @@ projectId: "<platty-project-id>"
 sourceCommit: "<sot-source-commit-or-unknown>"
 sotExportedAt: "<ISO timestamp>"
 evidenceBoundary: "<business-docs|static-only|mixed|stale>"
-derivedFrom: ["design.md"]
+outputLanguage: "<requested-output-language>"
+derivedFrom: ["request.md", "stories.md", "impact.md", "design.md"]
 approvedAt:
 approvedBy:
 ---
 
-# Tasks — <Spec title>
+# 구현 작업 — <스펙 제목>
 
-## 1. Implementation
+> 설계 참조: [design.md](design.md) · 상세 근거: [impact.md](impact.md)
 
-Order tasks by dependency: data, backend/domain, API/controller, frontend/screen, jobs/events, observability.
+## 0. 작업 연결표
 
-- [ ] 1.1 `<file path>` — <specific change>
+| 작업 | 설계 결정 | 규칙/시나리오 | 근거 또는 확인 필요 |
+| --- | --- | --- | --- |
 
-## 2. Tests
+## 1. 구현 작업
 
-- [ ] 2.1 `<test file path>` — <specific scenario>
+의존성 순서대로 작성합니다: 데이터 → 도메인/백엔드 → API/진입점 → 화면/호출자 → 이벤트·잡 → 관측성.
 
-## 3. E2E Scenarios
+- [ ] 1.1 `<파일 경로 또는 확인 작업>` — <구체적 변경>
+  - 설계 결정: <design.md §n>
+  - 규칙/시나리오: <R-01 / US-01>
+  - 근거: <impact.md 참조 또는 파일 확인 필요>
 
-| # | Given | When | Then | Maps to |
+파일 경로가 확인되지 않았으면 추측하지 말고, 먼저 근거 확인 작업을 만듭니다.
+
+## 2. 자동화 검증
+
+- [ ] 2.1 `<테스트 파일 또는 확인 작업>` — <정상·오류·상태/동시성 시나리오>
+  - 연결: <설계 결정 / 규칙 / 사용자 시나리오>
+
+## 3. E2E 시나리오
+
+| # | 조건 | 행동 | 결과 | 연결 |
 | --- | --- | --- | --- | --- |
-| 1 | | | | R1 / US-01 |
+| 1 | | | | R-01 / US-01 |
 
-## 4. Manual Verification
+## 4. 수동 검증
 
-Only include checks that cannot reasonably be automated.
+자동화하기 어렵거나 외부 환경이 필요한 항목만 포함합니다.
 
-- [ ] 4.1 <manual check>
+- [ ] 4.1 <수동 확인>
 
-## 5. Rollback Checklist
+## 5. 배포와 롤백
 
-- [ ] 5.1 <rollback action>
+| 단계 | 작업 | 롤백 조건 | 롤백 방법 |
+| --- | --- | --- | --- |

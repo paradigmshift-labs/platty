@@ -69,15 +69,21 @@ visible.
 3. If `ssot_search`, `ssot_get`, `ssot_resolve`, `document_search`,
    `spec_list`, `spec_search`, or `spec_resolve` are also visible, note that
    the search-assist tier is available.
-4. If `graph_trace`, `code_search`, or `code_snippet` are also visible, note
-   that the source-parity tier is available.
-5. If `sot_file_get` is also visible, note that the artifact-access tier is
+4. If `graph_trace` or `code_search` is also visible, note that graph/code
+   discovery is available.
+5. If `workspace_repo_list` or `readonly_workspace_shell` are also visible,
+   note the available workspace source-parity tools. They are optional and do
+   not change the minimum retrieval tier; full repository source parity requires
+   both tools.
+6. If `sot_file_get` is also visible, note that the artifact-access tier is
    available for stored SOT file content requests. Download and bundle metadata
    tools are not part of this MCP profile.
-6. Call `project_list`.
-7. If one project is available, use that `projectId`.
-8. If multiple projects are plausible, ask which project to use.
-9. Route retrieval questions to `using-platty-mcp`.
+7. Call `project_list`.
+8. If one project is available, use that `projectId`.
+9. If multiple projects are plausible, ask which project to use.
+10. Route retrieval and impact questions to `using-platty-mcp`; impact routing
+    requires a produced or reused Impact Seed Packet and may write `impact.md`
+    only through `platty-mcp-impact-analysis` in its selected SDD directory.
 
 ## Missing Server
 

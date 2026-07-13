@@ -7,10 +7,12 @@ This is the MCP-only intent-to-tool map. It does not list local CLI equivalents.
 | Tier | Required tools | Supported scope |
 | --- | --- | --- |
 | Minimum retrieval | `project_list`, `project_get`, `context_status`, `project_overview_get`, `glossary_translate`, `epic_list`, `epic_get`, `document_list`, `document_get`, `document_item_list`, `document_item_get`, `document_resolve`, `spec_get` | map-first business/spec retrieval without source-level confirmation |
-| Memory overlay reads | `memory_list`, `memory_get` | read-only human/agent correction, constraint, why, and context overlays |
+| Vocabulary inventory / ambiguity | `glossary_list` | broad or complete vocabulary inventory, comparison target maps, ambiguous concepts, every-alias requests, and candidate discovery after blank/conflicting exact translation |
+| Memory overlay reads | `memory_list`, `memory_get` | read-only human/agent correction, constraint, why, and context overlays; `memory_list` defaults to summary cards, `memory_get` reads exact bodies |
 | Memory lifecycle | `memory_add`, `memory_update`, `memory_delete` | explicit memory mutation after user intent and anchor resolution |
 | Search assist | `ssot_search`, `ssot_get`, `ssot_resolve`, `document_search`, `spec_list`, `spec_search`, `spec_resolve` | targeted discovery, connected context, and source-near anchor resolution |
-| Source parity | `graph_trace`, `code_search`, `code_snippet` | impact, exact code location, source confirmation, and negative source evidence |
+| Graph/code discovery | `graph_trace`, `code_search` | impact/dependency tracing and source-location candidates; pair `code_search` with `readonly_workspace_shell` for code claims |
+| Workspace source parity | `workspace_repo_list`, `readonly_workspace_shell` | repository discovery plus bounded read-only grep and exact source inspection after candidates are found |
 | Artifact access | `sot_file_get` | stored SOT file content access, not factual proof by itself |
 
 ## Intent Map
@@ -21,10 +23,11 @@ This is the MCP-only intent-to-tool map. It does not list local CLI equivalents.
 | Read one project | `project_get` | `projectId` |
 | Freshness/readiness | `context_status` | `projectId` |
 | Project overview | `project_overview_get` | `projectId` |
+| Vocabulary inventory | `glossary_list` | `projectId`; optional `limit`, `cursor` |
 | Vocabulary normalization | `glossary_translate` | `projectId`, `text` |
 | Epic catalog | `epic_list` | `projectId` |
 | Epic detail | `epic_get` | `projectId`, `epicId` |
-| Memory list | `memory_list` | `projectId`; optional `epicId`, `documentId`, `level`, `includeDeleted` |
+| Memory list | `memory_list` | `projectId`; optional `epicId`, `documentId`, `level`, `includeDeleted`, `memoryMode=summary|full` |
 | Memory detail | `memory_get` | `projectId`, `memoryId` |
 | Memory add | `memory_add` | `projectId`, `content`; optional `epicId`, `documentId`, `itemType`, `itemKey`, `memoryKind`, `actor`, `confidence` |
 | Memory update | `memory_update` | `projectId`, `memoryId`, `content`, `reason`; optional `actor` |
@@ -45,16 +48,25 @@ This is the MCP-only intent-to-tool map. It does not list local CLI equivalents.
 | Document targeted discovery | `document_search` | `projectId`, `query` |
 | Graph impact/dependency trace | `graph_trace` | `projectId`, `from` |
 | Code symbol/location search | `code_search` | `projectId`, `query`; optional `repoId`, `limit` |
-| Source snippet | `code_snippet` | `projectId`, `repoId`, `file`, `lines` |
+| Workspace repository inventory | `workspace_repo_list` | `projectId` |
+| Bounded repository exploration and source read | `readonly_workspace_shell` | `projectId`, `repoId`, `command`; optional `cwd`, `timeoutMs`, `maxBytes` |
 
 ## Missing Tool Behavior
 
 - Missing minimum retrieval tools: stop before retrieval and report MCP
   configuration gap.
+- Missing vocabulary inventory/ambiguity tools: continue unrelated exact
+  API/spec and other retrieval routes whose required tools are present. Stop and
+  report the capability gap when the selected route requires vocabulary
+  inventory, comparison, ambiguity resolution, every alias, or candidate
+  discovery after blank/conflicting `glossary_translate`.
 - Missing search assist tools: continue only for branches that do not require
   targeted discovery or connected context.
-- Missing source parity tools: answer only from map/spec evidence and say source
-  confirmation is unavailable.
+- Missing graph/code discovery tools: answer only from map/spec evidence and say
+  graph/code discovery is unavailable.
+- Missing workspace source-parity tools: retain graph/code parity when it is
+  available; otherwise report that repository source parity is unavailable. Do
+  not use a local fallback.
 - Missing memory overlay tools: use attached `epic_get.memories` and
   `document_get.memories` when present; otherwise name memory revision/detail as
   unavailable instead of using local files or CLI.

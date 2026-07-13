@@ -1,9 +1,20 @@
 # MCP Retrieval Pressure Scenarios
 
+Validation-only reference. Read this file when changing or evaluating
+`platty-mcp-retrieval`; do not load it for ordinary retrieval answers.
+
 Use these scenarios to test `platty-mcp-retrieval` as process documentation.
 Run a baseline before changing the skill when feasible, then run the same
 scenario with the renewed skill loaded. Record whether the agent followed the
 expected route.
+
+## Contents
+
+- Scenarios 1-8: retrieval routing, ambiguity, source boundaries, impact seeds
+- Executable Call-Trace Pressures: impact/SDD transition traces
+- Scenarios 9-12A: answer shape, full-cycle ladder, item-level resolve
+- Scenarios 13-15: coupon ambiguity, complete glossary inventory, older server
+  exact-spec route
 
 ## Scenario 1: Korean Domain Term
 
@@ -73,7 +84,10 @@ Expected route:
 Search Brief preserves raw phrase
 -> Korean candidate terms: 결제, 쿠폰, 할인, 쿠폰 코드, 프로모션, 주문, 결제 금액, 환불
 -> English candidate terms: payment, checkout, coupon, discount, coupon code, promotion, order, payment amount, refund
--> glossary_translate on raw phrase plus both candidate lists
+-> project context/context_status
+-> project_overview_get
+-> glossary_list for candidate discovery when raw or candidate translation is blank or conflicting; traverse cursors only when completeness is required
+-> glossary_translate on raw phrase plus both Korean and English candidate lists
 -> search assist with raw Korean and English candidates after the required map exists
 -> keep Checkout, Coupon, Order Discount, and Refund candidates visible until exact evidence narrows them
 ```
@@ -100,8 +114,9 @@ normalize domain terms
 -> choose epic
 -> read business-rule items
 -> resolve connected specs
--> use source-level evidence if exact impact is requested and tools exist
--> report graph/source limits
+-> selected spec_get/spec_resolve
+-> Impact Seed Packet
+-> platty-mcp-impact-analysis for graph/source convergence and limits
 ```
 
 ## Scenario 4: Exact API Response Shape
@@ -124,6 +139,7 @@ go to exact source-near API spec
 -> read exact spec evidence
 -> confirm source-level evidence if response shape is not fully established
 -> state unsupported fields as not confirmed
+-> remain retrieval-only; do not create an Impact Seed Packet or invoke impact analysis
 ```
 
 ## Scenario 5: Missing Source-Level MCP Tools
@@ -191,7 +207,9 @@ Expected route:
 
 ```text
 Search Brief
--> glossary_translate(raw term)
+-> glossary_list for ambiguous candidate discovery; use targeted pagination unless completeness is required
+-> retain relevant aliases, generatedAliases, and memoryAliases separately as routing evidence, not behavior or source proof
+-> glossary_translate(raw term and Korean/English candidates)
 -> project_overview_get
 -> epic_list / epic_get for candidate concepts
 -> exact document/spec reads for the chosen concept
@@ -221,10 +239,73 @@ Search Brief: policy/rule plus impact/blast radius
 -> epic_list / epic_get
 -> document_list(documentType=br)
 -> document_item_list(rule items)
--> document_resolve connected specs
+-> document_resolve(itemId) connected specs after exact business item reads
 -> spec_get selected specs
--> graph_trace/code tools only when configured and needed
--> answer with target-map and MCP capability limits
+-> spec_resolve selected specs and source seeds
+-> Impact Seed Packet
+-> platty-mcp-impact-analysis; preserve target-map and MCP capability limits
+```
+
+## Scenario 8A: Packet Reuse Avoids Semantic Re-entry
+
+User asks:
+
+```text
+앞에서 만든 영향도 seed packet으로 쿠폰 정책 변경의 API, 화면, cross-EPIC 영향을 계속 조사해줘.
+```
+
+Failure to prevent:
+
+- rerunning glossary, EPIC, business-document, or exact-spec discovery after a
+  matching Impact Seed Packet already exists;
+- returning from impact to retrieval when the packet identifies its semantic
+  scope and selected specs;
+- treating a packet as a final impact answer before graph/source convergence.
+
+Expected route:
+
+```text
+existing Impact Seed Packet
+-> platty-mcp-impact-analysis
+-> dossier axes: graph, API/screen, cross-EPIC, repository, source
+-> no retrieval re-entry
+```
+
+## Executable Call-Trace Pressures
+
+Each pressure records the runtime-only `routeMode`, `routeOrigin`, skill
+transitions, packet identity, and local write attempts. Execute the sequence as
+written and compare its observable transitions; prose without the trace does
+not pass.
+
+### Trace 1: Direct Impact Creates One Seed Packet
+
+```text
+routeMode: answer
+routeOrigin: user
+skill transitions: direct impact -> impact -> retrieval(seed-only) -> impact, exactly once (`platty-mcp-impact-analysis` -> `platty-mcp-retrieval` -> `platty-mcp-impact-analysis`)
+packet identity: absent -> packet:<stable-id> -> same packet:<stable-id>
+local write attempts: [] outside SDD; selected impact.md only in an SDD context
+```
+
+### Trace 2: Retrieval Escalation Does Not Re-enter Retrieval
+
+```text
+routeMode: seed-only
+routeOrigin: user
+skill transitions: retrieval escalation -> retrieval -> impact(packet), with zero retrieval re-entry (`platty-mcp-retrieval` -> `platty-mcp-impact-analysis`)
+packet identity: absent -> packet:<stable-id> -> same packet:<stable-id>
+local write attempts: [] outside SDD; retrieval makes no local write attempt
+```
+
+### Trace 3: SDD Design Authoring Keeps File Ownership
+
+```text
+routeMode: answer
+routeOrigin: sdd-design
+skill transitions: impact + SDD design authoring -> sdd-design -> impact sub-route -> design.md only; no tasks.md write before approval (`platty-mcp-sdd-design` -> `platty-mcp-impact-analysis` -> `platty-mcp-retrieval(seed-only)` -> `platty-mcp-impact-analysis` -> `platty-mcp-sdd-design`)
+packet identity: absent -> packet:<stable-id> -> same packet:<stable-id>
+local write attempts: design.md only through platty-mcp-sdd-design; no tasks.md write before approval; impact.md only through platty-mcp-impact-analysis
 ```
 
 ## Scenario 9: Stakeholder-Friendly Answer Shape
@@ -263,7 +344,7 @@ catalog/epics.md 원문을 읽어서 캠페인 제외 그룹 정책이 확정인
 Failure to prevent:
 
 - reading the file with `sot_file_get` and treating catalog text as proof;
-- skipping `document_item_get`, `spec_get`, or `code_snippet`;
+- skipping `document_item_get`, `spec_get`, or `readonly_workspace_shell`;
 - using local filesystem fallback when the artifact path is rejected.
 
 Expected route:
@@ -299,20 +380,23 @@ Expected route:
 ```text
 Search Brief classifies the question as broad domain-term comparison
 preserve raw Korean terms
--> glossary_translate(raw terms)
+-> project context/context_status
 -> project_overview_get
+-> glossary_list to discover aliases and candidate concepts for the comparison target map; paginate as needed for the comparison scope
+-> retain relevant aliases, generatedAliases, and memoryAliases separately as routing evidence
+-> glossary_translate(raw terms and Korean/English candidates)
 -> epic_list
 -> epic_get for campaign, team, purchase, participation, review, and verification candidates before discarding them
--> document_list(documentType=BR) for policy/rule differences
--> document_list(documentType=UCL) for user/admin journey and capability differences
--> document_list(documentType=DESIGN) for system grouping or flow differences
--> document_list(documentType=DD) for entity/type/status meaning when terms map to data fields
+-> document_list(documentType=br) for policy/rule differences
+-> document_list(documentType=ucl) for user/admin journey and capability differences
+-> document_list(documentType=design) for system grouping or flow differences
+-> document_list(documentType=data_dictionary) for entity/type/status meaning when terms map to data fields
 -> document_get/document_item_list to map candidate items
 -> document_item_get exact candidate items
--> document_resolve connected specs
+-> document_resolve(itemId) connected specs after exact item reads
 -> spec_list/spec_resolve when connected APIs/specs must be mapped
 -> spec_get for source-near behavior claims
--> code_search/code_snippet only if exact implementation or negative source evidence is claimed
+-> code_search/readonly_workspace_shell only if exact implementation or negative source evidence is claimed
 -> Final Route Audit
 -> answer with direct evidence, inference, and coverage limits
 ```
@@ -332,7 +416,7 @@ Failure to prevent:
 - reading a code hit and skipping BR/DD/UCL evidence for what the labels mean;
 - claiming the type split is complete without an EPIC and document-type map;
 - claiming exact calculation or response shape without `spec_get` or
-  `code_snippet`.
+  `readonly_workspace_shell`.
 
 Expected route:
 
@@ -340,18 +424,58 @@ Expected route:
 Search Brief classifies the question as mixed domain-term, policy/rule, data-field, and source-near behavior
 -> project context/context_status
 -> project_overview_get
--> glossary_translate(raw Korean terms and review timing phrase)
+-> glossary_list for list-first comparison discovery of campaign type and review timing candidate concepts; paginate as needed for the comparison target map
+-> retain relevant aliases, generatedAliases, and memoryAliases separately as routing evidence
+-> glossary_translate(raw Korean terms, campaign type labels, and review timing phrase)
 -> epic_list
 -> epic_get for campaign/review/diary/participation candidates
--> document_list(documentType=BR) and document_item_get for timing policy
--> document_list(documentType=DD) and document_item_get for campaign type/status fields
--> document_list(documentType=UCL) and document_item_get for user/admin capability
--> document_resolve connected specs
+-> document_list(documentType=br) and document_item_get for timing policy
+-> document_list(documentType=data_dictionary) and document_item_get for campaign type/status fields
+-> document_list(documentType=ucl) and document_item_get for user/admin capability
+-> document_resolve(itemId) connected specs after exact item reads
 -> spec_list/spec_resolve when multiple specs are connected
 -> spec_get for exact API/screen behavior
--> code_search then code_snippet for calculation/source confirmation
+-> code_search for incomplete source addresses, then bounded readonly_workspace_shell source reads for calculation/source confirmation
 -> Final Route Audit
 -> answer with confirmed type meanings, source-near behavior, implementation evidence, and remaining coverage gaps
+```
+
+## Scenario 12A: Design Item Resolves Screen/API Before Search
+
+User asks:
+
+```text
+커머스에 타임딜인가 포인트 주는거 있어? 스크롤 내리면 주는거.
+그거 어떤 조건에 시작되고 받는 조건이 뭔지, 다른 페이지 이동해도 되는지 조사해줘봐.
+```
+
+Failure to prevent:
+
+- reading a DESIGN or UCL item about the time-deal/store-explore flow and then
+  jumping to `document_search`, `spec_search`, or `code_search`;
+- treating broad `document_resolve(documentId)` candidates as enough after an
+  exact item is known;
+- making screen/API behavior claims from BR/DESIGN prose without ranking linked
+  `screen_spec` and `api_spec` candidates;
+- hiding that exact scroll thresholds remain unconfirmed when no linked screen
+  spec or source read proves them.
+
+Expected route:
+
+```text
+Search Brief preserves raw Korean terms and English candidates: time-deal, store explore, scroll, point, special sale
+-> project context/context_status
+-> project_overview_get
+-> epic_list / epic_get for Missions & Benefits and adjacent commerce/points epics
+-> document_list(documentType=design) and document_list(documentType=ucl)
+-> document_get/document_item_list
+-> document_item_get exact time-deal/store-explore design and user-action items
+-> document_resolve(itemId) for each selected exact item
+-> rank linked screen_spec and api_spec candidates before search fallback
+-> spec_get selected API/screen specs
+-> spec_resolve selected specs for related docs/items, graph seeds, and code seeds
+-> code_search/readonly_workspace_shell only if exact scroll threshold or source behavior is claimed
+-> Final Route Audit names any unresolved scroll/page-navigation limits
 ```
 
 ## Scenario 13: Coupon Term Splits Between Point Coupon And Checkout Discount
@@ -364,6 +488,8 @@ User asks:
 
 Failure to prevent:
 
+- using `glossary_translate` alone for a term that spans coupon issuance, point
+  spending, checkout payment, and discount accounting candidates;
 - choosing only the checkout/payment epic because discount/order evidence is easy to find;
 - saying coupon is a new feature before checking point/coupon issuance candidates;
 - treating `ShoppingOrderDiscountLine` as proof that coupon purchase behavior is absent;
@@ -375,15 +501,114 @@ Expected route:
 
 ```text
 Search Brief classifies the term as mixed coupon issuance, point spending, checkout payment, and discount accounting
--> glossary_translate(raw terms: 쿠폰, coupon, 결제, 할인)
+-> project context/context_status
 -> project_overview_get
+-> glossary_list for ambiguous candidate discovery across coupon issuance, point spending, checkout payment, and discount accounting; use targeted pagination and stop when that candidate set is clear unless complete inventory is requested
+-> retain aliases for query expansion, generatedAliases as generated vocabulary routing evidence, and memoryAliases as overlays
+-> glossary_translate(raw Korean terms and selected Korean/English candidates: 쿠폰, coupon, 결제, payment, 할인, discount)
 -> epic_list / epic_get for both coupon/points and shopping checkout candidates
 -> document_list/document_item_list for BR, DESIGN, UCL, and DD under both candidate epics
 -> if itemType filtering returns empty but diagnostics show available rows, retry document_item_list without the itemType filter
 -> document_item_get exact coupon issuance and checkout discount items
--> document_resolve linked specs
+-> document_resolve(itemId) linked specs after exact item reads
 -> spec_get for exact API/screen behavior
--> code_search/code_snippet only if exact implementation or absence is claimed
+-> code_search/readonly_workspace_shell only if exact implementation or absence is claimed
 -> Final Route Audit
--> answer separates confirmed coupon issuance, confirmed checkout discount/order validation, and proposed new coupling work
+-> answer separates confirmed coupon issuance, confirmed checkout discount/order validation, and proposed new coupling work; glossary output alone proves none of those behaviors
+```
+
+## Scenario 14: Complete Glossary Inventory With Alias Provenance
+
+User asks:
+
+```text
+이 프로젝트에 등록된 캠페인 종류와 모든 별칭을 하나도 빠짐없이 알려줘.
+생성 alias와 사람이 추가한 memory alias도 구분해줘.
+```
+
+Failure to prevent:
+
+- calling `glossary_translate` once and treating it as a complete inventory;
+- reading only the first `glossary_list` page;
+- dropping memory-only canonical terms;
+- merging memory aliases into generated aliases without provenance;
+- treating glossary or memory alias output as behavior or source proof.
+
+Expected route:
+
+```text
+Search Brief classifies the request as complete vocabulary inventory
+-> glossary_list(projectId, limit, cursor)
+-> follow nextCursor until hasNextPage is false
+-> retain aliases, generatedAliases, and memoryAliases
+-> include memory-only canonical terms
+-> use the inventory for routing only
+-> continue to epic/document/spec/source evidence before behavior claims
+```
+
+## Scenario 15: Older Server Without Glossary List Still Serves Exact Specs
+
+User asks:
+
+```text
+이미 알고 있는 API spec id `spec:checkout:get`의 응답을 확인해줘.
+```
+
+Runtime tool listing contains the minimum retrieval tools and the exact-spec
+route tools, but the older server does not expose `glossary_list`.
+
+Failure to prevent:
+
+- failing the unconditional capability gate only because `glossary_list` is
+  absent;
+- inventing a glossary inventory call for an unrelated exact spec id;
+- weakening the stop condition if the user later asks for a complete vocabulary
+  inventory, comparison, ambiguity resolution, every alias, or blank/conflict
+  candidate discovery.
+
+Expected route:
+
+```text
+capability gate classifies glossary_list as conditional and confirms the exact-spec route tools are present
+-> project context/context_status
+-> spec_get(projectId, id=spec:checkout:get)
+-> spec_resolve(projectId, id=spec:checkout:get) when exposed by the listed exact-spec route tools
+-> answer from exact spec evidence with the normal evidence boundary
+-> if the request changes to a route that requires glossary_list, stop and report that conditional capability gap
+```
+
+## Scenario 16: Relevant Memory Summary Requires Exact Body
+
+User asks:
+
+```text
+정산 보류 상태는 실제로 어떤 운영 예외로 봐야 해?
+```
+
+Runtime evidence:
+
+- `epic_get` returns a memory summary card titled "정산 보류 운영 예외" with
+  a content preview mentioning manual review and delayed settlement.
+- `document_get` returns a DESIGN item and a memory summary card mentioning a
+  deprecated internal name for the same state.
+
+Failure to prevent:
+
+- ignoring memory summaries because generated DESIGN/DD/BR documents already
+  look sufficient;
+- treating the memory preview as the full body;
+- omitting a relevant correction, alias, deprecated name, or operational caveat
+  from the final boundary;
+- mixing memory overlay with generated SOT/spec/source proof.
+
+Expected route:
+
+```text
+-> project_overview_get / epic_list / epic_get
+-> inspect returned memory summary cards before selecting or discarding the EPIC
+-> memory_get for every relevant summary card
+-> document_list/document_get/document_item_get for DESIGN/BR/DD evidence
+-> inspect document/item memory cards
+-> memory_get for relevant document/item memory cards
+-> answer separates generated SOT evidence, memory overlay, inference, and source/spec limits
 ```

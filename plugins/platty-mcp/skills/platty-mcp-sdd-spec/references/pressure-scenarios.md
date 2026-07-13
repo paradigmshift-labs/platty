@@ -1,7 +1,8 @@
 # MCP SDD Spec Pressure Scenarios
 
 Use these scenarios to test whether `platty-mcp-sdd-spec` preserves retrieval
-discipline, SDD draft status, and local file persistence boundaries.
+discipline, SDD draft status, impact-artifact ownership, and local file
+persistence boundaries.
 
 ## Scenario 1: Search-First Request Draft
 
@@ -26,7 +27,7 @@ using-platty-mcp capability gate
 -> request draft with evidence boundary
 ```
 
-## Scenario 2: Source Parity Gap
+## Scenario 2: Partial Source Parity
 
 User asks for implementation impact, but source parity tools are missing.
 
@@ -38,7 +39,11 @@ Failure to prevent:
 Expected route:
 
 ```text
-carry source impact as coverage limit
+draft request.md and stories.md
+-> build/reuse impactSeedPacket
+-> platty-mcp-impact-analysis writes partial impact.md
+-> append the compact handoff with sourceParity = partial
+-> carry source impact as coverage limit
 draft only product/spec claims supported by MCP evidence
 ```
 
@@ -97,8 +102,11 @@ Expected route:
 ```text
 produce request.md and stories.md markdown
 resolve localPersistenceTarget
-write request.md and stories.md under ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
-verify both files are readable
+impact skill writes or refreshes impact.md under ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
+SDD spec writes request.md and stories.md under the same directory
+verify all three files are readable and share `projectId` and `contextStatus`
+verify impact metadata uses `sourceCommits` and `retrievedAt`
+derive spec identity from `impactArtifactPath` and the shared SDD directory
 ```
 
 ## Scenario 5: Retrieval Drift
@@ -135,3 +143,118 @@ read request-shape.md before request drafting
 read stories-shape.md before stories drafting
 return drafts in the template shape without closing unresolved questions
 ```
+
+## Scenario 7: Unread Requirement Input
+
+The user provides a local requirement file while selecting the MCP-only route.
+
+Failure to prevent:
+
+- drafting from the filename and reporting the pair as complete;
+- replacing unread requirements with current SOT behavior;
+- reporting 100% requirement coverage from Rule Traceability.
+
+Expected route:
+
+```text
+preserve the MCP local-file boundary
+-> draft only supported claims
+-> record the unread input as missing Requirement Coverage
+-> Self Review verdict = NEEDS_WORK
+-> keep both documents draft
+```
+
+## Scenario 8: Retrieval Ladder Looks Broad But Is Incomplete
+
+The route reads many EPICs, items, specs, and snippets but omits document-level
+memory overlays or the Final Route Audit.
+
+Failure to prevent:
+
+- treating call volume as route completeness;
+- marking Self Review PASS because files are readable;
+- omitting the missing retrieval rung from the final answer.
+
+Expected route:
+
+```text
+run Search Route Audit
+-> check Search Brief, document_get/memory overlays, exact specs, source snippets, and Final Route Audit
+-> complete missing reads when possible
+-> otherwise record the gap and return NEEDS_WORK
+```
+
+## Scenario 9: Artifact Separation
+
+The SDD request and stories drafts exist, and the route needs impact evidence.
+
+Failure to prevent:
+
+- formatting the Impact Dossier in `platty-mcp-sdd-spec`;
+- writing `impact.md` from `impactMarkdown` in the SDD spec skill;
+- treating the impact artifact as an optional attachment.
+
+Expected route:
+
+```text
+build/reuse impactSeedPacket
+-> invoke platty-mcp-impact-analysis
+-> impact skill alone writes or refreshes impact.md
+-> SDD spec receives impactArtifactPath, impactStatus, and sourceParity
+-> SDD spec writes only request.md and stories.md
+```
+
+## Scenario 10: Three-File Verification
+
+The impact skill has returned a verified artifact path and the SDD spec has
+written its drafts.
+
+Failure to prevent:
+
+- returning after verifying only request.md and stories.md;
+- accepting mismatched project, spec, or freshness metadata;
+- omitting `impact.md` from the answer paths.
+
+Expected route:
+
+```text
+verify impact.md, request.md, and stories.md are readable
+-> verify the three files share `projectId` and `contextStatus`
+-> verify impact source metadata uses `sourceCommits` and impact freshness uses `retrievedAt`
+-> derive spec identity from `impactArtifactPath` and the shared SDD directory
+-> return all three paths
+```
+
+## Scenario 11: Open-Assumption Handoff
+
+The request has open assumptions when impact investigation completes.
+
+Failure to prevent:
+
+- promoting the impact result to a confirmed decision;
+- copying the full impact matrix, raw payload, shell transcript, or source bodies
+  into request.md;
+- hiding partial source parity or coverage limits.
+
+Expected route:
+
+```text
+keep assumptions in §7 and stories draft
+-> append only the compact Engineering Discovery Handoff after §8
+-> point to impact.md with status, source parity, seed ids, freshness, commits, and limits
+-> keep Self Review verdict and approval state honest
+```
+
+## scenario-reorder
+
+Reorder two already-authored scenarios in a story.
+
+Expected result: retain each original `US-NN-SNN` id and every downstream
+traceability link; do not renumber solely because display order changed.
+
+## open-question-loss
+
+An open question shaped an authored scenario.
+
+Expected result: keep the question's owner, affected ids, status, and the
+scenario-shaping assumption visible in request/stories traceability.

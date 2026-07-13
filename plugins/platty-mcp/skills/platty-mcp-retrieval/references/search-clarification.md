@@ -29,11 +29,18 @@ still applies.
   search both Korean candidate terms and English candidate terms, and record
   which glossary/search-assist queries were attempted. A blank Korean
   `glossary_translate` result is not a stop condition while plausible English
-  candidates remain.
+  candidates remain; call `glossary_list` for candidate discovery before
+  translating additional Korean/English candidates.
+- Use `glossary_list` before asking the user when the request is a vocabulary
+  inventory, needs every alias, remains ambiguous after translation, or a
+  plausible `glossary_translate` query is blank. Traverse all pages only when
+  completeness is required; otherwise stop after the candidate set is clear.
 - Use configured read-only MCP tools to reduce ambiguity before asking the
-  user. Start with `glossary_translate`, `project_overview_get`, `epic_list` /
-  `epic_get`, `document_list` / `document_item_list`, `spec_list`, or
-  `spec_get` as the branch requires.
+  user. For vocabulary, choose `glossary_list` for inventory, every-alias,
+  unresolved ambiguity, broad comparison, or blank/conflicting translation; use
+  `glossary_translate` for an exact raw phrase or candidate term. Then continue
+  with `project_overview_get`, `epic_list` / `epic_get`, `document_list` /
+  `document_item_list`, `spec_list`, or `spec_get` as the branch requires.
 - Ask exactly one clarifying question only when MCP evidence leaves two or
   more equally plausible interpretations, choosing one would hide a meaningful
   answer branch, and the choice is product/user intent rather than a fact
