@@ -7,7 +7,7 @@ sourceCommit: "<sot-source-commit-or-unknown>"
 sotExportedAt: "<ISO timestamp>"
 evidenceBoundary: "<business-docs|static-only|mixed|stale>"
 outputLanguage: "<requested-output-language>"
-derivedFrom: ["request.md", "stories.md", "impact.md"]
+derivedFrom: ["prd.md", "user_stories.md", "impact.md"]
 approvedAt:
 approvedBy:
 ---
@@ -28,8 +28,9 @@ approvedBy:
 
 ## 1. 입력·근거·제약
 
-- **입력 문서**: `request.md`, `stories.md`, `impact.md`
+- **입력 문서**: `prd.md`, `user_stories.md`, `impact.md`
 - **근거 경계와 최신성**:
+- **SOT 맥락 복원**: <기존 impact.md 재사용 | 새 세션에서 SOT 재조사 | 부분 확인>
 - **확인됨 / 가정 / 위험**:
 
 ## 2. 현재 구조 (As-Is)

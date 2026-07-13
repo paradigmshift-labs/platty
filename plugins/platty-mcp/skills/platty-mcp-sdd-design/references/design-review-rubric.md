@@ -1,7 +1,7 @@
 # MCP SDD Design Review Rubric
 
 This rubric is the single owner of implementation-readiness review for
-`design.md`. Review the persisted design, revise it, then review it again:
+`system_design.md`. Review the persisted design, revise it, then review it again:
 
 ```text
 review -> revise -> review
@@ -57,7 +57,7 @@ taskGate: "<open | gated, with reason>"
 - `productInputFingerprint` matches canonical JSON of both revisions and
   statuses. A draft-only design is not approval-eligible; after the product
   inputs are approved, generate a new design revision.
-- Approval and every task preflight reread `request.md` and `stories.md` rather
+- Approval and every task preflight reread `prd.md` and `user_stories.md` rather
   than trusting stored fields.
 
 ### Impact Assessment Audit
@@ -65,7 +65,7 @@ taskGate: "<open | gated, with reason>"
 - Audit all eight surfaces—API/contract, DB/data, business logic/state, UI/UX,
   jobs/events, external integrations, security/permissions, and
   observability/release—against `impact.md` and the `CHG-*` map. Persist this
-  audit in `design.md` frontmatter `review`, not as a reader-facing design section.
+  audit in `system_design.md` frontmatter `review`, not as a reader-facing design section.
 - Every surface is exactly `yes`, `no`, or `unknown`, with reason, impact
   evidence, and `CHG-*` or N/A. A blank blocks readiness.
 - Every `no` passes the negative-claim gate. Empty, missing, omitted,

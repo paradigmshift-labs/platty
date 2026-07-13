@@ -7,7 +7,7 @@ sourceCommit: "<sot-source-commit-or-unknown>"
 sotExportedAt: "<ISO timestamp>"
 evidenceBoundary: "<business-docs|static-only|mixed|stale>"
 outputLanguage: "<requested-output-language>"
-derivedFrom: ["request.md"]
+derivedFrom: ["prd.md"]
 approvedAt:
 approvedBy:
 ---
@@ -46,7 +46,7 @@ approvedBy:
 
 | 확인 항목 | 결과 | 근거 또는 이슈 |
 | --- | --- | --- |
-| request.md와의 일관성 | <PASS|FAIL> | |
+| prd.md와의 일관성 | <PASS|FAIL> | |
 | 규칙-시나리오 연결 | <PASS|FAIL> | |
 | 모든 사용자 과업의 스토리화 | <PASS|FAIL> | |
 | 사용자/운영자에게 보이는 결과 | <PASS|FAIL> | |

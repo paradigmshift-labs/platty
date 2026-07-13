@@ -10,7 +10,7 @@ scope, and metrics differ from the current SOT.
 Expected behavior:
 
 ```text
-draft request.md and stories.md
+draft prd.md and user_stories.md
 -> compare every input requirement with SOT and both drafts
 -> distinguish existing behavior from requested behavior
 -> revise contradictions
@@ -46,14 +46,14 @@ paths, candidates, and an unresolved freshness gap.
 Expected behavior:
 
 ```text
-write request.md and stories.md in Korean-first planner language
--> keep request.md in the familiar §0–§8 planning flow
+write prd.md and user_stories.md in Korean-first planner language
+-> keep prd.md in the familiar §0–§8 planning flow
 -> put detailed paths, search route, source references, and gaps in impact.md
 -> keep uncertainty as an open question or named assumption
 ```
 
 Failure to prevent:
 
-- pasting source paths, raw commands, or an evidence matrix into `request.md`;
+- pasting source paths, raw commands, or an evidence matrix into `prd.md`;
 - translating code identifiers or API paths that must remain exact;
 - dropping a search gap because the planning document is concise.

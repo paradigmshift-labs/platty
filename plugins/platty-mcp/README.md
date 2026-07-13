@@ -30,11 +30,11 @@ mutation, cache refresh, deletion outside memory lifecycle, export execution, or
 general local file persistence. Explicit memory lifecycle requests are handled
 by `platty-mcp:platty-mcp-memory`. The local SDD exceptions are:
 
-- `platty-mcp:platty-mcp-sdd-spec`, which writes `request.md` and `stories.md`
+- `platty-mcp:platty-mcp-sdd-spec`, which writes `prd.md` and `user_stories.md`
   with a compact pointer to the selected impact work.
 - `platty-mcp:platty-mcp-impact-analysis`, which writes only `impact.md` under
   `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`.
-- `platty-mcp:platty-mcp-sdd-design`, which writes `design.md` first. Its design
+- `platty-mcp:platty-mcp-sdd-design`, which writes `system_design.md` first. Its design
   records technical AS-IS/TO-BE behavior, a canonical `CHG-*` change map, and a
   mandatory DB/data-impact assessment. It does not create `tasks.md` until the
   user explicitly approves the reviewed design; post-approval tasks remain

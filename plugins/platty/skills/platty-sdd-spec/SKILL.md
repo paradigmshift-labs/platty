@@ -6,7 +6,7 @@ description: Use when turning a rough product idea, feature request, PRD need, o
 # Platty SDD Spec
 
 Use this skill to create the product half of an SDD workflow: planner-facing
-`request.md` and `stories.md`, plus the supporting `impact.md` evidence dossier.
+`prd.md` and `user_stories.md`, plus the supporting `impact.md` evidence dossier.
 
 This skill is allowed to author files only inside the selected SDD output directory. It must never edit regenerated SOT markdown under `~/.platty/sot/<projectId>/`.
 
@@ -16,8 +16,8 @@ Default location:
 
 ```text
 ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
-├── request.md
-├── stories.md
+├── prd.md
+├── user_stories.md
 └── impact.md
 ```
 
@@ -25,20 +25,20 @@ Do not write SDD documents to repository-local paths such as `docs/sdd/` or
 `.platty/sdd/`. The Platty web dashboard treats the global Platty home as the
 managed SDD source.
 
-When this skill authors SDD product documents, write both `request.md` and
-`stories.md` in the same SDD directory, and create or refresh `impact.md` there
-as the SSOT and code-search dossier. Do not leave `stories.md` as a chat-only
+When this skill authors SDD product documents, write both `prd.md` and
+`user_stories.md` in the same SDD directory, and create or refresh `impact.md` there
+as the SSOT and code-search dossier. Do not leave `user_stories.md` as a chat-only
 gate or handoff note. If decisions are unresolved, keep both planning documents
-in draft state and make those assumptions visible in `request.md` §7 and in
-`stories.md`.
+in draft state and make those assumptions visible in `prd.md` §7 and in
+`user_stories.md`.
 
 Reader boundary:
 
-- `request.md` and `stories.md` are Korean-first, skimmable planning documents
+- `prd.md` and `user_stories.md` are Korean-first, skimmable planning documents
   for planners, PMs, designers, and QA.
 - `impact.md` owns detailed SOT paths, source commits, search terms, exact
   reads, candidate hits, coverage gaps, route audits, and next reads.
-- Do not discard evidence when moving it out of `request.md`; preserve it in
+- Do not discard evidence when moving it out of `prd.md`; preserve it in
   `impact.md` and keep a short status pointer in the request.
 
 ## Required Gates
@@ -47,13 +47,13 @@ Reader boundary:
 2. Locate `~/.platty/sot/<projectId>/`.
 3. Read SOT `README.md` and `catalog/epics.md`; use `sot glossary search` for raw terms, aliases, or translated concepts before product claims.
 4. Declare the evidence boundary: `business-docs`, `static-only`, `mixed`, or `stale`.
-5. Ask SOT-informed questions before finalizing `request.md`.
-6. Generate `stories.md` with `request.md` as a draft even when open questions remain. Approval gates control `approved` status and design readiness, not whether the stories file exists.
+5. Ask SOT-informed questions before finalizing `prd.md`.
+6. Generate `user_stories.md` with `prd.md` as a draft even when open questions remain. Approval gates control `approved` status and design readiness, not whether the stories file exists.
 7. Set the output language before authoring. Use the language the user requested for the spec; if no language is explicitly requested, infer it from the user's latest idea/request and confirm only when mixed-language intent is ambiguous.
 8. Create or refresh `impact.md` after investigation and before finalizing the
    planning documents.
 9. Run the Self Review gate after all three drafts exist; persist detailed
-   review evidence in `impact.md` and a concise status in `request.md`.
+   review evidence in `impact.md` and a concise status in `prd.md`.
 
 Use the Platty CLI convention from `using-platty`. Inside this repository, `AGENTS.md` overrides public plugin examples: run the local build with `node packages/cli/dist/main.js <command> --json`.
 
@@ -108,11 +108,11 @@ Question categories:
 Confirmed answers go to `§6 Confirmed Decisions`. Unresolved items stay in `§7 Open Questions`.
 When unresolved items affect stories, write the stories from clearly named
 recommended defaults or assumptions and include an assumptions/impact section in
-`stories.md` so later edits know what must change.
+`user_stories.md` so later edits know what must change.
 
 ## Output Language
 
-Write user-facing `request.md`, `stories.md`, and `impact.md` content in the
+Write user-facing `prd.md`, `user_stories.md`, and `impact.md` content in the
 requested language.
 
 - If the user asks in Korean or requests Korean output, write titles, section prose, questions, rules, stories, scenarios, and validation notes in Korean.
@@ -124,7 +124,7 @@ requested language.
 
 ## Chat Response Contract
 
-When you author or update `request.md`, `stories.md`, or `impact.md` during a
+When you author or update `prd.md`, `user_stories.md`, or `impact.md` during a
 chat turn, the final chat response must show the planner-facing document content,
 not only the file paths.
 
@@ -133,9 +133,9 @@ location. Include enough content for the user to review without opening the file
 
 Minimum final response when files are written:
 
-- `request.md`: status, path, outputLanguage, evidence boundary, confirmed
+- `prd.md`: status, path, outputLanguage, evidence boundary, confirmed
   decisions, open questions, main request rules, and validation/release notes.
-- `stories.md`: status, path, outputLanguage, user stories, acceptance
+- `user_stories.md`: status, path, outputLanguage, user stories, acceptance
   scenarios, unresolved assumptions, and Self Review verdict.
 - `impact.md`: path, investigation status, freshness, evidence boundary,
   coverage limits, and Self Review verdict. Do not paste its full dossier unless
@@ -158,24 +158,24 @@ Authoring order:
 
 1. Gather the required SOT and source evidence, then create or update
    `impact.md` with detailed evidence, freshness, limits, and next reads.
-2. Create or update `request.md` with the planner-facing §0–§8 structure and a
+2. Create or update `prd.md` with the planner-facing §0–§8 structure and a
    compact `impact.md` pointer after §8.
-3. Create or update `stories.md` in the same directory from `request.md` §1 and
+3. Create or update `user_stories.md` in the same directory from `prd.md` §1 and
    §5.
 4. When unresolved open questions remain, keep both planning documents as draft.
-5. Keep `request.md` as `draft-with-open-questions` and `stories.md` as `draft`
+5. Keep `prd.md` as `draft-with-open-questions` and `user_stories.md` as `draft`
    when unresolved open questions or assumptions remain.
 6. Include all unresolved assumptions that affect story splitting in
-   `stories.md`; do not silently close them.
+   `user_stories.md`; do not silently close them.
 7. Run `review -> revise -> review` against `references/spec-review-rubric.md`.
 8. Compare the drafts with every user-supplied requirement source, not only the
-   rules created in `request.md`.
+   rules created in `prd.md`.
 9. Record requirement coverage, search-route audit, freshness, source evidence,
    and coverage limits in `impact.md`; keep only the outcome in the planning
    documents.
 10. If blocking findings remain, set the Self Review verdict to `NEEDS_WORK`,
     keep both planning documents in draft state, and expose the findings to the user.
-11. Persist and verify `request.md`, `stories.md`, and `impact.md` together.
+11. Persist and verify `prd.md`, `user_stories.md`, and `impact.md` together.
 
 ## Self Review Gate
 
@@ -189,7 +189,7 @@ The review must check:
 - SOT facts, user-requested changes, inferences, and recommended defaults are
   labeled separately;
 - statuses, enums, thresholds, metrics, scope, and terminology agree across the
-  input sources, `request.md`, and `stories.md`;
+  input sources, `prd.md`, and `user_stories.md`;
 - rule-to-scenario coverage is not presented as total input-requirement
   coverage;
 - `impact.md` records map-first evidence, exact reads, unread surfaces,
@@ -200,13 +200,13 @@ target, or cross-document contradiction is blocking. Revise once and review the
 revised pair; if it still fails, return `NEEDS_WORK` instead of claiming the
 documents are ready.
 
-`request.md` status:
+`prd.md` status:
 
 - `draft` while being filled;
 - `draft-with-open-questions` when assumptions remain;
 - `approved` only after explicit user approval.
 
-`stories.md` status:
+`user_stories.md` status:
 
 - `draft` while generated or under review;
 - `approved` only after explicit user approval.
@@ -226,7 +226,7 @@ documents are ready.
 | --- | --- |
 | "I know the domain term." | Run `sot glossary search` first. |
 | "The user wants speed, skip questions." | Draft with named assumptions and use `draft-with-open-questions`. |
-| "Stories need approval first." | Approval controls `approved` status. Still create `stories.md` as `draft` beside `request.md` and preserve assumptions. |
+| "Stories need approval first." | Approval controls `approved` status. Still create `user_stories.md` as `draft` beside `prd.md` and preserve assumptions. |
 | "Business docs are missing, so invent product intent from code." | Use static evidence only and state the boundary. |
 | "A graph trace shows the whole impact." | Use it to map candidate screen/API/domain/DB paths, record omissions or unresolved hops in `impact.md`, and confirm behavior-sensitive parts from source. |
 | "A code term can go directly to graph trace." | Resolve code term with `code search` first when the file/symbol address is incomplete, then use graph trace as a structural map and verify exact source with a bounded `readonly_workspace_shell` read. |

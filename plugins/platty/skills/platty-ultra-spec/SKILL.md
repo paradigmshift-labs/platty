@@ -1,11 +1,11 @@
 ---
 name: platty-ultra-spec
-description: Use when turning a plain product idea into a source-grounded spec via Platty's ultra-spec pipeline — compile an idea into typed registry facts, diff against the canonical SOT, and produce a one-page summary (and optionally design/tasks/qa). Distinct from platty-sdd-spec (which writes request.md + stories.md); ultra-spec compiles facts into the registry and diffs them against the code's source-of-truth.
+description: Use when turning a plain product idea into a source-grounded spec via Platty's ultra-spec pipeline — compile an idea into typed registry facts, diff against the canonical SOT, and produce a one-page summary (and optionally system design/tasks/qa). Distinct from platty-sdd-spec (which writes prd.md + user_stories.md); ultra-spec compiles facts into the registry and diffs them against the code's source-of-truth.
 ---
 
 # Platty Ultra-Spec
 
-Turn an idea into a source-grounded spec through the `platty spec` command. Unlike `platty-sdd-spec` (free-form request.md + stories.md), this pipeline compiles the idea into **typed registry facts**, **diffs them against the canonical SOT** (the code's as-is behavior), and renders a **one-page confirmation** — the planner sees that one page, the compiled docs stay internal. It is a *natural-language compiler*: when an idea has blocking ambiguity it **stops and asks before minting** (the dialogue gate) — concretizing the plan instead of guessing.
+Turn an idea into a source-grounded spec through the `platty spec` command. Unlike `platty-sdd-spec` (free-form prd.md + user_stories.md), this pipeline compiles the idea into **typed registry facts**, **diffs them against the canonical SOT** (the code's as-is behavior), and renders a **one-page confirmation** — the planner sees that one page, the compiled docs stay internal. It is a *natural-language compiler*: when an idea has blocking ambiguity it **stops and asks before minting** (the dialogue gate) — concretizing the plan instead of guessing.
 
 Inside this repository, `AGENTS.md` overrides public examples: run `node packages/cli/dist/main.js spec ... --json`.
 
@@ -53,7 +53,7 @@ SOT-aware gate that catches ungrounded/ambiguous/conflicting ideas before any fa
   - On success (`status: "completed"`) returns the one-page summary + proposal + SOT-conflict findings, and the facts are minted.
   - **Dialogue gate** (`status: "needs_answers"`): the idea had unresolved *blocking* ambiguity, so it minted NOTHING and returned `blockingQuestions` + a `nextAction`. Relay the questions, then re-run adding `--answer "<question>=<answer>"` (repeatable) — answers fold in as decided clarifications and the gate re-evaluates. `--accept-open-questions` mints despite blockers (only on the human's explicit call).
   - `--validate` runs independent, evidence-isolated cross-validation of each rule (as-is contradiction + intent scope-creep).
-  - `--design` lowers the approved bundle to `design.md` / `tasks.md` / `qa.md`.
+  - `--design` lowers the approved bundle to `system_design.md` / `tasks.md` / `qa.md`.
   - `--out <dir>` writes the artifacts (summary/design/tasks/qa/validation + branch tag) as the durable receipt.
   - The full pipeline (`--validate --design`) is the intended thorough use — ultra-spec aims at near-complete, conflict-checked dev docs, not a quick sketch (use `platty-sdd-spec` for a free-form narrative spec).
 

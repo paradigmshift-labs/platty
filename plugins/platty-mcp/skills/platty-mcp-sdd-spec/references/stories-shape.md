@@ -1,6 +1,6 @@
 # MCP SDD 사용자 스토리 형식
 
-`stories.md`는 한국어 사용자 시나리오 문서다. 구현 근거와 내부 검토 기록은
+`user_stories.md`는 한국어 사용자 시나리오 문서다. 구현 근거와 내부 검토 기록은
 `impact.md` 및 frontmatter에 둔다.
 
 ## Frontmatter
@@ -16,7 +16,7 @@ sourceCommit: "<source commit or unknown>"
 sotExportedAt: "<ISO timestamp or unknown>"
 evidenceBoundary: "<MCP evidence surfaces used>"
 contextStatus: "<fresh | stale | unknown>"
-derivedFrom: "request.md"
+derivedFrom: "prd.md"
 ---
 ```
 
