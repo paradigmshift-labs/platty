@@ -61,7 +61,7 @@ Follow map-first source-grounding discipline:
    - **Richer list when available**: `graph trace --from <traceId> --direction downstream` returns the
      connected code-node list. (It can be empty if those call edges weren't built — then fall back to the
      file+function names the spec already gives you.)
-   Then **read just those key functions directly** in that file — a handful of targeted reads, not the
+   Then use bounded `readonly_workspace_shell` commands to **read just those key functions directly** in that file — a handful of targeted reads, not the
    whole repo. That is the targeted grounding a blind grep can't match: the SOT told you the
    likely functions; you verify the truth in them.
 

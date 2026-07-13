@@ -1,20 +1,18 @@
 # MCP Retrieval Pressure Scenarios
 
-Validation-only reference. Read this file when changing or evaluating
-`platty-mcp-retrieval`; do not load it for ordinary retrieval answers.
+Validation-only reference다. `platty-mcp-retrieval`을 변경하거나 평가할 때 읽고,
+일반 retrieval answer에는 load하지 않는다.
 
-Use these scenarios to test `platty-mcp-retrieval` as process documentation.
-Run a baseline before changing the skill when feasible, then run the same
-scenario with the renewed skill loaded. Record whether the agent followed the
-expected route.
+이 scenario들은 `platty-mcp-retrieval`을 process documentation으로 테스트하기 위한
+압력 케이스다. 가능하면 skill을 바꾸기 전에 baseline을 실행하고, renewed skill을 load한 뒤
+같은 scenario를 다시 실행한다. agent가 expected route를 따랐는지 기록한다.
 
 ## Contents
 
-- Scenarios 1-8: retrieval routing, ambiguity, source boundaries, impact seeds
-- Executable Call-Trace Pressures: impact/SDD transition traces
-- Scenarios 9-12A: answer shape, full-cycle ladder, item-level resolve
-- Scenarios 13-15: coupon ambiguity, complete glossary inventory, older server
-  exact-spec route
+- Scenario 1-8: retrieval routing, ambiguity, source boundary, impact seed
+- Executable Call-Trace Pressures: impact/SDD transition trace
+- Scenario 9-12A: answer shape, full-cycle ladder, item-level resolve
+- Scenario 13-15: coupon ambiguity, complete glossary inventory, older server exact-spec route
 
 ## Scenario 1: Korean Domain Term
 
@@ -24,11 +22,11 @@ User asks:
 응원친구가 뭐야? 관련 기능이 어디에 있어?
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- guessing an English term before vocabulary normalization;
-- treating glossary output as proof;
-- answering from one search hit.
+- vocabulary normalization 전에 English term을 추측함
+- glossary output을 proof로 취급함
+- search hit 하나로 답함
 
 Expected route:
 
@@ -49,11 +47,11 @@ User asks:
 purchaseCampaignSubmission.status 필드 의미랑 어디서 쓰이는지 알려줘.
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- reading a whole document or search result and stopping;
-- skipping item-level DD evidence;
-- claiming usage without source-near or source evidence.
+- whole document 또는 search result만 읽고 멈춤
+- item-level DD evidence를 건너뜀
+- source-near 또는 source evidence 없이 usage를 주장함
 
 Expected route:
 
@@ -72,11 +70,11 @@ User asks:
 결제에서 쿠폰기능을 도입하려고해. 결제 쿠폰 할인 쿠폰 코드 프로모션 주문 결제 금액 적용 환불
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- stopping after `glossary_translate(raw Korean phrase)` returns no terms;
-- hiding the Korean candidate terms or English candidate terms;
-- searching only Korean text when the generated SOT vocabulary is English-heavy.
+- `glossary_translate(raw Korean phrase)`가 빈 결과를 반환했을 때 멈춤
+- Korean candidate term 또는 English candidate term을 숨김
+- generated SOT vocabulary가 English-heavy인데 Korean text만 search함
 
 Expected route:
 
@@ -100,11 +98,11 @@ User asks:
 체험단 참여 정책을 바꾸면 영향이 뭐야?
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- answering from one `ssot_search`, `document_search`, or `spec_search` hit;
-- treating one spec as the full impact map;
-- converting empty graph evidence into "no impact".
+- `ssot_search`, `document_search`, `spec_search` hit 하나로 답함
+- spec 하나를 full impact map으로 취급함
+- empty graph evidence를 "no impact"로 변환함
 
 Expected route:
 
@@ -127,10 +125,10 @@ User asks:
 GET /api/campaigns/:id 응답 shape이 뭐야?
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- answering from API title, business prose, or search snippet;
-- omitting source confirmation when spec evidence is thin.
+- API title, business prose, search snippet으로 답함
+- spec evidence가 thin한데 source confirmation을 생략함
 
 Expected route:
 
@@ -150,10 +148,10 @@ User asks:
 이 API 실제 구현 코드 위치랑 호출하는 화면까지 확인해줘.
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- falling back to local SOT files or surfaces outside configured MCP tools;
-- pretending source confirmation is possible without configured tools.
+- local SOT file 또는 configured MCP 밖 surface로 fallback함
+- configured tool 없이 source confirmation이 가능하다고 가장함
 
 Expected route:
 
@@ -172,11 +170,11 @@ User asks:
 이 BR 원문 파일 그대로 받아볼 수 있어?
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- reading local `~/.platty` files directly from the client;
-- running SOT export, sync, or generation from MCP;
-- treating stored artifact content as policy proof.
+- client에서 local `~/.platty` file을 직접 읽음
+- MCP에서 SOT export, sync, generation을 실행함
+- stored artifact content를 policy proof로 취급함
 
 Expected route:
 
@@ -195,13 +193,12 @@ User asks:
 응원친구가 뭐야? 관련 기능이 어디에 있어?
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- treating the first vocabulary or search hit as the selected concept;
-- hiding that the term could be a user-facing label, business concept, enum/model
-  value, or implementation branch;
-- asking the user before configured MCP tools have been used to reduce the
-  ambiguity.
+- 첫 vocabulary 또는 search hit를 selected concept으로 취급함
+- term이 user-facing label, business concept, enum/model value, implementation branch일 수
+  있음을 숨김
+- ambiguity를 줄이기 위해 configured MCP tool을 쓰기 전에 사용자에게 물음
 
 Expected route:
 
@@ -224,12 +221,11 @@ User asks:
 체험단 참여 정책을 바꾸면 영향이 뭐야?
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- answering from one `spec_search`, `document_search`, `graph_trace`, or
-  `code_search` hit;
-- treating one connected spec as the complete impact map;
-- losing the selected policy-impact interpretation during a long investigation.
+- `spec_search`, `document_search`, `graph_trace`, `code_search` hit 하나로 답함
+- connected spec 하나를 complete impact map으로 취급함
+- 긴 조사 중 selected policy-impact interpretation을 잃음
 
 Expected route:
 
@@ -254,13 +250,12 @@ User asks:
 앞에서 만든 영향도 seed packet으로 쿠폰 정책 변경의 API, 화면, cross-EPIC 영향을 계속 조사해줘.
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- rerunning glossary, EPIC, business-document, or exact-spec discovery after a
-  matching Impact Seed Packet already exists;
-- returning from impact to retrieval when the packet identifies its semantic
-  scope and selected specs;
-- treating a packet as a final impact answer before graph/source convergence.
+- matching Impact Seed Packet이 이미 있는데 glossary, EPIC, business-document, exact-spec
+  discovery를 다시 실행함
+- packet이 semantic scope와 selected specs를 식별하는데 impact에서 retrieval로 되돌아감
+- graph/source convergence 전에 packet을 final impact answer로 취급함
 
 Expected route:
 
@@ -273,10 +268,9 @@ existing Impact Seed Packet
 
 ## Executable Call-Trace Pressures
 
-Each pressure records the runtime-only `routeMode`, `routeOrigin`, skill
-transitions, packet identity, and local write attempts. Execute the sequence as
-written and compare its observable transitions; prose without the trace does
-not pass.
+각 pressure는 runtime-only `routeMode`, `routeOrigin`, skill transition, packet identity,
+local write attempt를 기록한다. sequence를 그대로 실행하고 observable transition을
+비교한다. trace 없는 prose는 pass가 아니다.
 
 ### Trace 1: Direct Impact Creates One Seed Packet
 
@@ -316,13 +310,12 @@ User asks:
 후기 작성 가능 시점 차이는 어떻게 봐야 해?
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- starting with a long evidence dump before the answer;
-- listing internal symbols before explaining what they mean;
-- saying "확인됨" for search candidates or partial specs;
-- splitting into planning/engineering sections when the user did not ask for
-  that split.
+- answer 전에 긴 evidence dump로 시작함
+- 의미를 설명하기 전에 internal symbol을 나열함
+- search candidate 또는 partial spec에 "확인됨"을 사용함
+- 사용자가 요청하지 않았는데 planning/engineering section으로 나눔
 
 Expected route:
 
@@ -341,11 +334,11 @@ User asks:
 catalog/epics.md 원문을 읽어서 캠페인 제외 그룹 정책이 확정인지 말해줘
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- reading the file with `sot_file_get` and treating catalog text as proof;
-- skipping `document_item_get`, `spec_get`, or `readonly_workspace_shell`;
-- using local filesystem fallback when the artifact path is rejected.
+- `sot_file_get`으로 file을 읽고 catalog text를 proof로 취급함
+- `document_item_get`, `spec_get`, `readonly_workspace_shell`을 건너뜀
+- artifact path가 reject될 때 local filesystem fallback을 사용함
 
 Expected route:
 
@@ -364,16 +357,14 @@ User asks:
 체험단이 일반 체험단, 팀 체험단, 검증단처럼 나뉘는 것 같은데 각각 뭐가 다른 거야?
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- skipping the Search Brief because several search tools are available;
-- treating `검증단` exact-term misses as proof that verification campaigns are not
-  independent;
-- reading one team-campaign item and concluding that verification is only a
-  mission status;
-- answering before candidate EPICs and BR/UCL/DESIGN/DD items are mapped;
-- using `document_search`, `spec_search`, or `code_search` as a substitute for
-  the full-cycle map/list/detail ladder.
+- search tool이 있어서 Search Brief를 생략함
+- `검증단` exact-term miss를 verification campaign이 independent하지 않다는 proof로 취급함
+- team-campaign item 하나를 읽고 verification은 mission status일 뿐이라고 결론냄
+- candidate EPIC과 BR/UCL/DESIGN/DD item map 전에 답함
+- `document_search`, `spec_search`, `code_search`를 full-cycle map/list/detail ladder의
+  substitute로 사용함
 
 Expected route:
 
@@ -409,14 +400,12 @@ User asks:
 후기 작성 가능 시점 차이는 어떻게 봐야 해? 일반 체험단/검증단/팀 체험단별로 알려줘.
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- starting with `document_search` or `code_search` because `reviewUnlockDays`
-  seems like an obvious code term;
-- reading a code hit and skipping BR/DD/UCL evidence for what the labels mean;
-- claiming the type split is complete without an EPIC and document-type map;
-- claiming exact calculation or response shape without `spec_get` or
-  `readonly_workspace_shell`.
+- `reviewUnlockDays`가 obvious code term처럼 보여 `document_search` 또는 `code_search`로 시작함
+- code hit를 읽고 label 의미에 대한 BR/DD/UCL evidence를 건너뜀
+- EPIC/document-type map 없이 type split이 complete하다고 주장함
+- `spec_get` 또는 `readonly_workspace_shell` 없이 exact calculation 또는 response shape를 주장함
 
 Expected route:
 
@@ -449,16 +438,15 @@ User asks:
 그거 어떤 조건에 시작되고 받는 조건이 뭔지, 다른 페이지 이동해도 되는지 조사해줘봐.
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- reading a DESIGN or UCL item about the time-deal/store-explore flow and then
-  jumping to `document_search`, `spec_search`, or `code_search`;
-- treating broad `document_resolve(documentId)` candidates as enough after an
-  exact item is known;
-- making screen/API behavior claims from BR/DESIGN prose without ranking linked
-  `screen_spec` and `api_spec` candidates;
-- hiding that exact scroll thresholds remain unconfirmed when no linked screen
-  spec or source read proves them.
+- time-deal/store-explore flow에 대한 DESIGN 또는 UCL item을 읽고 `document_search`,
+  `spec_search`, `code_search`로 점프함
+- exact item을 알고도 broad `document_resolve(documentId)` candidate면 충분하다고 취급함
+- linked `screen_spec`과 `api_spec` candidate를 rank하지 않고 BR/DESIGN prose로
+  screen/API behavior를 주장함
+- linked screen spec 또는 source read가 exact scroll threshold를 증명하지 않는데 그 미확정
+  상태를 숨김
 
 Expected route:
 
@@ -486,16 +474,16 @@ User asks:
 쿠폰 결제를 붙이려는데 기존 쿠폰/결제/할인 흐름 영향부터 찾아줘.
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- using `glossary_translate` alone for a term that spans coupon issuance, point
-  spending, checkout payment, and discount accounting candidates;
-- choosing only the checkout/payment epic because discount/order evidence is easy to find;
-- saying coupon is a new feature before checking point/coupon issuance candidates;
-- treating `ShoppingOrderDiscountLine` as proof that coupon purchase behavior is absent;
-- treating empty `document_item_list` results from narrow `itemType`
-  filters as proof that the document has no matching item;
-- continuing confidently after `document_item_list` reports an item-tier gap.
+- coupon issuance, point spending, checkout payment, discount accounting 후보를 모두 거치는
+  term에 `glossary_translate`만 사용함
+- discount/order evidence가 찾기 쉽다는 이유로 checkout/payment epic만 선택함
+- point/coupon issuance 후보를 확인하기 전에 coupon이 new feature라고 말함
+- `ShoppingOrderDiscountLine`을 coupon purchase behavior absence의 proof로 취급함
+- narrow `itemType` filter의 empty `document_item_list` 결과를 document에 matching item이
+  없다는 proof로 취급함
+- `document_item_list`가 item-tier gap을 보고했는데 confident하게 계속함
 
 Expected route:
 
@@ -526,13 +514,13 @@ User asks:
 생성 alias와 사람이 추가한 memory alias도 구분해줘.
 ```
 
-Failure to prevent:
+막아야 할 실패:
 
-- calling `glossary_translate` once and treating it as a complete inventory;
-- reading only the first `glossary_list` page;
-- dropping memory-only canonical terms;
-- merging memory aliases into generated aliases without provenance;
-- treating glossary or memory alias output as behavior or source proof.
+- `glossary_translate` 한 번을 complete inventory로 취급함
+- 첫 `glossary_list` page만 읽음
+- memory-only canonical term을 누락함
+- memory alias를 generated alias와 provenance 없이 합침
+- glossary 또는 memory alias output을 behavior/source proof로 취급함
 
 Expected route:
 
@@ -554,25 +542,21 @@ User asks:
 이미 알고 있는 API spec id `spec:checkout:get`의 응답을 확인해줘.
 ```
 
-Runtime tool listing contains the minimum retrieval tools and the exact-spec
-route tools, but the older server does not expose `glossary_list`.
+runtime tool listing에는 minimum retrieval tool과 exact-spec route tool이 있지만 older
+server가 `glossary_list`를 노출하지 않는다.
 
-Failure to prevent:
+막아야 할 실패:
 
-- failing the unconditional capability gate only because `glossary_list` is
-  absent;
-- inventing a glossary inventory call for an unrelated exact spec id;
-- weakening the stop condition if the user later asks for a complete vocabulary
-  inventory, comparison, ambiguity resolution, every alias, or blank/conflict
-  candidate discovery.
+- exact spec id가 있는데 missing `glossary_list` 때문에 멈춤
+- broad semantic route가 아닌데 vocabulary inventory를 요구함
+- exact `spec_get`/`spec_resolve` route를 capability gap으로 오판함
 
 Expected route:
 
 ```text
-capability gate classifies glossary_list as conditional and confirms the exact-spec route tools are present
--> project context/context_status
--> spec_get(projectId, id=spec:checkout:get)
--> spec_resolve(projectId, id=spec:checkout:get) when exposed by the listed exact-spec route tools
--> answer from exact spec evidence with the normal evidence boundary
--> if the request changes to a route that requires glossary_list, stop and report that conditional capability gap
+recognize exact API spec id
+-> bypass vocabulary inventory because route does not require ambiguity/comparison/every-alias discovery
+-> spec_get
+-> spec_resolve
+-> answer with missing glossary_list noted only if relevant to broader discovery
 ```

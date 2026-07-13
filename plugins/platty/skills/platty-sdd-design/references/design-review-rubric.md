@@ -12,7 +12,7 @@ Return `PASS` only when the draft is implementation-ready or clearly marked as a
 
 ## Technical Feasibility
 
-- Claims about implementation are grounded in graph trace, code search/snippet, or direct source reads.
+- Claims about implementation are grounded in graph trace, `code search` address resolution, or bounded `readonly_workspace_shell` source reads.
 - Missing graph evidence is not treated as no impact.
 - Existing patterns in registered repositories are followed.
 - Stale SOT is declared and accepted before use.

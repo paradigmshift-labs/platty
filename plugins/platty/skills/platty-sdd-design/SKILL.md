@@ -50,8 +50,8 @@ Use the Platty CLI convention from `using-platty`. Inside this repository, `AGEN
    - use catalog or `sot resolve` compact-row `traceId` when present;
    - read default compact `graph trace` output from `.data.confirmed`, `.data.candidates`, `.data.relationCandidates`, and `.data.flags`;
    - use `--detail full` only when raw hop/source-line metadata is required;
-   - if `traceId` is absent or trace has no confirmed edge, downgrade to risk and use `code search` or direct source reads.
-7. Read registered repository files from `repo list` paths for complex flows, DTOs, transactions, UI state, error handling, or tests.
+   - if `traceId` is absent or trace has no confirmed edge, downgrade to risk and use `code search` for incomplete addresses or bounded `readonly_workspace_shell` reads for exact source.
+7. Read registered repository files with bounded `readonly_workspace_shell` commands for complex flows, DTOs, transactions, UI state, error handling, or tests.
 
 Do not report graph trace as exhaustive when it returns candidates, omitted edge classes, truncation, or no confirmed edge.
 
@@ -91,7 +91,7 @@ Unsupported implementation claims must be marked as assumptions or risks.
 
 - `request.md` or `stories.md` is not approved and the user did not explicitly request draft-only design.
 - SOT documents referenced by the spec are stale or missing and the user has not accepted stale-evidence risk.
-- A critical implementation path has only graph candidates and no confirmed edge or source snippet.
+- A critical implementation path has only graph candidates and no confirmed edge or bounded source read.
 - The design requires a shared engine contract, persisted schema, public CLI behavior, or common resolver semantic change without explicit user approval.
 - No owning repository or implementation boundary can be identified after two discovery passes.
 

@@ -9,7 +9,7 @@ planners, and implementation agents can review the same product behavior.
 ```yaml
 ---
 id: "SPEC-<slug>-<YYYY-MM>"
-type: "spec-stories"
+type: "sdd-stories"
 status: "draft"       # draft -> approved
 projectId: "<projectId>"
 outputLanguage: "ko"
@@ -17,7 +17,7 @@ sourceCommit: "<source commit or unknown>"
 sotExportedAt: "<ISO timestamp or unknown>"
 evidenceBoundary: "<MCP evidence surfaces used>"
 contextStatus: "<fresh | stale | unknown>"
-derived_from: "request.md"
+derivedFrom: "request.md"
 ---
 ```
 
@@ -38,14 +38,14 @@ derived_from: "request.md"
 **I want** <goal><br>
 **So that** <outcome>
 
-### Scenario 1: <scenario title> (정상)
+### Scenario 1: US-01-S01 <scenario title> (정상)
 
 - **Given** <user/system state>
 - **When** <user action or system trigger>
 - **Then** <visible or measurable result>
 - **And** <optional additional result>
 
-### Scenario 2: <scenario title> (엣지)
+### Scenario 2: US-01-S02 <scenario title> (엣지)
 
 - **Given** <edge state>
 - **When** <action or trigger>
@@ -59,18 +59,39 @@ derived_from: "request.md"
 
 | User Story | Scenario | 관련 Rules | 비고 |
 |------------|----------|------------|------|
-| US-01 | S1 <scenario> | R1 | <note> |
+| US-01 | US-01-S01 <scenario> | R-01 | <note> |
 
-**Rule 커버리지: R1~R<N> 전부 1개 이상 시나리오에 매핑 (<N>/<N>, 100%)**
+**Rule 커버리지: R-01~R-<N> 전부 1개 이상 시나리오에 매핑 (<N>/<N>, 100%)**
+
+## Self Review
+
+- **Verdict**: <PASS | NEEDS_WORK>
+- **Blocking findings**: <count>
+
+| Check | Result | Evidence or finding |
+|----|----|----|
+| request.md consistency | <PASS|FAIL> | |
+| Rule-to-scenario coverage | <PASS|FAIL> | |
+| Every customer task has a story | <PASS|FAIL> | |
+| Scenarios describe user/operator-visible outcomes | <PASS|FAIL> | |
+| Assumptions and coverage gaps remain explicit | <PASS|FAIL> | |
 ```
 
 ## Rules
 
 - Every story must map to a request rule or open assumption.
+- Give each new scenario an immutable `US-NN-SNN` id. Do not renumber an
+  existing id when stories or scenarios are reordered; allocate a new id only
+  for a genuinely new scenario.
 - Do not invent implementation detail that the request did not establish.
 - Preserve unresolved assumptions instead of silently closing them.
+- For every open question that shaped a scenario, retain its owner, affected ids,
+  status, and scenario-shaping assumption in the story or Traceability note.
 - If `request.md` is still draft, keep `stories.md` draft and include the
   assumptions that were used to split stories.
 - Keep runtime-only metadata outside the markdown draft in the SDD packet.
 - If a request rule has no scenario, keep the coverage line below 100% and call
   out the missing rule in Traceability.
+- Rule coverage measures authored rules only; do not present it as total
+  user-input or evidence coverage.
+- Self Review `PASS` does not approve the document.

@@ -3,9 +3,9 @@
 `platty-mcp` is the Platty MCP plugin for Codex and Claude Code. It teaches
 agents how to use an already configured Platty MCP context server, how to
 register an existing MCP URL from the client side, how to answer project
-questions through MCP evidence, how to manage explicit memory lifecycle
-requests, and how to create locally saved MCP-grounded SDD request/story and
-technical design drafts.
+questions through MCP evidence, how to assess read-only technical impact, how
+to manage explicit memory lifecycle requests, and how to create approval-gated,
+locally saved MCP-grounded SDD handoffs.
 
 ## Boundary
 
@@ -28,12 +28,20 @@ Do not use this plugin for analysis, sync, server-side document generation,
 local SOT file reads from the client, local Platty CLI commands, project
 mutation, cache refresh, deletion outside memory lifecycle, export execution, or
 general local file persistence. Explicit memory lifecycle requests are handled
-by `platty-mcp:platty-mcp-memory`. The SDD exceptions are
-`platty-mcp:platty-mcp-sdd-spec`, which writes `request.md` and `stories.md`,
-and `platty-mcp:platty-mcp-sdd-design`, which writes `design.md` and
-`tasks.md`, under `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`. Stored
-artifact file content access must go through configured MCP tools such as
-`sot_file_get`. Use the full `platty` plugin for operator workflows outside
+by `platty-mcp:platty-mcp-memory`. The local SDD exceptions are:
+
+- `platty-mcp:platty-mcp-sdd-spec`, which writes `request.md` and `stories.md`
+  with a compact pointer to the selected impact work.
+- `platty-mcp:platty-mcp-impact-analysis`, which writes only `impact.md` under
+  `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`.
+- `platty-mcp:platty-mcp-sdd-design`, which writes `design.md` first. Its design
+  records technical AS-IS/TO-BE behavior, a canonical `CHG-*` change map, and a
+  mandatory DB/data-impact assessment. It does not create `tasks.md` until the
+  user explicitly approves the reviewed design; post-approval tasks remain
+  traceable to that approved design and classify readiness before execution.
+
+Stored artifact file content access must go through configured MCP tools such
+as `sot_file_get`. Use the full `platty` plugin for operator workflows outside
 those SDD-file exceptions.
 
 ## Included Skills
@@ -41,6 +49,7 @@ those SDD-file exceptions.
 - `platty-mcp:using-platty-mcp`
 - `platty-mcp:platty-mcp-client-setup`
 - `platty-mcp:platty-mcp-retrieval`
+- `platty-mcp:platty-mcp-impact-analysis`
 - `platty-mcp:platty-mcp-memory`
 - `platty-mcp:platty-mcp-sdd-spec`
 - `platty-mcp:platty-mcp-sdd-design`

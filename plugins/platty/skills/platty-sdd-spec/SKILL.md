@@ -37,6 +37,7 @@ state and make those assumptions visible in `request.md` §7 and in
 5. Ask SOT-informed questions before finalizing `request.md`.
 6. Generate `stories.md` with `request.md` as a draft even when open questions remain. Approval gates control `approved` status and design readiness, not whether the stories file exists.
 7. Set the output language before authoring. Use the language the user requested for the spec; if no language is explicitly requested, infer it from the user's latest idea/request and confirm only when mixed-language intent is ambiguous.
+8. Run the Self Review gate after both drafts exist; persist the final review result at the bottom of both documents.
 
 Use the Platty CLI convention from `using-platty`. Inside this repository, `AGENTS.md` overrides public plugin examples: run the local build with `node packages/cli/dist/main.js <command> --json`.
 
@@ -56,7 +57,8 @@ Use the Platty CLI convention from `using-platty`. Inside this repository, `AGEN
 4. Implementation hints only when needed:
    - catalog API/screen/table rows
    - graph trace for confirmed relationships
-   - code search/snippet for source-grounded terms
+   - `code search` for source addresses when file/symbol identity is incomplete
+   - bounded `readonly_workspace_shell` reads for exact source evidence
 
 Do not brute-force all `epics/` or `specs/`. Narrow through catalogs and frontmatter paths.
 
@@ -109,7 +111,7 @@ Minimum final response when files are written:
 - `request.md`: status, path, outputLanguage, evidence boundary, confirmed
   decisions, open questions, main request rules, and validation/release notes.
 - `stories.md`: status, path, outputLanguage, user stories, acceptance
-  scenarios, and unresolved assumptions.
+  scenarios, unresolved assumptions, and Self Review verdict.
 
 If a document is too long for chat, include its main sections and say which
 sections were abbreviated. Always include all open questions and assumptions.
@@ -121,6 +123,7 @@ Read reference templates only when writing the files:
 - `references/request-template.md`
 - `references/stories-template.md`
 - `references/spec-review-rubric.md`
+- `references/pressure-scenarios.md` when testing or changing this skill
 
 Authoring order:
 
@@ -132,6 +135,37 @@ Authoring order:
    when unresolved open questions or assumptions remain.
 5. Include all unresolved assumptions that affect story splitting in
    `stories.md`; do not silently close them.
+6. Run `review -> revise -> review` against `references/spec-review-rubric.md`.
+7. Compare the drafts with every user-supplied requirement source, not only the
+   rules created in `request.md`.
+8. Record the final requirement coverage and Search Route Audit in
+   `request.md` §10, and cross-document checks in `stories.md` Self Review.
+9. If blocking findings remain, set the Self Review verdict to `NEEDS_WORK`,
+   keep both documents in draft state, and expose the findings to the user.
+10. Persist and verify both revised files together.
+
+## Self Review Gate
+
+Self Review is an authoring quality gate, not an approval. It must not set either
+document to `approved`; only explicit user approval may do that.
+
+The review must check:
+
+- every user-supplied input document, pasted requirement, and confirmed answer
+  is represented or named as a coverage gap;
+- SOT facts, user-requested changes, inferences, and recommended defaults are
+  labeled separately;
+- statuses, enums, thresholds, metrics, scope, and terminology agree across the
+  input sources, `request.md`, and `stories.md`;
+- rule-to-scenario coverage is not presented as total input-requirement
+  coverage;
+- the search route records map-first evidence, exact reads, unread surfaces,
+  freshness, and any retrieval audit failure.
+
+Any missing required input, unresolved evidence conflict, unsupported numeric
+target, or cross-document contradiction is blocking. Revise once and review the
+revised pair; if it still fails, return `NEEDS_WORK` instead of claiming the
+documents are ready.
 
 `request.md` status:
 
@@ -161,6 +195,6 @@ Authoring order:
 | "The user wants speed, skip questions." | Draft with named assumptions and use `draft-with-open-questions`. |
 | "Stories need approval first." | Approval controls `approved` status. Still create `stories.md` as `draft` beside `request.md` and preserve assumptions. |
 | "Business docs are missing, so invent product intent from code." | Use static evidence only and state the boundary. |
-| "A code term can go directly to graph trace." | Resolve code term with `code search` first. |
+| "A code term can go directly to graph trace." | Resolve code term with `code search` first when the file/symbol address is incomplete, then verify exact source with a bounded `readonly_workspace_shell` read. |
 | "Fix the generated SOT markdown." | Never edit SOT projection; suggest memory or regeneration. |
 | "The SOT is English, so the spec should be English." | Follow the requested language; keep only identifiers and evidence labels unchanged. |

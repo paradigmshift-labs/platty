@@ -1,6 +1,6 @@
 ---
 name: platty-mcp-retrieval
-description: Use when answering Platty project questions through configured read-only MCP tools, including domain terms, epics, business documents, specs, impact, code locations, or source confirmation.
+description: Use when answering Platty project questions through configured read-only MCP tools, including domain terms, epics, business documents, specs, exact code locations, or source confirmation, or when another Platty MCP skill needs an Impact Seed Packet.
 ---
 
 # Platty MCP Retrieval
@@ -12,36 +12,66 @@ Platty MCP retrieval is map-first: browse project, epic, document-item, and
 spec maps before search hits.
 
 <HARD-GATE>
-For broad, domain-term, business-rule, data-field, system-design, capability,
-journey, comparison, inventory, or impact questions, do not answer and do not
-treat search as proof until the Full-Cycle Retrieval Ladder has been completed
-or a required MCP surface is reported missing.
+For broad, domain-term, rule, data-field, design, capability, journey,
+comparison, inventory, or impact-seed questions, do not answer or treat search
+as proof until the Full-Cycle Retrieval Ladder is complete or a required MCP
+surface is missing.
 
 Do not call `document_search`, `ssot_search`, `spec_search`, `code_search`, or
-`graph_trace` first. Build project overview, vocabulary when needed, epic map,
-and selected BR/DD/DESIGN/UCL map first. Search narrows candidates after maps;
-it cannot replace exact `epic_get`, `document_list`, `document_item_get`,
-`document_resolve`, `spec_get`, or `code_snippet` reads.
+`graph_trace` first. Build overview, vocabulary when needed, epic map, and
+selected BR/DD/DESIGN/UCL map first. Search narrows candidates; it cannot
+replace exact reads.
 </HARD-GATE>
 
-The MCP profile is read-only. Use configured MCP tools only; do not read local
-files, read local SOT, mutate projects, generate documents, or write memory. Stored SOT
-files are available only through MCP artifact tools and need exact evidence
-reads before behavior claims.
+The MCP profile is read-only. Use configured MCP tools only. Do not read local
+files, read local SOT, mutate projects, generate documents, or write memory.
+MCP `readonly_workspace_shell` is allowed when
+exposed and required by the evidence gate; it is not local fallback. Stored SOT
+files need MCP artifact reads before behavior claims.
 
-Memory overlay reads: read selected `project_overview_get.overview.memories`,
-`epic_get.memories`, and `document_get.memories`. Use `memory_list` or
-`memory_get` when only counts/ids are visible or overlays may affect the answer.
+Memory overlay reads: inspect selected `project_overview_get.overview.memories`,
+`epic_get.memories`, and `document_get.memories`. When cards are insufficient,
+use `memory_list` or `memory_get`: list for scoped discovery and get for an
+exact memory body.
 
 ## When To Use
 
-Use this skill for read-only Platty answers about domain terms, epics, business
-docs, specs, impact, code locations, or source confirmation.
+Use this skill for retrieval answers about domain terms, epics, business docs,
+specs, exact API/source-near questions, code locations, source confirmation, or
+an Impact Seed Packet needed by impact/SDD skills.
 
 ## When Not To Use
 
 Do not use it for setup, analysis, sync, generation, mutation, memory writes,
-local cache changes, or local inspection. Report those as boundary gaps.
+local cache changes, or local inspection. Report boundary gaps.
+
+## Impact Escalation Gate
+
+Route explicit SDD file authoring first: request/story authoring goes to
+`platty-mcp-sdd-spec`; design/task authoring goes to `platty-mcp-sdd-design`.
+That intent takes precedence over generic impact or design-change wording.
+
+Keep ordinary retrieval retrieval-only. In particular, an exact API, exact
+screen, or exact source-near question remains in this skill unless the user also
+asks an observable impact question.
+
+Treat "what changes", "what breaks", affected surface, blast radius,
+cross-EPIC impact, or design-change impact as observable impact triggers:
+
+```text
+ordinary question -> retrieval answer
+user impact trigger -> retrieval(routeMode=seed-only, routeOrigin=user)
+-> semantic map -> Impact Seed Packet -> platty-mcp-impact-analysis
+impact without packet -> retrieval(routeMode=seed-only, routeOrigin=impact)
+-> return Impact Seed Packet to impact; do not escalate
+impact with packet -> dossier axes; do not re-enter retrieval
+SDD file authoring intent -> platty-mcp-sdd-spec or platty-mcp-sdd-design
+```
+
+`routeMode: seed-only` makes this skill the packet producer only: return the
+Impact Seed Packet to the caller, and reuse an existing packet. Retrieval owns
+semantic scope and selected specs; impact owns graph, cross-EPIC, repository,
+and source convergence.
 
 ## Operating Flow
 
@@ -49,8 +79,9 @@ local cache changes, or local inspection. Report those as boundary gaps.
 2. Confirm the MCP capability tier needed for the question.
 3. Run the Search Clarification Gate when the question is broad or ambiguous.
 4. Run the Full-Cycle Retrieval Ladder for broad or semantic branches.
-5. Traverse exact specs, graph, or source evidence required by the selected
-   branch.
+5. For an observable impact trigger, produce or reuse the Impact Seed Packet;
+   otherwise traverse exact specs or source evidence required by the selected
+   retrieval branch.
 6. Account for relevant memory overlays without treating them as SOT or source
    proof.
 7. Run the Final Route Audit.
@@ -58,28 +89,44 @@ local cache changes, or local inspection. Report those as boundary gaps.
    and missing MCP surfaces separated.
 
 If the answer needs correction recording, re-anchoring, refresh, sync, or
-generation, report a boundary gap.
+generation, report a gap.
 
 ## Quick Rules
 
 | Do | Don't |
 | --- | --- |
-| Use configured MCP tools only. | Read local files, local SOT, DB tables, or caches. |
+| Use configured MCP tools only, including MCP `readonly_workspace_shell` for bounded source confirmation. | Read local files, use local shell/CLI fallback, local SOT, DB tables, or caches. |
 | Build project, epic, BR/DD/DESIGN/UCL, spec, and source maps in order. | Treat one search hit, snippet, or score as proof. |
 | Read attached memory overlays on selected epics/documents. | Treat memory as generated SOT or source-confirmed behavior. |
 | Normalize vocabulary when terms may not line up. | Treat glossary normalization as behavior evidence. |
 | Read exact item/spec/source evidence before implementation claims. | Claim response shape, permissions, writes, emits, or absence without the required evidence tier. |
+| Pair `code_search` with MCP `readonly_workspace_shell` for code claims: locate candidates, then read bounded source. | Stop at `code_search` when source code must be inspected. |
+| After exact BR/DD/DESIGN/UCL item reads, call `document_resolve(itemId)` before source-near search unless purely conceptual. | Jump from a business item to search without resolving linked context. |
 | Ask one clarifying question only after MCP evidence leaves tied interpretations. | Ask the user before using MCP evidence to reduce ambiguity. |
+
+## Vocabulary Tool Choice
+
+- Use `glossary_translate(projectId, text)` for an exact raw phrase or
+  candidate term. Keep Korean/English candidates visible.
+- Use `glossary_list(projectId, limit, cursor)` for broad vocabulary inventory,
+  comparisons, ambiguous concepts, all-alias requests, or candidate discovery
+  after translation is blank or conflicting.
+- If `glossary_translate` is blank or conflicting while plausible candidates
+  remain, call `glossary_list` before translating more candidates.
+- For complete inventory, follow `pageInfo.nextCursor` until exhausted. For
+  targeted discovery, stop after the needed candidates are found.
+- Use `aliases` for query expansion. Keep `generatedAliases` and
+  `memoryAliases` separate; memory aliases are overlays and glossary output is
+  routing evidence, not behavior or source proof.
 
 ## Search Clarification Gate
 
 Before routing, decide whether the question is exact or needs a runtime Search
-Brief. Exact source-near questions can bypass unless term, scope, or target set
-is ambiguous.
+Brief. Exact source-near questions can bypass unless ambiguous.
 
 Create a Search Brief for broad inventory, impact, Korean/English bridges,
-business-vs-implementation splits, or any case where one search hit could miss
-the target set. For triggers, read `references/search-clarification.md`.
+business-vs-implementation splits, or when one search hit could miss the target
+set. For triggers, read `references/search-clarification.md`.
 
 Search Brief shape:
 
@@ -100,15 +147,13 @@ Search Brief
 ```
 
 Keep the Search Brief in runtime context only. Use MCP evidence before asking
-the user. Ask one clarifying question only when evidence leaves tied
-interpretations, and include the recommended interpretation.
+one clarifying question for tied interpretations.
 
 ## Full-Cycle Retrieval Ladder
 
-Use the ladder for broad, semantic, comparison, inventory, or impact: project
-context -> overview -> vocabulary -> epic map -> BR/DD/DESIGN/UCL map -> exact
-items -> connected specs -> exact specs -> source confirmation when required ->
-Final Route Audit.
+Use the ladder for broad, semantic, comparison, inventory, or impact-seed:
+project context -> overview -> vocabulary -> epic map -> BR/DD/DESIGN/UCL map
+-> exact items -> connected specs -> specs/source as required -> audit.
 
 Each rung is list/map first, exact detail second. Overview, artifacts, catalog
 rows, glossary output, and search hits orient only. For the ladder and audit,
@@ -116,9 +161,14 @@ read `references/full-cycle-retrieval.md`.
 
 ## Branch Table
 
+`references/full-cycle-retrieval.md` is the canonical order of operations.
+Read `references/question-routes.md` only to choose branch-specific document
+families, extra requirements, and completion checks; do not treat it as a second
+copy of the ladder.
+
 Route by question type: concept/domain term, policy/rule, data field, design,
-capability/journey, exact API/screen/event/schedule, impact, or source absence.
-Branch criteria: `references/question-routes.md`.
+capability/journey, exact API/screen/event/schedule, impact seed, or source
+absence.
 
 ## Evidence Gates
 
@@ -133,7 +183,8 @@ Branch criteria: `references/question-routes.md`.
 - Follow selected `spec_search` candidates with `spec_get` and `spec_resolve`.
 - Exact implementation, response shape, permission, DB write, event emit,
   external call, or negative source evidence requires source-level confirmation
-  when the MCP server exposes it.
+  when the MCP server exposes it. Use `code_search` to locate candidates, then
+  actively use MCP `readonly_workspace_shell` to read the bounded source region.
 - If `document_item_list` with `itemType` returns no rows but reports
   available items or emits
   `DOCUMENT_ITEM_FILTER_EMPTY_WITH_AVAILABLE_ITEMS`, retry the same document
@@ -154,7 +205,7 @@ For examples and branch-specific evidence rules, read
 Stop and report a boundary when selected-branch tools are missing; the user asks
 for setup, analysis, sync, generation, mutation, memory writes, local cache/local
 reads; full-cycle maps cannot be built; only search candidates exist; raw and
-normalized terms split; broad inventory/impact lacks a target map; or required
+normalized terms split; broad inventory/impact seed lacks a target map; or required
 source confirmation tools are missing.
 
 If MCP evidence leaves tied interpretations, ask one clarifying question with a
@@ -196,5 +247,5 @@ confidence or scope.
 
 ## Verification Reference
 
-Use `references/pressure-scenarios.md` to test whether this skill prevents
-search-first answers, glossary-as-proof answers, and local fallback.
+Use `references/pressure-scenarios.md` only when validating or changing this
+skill. Do not load it for ordinary retrieval answers.

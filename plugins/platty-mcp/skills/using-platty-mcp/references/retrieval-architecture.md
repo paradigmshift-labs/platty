@@ -33,11 +33,12 @@ question
 | Question shape | Primary route | Proof threshold |
 | --- | --- | --- |
 | Project scope, freshness, available context | `project_list` -> `project_get` when needed -> `context_status` -> `project_overview_get` | status/overview can frame scope, not prove detailed behavior |
-| Domain term, alias, Korean/English wording | `glossary_translate` -> continue to the relevant route | glossary is normalization, not proof |
+| Exact, unambiguous domain term or raw phrase | `glossary_translate`; if it is blank/conflicting while plausible candidates remain, call `glossary_list` next before translating additional Korean/English candidates | glossary is normalization/routing evidence, not behavior or source proof |
+| Vocabulary inventory, comparison, ambiguity, or every-alias request | `glossary_list` first -> paginate only until targeted candidates are clear, or through `pageInfo.hasNextPage: false` for complete inventory -> `glossary_translate` on the raw phrase and candidates | keep `aliases`, `generatedAliases`, and `memoryAliases` distinct; memory aliases are overlays and no glossary field proves behavior |
 | Broad policy, business rule, design, data, journey | `epic_list` -> `epic_get` -> `document_list` -> `document_get` -> `document_item_list` -> `document_item_get` | exact item read is the business-document proof |
-| Business item to source-near API/screen/event/schedule | `document_resolve` -> rank linked `api_spec`/`screen_spec` candidates -> `spec_list` or `spec_search` when more mapping is needed -> `spec_get` -> `spec_resolve` | exact spec read is the source-near proof; resolve completes connected context |
+| Business item to source-near API/screen/event/schedule | `document_resolve(itemId)` -> rank linked `api_spec`/`screen_spec` candidates -> `spec_list` or `spec_search` when more mapping is needed -> `spec_get` -> `spec_resolve` | exact spec read is the source-near proof; item-level resolve completes connected context |
 | Known exact spec id | `spec_get` -> `spec_resolve` | exact spec read proves the spec; resolve completes connected context |
-| Impact, dependency, implementation location | `document_resolve` or `spec_resolve` -> `graph_trace` / `code_search` -> `code_snippet` | graph/code result or snippet, with missing-tool caveat when unavailable |
+| Impact, dependency, implementation location | `document_resolve(itemId)` or `spec_resolve` -> `graph_trace` / `code_search` -> `readonly_workspace_shell` | graph/code candidates plus bounded source reads when exact source confirmation is required; state missing-tool caveats |
 | Original stored SOT file request | `sot_file_get` | file content only; not proof for behavior unless paired with structured evidence |
 
 ## Full Ladder
@@ -48,21 +49,30 @@ map-first ladder:
 ```text
 project_list / project_get / context_status
 -> project_overview_get
--> glossary_translate when terms, aliases, or Korean/English mapping matter
+-> glossary_list first for inventory, comparison, ambiguity, or every-alias routes; after blank/conflicting exact translation, use it before translating additional candidates
+-> glossary_translate for the exact/raw phrase and Korean/English candidates
 -> epic_list / epic_get
 -> memory_list / memory_get overlay when relevant and available
 -> document_list by type and epic
 -> document_get
 -> document_item_list / document_item_get
--> document_resolve
+-> document_resolve(itemId) after exact item reads; use document_resolve(documentId)
+   only for document-wide inventory
 -> rank linked api_spec and screen_spec candidates
 -> spec_list or spec_search when connected source-near specs are incomplete or unknown
 -> spec_get before exact source-near behavior claims
 -> spec_resolve to expand selected specs to related documents, items, graph seeds, and code seeds
--> graph_trace / code_search / code_snippet for impact, location, or source confirmation
+-> graph_trace / code_search / readonly_workspace_shell for impact, location, or source confirmation
 ```
 
-`document_resolve`, `spec_list`, `spec_search`, `spec_get`, and `spec_resolve`
+For targeted candidate discovery, stop `glossary_list` pagination once the
+needed candidate set is clear. For complete inventory, follow
+`pageInfo.nextCursor` until `pageInfo.hasNextPage` is false. Preserve
+`aliases` for query expansion, `generatedAliases` as generated vocabulary
+routing evidence, and `memoryAliases` as memory overlays. Continue to exact
+document/spec/source evidence before behavior claims.
+
+`document_resolve(itemId)`, `spec_list`, `spec_search`, `spec_get`, and `spec_resolve`
 are part of the search path when the answer needs source-near anchors. Do not
 skip from a business document search result directly to a claim about API shape,
 screen behavior, event behavior, schedule behavior, or implementation.
@@ -110,17 +120,19 @@ asks to read an original stored SOT file by project-relative path.
 
 | Tool | Role |
 | --- | --- |
+| `glossary_list` | inventory and candidate discovery for comparison, ambiguity, every-alias, or blank/conflicting translation routes; targeted or complete pagination depends on the request |
+| `glossary_translate` | normalizes an exact/raw phrase and selected Korean/English candidates; blank/conflicting output may require list-based discovery |
 | `document_list` | finds business docs or source-near docs by type/scope |
 | `document_get` | reads one document summary/content envelope |
 | `document_item_list` | finds item-level BR/DD/DESIGN/UCL/UCS evidence |
 | `document_item_get` | reads exact item content |
-| `document_resolve` | first bridge from document/item evidence to linked specs, linked docs, items, relation candidates |
+| `document_resolve` | first bridge from exact item evidence to linked specs, linked docs, items, relation candidates; use `itemId` after `document_item_get`, and reserve `documentId` for document-wide inventory |
 | `spec_list` | lists source-near specs by kind, scope, status, or filters |
 | `spec_search` | targeted discovery when the exact spec id is unknown |
 | `spec_get` | reads exact source-near spec detail before source-near claims |
 | `spec_resolve` | post-selection expansion from a spec to related docs/items plus graph/code seeds |
 | `graph_trace` | follows graph impact or dependency paths when exposed |
-| `code_search` / `code_snippet` | confirms exact code location or implementation when exposed |
+| `code_search` / `readonly_workspace_shell` | `code_search` finds candidate files/symbols; `readonly_workspace_shell` reads bounded source before exact implementation claims |
 | `sot_file_get` | reads stored SOT file content only; not proof by itself |
 
 ## SOT Projection Shape

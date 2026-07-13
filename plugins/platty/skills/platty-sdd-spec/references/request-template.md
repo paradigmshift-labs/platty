@@ -67,3 +67,32 @@ Use EARS-style rules. Each rule must be observable or testable.
 
 | Evidence | Path or command | Freshness | Notes |
 | --- | --- | --- | --- |
+
+## §10 Self Review
+
+- **Verdict**: <PASS | NEEDS_WORK>
+- **Blocking findings**: <count>
+- **Warnings**: <count>
+
+### Requirement Coverage
+
+| Input source or requirement | Result | Evidence or gap |
+| --- | --- | --- |
+| <user input, SOT item, or confirmed answer> | <covered|partial|missing|conflict> | <request/story location or finding> |
+
+### Search Route Audit
+
+| Check | Result | Evidence or gap |
+| --- | --- | --- |
+| Project/SOT freshness and evidence boundary were checked | <PASS|FAIL> | |
+| Vocabulary and candidate areas were mapped before narrow search | <PASS|FAIL|N/A> | |
+| Relevant BR/DD/DESIGN/UCL and exact evidence were read | <PASS|FAIL|N/A> | |
+| Memory overlays or equivalent human-knowledge surfaces were accounted for | <PASS|FAIL|N/A> | |
+| Unread relevant surfaces and missing capabilities are disclosed | <PASS|FAIL> | |
+| Final route audit completed before factual claims | <PASS|FAIL> | |
+
+### Findings
+
+| Severity | Finding | Required action |
+| --- | --- | --- |
+| <blocking|warning> | | |

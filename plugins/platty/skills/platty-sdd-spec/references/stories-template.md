@@ -38,3 +38,16 @@ approvedBy:
 | Story | Scenarios | Request rules | Notes |
 | --- | --- | --- | --- |
 | US-01 | Scenario 1, Scenario 2 | R1 | |
+
+## Self Review
+
+- **Verdict**: <PASS | NEEDS_WORK>
+- **Blocking findings**: <count>
+
+| Check | Result | Evidence or finding |
+| --- | --- | --- |
+| request.md consistency | <PASS|FAIL> | |
+| Rule-to-scenario coverage | <PASS|FAIL> | |
+| Every customer task has a story | <PASS|FAIL> | |
+| Scenarios describe user/operator-visible outcomes | <PASS|FAIL> | |
+| No unsupported implementation detail or closed assumption | <PASS|FAIL> | |
