@@ -62,9 +62,10 @@ taskGate: "<open | gated, with reason>"
 
 ### Impact Assessment Audit
 
-- All eight surfaces are present: API/contract, DB/data, business logic/state,
-  UI/UX, jobs/events, external integrations, security/permissions, and
-  observability/release.
+- Audit all eight surfaces—API/contract, DB/data, business logic/state, UI/UX,
+  jobs/events, external integrations, security/permissions, and
+  observability/release—against `impact.md` and the `CHG-*` map. Persist this
+  audit in `design.md` frontmatter `review`, not as a reader-facing design section.
 - Every surface is exactly `yes`, `no`, or `unknown`, with reason, impact
   evidence, and `CHG-*` or N/A. A blank blocks readiness.
 - Every `no` passes the negative-claim gate. Empty, missing, omitted,
@@ -100,11 +101,16 @@ taskGate: "<open | gated, with reason>"
 
 - AS-IS facts and hard implementation claims cite relevant dossier/source
   evidence at recorded commits.
+- Every hard implementation claim and exact change location has a matching
+  `confirmed-path` code-path coverage row: entry/caller, orchestration,
+  persistence or external boundary, consumers, and adjacent tests,
+  configuration, and migrations when present were read. An unread known
+  boundary is `partial-path`, never a confirmed claim.
 - Impact status, context status, source parity, source commits, traversal
   status, and coverage limits match `impact.md`.
 - Candidate-only evidence remains candidate; unsupported claims are assumptions,
   risks, or omitted.
-- The Evidence Appendix references dossier entries without copying the dossier.
+- The design footer references `impact.md` evidence without copying the dossier.
 
 ### Delivery Safety
 
@@ -112,6 +118,17 @@ taskGate: "<open | gated, with reason>"
   deployment/backfill/validation/switch/contract ordering, and rollback/restore
   or roll-forward-only behavior.
 - Every change has a release signal and a safe rollback or roll-forward plan.
+
+### System Design Quality
+
+- The design names system boundaries, component responsibilities, and data
+  ownership before listing implementation changes.
+- Target structure distinguishes synchronous contracts, asynchronous events,
+  and external integrations. It records alternatives and selection reasons for
+  material decisions.
+- Critical flows cover consistency, idempotency, timeout/retry/compensation or
+  an explicit N/A rationale. Non-functional responsibilities include applicable
+  permissions/privacy, performance, and observability.
 
 ### Revision, Approval, And Task Gate
 

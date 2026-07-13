@@ -22,21 +22,34 @@ of confirmed impact, likely impact, candidates, unknowns, coverage, and next rea
    packet. Otherwise invoke retrieval with `routeMode: seed-only` and require it
    to return the packet to this caller without escalating back to impact. Read
    `references/impact-seed-packet.md`.
-3. Resolve selected specs and trace graph upstream/downstream while preserving
+3. Resolve selected business-document items with `document_resolve` before
+   graph tracing, then trace graph upstream/downstream while preserving
    confirmed edges, candidates, relation candidates, omissions, and truncation.
+   Use `graph_trace` as the fast structural map of `screen ↔ API ↔ domain ↔ DB`
+   plus related event/job/external paths; it never proves detailed behavior alone.
 4. Traverse confirmed cross-EPIC evidence through
    `references/cross-epic-traversal.md`.
-5. Follow the source ladder exactly: `workspace_repo_list -> select repo ->
-   readonly_workspace_shell search -> exact source read`. Call
-   `workspace_repo_list` before shell investigation unless repo id and analyzed
-   commit are already present.
+5. Apply the affected-code-path coverage gate to every implementation anchor.
+   The bounded path is not the whole repository: start at the affected UI/caller
+   or API/event entry and cover the reachable domain/orchestration,
+   DB/external boundary, event producers/consumers, and adjacent tests,
+   configuration, and migrations when they exist. Follow the source ladder
+   exactly: `workspace_repo_list -> select repo -> readonly_workspace_shell
+   search -> exact source read`. Call `workspace_repo_list` before shell
+   investigation unless repo id and analyzed commit are already present.
 6. Use `readonly_workspace_shell` only after repository selection, with the
    documented read-only command allowlist and bounded output. Search exact
    identifiers before aliases, then read exact source regions. A grep hit remains
    a candidate until its source region is read. Never write, install, execute
    project code, read blocked secrets, or leave the selected repository root.
 7. Build one evidence-matrix entry per target and classify confirmed, likely,
-   candidate, or unknown.
+   candidate, or unknown. Add a compact path map that separates confirmed hops,
+   candidate/unknown hops, omitted classes, and required exact source reads.
+   For each implementation anchor, add a code-path coverage row: resolved
+   document context, graph candidates and truncation, exact source files/symbols
+   read with their roles, consumers checked, and unread candidates with a reason.
+   Mark it `confirmed-path` only when every known bounded boundary was actually
+   read; otherwise mark it `partial-path`.
 8. Apply `references/impact-dossier.md` and its completion gate.
 9. In an SDD context, write or refresh only `impact.md` under the selected
    `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/` and verify readability.
@@ -46,8 +59,8 @@ of confirmed impact, likely impact, candidates, unknowns, coverage, and next rea
 Complete only when every seed has an exact spec or explicit gap, graph
 directions were attempted, API/screen candidates were classified, confirmed
 cross-EPIC edges reached the bound or retained a frontier, repository scope is
-known or named as a gap, hard code claims have bounded source reads, and missing
-evidence has a next exact read or coverage limit.
+known or named as a gap, every hard code claim has `confirmed-path` bounded
+source reads, and missing evidence has a next exact read or coverage limit.
 
 If a required branch is incomplete, return and persist a partial dossier.
 Never convert empty graph/search output into no impact.

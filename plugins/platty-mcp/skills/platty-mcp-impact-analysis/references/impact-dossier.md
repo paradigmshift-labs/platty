@@ -50,13 +50,39 @@ nextExactRead
 `observedBehavior` is a short source-grounded statement of what the bounded read
 proved. It must not contain a complete source file or an unbounded snippet.
 
+## Affected Code Path Coverage
+
+For every anchor that can produce an implementation claim, add one row. The
+goal is to read the complete *known affected path*, not to claim that the whole
+repository was read. Follow this order: `document_resolve` selects linked
+context; `graph_trace` maps both directions and exposes candidates; `code_search`
+finds exact symbols; `readonly_workspace_shell` reads the bounded source.
+
+```text
+anchor, resolvedDocuments, graphConfirmed, graphCandidatesOrTruncation,
+sourceFilesReadAndRoles, consumersChecked, unreadCandidatesAndReason, status,
+nextExactRead
+```
+
+- The known path includes the UI/caller or API/event entry, domain or
+  orchestration, DB/external boundary, event producers/consumers, and adjacent
+  tests, configuration, and migrations when each exists in the bounded path.
+- `confirmed-path` means all known boundaries in that path were read at the
+  recorded commit. It can support a hard implementation claim.
+- `partial-path` means a candidate, consumer, boundary, test/config/migration,
+  or source surface remains unread. It supports only a candidate, assumption,
+  risk, or evidence-resolution task.
+- A graph hop, search hit, or document link is never a replacement for the
+  matching exact source read. Empty output is also not evidence of no boundary.
+
 ## Stable Impact Revision
 
 `impactRevision` is `sha256:<hex>` over a canonical JSON evidence snapshot. The
 snapshot contains the artifact's evidence-bearing metadata (`status`,
 `sourceParity`, `projectId`, `contextStatus`, lexically sorted `sourceCommits`,
 and `maxCrossEpicDepth`), lexically sorted coverage-limit strings, canonical
-matrix rows sorted by `evidenceId`, and the exact canonical cross-EPIC traversal
+matrix rows sorted by `evidenceId`, canonical affected-code-path coverage rows
+sorted by their canonical JSON bytes, and the exact canonical cross-EPIC traversal
 state owned by `cross-epic-traversal.md`: sorted `frontierEpicIds`, `visitedEpicIds`,
 `visitedSpecIds`, `visitedGraphSeeds`, and `visitedCodeQueries`; `currentDepth`;
 `maxDepth`; sorted `truncationReasons`; and separate sorted `confirmedEdges`,
@@ -77,6 +103,15 @@ leading zeroes. The array fields are `businessEvidence`, `specEvidence`,
 `graphEvidence`, `sourceEvidence`, and `missingEvidence`; normalize every member
 as an LF-normalized string and sort it bytewise. No matrix field changes type
 between snapshots.
+
+Normalize every affected-code-path coverage row as a canonical object with
+scalar fields `anchor`, `status`, and `nextExactRead`, plus sorted LF-normalized
+string arrays `resolvedDocuments`, `graphConfirmed`,
+`graphCandidatesOrTruncation`, `sourceFilesReadAndRoles`, `consumersChecked`,
+and `unreadCandidatesAndReason`. Use `""` and `[]` for absent values. Sort each
+row's canonical JSON byte string in UTF-8 bytewise lexical order before placing
+the parsed objects in the snapshot. A changed code-path coverage boundary must
+therefore create a new `impactRevision` and downstream evidence fingerprint.
 
 Normalize every directed edge with all owning fields: `sourceEpicId`,
 `targetEpicId`, `direction`, `originLayer`, `sourceDocumentId`, sorted
@@ -114,7 +149,7 @@ status: "seeded | investigated | partial"
 impactRevision: "sha256:<hex>"
 sourceParity: "confirmed | partial | unavailable"
 projectId: "<projectId>"
-outputLanguage: "<language>"
+outputLanguage: "ko"
 contextStatus: "fresh | stale | unknown"
 sourceCommits: {}
 retrievedAt: "<ISO timestamp>"
@@ -125,38 +160,26 @@ maxCrossEpicDepth: 2
 Use these headings verbatim:
 
 ```text
-# Impact Analysis - <Request title>
-## 1. Seed and Interpretation
-## 2. Freshness and Evidence Boundary
-## 3. Selected EPICs and Specs
-## 4. API and Screen Candidates
-## 5. Cross-EPIC Traversal
-## 6. Graph Impact
-## 7. Repository Search
-## 8. Source Evidence
-## 9. Impact Evidence Matrix
-## 10. Coverage Limits
-## 11. Next Exact Reads
+# 영향도 및 근거 조사 — <요청 제목>
+## 1. 조사 기준과 문서 연결
+## 2. 최신성 및 근거 경계
+## 3. 관련 EPIC·문서·스펙
+## 4. 화면·API·데이터 후보
+## 5. 빠른 경로 지도 (Graph Trace)
+## 6. 교차 EPIC·저장소·원문 확인
+## 7. 영향 근거 매트릭스
+## 8. 조사 한계와 다음 확인
 ```
 
-## Compact Request Handoff
+`document_resolve`로 선택한 문서 항목과 연결 스펙을 확인한 뒤,
+`graph_trace`로 `화면 ↔ API ↔ 도메인 ↔ DB/외부 연동` 경로를 기록한다.
+경로 지도에는 시작 앵커, 확인된 홉, 후보/미확인 홉, 누락·절단 정보, 다음 원문
+확인을 표로 남긴다. Graph trace만으로 쓰기, 권한, 트랜잭션, 계약, 영향 부재를
+확정하지 않는다.
 
-Keep this compact Engineering Discovery Handoff as an in-memory/reference
-contract that the SDD spec flow may copy later when it owns the request. Impact
-analysis must not mutate `request.md`:
-
-```markdown
-## Engineering Discovery Handoff
-
-- **Impact artifact**: `impact.md`
-- **Impact status**: <seeded | investigated | partial>
-- **Source parity**: <confirmed | partial | unavailable>
-- **Seed EPICs**: <ids and names>
-- **Seed specs**: <ids and kinds>
-- **Context freshness**: <fresh | stale | unknown>
-- **Source commits**: <repo id -> commit>
-- **Coverage limits**: <short summary or none>
-```
+`## 6. 교차 EPIC·저장소·원문 확인`에는 앵커별 **영향 코드 경로 읽기 범위** 표를
+함께 둔다. 표에는 읽은 파일·심볼과 역할, 확인한 소비자, 미열람 후보와 이유,
+`confirmed-path | partial-path`, 다음 원문 확인을 기록한다.
 
 ## Completion Gate And Boundary Outcomes
 

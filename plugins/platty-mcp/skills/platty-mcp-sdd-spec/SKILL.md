@@ -13,6 +13,9 @@ evidence through `platty-mcp-retrieval`, drafts `request.md` and `stories.md`,
 then uses `platty-mcp-impact-analysis` to persist the impact snapshot under
 `~/.platty/specs/<projectId>/...`.
 
+All reader-facing output is Korean. Keep code identifiers, API paths, file
+paths, status values, and quoted evidence in their original form.
+
 ## Required Sub-Skills
 
 1. Use `using-platty-mcp` for MCP capability and project context.
@@ -46,7 +49,8 @@ local Platty specs directory.
 4. Require the retrieval full-cycle ladder before SDD product claims.
 5. Stop if minimum retrieval or a selected branch's required evidence surface is
    missing.
-6. Build an SDD packet from direct evidence, inference boundaries,
+6. Require the retrieval packet to distinguish document-map evidence resolved
+   with `document_resolve` from candidates, then build an SDD packet from direct evidence, inference boundaries,
    coverage limits, assumptions, confirmed decisions, and open questions.
 7. Draft `request.md` content through §8 by applying the request template.
 8. Always draft `stories.md` with `request.md` by applying the stories template.
@@ -58,17 +62,18 @@ local Platty specs directory.
    `impact.md` and returns `impactDossier`, `impactStatus`, `sourceParity`, and
    the verified `impactArtifactPath`. Missing workspace parity creates partial
    impact without erasing the product drafts.
-10. Append the compact Engineering Discovery Handoff to `request.md` after §8,
-    using the impact result; then complete §9 Self Review.
+10. Add only a compact `impact.md` status link to `request.md`; detailed
+    discovery, freshness, graph, and source evidence remain in `impact.md`.
 11. Run Self Review across the raw idea, all available requirement inputs, MCP
    evidence, `request.md`, `stories.md`, and the impact result.
-12. Run `review -> revise -> review`; record the final Requirement Coverage,
-    Search Route Audit, and cross-document findings in the drafts.
+12. Run `review -> revise -> review`; retain the final Requirement Coverage,
+    Search Route Audit, and cross-document findings in the review result and
+    `impact.md`, not in planner-facing document bodies.
 13. Persist the revised `request.md` and `stories.md` under the same SDD
     directory. SDD spec must not format or write impact.md.
 14. Verify all three files are readable. Confirm that the three artifacts share
-    `projectId` and `contextStatus`; use `impact.md`'s `sourceCommits` and the
-    handoff's Source commits for source metadata, and use its `retrievedAt` for
+    `projectId` and `contextStatus`; use `impact.md`'s `sourceCommits` for
+    source metadata and its `retrievedAt` for
     impact freshness. Derive the spec identity from the verified
     `impactArtifactPath` and confirm that `impact.md`, `request.md`, and
     `stories.md` are in the same shared SDD directory before returning the final
@@ -87,10 +92,9 @@ Persist durable workflow metadata needed by later SDD stages in frontmatter:
 `localPersistenceTarget`, raw MCP tool payloads, and transient candidate lists in
 the SDD packet, not in the drafted file frontmatter.
 
-Append `## Engineering Discovery Handoff` immediately after §8 in `request.md`.
-Use the compact shape in `references/request-shape.md`; do not include the full
-impact matrix, raw MCP payload, shell transcript, or source bodies in the
-request.
+Do not include an evidence table, self-review checklist, raw MCP payload, shell
+transcript, or source bodies in planner-facing documents. `impact.md` owns those
+details; the request only links to it with status and known limits.
 
 `request.md` uses `references/request-shape.md` and includes these sections in
 order:
@@ -105,13 +109,12 @@ order:
 §6 Confirmed Decisions
 §7 Open Questions
 §8 Validation Hypotheses
-Engineering Discovery Handoff
-§9 Self Review
+Impact reference
 ```
 
-`stories.md` uses `references/stories-shape.md`, starts with `# User Stories`,
-uses `US-NN` story blocks with Given/When/Then scenarios, and ends with
-Traceability followed by Self Review.
+`stories.md` uses `references/stories-shape.md`, starts with `# 사용자 스토리`,
+uses `US-NN` story blocks with Given/When/Then scenarios, and ends with the
+Korean rule-to-scenario connection table.
 
 ## Local Persistence
 
@@ -232,7 +235,7 @@ Read `references/stories-shape.md` before drafting stories content. If
 
 ## Self Review Gate
 
-Self Review is mandatory after the request handoff and both drafts exist. It
+Self Review is mandatory after the compact impact link and both drafts exist. It
 must not move either file to `approved`; explicit user approval remains the only
 approval gate.
 
@@ -249,17 +252,17 @@ Apply this review sequence:
    contradictions or unsupported promotion from inference to decision.
 4. Check request-to-story coverage without treating rule-to-scenario coverage
    as total input-requirement coverage.
-5. Check that the compact handoff agrees with `impactArtifactPath`,
-   `impactStatus`, `sourceParity`, seed EPICs/specs, freshness, source commits,
-   and coverage limits without copying impact evidence into the request.
+5. Check that the compact impact link agrees with `impactArtifactPath`,
+   `impactStatus`, freshness, and coverage limits without copying impact
+   evidence into the request.
 6. Revise both drafts for every fixable blocking finding, then review the
    revised pair again.
 
 Set the final verdict to `NEEDS_WORK` when blocking findings remain. A required
 input that cannot be read inside the MCP boundary is a requirement-coverage gap,
-not permission to claim completeness. Preserve it in §9 and keep both files
-draft. `PASS` means the authored pair is internally reviewable; it does not mean
-user approval.
+not permission to claim completeness. Preserve it in the review result and keep
+both files draft. `PASS` means the authored pair is internally reviewable; it
+does not mean user approval.
 
 ## Answer Contract
 

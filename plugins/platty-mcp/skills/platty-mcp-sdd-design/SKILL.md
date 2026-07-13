@@ -8,11 +8,15 @@ description: Use when creating locally saved MCP-grounded SDD technical design a
 **Prerequisite:** Read `using-platty-mcp` before acting unless it has already
 been read in this turn.
 
-Create an evidence-gated technical design from the approved product inputs and
-the persisted Impact Dossier. The design owns technical decisions and the
-canonical change map; impact analysis owns impact discovery and `impact.md`.
+Create an evidence-gated system design from the approved product inputs and the
+persisted Impact Dossier. The design owns system boundaries, technical decisions,
+and the canonical change map; impact analysis owns impact discovery and
+`impact.md`.
 Use `references/design-shape.md` for the design and
 `references/tasks-shape.md` for the approval-gated task plan.
+
+All reader-facing output is Korean. Keep code identifiers, API paths, file
+paths, status values, and quoted evidence in their original form.
 
 ## Required Sub-Skills
 
@@ -62,9 +66,15 @@ Use `references/design-shape.md` for the design and
    `impactRevision`, the sorted matrix `evidenceId` snapshot, source parity,
    commits, traversal status, and `impactCoverageLimits`. Never edit an Impact
    Dossier entry from this skill.
-6. Derive evidence-backed Technical AS-IS facts and Technical TO-BE decisions
-   from request, stories, and impact. Unsupported hard implementation claims
-   become explicit assumptions or risks, or are omitted.
+6. Derive evidence-backed AS-IS facts and system TO-BE decisions from request,
+   stories, and impact. Use the dossier's `document_resolve` links to connect
+   product documents to selected specs, and use its `graph_trace` result as a
+   fast `screen ↔ API ↔ domain ↔ DB` path map. For every hard implementation
+   claim, require the dossier's matching `confirmed-path` coverage row: the
+   entry/caller, orchestration, persistence or external boundary, consumers,
+   and adjacent tests/configuration/migrations when present must have exact
+   source reads. `partial-path` evidence becomes a risk or an
+   Evidence-Resolution task, never a confirmed system fact.
 7. Draft `design.md` from `references/design-shape.md`.
 8. Persist and read back `design.md`, then report its path for user review.
 9. If Self Review is `blocked` or `NEEDS_WORK`, reject approval and stop without
@@ -107,14 +117,17 @@ Persist that record as the `design.md` frontmatter `impactRefreshReason` (use
 `condition: not-needed` with empty lists when no refresh ran); it participates in
 `evidenceFingerprint`, so changing it creates a new unapproved design revision.
 Do not always rerun impact.
-Do not copy its Impact Evidence Matrix or
-search transcript into `design.md`. Reference dossier evidence ids instead.
+Do not copy its Impact Evidence Matrix or search transcript into `design.md`.
+Show only the compact path map needed for implementation, reference dossier
+evidence ids, and link to `impact.md` for detailed evidence.
 
 Hard implementation claims require the relevant bounded evidence and source
-parity. Evidence references may identify `graph_trace` and `code_search`
-results plus bounded `readonly_workspace_shell` exact reads retained by the
-dossier. Empty graph/search results are not proof of no impact. A candidate-only
-result is not a confirmed claim.
+parity plus `confirmed-path` coverage. `document_resolve` selects connected
+document context; `graph_trace` accelerates path discovery; `code_search` finds
+exact source candidates; and `readonly_workspace_shell` reads the bounded
+source. Graph output does not prove writes, permissions, contracts,
+transactions, retries, or absence. Empty graph/search results are not proof of
+no impact. A candidate-only or `partial-path` result is not a confirmed claim.
 
 ## Local SDD File Access
 
@@ -189,6 +202,7 @@ SDD Design Packet
 - sourceCommits
 - crossEpicTraversalStatus
 - impactCoverageLimits
+- codePathCoverage
 - surfacesRead
 - selectedEpics
 - selectedSpecs
@@ -381,7 +395,7 @@ missing source parity.
 | Creating tasks before design approval | Stop after writing and verifying `design.md`; do not create or overwrite `tasks.md`. |
 | Treating user approval as an override for a blocked design | Reject approval and resolve the blocking finding before presenting a new approval-eligible revision. |
 | Treating a stale task plan as current | Compare design approval metadata and regenerate only after the revised design is approved. |
-| Inventing task details from partial source parity | Set readiness to `partial`, preserve the gap and next exact read, and omit unsupported hard claims. |
+| Inventing task details from partial source parity or `partial-path` coverage | Set readiness to `partial`, preserve the gap and next exact read, and omit unsupported hard claims. |
 
 ## Verification
 
