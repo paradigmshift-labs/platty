@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Platty MCP",
     "shortDescription": "Platty MCP retrieval, impact, memory, and SDD handoffs",
-    "longDescription": "Use Platty MCP skills for read-only retrieval and impact analysis against configured remote Platty context, memory lifecycle requests, and local SDD handoffs that write impact.md and design.md for review before generating post-approval tasks.md, without running local CLI lifecycle commands.",
+    "longDescription": "Use Platty MCP skills for read-only retrieval and impact analysis against configured remote Platty context, memory lifecycle requests, and local SDD handoffs that write prd.md, user_stories.md, and system_design.md before generating approval-gated tasks.md, without running local CLI lifecycle commands.",
     "developerName": "Paradigm Shift Labs",
     "category": "Developer Tools",
     "capabilities": [
@@ -30,8 +30,9 @@
     "defaultPrompt": [
       "Search my configured Platty MCP context.",
       "Answer from Platty MCP evidence.",
-      "Draft design.md for review.",
-      "After I approve design.md, generate tasks.md.",
+      "Draft prd.md and user_stories.md in Korean.",
+      "Draft system_design.md for review.",
+      "After I approve system_design.md, generate tasks.md.",
       "Manage Platty MCP memory.",
       "Draft an MCP-grounded SDD handoff."
     ]

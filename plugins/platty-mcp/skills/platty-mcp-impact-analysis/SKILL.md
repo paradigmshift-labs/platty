@@ -14,6 +14,9 @@ business-document gates, or exact spec selection here.
 
 The final product is an Impact Dossier: one evidence-separated, reusable record
 of confirmed impact, likely impact, candidates, unknowns, coverage, and next reads.
+In SDD context, use
+`../using-platty-mcp/references/sdd-revision-contract.md` for product bindings
+and downstream fingerprints.
 
 ## Operating Flow
 
@@ -51,11 +54,14 @@ of confirmed impact, likely impact, candidates, unknowns, coverage, and next rea
    Mark it `confirmed-path` only when every known bounded boundary was actually
    read; otherwise mark it `partial-path`.
 8. Apply `references/impact-dossier.md` and its completion gate.
-9. In an SDD context, format the final `## 9. 영향도 조사 및 근거` appendix.
-   When `prd.md` already exists, update only that appendix and its impact
-   frontmatter fields, preserving §0–§8 byte-for-byte; when it does not exist,
-   return `impactAppendixMarkdown` to `platty-mcp-sdd-spec`, which persists the
-   completed PRD. Verify the resulting `prd.md` is readable.
+9. In an SDD context, require the finalized `productSegmentRevision` and
+   `storiesRevision`, then format the final `## 9. 영향도 조사 및 근거`
+   appendix bound to those values.
+   SDD context requires an existing `prd.md` with finalized §0–§8 and a pending
+   §9 marker. Update only that appendix, preserving frontmatter and §0–§8
+   byte-for-byte, then verify the resulting `prd.md` is readable. If the PRD is
+   absent, return control to `platty-mcp-sdd-spec` to persist the reviewed
+   product pair first; do not create the PRD from impact analysis.
 
 ## Completion Gate
 
@@ -74,7 +80,7 @@ name the MCP capability gap and next exact read, and use no local fallback.
 ## Local SDD File Access
 
 The only local exception is the selected `prd.md`: read it only to locate and
-replace §9 and the impact frontmatter fields. Do not read local SOT, run local
+replace §9. Do not read local SOT, run local
 Platty CLI commands, inspect unrelated files, or alter §0–§8, user stories,
 design, or task files.
 

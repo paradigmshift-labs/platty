@@ -122,8 +122,8 @@ Code가 Platty CLI를 구동하는 법을 가르치는 스킬 모음입니다. P
 `platty-mcp:platty-mcp-sdd-spec`,
 `platty-mcp:platty-mcp-sdd-design`를 포함한 `platty-mcp` 플러그인을 설치하세요.
 영향 분석은 선택된 스펙, 그래프 클래스, cross-EPIC 탐색, 저장소 범위, 제한된 소스
-증거를 하나의 dossier로 수렴하고 선택된 `impact.md` 예외를 소유합니다. SDD 요청
-흐름은 `prd.md`에 compact engineering-discovery handoff pointer만 남기며,
+증거를 하나의 dossier로 수렴하고 선택된 `prd.md`의 마지막 §9 부록만 소유합니다.
+SDD 요청 흐름은 `prd.md`와 `user_stories.md`를 작성하며,
 설계 흐름은 검토용 `system_design.md`를 먼저 작성하고 명시적 승인 후에만 해당 승인
 설계에서 readiness를 분류한 `tasks.md`를 생성합니다.
 `platty-mcp` 플러그인은 서버 URL이 배포마다 다르기 때문에 `.mcp.json`이나
