@@ -48,6 +48,10 @@ Common routes:
 
 ## Core Rules
 
+- Use `prd.md -> user_stories.md -> system_design.md -> tasks.md` as the canonical
+  SDD artifact sequence. Treat non-canonical legacy filenames only as read-only
+  input aliases, never as names for newly authored output.
+
 - Prefer `--json` for CLI commands so results can be inspected precisely.
 - Start with bare `platty setup` for human-guided project management. Use
   `Manage current project` to inspect repository, analysis, docs, EPIC,

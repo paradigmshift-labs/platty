@@ -12,7 +12,7 @@ Create an evidence-gated system design from the approved product inputs and the
 persisted Impact Dossier. The design owns system boundaries, technical decisions,
 and the canonical change map; impact analysis owns impact discovery and the
 final §9 appendix of `prd.md`.
-Use `references/design-shape.md` for the design and
+Use `references/system-design-shape.md` for the design and
 `references/tasks-shape.md` for the approval-gated task plan.
 
 All reader-facing output is Korean. Keep code identifiers, API paths, file
@@ -111,7 +111,7 @@ or `prd.md` as the handoff.
    delta. For `DEPRECATE` or `DELETE`, confirm every consumer and the replacement,
    observation period, removal order, and rollback. If those reads are absent,
    keep `UNKNOWN` or `DEPRECATE`; never assert safe deletion.
-7. Draft `system_design.md` from `references/design-shape.md`.
+7. Draft `system_design.md` from `references/system-design-shape.md`.
 8. Persist and read back `system_design.md`, then report its path for user review.
 9. If Self Review is `blocked` or `NEEDS_WORK`, reject approval and stop without
    creating or overwriting `tasks.md`; refresh evidence or revise the design.
@@ -283,11 +283,11 @@ SDD Design Packet
 
 `system_design.md` is a meeting draft, not an MCP execution log. Keep its
 frontmatter limited to the identity, input/revision, approval, and compact
-review fields defined in `design-shape.md`. Do not put source parity, source
+review fields defined in `system-design-shape.md`. Do not put source parity, source
 commits, impact snapshots, tool output, refresh history, or detailed coverage
 maps above the title.
 
-Write the body in the fixed reader order from `design-shape.md`:
+Write the body in the fixed reader order from `system-design-shape.md`:
 
 1. meeting goal and decision agenda;
 2. product understanding and user flows;
@@ -396,7 +396,7 @@ implementation edit.
 ## Revision And Approval Contract
 
 Apply `../using-platty-mcp/references/sdd-revision-contract.md` and the
-frontmatter rules in `design-shape.md`. A new or
+frontmatter rules in `system-design-shape.md`. A new or
 revised design has `status: draft`; `approvedRevision`, `approvedAt`, and
 `approvedBy` are empty.
 

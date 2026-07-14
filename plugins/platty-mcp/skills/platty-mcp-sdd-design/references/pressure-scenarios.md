@@ -89,7 +89,7 @@ missing-change-map: AS-IS와 TO-BE 설명은 있지만 둘을 잇는 변경 식�
   then review again.
 - **Observable pass criteria**: AS-IS and TO-BE exist and every applicable delta
   is connected by a complete `CHG-*` row before readiness is ready.
-- **Owning contract**: `design-shape.md` Canonical Change Map and
+- **Owning contract**: `system-design-shape.md` Canonical Change Map and
   `design-review-rubric.md` Change Coverage.
 
 ### db-impact-blank
@@ -106,7 +106,7 @@ db-impact-blank: DB/Data 변경 여부를 확인하지 못했지만 해당 섹�
   evidence, and change id/N/A; never leave it blank.
 - **Observable pass criteria**: A blank DB/data row blocks readiness; applicable
   DB changes receive the complete conditional DB/data design.
-- **Owning contract**: `design-shape.md` Impact Assessment and DB/Data module;
+- **Owning contract**: `system-design-shape.md` Impact Assessment and DB/Data module;
   rubric Impact Assessment Audit and Change Coverage.
 
 ### unknown-critical-ready
@@ -125,7 +125,7 @@ unknown-critical-ready: 요청 규칙과 연결된 결제 API 영향이 unknown�
   condition in a new design revision.
 - **Observable pass criteria**: An implicated unknown cannot silently produce
   ready; generic design approval does not accept the risk or remove the blocker.
-- **Owning contract**: `design-shape.md` Impact Assessment and
+- **Owning contract**: `system-design-shape.md` Impact Assessment and
   `design-review-rubric.md` Impact Assessment Audit.
 
 ### no-impact-from-empty-graph
@@ -160,7 +160,7 @@ missing-verification-link: CHG-02 변경에는 검증 시나리오가 없어. �
   `review -> revise -> review`.
 - **Observable pass criteria**: Missing verification forces NEEDS_WORK and
   partial/blocked; PASS/ready requires every CHG row to map to VER.
-- **Owning contract**: `design-shape.md` Verification and Traceability and
+- **Owning contract**: `system-design-shape.md` Verification and Traceability and
   `design-review-rubric.md` Verification Coverage.
 
 ## Approval-Gated TDD Task Detail Controls

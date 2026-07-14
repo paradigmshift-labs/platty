@@ -139,8 +139,8 @@ Failure to prevent:
 Expected route:
 
 ```text
-read request-shape.md before request drafting
-read stories-shape.md before stories drafting
+read prd-shape.md before PRD drafting
+read user-stories-shape.md before user-story drafting
 return drafts in the template shape without closing unresolved questions
 ```
 
