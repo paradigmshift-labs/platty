@@ -104,8 +104,7 @@ produce prd.md and user_stories.md markdown
 resolve localPersistenceTarget
 impact skill writes or refreshes prd.md §9 under ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
 SDD spec writes prd.md and user_stories.md under the same directory
-verify prd.md (including §9) and user_stories.md are readable and share `projectId` and `contextStatus`
-verify impact metadata uses `sourceCommits` and `retrievedAt`
+verify both files share `projectId`; verify `contextStatus`, `sourceCommits`, and `impactRetrievedAt` in prd.md §9
 derive spec identity from the PRD path and the shared SDD directory
 ```
 
@@ -133,7 +132,8 @@ MCP 근거로 prd.md랑 user_stories.md 초안까지 만들어줘. 문서 양식
 Failure to prevent:
 
 - returning a prose requirements summary instead of `prd.md`;
-- using generic numbered sections instead of `§0 Impact` through `§8 Validation Hypotheses`;
+- using generic numbered sections instead of the exact Korean §0 변경 한눈에 보기 through
+  §8 성공 가설과 운영 지표 contract;
 - drafting stories without `US-NN`, Given/When/Then scenarios, and Traceability.
 
 Expected route:
@@ -197,32 +197,32 @@ Failure to prevent:
 Expected route:
 
 ```text
-build/reuse impactSeedPacket
--> invoke platty-mcp-impact-analysis
--> impact skill alone writes or refreshes prd.md §9
--> SDD spec receives the formatted §9 appendix, impact status, and source parity
--> SDD spec writes only prd.md and user_stories.md
+finish and persist reviewed prd.md §0–§8 plus user_stories.md
+-> compute productSegmentRevision and storiesRevision
+-> invoke platty-mcp-impact-analysis with both revisions and impactSeedPacket
+-> impact skill alone writes or refreshes prd.md §9 bound to both revisions
+-> SDD spec rereads and verifies prd.md plus user_stories.md without rewriting product content
 ```
 
-## Scenario 10: Three-File Verification
+## Scenario 10: Two-Artifact And Embedded-Appendix Verification
 
-The impact skill has returned a verified artifact path and the SDD spec has
-written its drafts.
+The impact skill has updated the embedded PRD §9 and the SDD spec has both
+product artifacts.
 
 Failure to prevent:
 
 - returning after verifying only prd.md and user_stories.md;
 - accepting mismatched project, spec, or freshness metadata;
-- omitting `prd.md §9` from the answer paths.
+- omitting the `prd.md` §9 verification result from the answer.
 
 Expected route:
 
 ```text
-verify prd.md §9, prd.md, and user_stories.md are readable
--> verify the three files share `projectId` and `contextStatus`
--> verify impact source metadata uses `sourceCommits` and impact freshness uses `retrievedAt`
+verify prd.md, its §9 appendix, and user_stories.md are readable
+-> verify both files share `projectId`
+-> verify §9 impact metadata uses `contextStatus`, `sourceCommits`, and `impactRetrievedAt`
 -> derive spec identity from the PRD path and the shared SDD directory
--> return all three paths
+-> return both file paths and state that impact evidence is in prd.md §9
 ```
 
 ## Scenario 11: Open-Assumption Handoff
@@ -240,7 +240,7 @@ Expected route:
 
 ```text
 keep assumptions in §7 and stories draft
--> keep detailed discovery in prd.md §9 and add only its compact status link to prd.md
+-> keep detailed discovery only in prd.md §9
 -> point to prd.md §9 with status and the user-relevant coverage limit
 -> keep Self Review verdict and approval state honest
 ```

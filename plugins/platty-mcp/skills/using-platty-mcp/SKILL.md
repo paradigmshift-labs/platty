@@ -79,6 +79,9 @@ For the MCP DB/read-model structure, document/spec link relationships, retrieval
 order, and SOT projection boundary, read
 `references/retrieval-architecture.md`.
 
+For SDD revision, approval, evidence fingerprint, and stale-plan calculations,
+read `references/sdd-revision-contract.md`.
+
 For SOT file roots and stored file content behavior, read
 `references/artifact-access.md`.
 
@@ -131,7 +134,9 @@ That skill must use `platty-mcp-retrieval` for evidence and invoke
 `platty-mcp-impact-analysis` for the final §9 Engineering Discovery appendix.
 It writes `prd.md` and `user_stories.md` directly to
 `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`, then verifies both files,
-including the final PRD §9 section.
+including the final PRD §9 section. Impact binds §9 to the finalized product and
+story revisions. A later explicit product approval rereads both files and moves
+their statuses together before technical design begins.
 
 For MCP-grounded SDD technical design from existing approved `prd.md` (including
 §9) and `user_stories.md`, use `platty-mcp-sdd-design` after the capability gate.

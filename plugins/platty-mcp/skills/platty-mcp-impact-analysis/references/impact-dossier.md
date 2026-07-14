@@ -3,7 +3,7 @@
 ## Evidence And Artifact State
 
 Classify each matrix entry as `confirmed`, `likely`, `candidate`, or `unknown`.
-The dossier artifact status is `seeded`, `investigated`, or `partial`; source
+The dossier artifact status is `seeded`, `investigated`, `partial`, or `stale`; source
 parity is `confirmed`, `partial`, or `unavailable`.
 
 - `seeded`: retrieval produced a valid packet, but a configured investigation
@@ -12,6 +12,8 @@ parity is `confirmed`, `partial`, or `unavailable`.
   classified, even where the classification remains likely, candidate, or unknown.
 - `partial`: a required axis, exact read, freshness check, or traversal frontier
   could not be completed.
+- `stale`: the bound product/story revisions, context freshness, or recorded
+  source commits no longer match the current inputs.
 - `sourceParity: confirmed`: each hard source claim has a bounded exact source
   read at a recorded commit.
 - `sourceParity: partial`: source parity is not confirmed, so do not make hard
@@ -79,8 +81,9 @@ nextExactRead
 
 `impactRevision` is `sha256:<hex>` over a canonical JSON evidence snapshot. The
 snapshot contains the artifact's evidence-bearing metadata (`status`,
-`sourceParity`, `projectId`, `contextStatus`, lexically sorted `sourceCommits`,
-and `maxCrossEpicDepth`), lexically sorted coverage-limit strings, canonical
+`sourceParity`, `projectId`, `contextStatus`, `productSegmentRevision`,
+`storiesRevision`, lexically sorted `sourceCommits`, and `maxCrossEpicDepth`),
+lexically sorted coverage-limit strings, canonical
 matrix rows sorted by `evidenceId`, canonical affected-code-path coverage rows
 sorted by their canonical JSON bytes, and the exact canonical cross-EPIC traversal
 state owned by `cross-epic-traversal.md`: sorted `frontierEpicIds`, `visitedEpicIds`,
@@ -129,9 +132,9 @@ edge bucket. This total order includes array-valued fields and prevents input or
 locale order from changing the revision when leading fields tie. Apply the same
 canonical JSON key and UTF-8 rules to the complete snapshot.
 
-`impactRevision` excludes `retrievedAt`, its own frontmatter field, and other
-write-time timestamps. `retrievedAt` records freshness only, not impactRevision
-content. A refresh that changes only `retrievedAt` must retain the same
+`impactRevision` excludes `impactRetrievedAt`, its own status-table field, and other
+write-time timestamps. `impactRetrievedAt` records freshness only, not impactRevision
+content. A refresh that changes only `impactRetrievedAt` must retain the same
 `impactRevision`; evidence or coverage changes create a new revision.
 
 ## Persisted PRD Appendix
@@ -141,10 +144,28 @@ Persist source evidence by reference only: repo id, source commit, file, symbol,
 line range, `matchedQuery`, and short `observedBehavior`; do not persist complete
 source files or unbounded snippets.
 
-Store `impactRevision`, `impactStatus`, `sourceParity`, `impactRetrievedAt`,
-`sourceCommits`, and `impactCoverageLimits` in `prd.md` frontmatter. The
-appendix begins after the completed §0–§8 product body and is the only part of
-the PRD this skill may replace.
+Store `productSegmentRevision`, `storiesRevision`, `impactRevision`,
+`impactStatus`, `contextStatus`, `sourceParity`, `impactRetrievedAt`,
+`sourceCommits`, cross-EPIC traversal status, and `impactCoverageLimits` in the
+compact status table under PRD `### 9-2. 최신성 및 근거 경계`, not in
+frontmatter. The appendix begins
+after the completed §0–§8 product body and is the only part of the PRD this
+skill may replace.
+
+Use this exact status table key vocabulary:
+
+| key | value contract |
+| --- | --- |
+| `productSegmentRevision` | `sha256:<hex>`; PRD stable product body revision |
+| `storiesRevision` | `sha256:<hex>`; stable stories body revision |
+| `impactRevision` | `sha256:<hex>` |
+| `impactStatus` | `seeded | investigated | partial | stale` |
+| `contextStatus` | current MCP context freshness value |
+| `sourceParity` | `confirmed | partial | unavailable` |
+| `impactRetrievedAt` | ISO-8601 timestamp |
+| `sourceCommits` | repo id and full commit pairs, sorted by repo id |
+| `crossEpicTraversalStatus` | completion/truncation state and depth |
+| `impactCoverageLimits` | sorted explicit limits or `[]` |
 
 Use these headings verbatim:
 

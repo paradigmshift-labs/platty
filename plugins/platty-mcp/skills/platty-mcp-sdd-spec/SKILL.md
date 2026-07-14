@@ -1,6 +1,6 @@
 ---
 name: platty-mcp-sdd-spec
-description: Use when creating locally saved MCP-grounded SDD request and story drafts from a product idea, feature request, PRD need, policy change, or requirements discussion.
+description: Use when creating locally saved MCP-grounded SDD PRD and user-story drafts from a product idea, feature request, PRD need, policy change, or requirements discussion.
 ---
 
 # Platty MCP SDD Spec
@@ -12,6 +12,9 @@ Produce MCP-grounded SDD documents and persist them locally. This skill gathers
 evidence through `platty-mcp-retrieval`, drafts `prd.md` and `user_stories.md`,
 then uses `platty-mcp-impact-analysis` to persist the impact snapshot under
 `~/.platty/specs/<projectId>/...`.
+
+Use `../using-platty-mcp/references/sdd-revision-contract.md` for every product
+revision and downstream fingerprint value.
 
 All reader-facing output is Korean. Keep code identifiers, API paths, file
 paths, status values, and quoted evidence in their original form.
@@ -56,20 +59,24 @@ local Platty specs directory.
 8. Always draft `user_stories.md` with `prd.md` by applying the stories template.
    If the request has unresolved questions, keep stories as draft and surface the
    assumptions used to split scenarios.
-9. Review the product requirements for policy, journey, data, EPIC, API, and
-   screen impact. Build or reuse `impactSeedPacket` from the retrieval results,
-   then invoke `platty-mcp-impact-analysis`. It returns the formatted §9
-   appendix plus `impactRevision`, status, source parity, and coverage limits.
-   Missing workspace parity creates partial impact without erasing the product drafts.
-10. Append the returned appendix as the final §9 of `prd.md`; detailed
-    discovery, freshness, graph, and source evidence remain there.
-11. Run Self Review across the raw idea, all available requirement inputs, MCP
-   evidence, `prd.md`, `user_stories.md`, and the impact result.
-12. Run `review -> revise -> review`; retain the final Requirement Coverage,
-    Search Route Audit, and cross-document findings in §9, not in §0–§8.
-13. Persist the revised `prd.md` and `user_stories.md` under the same SDD
-    directory, then verify both files are readable and their shared project and
-    freshness metadata agree.
+9. Run product Self Review across the raw idea, requirement inputs, retrieval
+   packet, PRD §0–§8, and all stories. Apply `review -> revise -> review` until
+   the product pair is internally consistent. Do not run impact against a product
+   body that may still be revised.
+10. Persist both draft files together. The PRD may contain the §9 heading and a
+    pending marker at this point; no impact claim may be made from that marker.
+11. Compute the finalized `productSegmentRevision` from PRD §0–§8 and
+    `storiesRevision` from stable stories frontmatter and body, excluding the
+    mutable status. Review policy,
+    journey, data, EPIC, API, and screen impact, then invoke
+    `platty-mcp-impact-analysis` with both revisions and the seed packet.
+12. Impact analysis alone replaces the final §9 and binds the dossier to those
+    two revisions. Reread `prd.md` and verify the bound revisions,
+    `impactRevision`, status, freshness, source parity, and coverage limits.
+13. Run final cross-document Self Review without rewriting §0–§8 or stories. If
+    a product change is required, update both product files, reset their status
+    to `draft`, and restart from step 9 so impact is regenerated for the new
+    revisions. Persist and read back the final pair before reporting completion.
 
 ## Template Contract
 
@@ -77,35 +84,54 @@ local Platty specs directory.
 template references exactly enough that designers, planners, and implementation
 agents can review them without reshaping them.
 
-Persist durable workflow metadata needed by later SDD stages in frontmatter:
-`projectId`, `outputLanguage`, `sourceCommit`, `sotExportedAt`,
-`evidenceBoundary`, and `contextStatus`. Keep runtime-only metadata such as
-`localPersistenceTarget`, raw MCP tool payloads, and transient candidate lists in
-the SDD packet, not in the drafted file frontmatter.
+Keep frontmatter reader-light: persist only `id`, `type`, `status`, `projectId`,
+`outputLanguage`, and the stories `derivedFrom` link. Source commits,
+freshness, evidence boundary, impact status/revision, source parity, coverage
+limits, review detail, `localPersistenceTarget`, raw MCP payloads, and
+transient candidates do not belong above the title. Durable evidence metadata
+is stored in PRD §9; runtime-only metadata stays in the SDD packet.
 
 Do not include raw MCP payloads, shell transcripts, or source bodies. The
 evidence table, review findings, and source references belong only in the final
 §9 appendix; §0–§8 remain planner-facing.
 
+Write §0–§8 as a product document, not a source-analysis summary. Its allowed
+shape is user/operations/policy language, with only the minimal confirmed
+original status value or values in parentheses when a product rule directly
+depends on them. Explain the Korean business meaning first. Class,
+function, file, line, code-node, spec-id, route/component candidate, full enum
+transition list, source-parity, graph/search status, and confidence narration
+belong in §9. Evidence-handling or authoring behavior is not a product rule:
+never create `R-*`, `AC-*`, `D-*`, or `H-*` for how the document labels partial
+source evidence.
+
 `prd.md` uses `references/request-shape.md` and includes these sections in
 order:
 
 ```text
-§0 Impact
-§1 Customer Task
-§2 Current Situation
-§3 Limits
-§4 Solution
-§5 Rules
-§6 Confirmed Decisions
-§7 Open Questions
-§8 Validation Hypotheses
+§0 변경 한눈에 보기
+§1 사용자 과업
+§2 현재 상황과 문제
+§3 범위와 비범위
+§4 제안하는 해결 방향
+§5 제품 규칙과 수용 기준
+§6 확정 결정
+§7 가정과 미결 질문
+§8 성공 가설과 운영 지표
 §9 Impact evidence appendix
 ```
 
 `user_stories.md` uses `references/stories-shape.md`, starts with `# 사용자 스토리`,
-uses `US-NN` story blocks with Given/When/Then scenarios, and ends with the
-Korean rule-to-scenario connection table.
+places the Korean `스토리 한눈에 보기` index before the detailed stories, uses
+`US-NN` story blocks with Given/When/Then scenarios, and ends with the Korean
+rule-to-scenario connection table. The index is derived from the detailed story
+and trace rows; it never owns a new product decision.
+
+PRD §0 must name what the current review is being asked to approve by linking
+the existing scope, `R-*`/`AC-*`, `O-*`, and `H-*` items. PRD §8 must make a
+success decision possible: record the observed baseline, target or decision
+rule, measurement period, owner, and linked rules. Unknown baselines or targets
+stay attached to `A-*` or `O-*`; do not invent a number to complete the table.
 
 ## Local Persistence
 
@@ -125,16 +151,19 @@ writing files; do not pass a literal `~` path to filesystem tools.
 Persistence rules:
 
 - Create the target directory if it does not exist.
-- The impact skill formats the §9 appendix and returns its revision, status,
-  parity, commits, and coverage limits.
-- Write `requestMarkdown` with that appendix to `prd.md`.
-- Write `storiesMarkdown` to `user_stories.md`.
+- Write the reviewed PRD §0–§8 plus pending §9 marker to `prd.md` and
+  `storiesMarkdown` to `user_stories.md` before impact analysis.
+- The impact skill formats and exclusively replaces §9, binding it to
+  `productSegmentRevision` and `storiesRevision`, then returns its revision,
+  status, parity, commits, and coverage limits.
+- After impact returns, this skill rereads both files and does not rewrite
+  `prd.md` unless a product revision is intentionally restarted from step 9.
 - Update the request and stories together when regenerating the same spec; do
   not leave either stale.
 - Do not delete unrelated files in the directory.
-- Verify both files are readable after writing and share `projectId` and
-  `contextStatus`. Use PRD frontmatter for source commits and impact freshness.
-  Include both paths in the final response.
+- Verify both files are readable after writing and share `projectId`. Verify
+  source commits, freshness, and impact state from PRD §9. Include both paths
+  in the final response.
 
 The MCP impact work is read-only except for the final §9 of the selected PRD. Do not
 read local SOT or run local Platty CLI commands, mutate projects, generate docs,
@@ -175,6 +204,9 @@ SDD Packet
 - impactSeedPacket
 - impactDossier
 - impactStatus
+- impactRevision
+- productSegmentRevision
+- storiesRevision
 - sourceParity
 - impactAppendix
 - selfReview
@@ -203,6 +235,14 @@ Carry forward the local `platty-sdd-spec` request states:
   file frontmatter stays `status: "draft"`;
 - `approved` only after explicit user approval.
 
+On a later explicit approval message, reread both persisted files and the final
+Self Review result. Recompute `productSegmentRevision` and `storiesRevision`,
+verify that PRD §9 is bound to both values and has no blocking coverage finding,
+then change both statuses to `approved` in one operation. Read both files back
+and report the approved revisions. If either file changed, §9 is stale, or a
+blocking finding remains, keep both files `draft` and return to the relevant
+review/impact step. Any later product edit resets both statuses to `draft`.
+
 Read `references/request-shape.md` before drafting request content. If the
 SDD packet has unresolved assumptions or unanswered decisions, keep the
 frontmatter `status` as `draft` and preserve the unresolved items in §7 instead
@@ -220,9 +260,9 @@ Read `references/stories-shape.md` before drafting stories content. If
 
 ## Self Review Gate
 
-Self Review is mandatory after the compact impact link and both drafts exist. It
-must not move either file to `approved`; explicit user approval remains the only
-approval gate.
+Self Review runs once on the product pair before impact and again after the
+revision-bound §9 exists. It must not move either file to `approved`; explicit
+later user approval remains the only approval gate.
 
 Apply this review sequence:
 
@@ -235,13 +275,25 @@ Apply this review sequence:
    `spec_resolve`, source snippets for exact claims, and unread surfaces.
 3. Check statuses, enums, thresholds, metrics, scope, and terminology for
    contradictions or unsupported promotion from inference to decision.
-4. Check request-to-story coverage without treating rule-to-scenario coverage
+4. Verify that the PRD §0 approval summary contains only existing §3/§5/§7/§8
+   items, every closed `O-*` points to its resolving `D-*`, and each `H-*` has a
+   usable success criterion or an explicit `A-*`/`O-*` gap.
+5. Verify that the story overview exactly matches the detailed story ids,
+   users, outcomes, scenario ids/counts, rule/acceptance links, and affected
+   assumptions/questions.
+6. Scan PRD §0–§8 and every story for source-analysis leakage. Move class,
+   handler, file/line, code-node, spec-id, route/component candidate, full state
+   transitions, source parity, graph/search status, and confidence narration to
+   PRD §9 or technical design. Reject evidence-handling instructions that were
+   promoted to product rules or scenarios.
+7. Check request-to-story coverage without treating rule-to-scenario coverage
    as total input-requirement coverage.
-5. Check that the final §9 appendix agrees with `impactRevision`,
-   `impactStatus`, freshness, and coverage limits, while §0–§8 remains free of
-   detailed impact evidence.
-6. Revise both drafts for every fixable blocking finding, then review the
-   revised pair again.
+8. Check that the final §9 appendix agrees with the working packet's
+   `productSegmentRevision`, `storiesRevision`, `impactRevision`,
+   `impactStatus`, freshness, and coverage limits, while
+   §0–§8 and frontmatter remain free of detailed impact evidence.
+9. If a fix changes PRD §0–§8 or stories, reset both statuses to draft and rerun
+   impact before the final review. Never leave §9 bound to older product bytes.
 
 Set the final verdict to `NEEDS_WORK` when blocking findings remain. A required
 input that cannot be read inside the MCP boundary is a requirement-coverage gap,
