@@ -148,8 +148,8 @@ sections were abbreviated. Always include all open questions and assumptions.
 
 Read reference templates only when writing the files:
 
-- `references/request-template.md`
-- `references/stories-template.md`
+- `references/prd-template.md`
+- `references/user-stories-template.md`
 - `references/impact-template.md`
 - `references/spec-review-rubric.md`
 - `references/pressure-scenarios.md` when testing or changing this skill

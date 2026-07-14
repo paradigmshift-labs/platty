@@ -105,7 +105,7 @@ belong in §9. Evidence-handling or authoring behavior is not a product rule:
 never create `R-*`, `AC-*`, `D-*`, or `H-*` for how the document labels partial
 source evidence.
 
-`prd.md` uses `references/request-shape.md` and includes these sections in
+`prd.md` uses `references/prd-shape.md` and includes these sections in
 order:
 
 ```text
@@ -121,7 +121,7 @@ order:
 §9 Impact evidence appendix
 ```
 
-`user_stories.md` uses `references/stories-shape.md`, starts with `# 사용자 스토리`,
+`user_stories.md` uses `references/user-stories-shape.md`, starts with `# 사용자 스토리`,
 places the Korean `스토리 한눈에 보기` index before the detailed stories, uses
 `US-NN` story blocks with Given/When/Then scenarios, and ends with the Korean
 rule-to-scenario connection table. The index is derived from the detailed story
@@ -243,7 +243,7 @@ and report the approved revisions. If either file changed, §9 is stale, or a
 blocking finding remains, keep both files `draft` and return to the relevant
 review/impact step. Any later product edit resets both statuses to `draft`.
 
-Read `references/request-shape.md` before drafting request content. If the
+Read `references/prd-shape.md` before drafting PRD content. If the
 SDD packet has unresolved assumptions or unanswered decisions, keep the
 frontmatter `status` as `draft` and preserve the unresolved items in §7 instead
 of inventing closure.
@@ -254,7 +254,7 @@ Always draft `user_stories.md` with `prd.md`. Approval controls whether the file
 can move from `draft` to `approved`; it does not control whether
 `user_stories.md` exists.
 
-Read `references/stories-shape.md` before drafting stories content. If
+Read `references/user-stories-shape.md` before drafting user-story content. If
 `prd.md` has open questions or assumptions, make those visible in
 `user_stories.md` and trace which stories would change if the answers change.
 

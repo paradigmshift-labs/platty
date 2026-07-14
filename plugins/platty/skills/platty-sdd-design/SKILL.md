@@ -117,7 +117,7 @@ Do not infer a framework, ORM, vendor, or repository layout from another project
 
 Read reference templates only when writing files:
 
-- `references/design-template.md`
+- `references/system-design-template.md`
 - `references/tasks-template.md`
 - `references/design-review-rubric.md`
 
@@ -129,7 +129,7 @@ Korean while preserving code identifiers and quoted source evidence exactly.
 
 ## Design Contents
 
-Use `design-template.md` in this reading order: implementation summary,
+Use `system-design-template.md` in this reading order: implementation summary,
 input/evidence boundary, as-is structure, to-be changes by responsibility,
 contracts and data, key flow and failure paths, state/concurrency/edge cases,
 observed code conventions, validation/release/rollback, area summary, and compact

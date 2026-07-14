@@ -126,7 +126,17 @@ platty-mcp-memory      -> explicit memory read/write/update/delete lifecycle
 
 ## SDD File Routing
 
-For MCP-grounded SDD request/story authoring from a product idea, feature
+The canonical SDD artifact names are fixed:
+
+```text
+prd.md -> user_stories.md -> system_design.md -> tasks.md
+```
+
+Always use those names for newly authored or rewritten artifacts. Treat
+non-canonical legacy filenames only as read-only input aliases; never select them
+as output filenames or present them as the current SDD contract.
+
+For MCP-grounded SDD PRD/user-story authoring from a product idea, feature
 request, policy change, PRD need, or requirements discussion, use
 `platty-mcp-sdd-spec` after the capability gate.
 
