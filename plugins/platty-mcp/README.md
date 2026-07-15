@@ -57,7 +57,6 @@ those SDD-file exceptions.
 - `platty-mcp:using-platty-mcp`
 - `platty-mcp:platty-mcp-client-setup`
 - `platty-mcp:platty-mcp-retrieval`
-- `platty-mcp:platty-mcp-retrieval-eval`
 - `platty-mcp:platty-mcp-impact-analysis`
 - `platty-mcp:platty-mcp-memory`
 - `platty-mcp:platty-mcp-sdd-spec`
