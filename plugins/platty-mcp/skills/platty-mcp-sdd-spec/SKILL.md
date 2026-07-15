@@ -59,24 +59,53 @@ local Platty specs directory.
 8. Always draft `user_stories.md` with `prd.md` by applying the stories template.
    If the request has unresolved questions, keep stories as draft and surface the
    assumptions used to split scenarios.
-9. Run product Self Review across the raw idea, requirement inputs, retrieval
+9. Before detailed source descent, build a **Macro Approval Packet** across the
+   raw idea, users, problem, scope/non-scope, proposed `R-*`/`AC-*`, stories,
+   and `H-*`. Mark each promise approval-critical when it adds or changes money
+   movement, privileged mutation, permission, irreversible state, notification
+   guarantee, persistence, or a user-facing surface. Source-confirm only the
+   facts needed to decide whether those promises are feasible and safe; defer
+   exact edit targets, exhaustive consumers, tests, and implementation details
+   that do not change the product promise to `platty-mcp-sdd-design`.
+10. Run product Self Review across the raw idea, requirement inputs, retrieval
    packet, PRD §0–§8, and all stories. Apply `review -> revise -> review` until
    the product pair is internally consistent. Do not run impact against a product
    body that may still be revised.
-10. Persist both draft files together. The PRD may contain the §9 heading and a
+11. Persist both draft files together. The PRD may contain the §9 heading and a
     pending marker at this point; no impact claim may be made from that marker.
-11. Compute the finalized `productSegmentRevision` from PRD §0–§8 and
+12. Compute the finalized `productSegmentRevision` from PRD §0–§8 and
     `storiesRevision` from stable stories frontmatter and body, excluding the
     mutable status. Review policy,
     journey, data, EPIC, API, and screen impact, then invoke
     `platty-mcp-impact-analysis` with both revisions and the seed packet.
-12. Impact analysis alone replaces the final §9 and binds the dossier to those
+13. Impact analysis alone replaces the final §9 and binds the dossier to those
     two revisions. Reread `prd.md` and verify the bound revisions,
     `impactRevision`, status, freshness, source parity, and coverage limits.
-13. Run final cross-document Self Review without rewriting §0–§8 or stories. If
+14. Run final cross-document Self Review without rewriting §0–§8 or stories.
+    Require every §9 coverage limit to name affected product/story ids and an
+    approval impact of `BLOCKING` or `NON_BLOCKING`. A missing required retrieval
+    rung, unread permission/write/payment/notification branch, or unverified new
+    screen is `BLOCKING` when it controls an approval-critical promise. Any
+    `BLOCKING` row forces `NEEDS_WORK`; document length, call volume, or a merely
+    readable pair can never override it. A partial dossier may pass only when all
+    partial limits are explicitly `NON_BLOCKING` for the approved product result.
+    An adopted recommendation is a decision: record it as `D-*` and close the
+    related `O-*`; do not keep it open merely as a possible future revision.
+    Any `A-*` or `O-*` that can change an approval-critical user result is
+    BLOCKING until proven, narrowed out of scope, or explicitly decided.
+    If
     a product change is required, update both product files, reset their status
     to `draft`, and restart from step 9 so impact is regenerated for the new
     revisions. Persist and read back the final pair before reporting completion.
+15. Accept a feasibility-feedback packet from `platty-mcp-sdd-design` when
+    bounded source reads disprove an approved product premise or show that a
+    requirement needs data, attribution, policy, or a user surface that the
+    approved scope forbids. Reopen only the affected `R-*`, `AC-*`, `D-*`,
+    `H-*`, story, and scenario rows; preserve the original intent and record the
+    exact product trade-off. Reset both product files to `draft`, regenerate §9
+    against the new revisions, and require a later explicit user approval. A
+    design finding never silently edits an approved product pair and never
+    becomes an implementation task while the pair is draft.
 
 ## Template Contract
 
@@ -132,6 +161,11 @@ the existing scope, `R-*`/`AC-*`, `O-*`, and `H-*` items. PRD §8 must make a
 success decision possible: record the observed baseline, target or decision
 rule, measurement period, owner, and linked rules. Unknown baselines or targets
 stay attached to `A-*` or `O-*`; do not invent a number to complete the table.
+`baseline 대비 개선`, `측정 후 확정`, or an unbounded directional goal is not
+an executable success decision. Every `H-*` needs either a numeric target or a
+decision rule with a comparison window, minimum sample or guardrail when
+relevant, owner, and the exact outcome of pass versus fail. If that cannot be
+chosen yet, keep the pair `NEEDS_WORK` and link the gap to an open `O-*`.
 
 ## Local Persistence
 
@@ -238,7 +272,10 @@ Carry forward the local `platty-sdd-spec` request states:
 On a later explicit approval message, reread both persisted files and the final
 Self Review result. Recompute `productSegmentRevision` and `storiesRevision`,
 verify that PRD §9 is bound to both values and has no blocking coverage finding,
-then change both statuses to `approved` in one operation. Read both files back
+then change both statuses to `approved` in one operation. Also verify that every
+approval-critical promise has no open product decision and every `H-*` has an
+executable success decision. Technical implementation detail may remain for
+design only when it cannot change the promised user result. Read both files back
 and report the approved revisions. If either file changed, §9 is stale, or a
 blocking finding remains, keep both files `draft` and return to the relevant
 review/impact step. Any later product edit resets both statuses to `draft`.
@@ -275,9 +312,16 @@ Apply this review sequence:
    `spec_resolve`, source snippets for exact claims, and unread surfaces.
 3. Check statuses, enums, thresholds, metrics, scope, and terminology for
    contradictions or unsupported promotion from inference to decision.
+   When review is triggered by design feasibility feedback, distinguish a
+   source fact that changes implementation detail from one that changes the
+   promised user result. The latter must reopen the linked product rule and
+   story; it cannot be hidden only in §9 or weakened only in system design.
 4. Verify that the PRD §0 approval summary contains only existing §3/§5/§7/§8
    items, every closed `O-*` points to its resolving `D-*`, and each `H-*` has a
    usable success criterion or an explicit `A-*`/`O-*` gap.
+   Also verify the inverse: when the recommended answer was adopted, the
+   matching `O-*` is closed and linked to `D-*`. A future revisit condition does
+   not make the current decision open.
 5. Verify that the story overview exactly matches the detailed story ids,
    users, outcomes, scenario ids/counts, rule/acceptance links, and affected
    assumptions/questions.
@@ -292,7 +336,20 @@ Apply this review sequence:
    `productSegmentRevision`, `storiesRevision`, `impactRevision`,
    `impactStatus`, freshness, and coverage limits, while
    §0–§8 and frontmatter remain free of detailed impact evidence.
-9. If a fix changes PRD §0–§8 or stories, reset both statuses to draft and rerun
+9. Build a final Macro Approval Gate table in runtime context with one row per
+   approval-critical promise: product ids, promised result, evidence read,
+   blocking limit, and disposition (`PROVEN`, `NARROWED`, or `BLOCKED`). Verify
+   every §9-8 limit has affected ids and `BLOCKING | NON_BLOCKING`; any BLOCKING
+   row or BLOCKED promise makes the verdict `NEEDS_WORK`.
+10. Reject success hypotheses whose target is only directional or deferred.
+    Require a numeric target or executable pass/fail decision rule; otherwise
+    keep the linked `O-*` open and the verdict `NEEDS_WORK`.
+11. Compare every `H-*` pass/fail rule with every linked normal and exception
+    scenario. Distinguish notification attempted, provider accepted, delivered,
+    and user-observed outcomes; a channel-failure scenario cannot coexist with
+    an unqualified zero-miss guarantee. Any semantic contradiction forces
+    `NEEDS_WORK` even when ids and trace tables are complete.
+12. If a fix changes PRD §0–§8 or stories, reset both statuses to draft and rerun
    impact before the final review. Never leave §9 bound to older product bytes.
 
 Set the final verdict to `NEEDS_WORK` when blocking findings remain. A required
@@ -335,6 +392,8 @@ missing source parity.
 - Local filesystem write access is unavailable or the target directory cannot be
   created.
 - The impact skill cannot write or verify the selected `prd.md §9` artifact.
+- Design feasibility feedback disproves a promised result, but the affected
+  product rule/story has not been revised and explicitly reapproved.
 - The user asks for analysis, sync, generated-docs, export, project mutation, or
   memory writes from this MCP route.
 
@@ -351,6 +410,7 @@ missing source parity.
 | Returning a prose SDD summary | Apply the request/stories templates and include all required sections. |
 | Treating story Rule coverage as complete requirement coverage | Compare every user input and MCP evidence source in Requirement Coverage. |
 | Skipping retrieval audit because files are readable | Import the Final Route Audit and return `NEEDS_WORK` when a required rung is missing. |
+| Letting design silently weaken an approved product promise | Reopen the affected product rows, reset both files to draft, regenerate §9, and require later explicit approval before ready design or tasks. |
 
 ## Verification
 

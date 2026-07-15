@@ -105,6 +105,11 @@ when claiming API/screen/source-near usage.
 
 Completion:
 
+- read the selected parent `data_dictionary` document and inspect its attached
+  memory cards before item-level conclusions; if cards are unavailable, call
+  `memory_list(documentId)`, then `memory_get` for every relevant card;
+- apply relevant parent-document memory even when one exact `dd_field` item is
+  later resolved; keep it labeled as a memory overlay rather than SOT proof;
 - name the entity or field item read;
 - state whether usage is documented, source-near, or source-confirmed;
 - do not treat whole-document search hits as field-level proof.

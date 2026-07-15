@@ -1,6 +1,6 @@
 ---
 name: using-platty-mcp
-description: Use when a task should use configured Platty MCP tools for remote project context, tool capability checks, client setup routing, Platty MCP retrieval, memory lifecycle routing, or MCP-grounded SDD file creation.
+description: Use when a task should use configured Platty MCP tools for remote project context, tool capability checks, client setup routing, Platty MCP retrieval, memory or glossary-alias lifecycle routing, or MCP-grounded SDD file creation.
 ---
 
 # Using Platty MCP
@@ -36,7 +36,8 @@ Keep the setup split thin and explicit:
    - impact, blast-radius, affected-surface, cross-EPIC, or design-change
      questions to `platty-mcp-impact-analysis` after it produces or reuses an
      Impact Seed Packet;
-   - explicit memory read/write/update/delete requests to `platty-mcp-memory`;
+   - explicit memory or glossary-alias read/write/update/delete requests to
+     `platty-mcp-memory`;
    - MCP-grounded SDD request/story file creation to `platty-mcp-sdd-spec`;
    - MCP-grounded SDD design/task file creation to `platty-mcp-sdd-design`.
 2. If MCP tools are missing but the user already has a `/api/mcp` URL, route to
@@ -57,9 +58,11 @@ Before relying on MCP evidence:
    - vocabulary inventory and ambiguity;
    - memory overlay reads;
    - memory lifecycle;
+   - glossary alias lifecycle;
    - search assist;
    - source parity;
    - workspace source parity;
+   - workspace Git observability;
    - artifact access.
 4. Call `project_list` when no project is already selected.
 5. Call `context_status` for the selected project before freshness-sensitive
@@ -91,6 +94,12 @@ For user questions about Platty project context, domain terms, epics, business
 documents, specs, exact code locations, or source confirmation, use
 `platty-mcp-retrieval` after the capability gate.
 
+Questions about recent analyzed commits, managed-worktree Git history, the last
+successfully analyzed commit, or cached analysis-branch freshness also route to
+`platty-mcp-retrieval` when `workspace_git_history` or
+`workspace_sync_status` is exposed. These tools do not fetch and do not observe
+application deployment.
+
 For observable impact questions such as what changes, what breaks, blast radius,
 affected surface, cross-EPIC effects, or design-change impact, use
 `platty-mcp-impact-analysis`. It must produce or reuse an Impact Seed Packet
@@ -121,7 +130,7 @@ Keep MCP usage and retrieval judgment separate:
 using-platty-mcp       -> transport boundary, capability gate, tool mapping
 platty-mcp-retrieval   -> question route, map-first ladder, evidence gates
 platty-mcp-impact-analysis -> Impact Seed Packet reuse, graph/cross-EPIC/workspace convergence
-platty-mcp-memory      -> explicit memory read/write/update/delete lifecycle
+platty-mcp-memory      -> explicit memory and glossary-alias lifecycle
 ```
 
 ## SDD File Routing
@@ -158,12 +167,16 @@ route.
 
 ## Memory Lifecycle Routing
 
-For explicit memory read, record, correct, update, or delete requests, use
-`platty-mcp-memory` after the capability gate.
+For explicit memory or glossary-alias read, record, correct, update, or delete
+requests, use `platty-mcp-memory` after the capability gate.
 
 That skill may use memory mutation tools only for explicit user intent. Normal
 retrieval answers remain read-only and keep memory overlays separate from
 generated SOT, specs, and source evidence.
+
+Glossary aliases use the dedicated `glossary_alias_list/add/remove` tools, are
+EPIC-scoped, and remain distinct from generated glossary aliases. Do not route
+them through generic `memory_add/update/delete`.
 
 ## Stop Conditions
 
@@ -171,6 +184,8 @@ generated SOT, specs, and source evidence.
 - Minimum retrieval tools are missing.
 - A vocabulary inventory, comparison, ambiguity, every-alias, or
   blank/conflict-fallback route requires `glossary_list` and it is missing.
+- A requested glossary alias read/add/remove route lacks its corresponding
+  `glossary_alias_*` tool.
 - The task asks for setup, analysis, sync, server-side document generation,
   project mutation, local cache changes, local CLI, or memory writes outside
   `platty-mcp-memory`.
@@ -178,4 +193,6 @@ generated SOT, specs, and source evidence.
   `platty-mcp-sdd-design`, or `platty-mcp-impact-analysis`
   `~/.platty/specs/<projectId>/...` SDD read/write exception.
 - A retrieval branch needs a missing search-assist or source-parity tool.
+- A Git-history or worktree-freshness branch needs its missing
+  `workspace_git_history` or `workspace_sync_status` capability.
 - The user asks for an SOT artifact and no artifact access tier is configured.

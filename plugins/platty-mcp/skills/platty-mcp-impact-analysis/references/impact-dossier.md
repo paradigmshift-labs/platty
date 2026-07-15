@@ -80,16 +80,36 @@ nextExactRead
 ## Stable Impact Revision
 
 `impactRevision` is `sha256:<hex>` over a canonical JSON evidence snapshot. The
-snapshot contains the artifact's evidence-bearing metadata (`status`,
-`sourceParity`, `projectId`, `contextStatus`, `productSegmentRevision`,
-`storiesRevision`, lexically sorted `sourceCommits`, and `maxCrossEpicDepth`),
-lexically sorted coverage-limit strings, canonical
-matrix rows sorted by `evidenceId`, canonical affected-code-path coverage rows
-sorted by their canonical JSON bytes, and the exact canonical cross-EPIC traversal
-state owned by `cross-epic-traversal.md`: sorted `frontierEpicIds`, `visitedEpicIds`,
-`visitedSpecIds`, `visitedGraphSeeds`, and `visitedCodeQueries`; `currentDepth`;
-`maxDepth`; sorted `truncationReasons`; and separate sorted `confirmedEdges`,
-`likelyEdges`, and `candidateEdges` arrays.
+snapshot uses these exact top-level keys and no aliases:
+
+```json
+{
+  "affectedCodePathCoverage": [],
+  "contextStatus": "",
+  "crossEpicTraversal": {},
+  "impactCoverageLimits": [],
+  "impactEvidenceMatrix": [],
+  "maxCrossEpicDepth": 2,
+  "productSegmentRevision": "",
+  "projectId": "",
+  "sourceCommits": [],
+  "sourceParity": "",
+  "status": "",
+  "storiesRevision": ""
+}
+```
+
+`sourceCommits` contains exact `{repoId, sourceCommit}` objects sorted first by
+`repoId`, then by `sourceCommit`. `impactCoverageLimits` is a sorted set of
+strings. `impactEvidenceMatrix` contains the normalized matrix rows sorted by
+`evidenceId`. `affectedCodePathCoverage` contains normalized coverage rows
+sorted by canonical JSON bytes. `crossEpicTraversal` is the exact canonical
+state owned by `cross-epic-traversal.md`: sorted `frontierEpicIds`,
+`visitedEpicIds`, `visitedSpecIds`, `visitedGraphSeeds`, and
+`visitedCodeQueries`; numeric `currentDepth` and `maxDepth`; sorted
+`truncationReasons`; and separate sorted `confirmedEdges`, `likelyEdges`, and
+`candidateEdges` arrays. `maxCrossEpicDepth` is the same configured numeric
+bound persisted at top level.
 
 Normalize every matrix row as a canonical object containing all documented
 fields from the Impact Evidence Matrix contract. In every matrix row, encode an
@@ -131,6 +151,20 @@ in UTF-8 bytewise lexical order before placing the parsed objects into their
 edge bucket. This total order includes array-valued fields and prevents input or
 locale order from changing the revision when leading fields tie. Apply the same
 canonical JSON key and UTF-8 rules to the complete snapshot.
+
+### Normative calculator
+
+Use the repo-local calculator instead of recreating these rules from memory:
+
+```bash
+node scripts/impact-revision.mjs <impact-snapshot-input.json>
+```
+
+Pass `--json` to print both the digest and normalized snapshot. The input may
+omit `evidenceId`; the calculator derives it from the normative tuple. A
+supplied mismatching `evidenceId` is an error. The normalized snapshot printed
+by the calculator is the evidence-bearing value that the dossier tables must
+represent; a digest without corresponding persisted rows is invalid.
 
 `impactRevision` excludes `impactRetrievedAt`, its own status-table field, and other
 write-time timestamps. `impactRetrievedAt` records freshness only, not impactRevision
@@ -216,3 +250,25 @@ a next exact read or coverage limit.
 
 Every boundary yields a named gap, limit, candidate, partial status, or stop
 condition. Never produce a silent no-impact conclusion.
+
+## Product Approval Impact Gate
+
+When the dossier is embedded in an SDD PRD, every `impactCoverageLimits` entry
+must also appear in §9-8 with these fields:
+
+```text
+limit, affectedProductIds, approvalImpact(BLOCKING | NON_BLOCKING), nextExactRead
+```
+
+Use `BLOCKING` when the missing evidence can change a promised user result,
+especially money movement, privileged mutation, permission/ownership,
+irreversible state, notification guarantees, persistence, or a new/changed user
+surface. Missing a required full-cycle rung such as DESIGN for product flow or
+UCL for user action is also BLOCKING when that rung owns the promise. Use
+`NON_BLOCKING` only when the product result is already supported and the gap is
+an implementation detail safely deferred to technical design.
+
+`impactStatus: partial` is not automatically blocking, but an SDD product pair
+with any BLOCKING row cannot report Self Review PASS or request approval. The
+owning SDD spec skill must either complete the next exact read or narrow the
+product promise and regenerate the revision-bound appendix.

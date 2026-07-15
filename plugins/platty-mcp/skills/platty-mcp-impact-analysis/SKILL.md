@@ -53,10 +53,25 @@ and downstream fingerprints.
    read with their roles, consumers checked, and unread candidates with a reason.
    Mark it `confirmed-path` only when every known bounded boundary was actually
    read; otherwise mark it `partial-path`.
-8. Apply `references/impact-dossier.md` and its completion gate.
+   In SDD product-spec context, start from the caller's Macro Approval Packet.
+   Prioritize paths that can change an approval-critical promise and stop source
+   descent once feasibility and safety can be classified. Do not expand into
+   exact edit targets, exhaustive tests, or adjacent implementation detail that
+   cannot change §0–§8; those belong to technical design.
+8. Apply `references/impact-dossier.md` and its completion gate. Build the exact
+   canonical snapshot defined there and compute `impactRevision` with
+   `scripts/impact-revision.mjs`; do not hand-hash an inferred envelope or use
+   prose order as the revision input. Persist the normalized matrix and coverage
+   rows represented by that snapshot so the revision is independently
+   reproducible.
 9. In an SDD context, require the finalized `productSegmentRevision` and
    `storiesRevision`, then format the final `## 9. 영향도 조사 및 근거`
    appendix bound to those values.
+   Classify every coverage limit with affected `R/AC/H/US` ids and
+   `BLOCKING | NON_BLOCKING` approval impact. Missing evidence that controls
+   money movement, privileged mutation, permission, irreversible state,
+   notification guarantees, persistence, or a promised user surface is
+   `BLOCKING` until read or until the product promise is narrowed.
    SDD context requires an existing `prd.md` with finalized §0–§8 and a pending
    §9 marker. Update only that appendix, preserving frontmatter and §0–§8
    byte-for-byte, then verify the resulting `prd.md` is readable. If the PRD is

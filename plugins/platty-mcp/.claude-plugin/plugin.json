@@ -1,7 +1,7 @@
 {
   "name": "platty-mcp",
   "description": "Platty MCP read-only retrieval, impact analysis, memory, and approval-gated local SDD design/task draft skills for configured remote context servers; no server or unrelated write capability.",
-  "version": "0.0.6",
+  "version": "0.0.12",
   "author": {
     "name": "Paradigm Shift Labs"
   },
