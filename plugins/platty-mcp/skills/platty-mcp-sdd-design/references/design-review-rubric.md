@@ -15,6 +15,8 @@ back the revised design before the final review.
 ```yaml
 verdict: PASS | NEEDS_WORK
 readiness: ready | partial | blocked
+implementationReadinessScore: 0-100
+criticalFindings: []
 blockingFindings: []
 warnings: []
 requirementCoverage: {}
@@ -35,16 +37,19 @@ The full result is the review working record and is summarized in Appendix A.
   bounded scope, and revisit condition in a new design revision. Generic design
   approval does not accept the risk and must not remove the blocker. The design
   is approval-eligible when it has no blocking findings.
-- `partial`: the design is approval-eligible only when it has no blocking
-  findings and all remaining gaps are task-level evidence-resolution gaps. The
-  approved task artifact must set `executionReadiness: partial`, preserve each
-  gap and next read, and omit unsupported implementation detail.
+- `partial`: the design can be reviewed when it has no blocking findings and all
+  remaining gaps are bounded Evidence-Resolution items, but it is not final
+  approval-eligible and never creates or overwrites `tasks.md`. Preserve each
+  gap and next read in `system_design.md` §11, resolve it, and create a new design
+  revision.
 - `blocked`: a required input/refresh is unavailable, a critical contradiction
   exists, or an unaccepted implicated unknown prevents safe implementation. It
   requires `NEEDS_WORK` and is not approval-eligible.
 - `PASS` permits `readiness: ready` or `partial` only when there are no
-  blocking findings. `NEEDS_WORK` blocks approval and is required for
+  blocking findings, but only `PASS / ready` opens the task gate. `NEEDS_WORK` blocks approval and is required for
   `readiness: blocked` or any blocking finding.
+- `ready` additionally requires `implementationReadinessScore >= 95` and zero
+  `criticalFindings`. A weighted score never cancels a critical failure.
 
 ## Review Gates
 
@@ -58,6 +63,11 @@ The full result is the review working record and is summarized in Appendix A.
   is never silently renumbered or closed by `DEC-*`; a product-changing answer
   returns to the product revision and approval flow.
 - Scope, non-goals, assumptions, and accepted risks do not contradict inputs.
+- Every promised `WHEN`, universal quantifier, rate, and `H-*` denominator is
+  reconciled with all source eligibility gates and intentional suppression/skip
+  paths. Any difference between the promised trigger set and the source eligible
+  set either maps to an approved exclusion or returns to product revision; it is
+  never hidden behind a `NO-CHANGE` implementation boundary.
 
 ### Product Input Audit
 
@@ -126,6 +136,62 @@ The full result is the review working record and is summarized in Appendix A.
 - Candidate-only evidence remains candidate; unsupported claims are assumptions,
   risks, or omitted.
 - The design footer references `prd.md §9` evidence without copying the dossier.
+- Appendix A-10 records every implementation repository's exact evidence tree,
+  implementation baseline, read proof, and `MATCHED`. A different standalone
+  snapshot cannot prove parity; execution preflight separately checks checkout
+  HEAD against that baseline.
+
+### Implementation Evidence Ledger Audit
+
+- Start with one macro coverage verdict: actors/outcomes, end-to-end flows,
+  ownership, security/PII, failure isolation, dependencies, release,
+  observability, and rollback. File/constant reads may follow only when they
+  resolve a named P0/P1/P2 implementation blocker; resolved evidence is not
+  repeatedly reread.
+
+- Every changed API has field-level request, response, and error rows. Each row
+  records type/nullability, consumer, and a `stored`, `derived`, or `constant`
+  value origin with exact source or formula. `unavailable` blocks readiness.
+- Actor, cause, policy eligibility, scheduled time, and correlation claims need
+  explicit source capability. A boolean, timestamp, URL fragment, or job target
+  date alone does not prove attribution.
+- Every user-visible reason, label, status copy, and notification value has an
+  exact safe mapping, constant, sanitization rule, or formula. Names such as
+  `errorMessage`, `reason`, `description`, and `label` are not semantic proof of
+  user language, stability, privacy safety, or source-state coverage. Audit every
+  control-flow branch: a safe null fallback does not authorize a non-null branch
+  to expose a raw/provider/exception/original message directly.
+- Every implicated enum/status symbol lists all discovered values. Each appears
+  exactly once as mapped or excluded, with count/invariant treatment. Every
+  mapped source value names one exact declared response/UI disposition, and the
+  map may not point to an undeclared target. A complete partition without these
+  target assignments, partial examples, and catch-all prose all block readiness.
+- Every changed screen records exact route, server entry, client component, API
+  hook/client, type, test target, and bounded evidence. A page file alone is not
+  complete topology for an interactive App Router screen.
+- Every paginated API declares strategy, deterministic total order, unique
+  tie-breaker, page/cursor semantics, and exact `hasNext` derivation. Offset or
+  cursor pagination with unspecified ordering blocks readiness.
+- Every `CHG-*` is Primary in exactly one slice, every `VER-*` belongs to at
+  least one slice, and a slice with predecessors is not labeled independent.
+- Every exact command has cwd, command, observed timestamp, exit/result, and
+  evidence. `PASS` requires exit 0; `EXPECTED_RED` requires the
+  runner to start and an intended missing behavior, assertion, or approved-new
+  test target to explain the nonzero exit. Runtime, package-manager, dependency,
+  permission, network, workspace, and module-resolution failures block readiness.
+  In a contractually read-only MCP source session, `SOURCE_CONFIRMED` requires
+  exact wrapper, module, runner config/plugin, selector, adjacent test, matched
+  source commit, `exit: N/A`, and `executionDeferred=task-preflight`. The task
+  checklist must copy its id and exact command into a before-edit actual execution
+  step; incomplete source proof or deferred execution transfer blocks readiness.
+- Run `scripts/readiness-validator.mjs` on the persisted artifacts. Its score is
+  the implementation readiness score; any critical finding blocks ready. The
+  validator also checks revision/fingerprint binding, placeholders, v4 module
+  table/checklists, exact file actions, API request/response/error contracts,
+  DB migration/write behavior, RED/GREEN/regression commands, pagination
+  contracts, slice ownership/dependencies, and `CHG-*`/`VER-*` coverage. It recomputes the
+  canonical product-input fingerprint and design revision from persisted
+  content; equal stale strings are not sufficient.
 
 ### Delivery Safety
 
@@ -146,6 +212,10 @@ The full result is the review working record and is summarized in Appendix A.
 - Applicable designs inventory screens, APIs, events/jobs, data/DB boundaries,
   external integrations, and retirement work before implementation packets.
   Non-applicable sections say why they are N/A.
+- Every screen and API inventory row includes its stable ID, human-readable name,
+  exact screen route or method/path, and decision status. Use `Proposed · Approved`
+  for decided TO-BE contracts and `Existing · Confirmed` for bounded-read AS-IS
+  contracts; `Candidate` blocks task generation.
 - Every applicable screen, synchronous API, asynchronous event/job trigger, and
   data/state boundary has exactly one owning `SCREEN-*`, `API-*`, `EVENT-*`, or
   `DATA-*` row. Rules, slices, Appendix A, and tasks reuse those ids instead of
@@ -197,7 +267,7 @@ The full result is the review working record and is summarized in Appendix A.
   implementation order, exceptions, verification, dependencies, parallelism,
   release, and rollback so tasks can inherit it without adding design.
 - Design §10 defines the complete verification contract and development
-  completion conditions. Tasks may expand §8–§10 into cards but do not invent
+  completion conditions. Tasks may expand §8–§10 into module checklists but do not invent
   contracts, decisions, code locations, commands, or dependencies.
 - Every `edit-target` has repo, full source commit, file, symbol, advisory line
   range, change intent, and bounded-read evidence. `candidate-target` rows use
@@ -212,22 +282,27 @@ The full result is the review working record and is summarized in Appendix A.
 - A new or changed design is draft with empty approval fields.
 - Approved metadata is valid only when `approvedRevision = designRevision` and
   the approval transition was persisted and read back.
-- `tasks.md` is written only after the current design is explicitly approved.
-  Prospective, blanket, or same-request approval does not count. A `partial`
-  approval may create only a task plan with `executionReadiness: partial`; a
-  `ready` approval may create a task plan with `executionReadiness: ready`.
-  `blocked` or `NEEDS_WORK` is never approval-eligible and never creates or
-  overwrites `tasks.md`.
-- After task generation only, read back `tasks.md` and audit every slice as
-  `handoff summary -> task index -> code edit map -> detailed task cards`, with
-  one matching index row per task. Only applicable task categories receive
-  cards; non-applicable categories are one `N/A` entry with a reason. This
-  post-task audit is not part of the earlier design-readiness verdict.
+- `tasks.md` is written only after the current design is explicitly approved and
+  Self Review is exactly `PASS / ready`. Prospective, blanket, or same-request
+  approval does not count. `partial`, `blocked`, or `NEEDS_WORK` never creates or
+  overwrites `tasks.md`; Evidence-Resolution stays in design §11.
+- Prospective, blanket, or same-request approval is invalid for the task gate.
+- The task gate remains closed while any candidate-only edit target, result-changing
+  open `O-*`/`TQ-*`, implicated `UNKNOWN`, missing exact API/screen route, or missing
+  test file/symbol/command remains.
+- After task generation only, read back `tasks.md` and audit the §0 module table
+  against every numbered section. Every changed module needs checked exact file
+  actions, symbol/signature, standalone boundary schema and state behavior, and
+  exact Test/RED/GREEN/Regression commands. Non-applicable categories are one
+  `N/A` entry with a reason. This post-task audit is not part of the earlier
+  design-readiness verdict.
 
 ## Finding Severity
 
 Put missing canonical change rows, blank impact surfaces, invalid negative
 claims, unaccepted implicated unknowns, missing `VER-*` mappings, stale required
-impact, and approval/revision mismatches in `blockingFindings`. Put non-blocking
+impact, incomplete Appendix A-10 ledgers, unavailable fields, incomplete state
+coverage, unproven commands, checkout mismatch, frontend topology gaps, and
+approval/revision mismatches in `blockingFindings` and `criticalFindings`. Put non-blocking
 clarity or operational improvements in `warnings`. Revise every blocking
 finding and rerun the complete rubric before claiming ready.

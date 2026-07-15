@@ -110,9 +110,11 @@ generation, report a boundary gap.
 | Use configured MCP tools only, including MCP `readonly_workspace_shell` when exposed for bounded source confirmation. | Read local files, use local shell/CLI fallback, local SOT, DB tables, or caches. |
 | Build project, epic, BR/DD/DESIGN/UCL, spec, and source maps in order. | Treat one search hit, snippet, or score as proof. |
 | Read attached memory overlays on every selected overview/epic/document/item/spec surface, and use `memory_get` for relevant cards. | Treat memory as generated SOT or source-confirmed behavior. |
+| On every table/field route, inspect parent `data_dictionary` document memories before item-level conclusions; use `memory_list(documentId)` if attached cards are unavailable. | Read only the `dd_field` item and skip a parent DD fallback memory. |
 | Normalize vocabulary when terms may not line up. | Treat glossary normalization as behavior evidence. |
 | Read exact item/spec/source evidence before implementation claims. | Claim response shape, permissions, writes, emits, or absence without the required evidence tier. |
 | Treat `code_search` and MCP `readonly_workspace_shell` as a pair for code claims: find candidate files/symbols, then read bounded source before asserting exact behavior. | Stop at `code_search` when source code must be inspected. |
+| Use `workspace_git_history` and `workspace_sync_status` only for managed-worktree Git questions, preserving `networkChecked: false` and deployment limits. | Call cached refs “latest GitHub” or “production deployment,” or send `git log` through `readonly_workspace_shell`. |
 | After reading an exact BR/DD/DESIGN/UCL item, call `document_resolve(itemId)` before source-near search unless the answer is purely conceptual. | Jump from a business item to `document_search` or `spec_search` without first resolving linked context. |
 | Ask one clarifying question only after MCP evidence leaves tied interpretations. | Ask the user before using MCP evidence to reduce ambiguity. |
 
@@ -129,6 +131,29 @@ For exact code claims, follow `workspace_repo_list -> select repo ->
 readonly_workspace_shell search -> exact source read`. The bounded source read
 is required for exact behavior claims. If missing workspace or source tools
 prevent that read, report a partial capability gap and use no local fallback.
+
+## Workspace Git History And Freshness
+
+For recent commit history or analysis-worktree freshness, first select one
+repository with `workspace_repo_list` when `repoId` is not already known.
+
+- Use `workspace_git_history(projectId, repoId, limit?, path?)` for bounded
+  history from the managed analysis worktree.
+- Use `workspace_sync_status(projectId, repoId)` to distinguish worktree HEAD,
+  last successfully analyzed commit, cached analysis-branch tip, and exact
+  worktree refresh time.
+- Preserve `networkChecked: false`. A cached origin ref is only the newest ref
+  already present on the MCP server.
+- Preserve `productionDeploymentObserved: false`. Neither tool proves what is
+  running in production; that needs separate CI/CD or deployment evidence.
+- If `availability` is `git_metadata_unavailable`, report that source files may
+  still be readable while the linked worktree's Git common directory is not.
+- Do not substitute local CLI/files or the shell tool's restricted Git
+  commands. Missing Git tools are a capability gap.
+
+Do not call these tools for ordinary code behavior questions unless the user
+also asks about history or freshness. Continue to use exact specs and bounded
+source reads for implementation behavior.
 
 ## Vocabulary Tool Choice
 

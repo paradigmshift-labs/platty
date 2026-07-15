@@ -152,7 +152,135 @@ Expected route:
 
 ```text
 resolve document item
--> memory_list(documentId, itemType, itemKey)
+-> memory_list(documentId), then select the exact returned item anchor
 -> memory_add(documentId, itemType, itemKey)
 -> verify presence through memory_list; use memory_get or memoryMode=full for exact body checks
+```
+
+## Scenario 8: Glossary Alias Memory
+
+User asks:
+
+```text
+자리톡 프로젝트에서 "예약문의"는 "Booking Inquiry"의 별칭이야.
+이 EPIC의 용어집 alias로 기억해줘.
+```
+
+Failure to prevent:
+
+- calling generic `memory_add` instead of the glossary alias lifecycle;
+- guessing the `glossary_alias_add` schema because the skill omits its contract;
+- adding a project-wide alias even though glossary alias memory is EPIC-scoped;
+- skipping duplicate/conflict discovery and post-write vocabulary verification.
+- rejecting an explicit mapping only because the generated glossary has no
+  canonical match, instead of preserving a memory-only canonical term.
+
+Observed RED failure with the previous skill: the agent correctly refused generic
+`memory_add` but could not complete the request because neither the skill nor its
+tool map documented `glossary_alias_list/add/remove` inputs or ownership.
+
+Expected route:
+
+```text
+explicit alias write intent
+-> resolve project + exact EPIC + raw term + canonical term
+-> glossary_alias_list(projectId, epicId) for duplicate/conflict discovery
+-> glossary_alias_add(projectId, epicId, term, canonicalTerm)
+-> glossary_alias_list + glossary_translate(projectId, text=term) for verification
+```
+
+## Scenario 9: Retired API
+
+User asks after naming one API route:
+
+```text
+이 API는 이제 안 써. 메모리에 기록해놔.
+```
+
+Failure to prevent:
+
+- searching only authored business documents and inventing a document-item
+  anchor instead of finding the exact `api_spec` document;
+- recording an ambiguous absolute statement without preserving the user's
+  scope and as-of context;
+- choosing the first same-looking route when multiple API specs remain.
+
+Observed RED failure: the previous skill routed API discovery through generic
+`document_search/get/item_list` and proposed a document-item anchor even though
+source-near specs are themselves document anchors.
+
+Expected route:
+
+```text
+spec_search(exact route/name, specKind=api_spec when supported)
+-> spec_get exact candidate -> spec_resolve when identity remains unclear
+-> one exact spec id or ask
+-> memory_list(documentId=spec.id)
+-> memory_add/update(kind=correction or constraint)
+-> memory_get
+```
+
+## Scenario 10: Retired DB Field
+
+User asks after naming one table and field:
+
+```text
+이 DB 필드는 이제 안 써. 메모리에 기록해놔.
+```
+
+Failure to prevent:
+
+- using generic document search without selecting `data_dictionary`;
+- anchoring at the whole document when one exact `dd_field` exists;
+- guessing a field after a whole-document hit.
+- blocking on a missing or ambiguous field item even though one parent DD
+  document is already exact;
+- failing to inspect the parent DD document memory on later field retrieval.
+
+Observed RED failure: the previous skill reused the generic API document route
+and did not require the `data_dictionary -> dd_field` ladder.
+
+Expected route:
+
+```text
+document_list(documentType=data_dictionary) + document_search(table.field)
+-> document_get -> document_item_list(itemType=dd_field)
+-> one exact field: document_item_get and use the exact item anchor
+-> zero or multiple plausible fields under one exact DD: use the parent document anchor
+-> multiple plausible parent DD documents: ask; do not guess
+-> memory_list(documentId), selecting the exact item anchor only when one exists
+-> memory_add/update(kind=correction or constraint) on item or parent fallback
+-> memory_get
+```
+
+Later field retrieval through that DD must inspect parent document memory cards
+from `document_get`; if attached cards are unavailable, call
+`memory_list(documentId)`. Use `memory_get` for every relevant card before the
+answer. A parent fallback memory is broader by design and must remain visible
+even when a later query resolves one exact field item.
+
+## Scenario 11: Product Why
+
+User asks after naming one feature:
+
+```text
+이 기능은 당시 고객센터 반복 문의를 줄이려고 기획한 거야.
+메모리에 기록해놔.
+```
+
+Failure to prevent:
+
+- always using a broad EPIC even when the reason belongs to one rule or flow;
+- using `correction` for historical product rationale;
+- guessing one EPIC or business document from multiple candidates.
+
+Expected route:
+
+```text
+retrieve the named feature and candidate EPIC/doc/item surfaces
+-> broad capability rationale: EPIC anchor
+-> one rule/flow rationale: exact BR/design/UCL/UCS document or item anchor
+-> memory_list on that anchor
+-> memory_add/update(kind=why)
+-> memory_get
 ```

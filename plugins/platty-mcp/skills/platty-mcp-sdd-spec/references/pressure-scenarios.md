@@ -258,3 +258,101 @@ An open question shaped an authored scenario.
 
 Expected result: keep the question's owner, affected ids, status, and the
 scenario-shaping assumption visible in request/stories traceability.
+
+## Scenario 12: Design Disproves An Approved Product Premise
+
+The approved PRD promises an automatically attributed cancellation result while
+also forbidding new persistence or write paths. Bounded design reads show only a
+generic `canceled` flag and timestamp; no cause or policy-eligibility timestamp
+is stored. They also show that a surface described as new already exists.
+
+Failure to prevent:
+
+- calling the generic flag an automatic cancellation;
+- burying the changed promise only in a technical risk;
+- creating an implementer research task for unavailable attribution;
+- duplicating the already-existing surface.
+
+Expected route:
+
+```text
+platty-mcp-sdd-design bounded source evidence
+-> feasibility-feedback packet with affected R/AC/D/H/story ids
+-> platty-mcp-sdd-spec reopens only those product rows
+-> distinguish observable cancellation state from unavailable attribution
+-> reuse the existing surface and revise only the missing product delta
+-> reset prd.md and user_stories.md to draft
+-> regenerate revision-bound PRD §9
+-> require later explicit user approval
+-> only then create a new ready design revision and tasks
+```
+
+## Scenario 13: Long Draft Looks Complete But Macro Approval Is Unsafe
+
+A real full-cycle run produces a long PRD and reports `Self Review: PASS`, while
+the impact appendix is `partial`. The unread surfaces include DESIGN/UCL, the
+new user screen, mutation permission guards, and the notification branch that
+directly determine promised `R-*` behavior. Two success hypotheses say only
+"improve from baseline after measurement".
+
+Failure to prevent:
+
+- treating document length or many MCP calls as approval readiness;
+- reporting PASS when a missing required retrieval rung intersects a promised
+  user result;
+- promising privileged retry/reactivation or a notification guarantee while
+  its permission/failure branch remains unread;
+- accepting "baseline 대비 개선, 나중에 확정" as an executable success rule;
+- spending product-spec time proving implementation details unrelated to an
+  approval-critical promise.
+
+Expected route:
+
+```text
+identify approval-critical promises first
+-> read only the business/spec/source evidence needed to validate those promises
+-> classify every §9 coverage limit as BLOCKING or NON_BLOCKING with affected ids
+-> missing DESIGN/UCL or permission/write/notification evidence that affects a
+   promise = BLOCKING
+-> Self Review NEEDS_WORK and both files remain draft
+-> either finish the exact reads or narrow the product promise to the proven safe scope
+-> require a measurable target or executable decision rule for every H-*
+```
+
+Observable pass criteria: the run cannot report PASS or request approval while
+any approval-critical promise has a BLOCKING limit. Non-critical implementation
+detail is deferred to design instead of extending the product retrieval loop.
+
+## Scenario 14: Recommended Decision Is Still Open And Metrics Contradict Stories
+
+A draft says the recommended scope decision was adopted (for example, no new
+admin console), but keeps the same question `open`. Core assumptions still
+affect most `R-*` promises while every coverage limit is labeled NON_BLOCKING.
+The success goal says notification misses must be zero, while an exception
+story accepts a channel failure with only a recorded log.
+
+Failure to prevent:
+
+- reporting PASS while an adopted recommendation remains an open product
+  decision;
+- treating a core assumption as non-blocking without proving or narrowing the
+  linked promise;
+- checking ids and table shape but missing a semantic contradiction between an
+  `H-*` target and a Given/When/Then exception;
+- rerunning the complete retrieval ladder when the existing packet contains
+  enough evidence for review correction.
+
+Expected route:
+
+```text
+adopted recommendation -> D-* + O-* closed
+approval-critical A/O -> PROVEN, NARROWED, or BLOCKING
+compare every H-* pass/fail rule against all linked normal and exception scenarios
+distinguish attempted, accepted, delivered, and observed notification metrics
+-> review -> revise -> review using the existing evidence packet
+-> regenerate impact only when §0–§8 or stories change
+```
+
+Observable pass criteria: no adopted recommendation remains open, no core
+assumption is silently NON_BLOCKING, and every linked exception scenario can
+coexist with the stated success rule.

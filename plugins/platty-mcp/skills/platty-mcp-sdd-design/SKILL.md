@@ -1,6 +1,6 @@
 ---
 name: platty-mcp-sdd-design
-description: Use when creating locally saved MCP-grounded SDD technical design and implementation-task drafts from existing prd.md and user_stories.md.
+description: Use when creating locally saved MCP-grounded SDD technical design and executable implementation plans from existing prd.md and user_stories.md.
 ---
 
 # Platty MCP SDD Design
@@ -99,8 +99,8 @@ or `prd.md` as the handoff.
    claim, require the dossier's matching `confirmed-path` coverage row: the
    entry/caller, orchestration, persistence or external boundary, consumers,
    and adjacent tests/configuration/migrations when present must have exact
-   source reads. `partial-path` evidence becomes a risk or an
-   Evidence-Resolution task, never a confirmed system fact.
+   source reads. `partial-path` evidence becomes a risk or an Evidence-Resolution
+   row in `system_design.md` §11, never a confirmed system fact or an executable checklist item.
    Before drafting, assemble the affected AS-IS component map and critical call
    flow from confirmed rows, then derive the TO-BE map against the same boundary.
    Classify every affected screen, synchronous API, event/job, data/DB boundary,
@@ -111,10 +111,44 @@ or `prd.md` as the handoff.
    delta. For `DEPRECATE` or `DELETE`, confirm every consumer and the replacement,
    observation period, removal order, and rollback. If those reads are absent,
    keep `UNKNOWN` or `DEPRECATE`; never assert safe deletion.
+   Before readiness, fill Appendix A-10 from bounded evidence: checkout HEAD
+   equality, every API request/response/error field and value origin, exhaustive
+   source-state disposition, frontend server/client/API/type/test topology, and
+   command preflight receipts. In a writable compatible checkout, execute the
+   command and record `PASS` or feature-missing `EXPECTED_RED`. When the selected
+   MCP source tool is contractually read-only, `SOURCE_CONFIRMED` is allowed only
+   after exact wrapper/build script, module, runner configuration, selector,
+   adjacent test, and matched 40-character source commit are read from source;
+   execution is then mandatory in the generated task Execution Preflight before
+   any implementation edit. A plausible command or package script name alone is
+   not source confirmation. A `confirmed-path` label without those
+   rows is not implementation evidence.
+   Before drafting TO-BE contracts, run a product-feasibility reconciliation:
+   compare every promised user result with fields, attribution, state coverage,
+   existing surfaces, and the approved no-change/no-write boundaries. For every
+   promised `WHEN`, universal quantifier, rate, and `H-*` denominator, enumerate
+   the source eligibility gates, intentional suppression/skip paths, and approved
+   exclusions. Require `promised trigger set = source eligible set - approved
+   exclusions`; a metric name or happy-path event is not proof of set equality.
+   For every user-visible reason, message, label, status copy, or notification
+   value, enumerate every control-flow branch in A-10-2. Every branch must derive
+   only from an exact safe mapping, approved constant, or sanitization rule. A
+   safe fallback does not make the non-null or success branch safe; direct raw,
+   provider, exception, or original message exposure contradicts an approved
+   safe-mapping promise and blocks readiness.
+   If source
+   evidence disproves a product premise or satisfying it requires work forbidden
+   by the approved scope, emit a feasibility-feedback packet with the affected
+   `R-*`/`AC-*`/`D-*`/`H-*` and story/scenario ids, the disproving source fact,
+   and the recommended product trade-off. Invoke `platty-mcp-sdd-spec` to revise
+   the pair, reset both product inputs to draft, and stop this design revision.
+   Do not hide a changed user promise as a technical limitation, invent a field,
+   or create tasks from the stale approval.
 7. Draft `system_design.md` from `references/system-design-shape.md`.
 8. Persist and read back `system_design.md`, then report its path for user review.
-9. If Self Review is `blocked` or `NEEDS_WORK`, reject approval and stop without
-   creating or overwriting `tasks.md`; refresh evidence or revise the design.
+9. If Self Review is not `PASS / ready`, reject final approval and stop without
+   creating or overwriting `tasks.md`; record every Evidence-Resolution item in
+   `system_design.md` §11, refresh evidence, and create a new design revision.
 10. If the current design is not explicitly approved, stop without creating or
    overwriting `tasks.md`.
 11. On explicit approval, reread `system_design.md`, `prd.md`, and `user_stories.md`.
@@ -133,24 +167,44 @@ or `prd.md` as the handoff.
     its fingerprint changes; create and verify a new unapproved design revision
     and stop without creating tasks. Apply the same transition for an evidence
     fingerprint change.
-15. Otherwise draft `tasks.md` from `references/tasks-shape.md`, assign
-    `executionReadiness` as `blocked`, `partial`, or `ready` according to the
-    deterministic table below, copy only the minimal
-    revision/fingerprint metadata defined by the template, inherit the
-    design's `SLICE-*` groups, and create only the applicable contract,
-    backend/API, frontend/screen, integration/observability, and verification
-    task cards inside each slice. Record a non-applicable category once as
-    `N/A` with its reason in the slice handoff instead of creating an empty task.
-    Include the four-artifact Execution Preflight and a
-    task-local RED/GREEN/regression verification loop only where the source and
-    existing test convention are confirmed. The §0 dependency table—not the
-    section order—defines actual execution order.
+15. Otherwise draft `tasks.md` from `references/tasks-shape.md` as
+    `schemaVersion: sdd-tasks.v4`, `designSchemaVersion: sdd-design.v2`,
+    `planKind: implementation-checklist`, and
+    `executionReadiness: ready`. Copy only the minimal revision/fingerprint
+    metadata defined by the template. Project the design's outcome slices into
+    a standalone module execution table and numbered backend/API, DB/data,
+    frontend/screen, job/event/external, integration/release sections. Every
+    implementation action is a checkbox with `Create:`, `Modify:`, or `Delete:`,
+    an exact path, symbol/signature, behavior, failure handling, and verification.
+    Repeat the minimum approved API request/response/error schema and state/query
+    invariant required to implement without reopening `system_design.md`.
+    Record a non-applicable category once as `N/A` with its reason instead of
+    creating an empty checklist. Include the four-artifact Execution Preflight and a module-local
+    RED/GREEN/regression verification loop with either an existing test symbol
+    or an approved new test target under a confirmed parent, plus an exact test
+    command preflight. Copy every `SOURCE_CONFIRMED` command into §1 as a
+    before-edit execution checkbox that records `PASS` or feature-missing
+    `EXPECTED_RED`. `EXPECTED_RED` is valid only when the runner
+    starts and missing behavior, an assertion, or the approved-new test target
+    explains the nonzero exit; runtime, package-manager, dependency, permission,
+    network, workspace, or module-resolution failures remain blockers. The §0
+    module table defines actual execution order and maps every row to one numbered section.
 16. Persist and read back `tasks.md`; verify its metadata matches the current
     approved design, then run the rubric's post-task structural audit. Check
-    every slice has `handoff summary -> task index -> code edit map -> detailed
-    task cards`, every detailed task has exactly one matching index row, target
-    ids/readiness agree, open `O-*`/`TQ-*` gates are preserved, and
-    non-applicable categories are `N/A` with a reason rather than empty tasks.
+    every §0 module row maps to one numbered section; every changed section has
+    checkboxes, confirmed exact file actions, symbol/signature, full source
+    commit, applicable schema/state behavior, and exact test commands; and
+    non-applicable categories are `N/A` with a reason rather than empty sections.
+    Require task `designRevision`, `approvedRevision`, product-input fingerprint,
+    and evidence fingerprint to match the current design; require every design
+    `CHG-*` and `VER-*` in at least one complete module checklist containing behavior,
+    failure handling, RED/GREEN, regression, and completion checks.
+    The validator must recompute the canonical product-input fingerprint and
+    `designRevision` from the persisted design rather than comparing stored
+    strings only.
+    Run `scripts/readiness-validator.mjs` against the persisted design and task
+    artifact. Any score below 95 or any critical finding makes task generation
+    incomplete even when prose Self Review says `PASS / ready`.
     Apply `review -> revise -> read back -> review` to `tasks.md` until the audit
     passes. If it cannot pass, report task generation incomplete with the exact
     structural findings; do not report the task artifact as verified.
@@ -205,8 +259,8 @@ Rules:
 - `platty-mcp-impact-analysis` owns every PRD §9 update and dossier edit.
 - Write `designMarkdown` to `system_design.md`.
 - Read `system_design.md` back and verify its project/evidence metadata.
-- Reject approval and do not create or overwrite `tasks.md` while Self Review is
-  `blocked` or `NEEDS_WORK`.
+- Reject approval and do not create or overwrite `tasks.md` unless Self Review is
+  exactly `PASS / ready`.
 - Do not create or overwrite `tasks.md` before explicit design approval.
 - After approval, write `tasksMarkdown` to `tasks.md` and read it back.
 - If task write/read-back fails, report task generation as incomplete, include
@@ -349,7 +403,8 @@ state, actions/navigation, connected APIs/events; and API method/path,
 controller/handler, service/use case, persistence/external boundary,
 request/response/error, permissions/consumers. Include only exact spec/source
 reads as confirmed. Candidate or partial evidence stays explicitly marked and
-becomes an Evidence-Resolution task when required for implementation.
+becomes an Evidence-Resolution row in `system_design.md` §11 when required for
+implementation.
 
 Before task generation, derive stable `SLICE-*` groups in design §8. A slice
 is an independently reviewable user outcome, not a generic technical layer.
@@ -358,23 +413,54 @@ several outcomes depend on them. Every `CHG-*` has one primary slice and every
 slice maps to its screens, contracts/data, `VER-*`, dependencies, parallelism,
 and release boundary.
 
-Inside every task slice, keep the reader order `handoff summary -> task index ->
-code edit map -> detailed task cards`. The task index is a derived navigation
-view with exactly one row per detailed task. It must expose task result, area,
-dependency, edit/candidate target, and readiness without promoting candidate
-evidence to executable work. An open product `O-*` or technical `TQ-*` that can
-change the task result also blocks `ready`; route it to product revision,
-technical decision, or Evidence-Resolution as applicable.
+In `tasks.md`, begin with one module execution table, then use numbered module
+sections. A developer must see, in order, which repository and file changes,
+which symbols/signatures and schemas to implement, how state/data changes, how
+failures behave, and which exact RED/GREEN/regression commands prove completion.
+Keep `SLICE-*`, `CHG-*`, `VER-*`, `EDIT-*`, and `NOEDIT-*` in a short evidence line
+at the end of the applicable module; never make the reader decode IDs to learn
+what to implement. Candidate targets never enter `tasks.md`. An open product
+`O-*` or technical `TQ-*` that can change the result remains in design §11 and
+blocks task creation.
+
+Any open `O-*`/`TQ-*` decision that changes the result blocks task creation;
+do not create or overwrite `tasks.md` until a new ready design resolves them.
+
+Review macro-first. Before chasing file-level completeness, make one explicit
+pass over actors and outcomes, end-to-end screen/API/data flows, system and data
+ownership, permissions/PII, failure isolation, dependencies, release,
+observability, and rollback. Only then perform bounded source reads for a named
+decision that blocks one concrete contract or task. Reuse already resolved
+evidence; do not reread the whole source tree to increase confidence. After one
+independent semantic review, loop again only for a new P0/P1/P2 finding and stop
+when none remain.
 
 For each changed screen, specify applicable loading, success, empty, forbidden,
 error, and partial-failure states. For each changed synchronous contract,
 separate AS-IS and TO-BE request, response, errors, permissions, consumers, and
 compatibility; include field meaning and derivation, not names alone. For each
+paginated contract, specify pagination strategy, deterministic total order,
+unique tie-breaker, page/cursor semantics, and exact `hasNext` derivation; an
+offset or cursor without stable ordering blocks readiness. For each
 event/job, specify producer, condition, payload/schema, consumers, ordering,
 duplication, retry, PII, and observation. For each DB change, specify schema and
 index changes, readers/writers, migration, backfill, old/new compatibility,
 deployment order, validation, and rollback or roll-forward-only behavior. A
 schema-preserving change says explicitly that schema and writes remain unchanged.
+
+Every response field and user-visible message value also needs a value-capability
+proof. Distinguish stored facts, deterministic derivations, constants, and
+unavailable attribution. Identifier names such as `errorMessage`, `reason`,
+`description`, or `label` do not prove that content is safe, user-language, or
+stable; require an exact mapping, constant, sanitization rule, or formula. A
+boolean or timestamp does not prove actor, cause, policy eligibility, or planned
+execution time. Remove an unavailable field or revise the product/data design;
+never turn it into a derived field by naming it. Enumerate every source enum or
+status value and place it exactly once in mapped or excluded disposition. For
+every mapped value, name the exact declared response/UI disposition that receives
+it; a partition without target-bucket assignments does not make a funnel
+implementable. Require this source-to-target map before claiming funnel totals,
+exhaustive classification, or readiness.
 
 Before task generation, require design §8 to contain one vertical packet per
 outcome-oriented `SLICE-*`, connecting product ids, AS-IS gap, TO-BE `CHG-*`,
@@ -384,8 +470,13 @@ contract. `tasks.md` may expand these packets into executable cards but must not
 invent a contract, decision, location, command, or dependency absent from the
 approved design.
 
-Use `EDIT-*` for executable edit targets, `CAND-*` for candidates, and
-`NOEDIT-*` for protected boundaries. Every `edit-target` requires `repo + full
+Every `CHG-*` must be Primary in exactly one `SLICE-*`, and every `VER-*` must
+belong to at least one slice. A slice with a predecessor cannot be labeled
+independent. Shared prerequisites either belong to one explicit owning slice or
+to a bounded `SLICE-00`; related-only references do not establish ownership.
+
+Use `EDIT-*` for executable edit targets, `CAND-*` for design-only candidates,
+and `NOEDIT-*` for protected boundaries. Every `edit-target` requires `repo + full
 source commit + file + symbol + line range + change intent + bounded-read
 evidence`. The symbol is the stable locator; line ranges are advisory at the
 recorded commit. Search metadata, graph nodes, spec-only links, truncated
@@ -432,15 +523,15 @@ present that revision separately for approval.
 Self Review semantics are strict:
 
 - `ready` is approval-eligible when it has no blocking findings.
-- `partial` is approval-eligible only when it has no blocking findings and all
-  remaining gaps are task-level evidence-resolution gaps. After approval, those
-  gaps require `executionReadiness: partial`; preserve each exact gap and next
-  read in `tasks.md` without inventing implementation detail.
+- `partial` is a reviewable design draft but is not final approval-eligible and
+  never creates or overwrites `tasks.md`. Preserve each exact gap and next bounded
+  read as Evidence-Resolution in `system_design.md` §11, resolve it through the
+  impact owner, and create a new design revision.
 - `blocked` requires `NEEDS_WORK` and is not approval-eligible.
 - `NEEDS_WORK` blocks approval. A user approval message cannot override it.
 
 Refresh MCP evidence or create a new design revision until Self Review is an
-approval-eligible `partial` or `ready`, then present that revision for approval.
+approval-eligible `ready`, then present that revision for approval.
 
 Prospective, blanket, or same-request approval does not count. Approval must be
 a later user message received after the verified design path and
@@ -463,14 +554,16 @@ create a new unapproved design revision and stop for approval. Otherwise copy
 and `productInputFingerprint` into the task artifact. Keep approval actor and
 timestamp in `system_design.md`; do not duplicate them in task frontmatter.
 
-Assign `executionReadiness` deterministically:
+Assign task artifact readiness deterministically:
 
 | Condition | Readiness | Required behavior |
 | --- | --- | --- |
 | Design is not approved | no task artifact | Stop after verified `system_design.md`; do not create or overwrite `tasks.md`. |
 | Design Self Review is `blocked` or `NEEDS_WORK` | no task artifact | Reject approval and resolve the blocking finding through MCP evidence or a revised design. |
-| Design is approved and only a task-level evidence-resolution gap remains | `partial` | Preserve the exact gap and next read; do not invent implementation detail. |
-| Design is approved and every required implementation claim is evidence-backed | `ready` | Persist the execution-ready TDD plan. |
+| Design Self Review is `partial` or any candidate-only target remains | no task artifact | Preserve the exact gap and next bounded read in `system_design.md` §11; do not create or overwrite `tasks.md`. |
+| Any result-changing open `O-*`/`TQ-*` remains | no task artifact | Resolve the product or technical decision, create a new design revision, and rerun Self Review. |
+| Any command preflight, existing or approved-new test target, API path, or screen route is missing | no task artifact | Resolve the missing source fact in design §11; do not create or overwrite `tasks.md`. |
+| Design is approved, `PASS / ready`, Appendix A-10 validates at 95+ with zero critical findings, and every implementation claim is evidence-backed | `ready` | Persist the `sdd-tasks.v4` standalone implementation checklist. |
 | Design approval metadata no longer matches tasks | `blocked` on stale existing task | Set `status: stale`; block execution until the revised design is approved and tasks are regenerated. |
 | Either product input status is not approved | `blocked` on stale existing task | Set `status: stale`; stop execution; do not create a design revision unless the user later requests an explicit draft-only design. |
 | Product input fingerprint changes after approval | no new task artifact | Create a new unapproved design revision from the current approved request and stories, then stop for reapproval. |
@@ -497,7 +590,8 @@ blocks execution and returns to a new unapproved design revision.
 
 ```text
 system_design.md is created and verified before tasks.md.
-Blocked or NEEDS_WORK design revisions are not approval-eligible and never create or overwrite tasks.md.
+Only PASS / ready design revisions are approval-eligible for task generation.
+Partial, blocked, or NEEDS_WORK design revisions never create or overwrite tasks.md.
 Do not create or overwrite `tasks.md` until the current design is explicitly approved.
 Current designRevision, approvedRevision, and tasks.md designRevision must match.
 Current productInputFingerprint must match system_design.md and tasks.md.
@@ -518,7 +612,7 @@ If the approved design changes, the existing tasks.md is stale until reapproval 
 <full markdown; emitted only after current design approval>
 
 ## tasks.md readiness
-<blocked | partial | ready, with the exact evidence reason>
+<not-created | stale | ready, with the exact reason>
 
 ## tasks.md structural audit
 <PASS, or task generation incomplete with exact slice/index/card findings>
@@ -543,8 +637,12 @@ missing source parity.
   artifact cannot be read back.
 - Required source parity is missing for a hard implementation claim; weaken or
   omit the claim and report the gap.
-- Self Review is `blocked` or `NEEDS_WORK`; reject approval and resolve the
-  blocking finding through MCP evidence or a revised approval-eligible design.
+- Bounded source evidence disproves an approved product premise or requires a
+  write/policy/surface excluded by the approved scope; return through
+  `platty-mcp-sdd-spec`, reset both product inputs to draft, and wait for explicit
+  reapproval before a ready design or tasks.
+- Self Review is not `PASS / ready`; reject final approval, preserve the exact
+  Evidence-Resolution rows in design §11, and resolve them before task creation.
 - Task generation is requested while the current design is not explicitly
   approved with matching revision and approval metadata.
 - A task preflight product-input status is not approved; stop without creating a
@@ -554,6 +652,9 @@ missing source parity.
   design revision and stop before task generation.
 - A shared engine contract, persisted schema, public CLI behavior, or common
   resolver semantic change is required without explicit approval.
+- Appendix A-10 is missing/incomplete, analyzed commit differs from checkout
+  HEAD, a field is unavailable, source-state coverage is not exhaustive, a
+  changed screen lacks complete topology, or a command was not actually probed.
 - The target SDD directory cannot be created or written.
 
 ## Common Mistakes
@@ -565,14 +666,18 @@ missing source parity.
 | Hiding AS-IS only in the evidence appendix | Synthesize the confirmed affected boundary and current critical flow in design §3; keep source proof in Appendix A. |
 | Describing AS-IS and TO-BE without lifecycle classification | Add every affected surface exactly once to §5 as `NEW`, `MODIFY`, `REUSE`, `NO-CHANGE`, `DEPRECATE`, `DELETE`, or `UNKNOWN`, and connect it to `CHG-*`. |
 | Treating a shallow API inventory as an implementation contract | For `NEW` and `MODIFY`, separate current and target request/response/error, field semantics, permissions, consumers, compatibility, logic branches, and verification. |
+| Treating a named field as proof it can be produced | Record stored/derived/constant/unavailable origin and exact source or formula; unavailable attribution blocks readiness. |
+| Showing only happy-path enum examples | Enumerate the full source symbol and map or exclude every value exactly once; catch-all prose is not exhaustive coverage. |
+| Calling a plausible command confirmed | Record cwd, exact command, observed time, exit, result, and output evidence; wrong runner/workspace failures do not pass. |
 | Deleting a surface before consumer convergence | Keep `DEPRECATE` or `UNKNOWN` until consumers, replacement, observation, removal order, and rollback are confirmed. |
 | Leaving DB/data blank | Record `yes`, `no`, or `unknown`; when changed, include schema/index, readers/writers, migration, backfill, compatibility, validation, and rollback. When unchanged, state schema/write are unchanged. |
-| Making tasks fill design gaps | Stop design readiness or create Evidence-Resolution. Tasks may expand approved §8–§10 but cannot invent contracts, targets, commands, or dependencies. |
+| Making tasks fill design gaps | Keep Evidence-Resolution in `system_design.md` §11. Tasks may expand approved §8–§10 but cannot contain research work or invent contracts, targets, commands, or dependencies. |
 | Claiming readiness without verification | Map every `CHG-*` row to at least one `VER-*` row and rerun Self Review. |
 | Creating tasks before design approval | Stop after writing and verifying `system_design.md`; do not create or overwrite `tasks.md`. |
 | Treating user approval as an override for a blocked design | Reject approval and resolve the blocking finding before presenting a new approval-eligible revision. |
 | Treating a stale task plan as current | Compare design approval metadata and regenerate only after the revised design is approved. |
-| Inventing task details from partial source parity or `partial-path` coverage | Set readiness to `partial`, preserve the gap and next exact read, and omit unsupported hard claims. |
+| Inventing task details from partial source parity or `partial-path` coverage | Do not create or overwrite `tasks.md`; preserve the gap and next exact read in design §11 and create a new revision after confirmation. |
+| Weakening a promised user result only in design | Send feasibility feedback to `platty-mcp-sdd-spec`; revise and reapprove the affected product rules and stories before continuing. |
 | Grouping tasks only by data/backend/frontend layers | Inherit the approved design's outcome-oriented `SLICE-*` groups and place layer-specific work inside each slice. |
 | Using a search-result line number as an edit instruction | Require repository, source commit, file, symbol, advisory line range, change intent, and bounded source evidence. Keep unverified locations as `candidate-target` and create Evidence-Resolution work first. |
 
@@ -580,3 +685,8 @@ missing source parity.
 
 Use `references/pressure-scenarios.md` and
 `references/design-review-rubric.md` when testing this skill.
+Run the deterministic contract tests before deployment:
+
+```bash
+node --test agent-marketplace/plugins/platty-mcp/skills/platty-mcp-sdd-design/scripts/__tests__/readiness-validator.test.mjs
+```

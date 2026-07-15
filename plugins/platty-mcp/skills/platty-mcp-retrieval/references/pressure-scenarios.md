@@ -15,6 +15,7 @@ expected route.
 - Scenarios 9-12A: answer shape, full-cycle ladder, item-level resolve
 - Scenarios 13-15: coupon ambiguity, complete glossary inventory, older server
   exact-spec route
+- Scenario 17: managed-worktree Git history and deployment-boundary labeling
 
 ## Scenario 1: Korean Domain Term
 
@@ -611,4 +612,34 @@ Expected route:
 -> inspect document/item memory cards
 -> memory_get for relevant document/item memory cards
 -> answer separates generated SOT evidence, memory overlay, inference, and source/spec limits
+```
+
+## Scenario 17: Managed Worktree History Is Not Production Deployment
+
+User asks:
+
+```text
+이 저장소 최근 Git 이력하고 지금 분석된 브랜치가 최신인지 봐줘. 최근 배포도 같이 알려줘.
+```
+
+Failure to prevent:
+
+- passing `git log` to `readonly_workspace_shell`;
+- calling the user's local CLI or reading local repository files as fallback;
+- calling a cached origin ref “latest GitHub commit”;
+- reporting worktree refresh time or cached branch time as production deployment;
+- treating readable source files as proof that linked-worktree Git metadata is
+  available.
+
+Expected route:
+
+```text
+capability gate
+-> workspace_repo_list when repoId is unknown
+-> workspace_git_history(projectId, repoId, bounded limit/path)
+-> workspace_sync_status(projectId, repoId)
+-> distinguish worktree HEAD, last analyzed commit, cached branch tip, and F0 refresh time
+-> preserve networkChecked=false and productionDeploymentObserved=false
+-> if git_metadata_unavailable, report the linked Git metadata gap without local fallback
+-> state that actual production deployment requires separate CI/CD/deployment evidence
 ```

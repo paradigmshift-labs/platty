@@ -37,9 +37,16 @@ by `platty-mcp:platty-mcp-memory`. The local SDD exceptions are:
   `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`.
 - `platty-mcp:platty-mcp-sdd-design`, which writes `system_design.md` first. Its design
   records technical AS-IS/TO-BE behavior, a canonical `CHG-*` change map, and a
-  mandatory DB/data-impact assessment. It does not create `tasks.md` until the
+  mandatory DB/data-impact assessment. `sdd-design.v2` also records field-level
+  provenance, exhaustive source-state coverage, source checkout equality,
+  frontend topology, and command preflight evidence. It does not create
+  `sdd-tasks.v3` until the
   user explicitly approves the reviewed design; post-approval tasks remain
-  traceable to that approved design and classify readiness before execution.
+  traceable to that approved design and must pass the bundled readiness validator
+  at 95 or higher with zero critical findings.
+- `platty-mcp:platty-mcp-impact-analysis` uses its bundled canonical revision
+  calculator so reordered evidence sets cannot produce runtime-specific
+  `impactRevision` values.
 
 Stored artifact file content access must go through configured MCP tools such
 as `sot_file_get`. Use the full `platty` plugin for operator workflows outside
