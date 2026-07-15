@@ -41,43 +41,12 @@ question
 | Impact, dependency, implementation location | `document_resolve(itemId)` or `spec_resolve` -> `graph_trace` / `code_search` -> `readonly_workspace_shell` | graph/code candidates plus bounded source reads when exact source confirmation is required; state missing-tool caveats |
 | Original stored SOT file request | `sot_file_get` | file content only; not proof for behavior unless paired with structured evidence |
 
-## Full Ladder
+## Canonical Execution Order
 
-For broad product, policy, data, design, journey, or impact questions, use the
-map-first ladder:
-
-```text
-project_list / project_get / context_status
--> project_overview_get
--> glossary_list first for inventory, comparison, ambiguity, or every-alias routes; after blank/conflicting exact translation, use it before translating additional candidates
--> glossary_translate for the exact/raw phrase and Korean/English candidates
--> epic_list / epic_get
--> memory_list / memory_get overlay when relevant and available
--> document_list by type and epic
--> document_get
--> document_item_list / document_item_get
--> document_resolve(itemId) after exact item reads; use document_resolve(documentId)
-   only for document-wide inventory
--> rank linked api_spec and screen_spec candidates
--> spec_list or spec_search when connected source-near specs are incomplete or unknown
--> spec_get before exact source-near behavior claims
--> spec_resolve to expand selected specs to related documents, items, graph seeds, and code seeds
--> graph_trace / code_search / readonly_workspace_shell for impact, location, or source confirmation
-```
-
-For targeted candidate discovery, stop `glossary_list` pagination once the
-needed candidate set is clear. For complete inventory, follow
-`pageInfo.nextCursor` until `pageInfo.hasNextPage` is false. Preserve
-`aliases` for query expansion, `generatedAliases` as generated vocabulary
-routing evidence, and `memoryAliases` as memory overlays. Continue to exact
-document/spec/source evidence before behavior claims.
-
-`document_resolve(itemId)`, `spec_list`, `spec_search`, `spec_get`, and `spec_resolve`
-are part of the search path when the answer needs source-near anchors. Do not
-skip from a business document search result directly to a claim about API shape,
-screen behavior, event behavior, schedule behavior, or implementation.
-
-Treat `spec_search` as paired discovery: after it selects a candidate, immediately run `spec_get` and `spec_resolve` before making source-near, impact, graph, code, or implementation claims.
+The executable map-first order, evidence-depth rules, and completion audit live
+only in `platty-mcp-retrieval/references/full-cycle-retrieval.md`. This
+architecture reference explains tool and storage roles; it does not redefine
+that order.
 
 ## Why These Tools Exist
 

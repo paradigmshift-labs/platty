@@ -42,8 +42,8 @@ This is the MCP-only intent-to-tool map. It does not list local CLI equivalents.
 | Business document items | `document_item_list` | `projectId`, `documentId`; optional `itemType`, `limit`, `cursor` |
 | Business document item detail | `document_item_get` | `projectId`, `itemId` |
 | Document/item connected context | `document_resolve` | `projectId` plus `documentId` or `itemId` |
-| Spec list | `spec_list` | `projectId`; optional `specKind`, `scopeId`, `status`, `filters`, `limit`, `cursor` |
-| Spec search | `spec_search` | `projectId`, `query` |
+| Spec list (complete inventory) | `spec_list` | `projectId`; optional `specKind`, `scopeId`, `status`, `filters`, `limit`, `cursor`; follow `nextCursor` until `hasNextPage` is false |
+| Spec search (targeted discovery; not a completeness surface) | `spec_search` | `projectId`, `query`; follow selected hits with `spec_get` and `spec_resolve` |
 | Spec detail | `spec_get` | `projectId`, `id` |
 | Spec connected context | `spec_resolve` | `projectId`, `id` |
 | Stored SOT file content | `sot_file_get` | `projectId`, `path` |

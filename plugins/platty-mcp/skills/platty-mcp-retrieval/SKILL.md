@@ -22,14 +22,24 @@ Do not call `document_search`, `ssot_search`, `spec_search`, `code_search`, or
 and selected BR/DD/DESIGN/UCL map first. Search narrows candidates after maps;
 it cannot replace exact `epic_get`, `document_list`, `document_item_get`,
 `document_resolve`, `spec_get`, or `readonly_workspace_shell` reads.
+
+Use `spec_list` for a complete API, screen, event, or schedule inventory. Apply
+`specKind` and `scopeId` filters when known and follow every `nextCursor` until
+`hasNextPage` is false. Use `spec_search` only for targeted discovery when the
+exact spec id is unknown, then confirm selected hits with `spec_get` and
+`spec_resolve`.
 </HARD-GATE>
 
-The MCP profile is read-only. Use configured MCP tools only. Do not read local
-files, use local shell/CLI as a fallback, read local SOT, mutate projects,
-generate documents, or write memory. MCP-provided source tools such as
-`readonly_workspace_shell` are allowed when exposed and required by the evidence
-gate; they are not local fallback. Stored SOT files are available only through
-MCP artifact tools and need exact evidence reads before behavior claims.
+## MCP Tool Boundary
+
+| Case | Required behavior |
+| --- | --- |
+| Allowed | Use configured MCP tools. MCP `readonly_workspace_shell` is the bounded source-read tool when exposed. |
+| Prohibited | Do not use host/local files, host/local shell or CLI, local SOT, project mutation, generation, or memory writes. |
+| Missing MCP surface | Report the capability gap and weaken or stop the claim; never substitute a host/local surface. |
+
+Stored SOT files are available only through MCP artifact tools and need exact
+evidence reads before behavior claims.
 
 Memory overlay reads are a first-class retrieval rung. At every selected
 overview, epic, document, item, and spec read, inspect returned memory summary
@@ -107,9 +117,7 @@ generation, report a boundary gap.
 
 | Do | Don't |
 | --- | --- |
-| Use configured MCP tools only, including MCP `readonly_workspace_shell` when exposed for bounded source confirmation. | Read local files, use local shell/CLI fallback, local SOT, DB tables, or caches. |
 | Build project, epic, BR/DD/DESIGN/UCL, spec, and source maps in order. | Treat one search hit, snippet, or score as proof. |
-| Read attached memory overlays on every selected overview/epic/document/item/spec surface, and use `memory_get` for relevant cards. | Treat memory as generated SOT or source-confirmed behavior. |
 | On every table/field route, inspect parent `data_dictionary` document memories before item-level conclusions; use `memory_list(documentId)` if attached cards are unavailable. | Read only the `dd_field` item and skip a parent DD fallback memory. |
 | Normalize vocabulary when terms may not line up. | Treat glossary normalization as behavior evidence. |
 | Read exact item/spec/source evidence before implementation claims. | Claim response shape, permissions, writes, emits, or absence without the required evidence tier. |

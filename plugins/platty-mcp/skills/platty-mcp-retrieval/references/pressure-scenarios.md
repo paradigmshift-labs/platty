@@ -16,6 +16,7 @@ expected route.
 - Scenarios 13-15: coupon ambiguity, complete glossary inventory, older server
   exact-spec route
 - Scenario 17: managed-worktree Git history and deployment-boundary labeling
+- Scenarios 18-19: complete spec inventory versus exact targeted lookup
 
 ## Scenario 1: Korean Domain Term
 
@@ -642,4 +643,52 @@ capability gate
 -> preserve networkChecked=false and productionDeploymentObserved=false
 -> if git_metadata_unavailable, report the linked Git metadata gap without local fallback
 -> state that actual production deployment requires separate CI/CD/deployment evidence
+```
+
+## Scenario 18: Complete Survey API Inventory Uses Spec List
+
+User asks:
+
+```text
+Survey EPIC에 연결된 API를 빠짐없이 보여줘.
+```
+
+Failure to prevent:
+
+- treating one relevance-ranked `spec_search` page as a complete inventory;
+- failing to follow `nextCursor` when `hasNextPage` is true;
+- widening outside the selected Survey EPIC without reporting the scope change.
+
+Expected route:
+
+```text
+establish project and Survey EPIC scope
+-> spec_list(projectId, specKind=api_spec, scopeId=<survey-epic-id>)
+-> follow nextCursor until hasNextPage=false
+-> spec_get selected ids
+-> spec_resolve when connected evidence matters
+```
+
+## Scenario 19: Exact Tally Webhook Uses Targeted Search
+
+User asks:
+
+```text
+POST /api/v2/surveys/tally/webhook 스펙을 찾아서 동작을 확인해줘.
+```
+
+Failure to prevent:
+
+- treating `/api/` as a request for every API;
+- starting with a complete `spec_list` traversal when one exact target is known;
+- stopping at a search hit without exact spec and connected-context reads.
+
+Expected route:
+
+```text
+after project overview and the relevant EPIC/document map are established
+-> spec_search(projectId, query="POST /api/v2/surveys/tally/webhook")
+-> select the exact route candidate
+-> spec_get(projectId, id=<selected-spec-id>)
+-> spec_resolve(projectId, id=<selected-spec-id>)
 ```
