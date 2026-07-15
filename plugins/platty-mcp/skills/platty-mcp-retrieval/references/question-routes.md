@@ -25,14 +25,9 @@ chosen branch. The branch route may refine `Question branch`, `Candidate MCP
 route`, and `User decision needed`, but it must preserve the raw question and
 the ambiguity trigger that caused the gate to fire.
 
-Read attached memory summary cards on every selected
-`project_overview_get.overview.memories`, `epic_get.memories`,
-`document_get.memories`, document item, and spec result before discarding
-candidates or finalizing semantic answers. If a memory title/contentPreview,
-kind, level, trust, or alias relates to the user question, ambiguity,
-correction, constraint, why, naming, deprecated behavior, or operational caveat,
-call `memory_get` before the final answer. Keep memory separate from SOT/spec/
-source proof, but treat unread relevant memory as an incomplete route.
+Apply the retrieval skill's memory-overlay invariant and the canonical ladder's
+Final Route Audit to every branch below. Branch sections add only their extra
+document families and completion conditions.
 
 Document family names such as BR, DD, DESIGN, and UCL are semantic labels in
 this guide. When passing them to `document_list.documentType`, use the MCP
@@ -159,8 +154,10 @@ Completion:
 ## Exact API, Screen, Event, Schedule
 
 Use the exact source-near branch of the Full-Cycle Retrieval Ladder. Start from
-`spec_get` when the exact spec id is known; use `spec_list/spec_search` only
-when the exact spec id is unknown. Follow selected specs with `spec_resolve`.
+`spec_get` when the exact spec id is known. When an exact route, title, symbol,
+or trace is known but the spec id is unknown, use `spec_search`, then
+`spec_get`, then `spec_resolve` for selected hits. Use `spec_list` only for a
+complete inventory and follow every page.
 
 Completion:
 

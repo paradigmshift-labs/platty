@@ -11,7 +11,6 @@ detail second.
 - Canonical Ladder
 - Runtime Evidence Checklist
 - Business Document To Source-Near Spec Descent
-- Retrieval Order
 - Final Route Audit
 
 ## Exact Item Fast Path
@@ -103,142 +102,47 @@ capability gap instead of replacing the rung with search.
 
 ## Runtime Evidence Checklist
 
-Before answering, keep this checklist in runtime context and complete the rungs
-required by the selected question branch. Do not print a long checklist in the
-final answer unless the user asks for the route audit.
+Use this only for branch-level completion state; do not restate the Canonical
+Ladder in runtime context or the final answer.
 
-```text
-[ ] Select project with project_list or project_get.
-[ ] Check context_status and project_overview_get.
-[ ] Inspect memory summary cards returned by every selected overview, epic,
-    document, item, and spec read before discarding candidates or finalizing
-    claims.
-[ ] If any memory title/contentPreview/kind/level/trust/alias is relevant to
-    the question, ambiguity, correction, constraint, why, naming, deprecated
-    behavior, or operational caveat, call memory_get for the exact body.
-[ ] Identify relevant EPICs with epic_list and epic_get.
-[ ] Normalize ambiguous Korean/domain terms with glossary_translate or
-    glossary_list when needed.
-[ ] If this is a pure service overview/user-type explanation with no concrete
-    implementation, API, screen, event, schedule, state, or operational-data
-    claim, stop at overview/epic/SSOT depth and state the boundary.
-[ ] For product/business flow: use ssot_search -> ssot_get when SSOT evidence is
-    the selected surface.
-[ ] For authored docs or business rules: use document_list/search/get and exact
-    document_item_get when item evidence is needed.
-[ ] If any exact BR/DD/DESIGN/UCL item was used, run document_resolve(itemId)
-    before source-near search, or state why the answer remains purely
-    conceptual.
-[ ] For product flow, capability, journey, admin workflow, data flow,
-    integration, architecture, or implementation-facing questions, include
-    DESIGN as a near-mandatory business map before descending to specs.
-[ ] For API/screen/event/schedule/source-near behavior: use
-    document_resolve(itemId) first after exact item reads, and prefer explicitly
-    linked api_spec/screen_spec/event_spec/schedule_spec ids when available.
-    Use spec_search only as fallback when explicit links are absent, incomplete,
-    stale, too broad, or unresolved.
-[ ] Run spec_resolve after selected spec reads when connected docs/items, graph
-    seeds, or code seeds matter.
-[ ] If implementation behavior is important or still ambiguous:
-    [ ] use code_search to find filePath/functionName candidates when the source
-        address is incomplete.
-    [ ] use workspace_repo_list if repoId is unknown.
-    [ ] actively use bounded readonly_workspace_shell to read only the relevant
-        file/function range before making code behavior claims. There is no
-        code_snippet tool; do not ask for or claim one.
-[ ] If operational data is claimed:
-    [ ] only do this when a data MCP is exposed for the environment.
-    [ ] read data_analysis_guide/domain_guide when exposed by that data MCP.
-    [ ] use read-only RDS/Athena SELECT and state sample/cohort limits.
-[ ] If no operational data MCP is exposed for a funnel/conversion/bottleneck
-    question, limit the answer to SSOT-derived funnel steps, instrumentation
-    points, and hypotheses. Do not claim observed conversion drops or causes.
-[ ] Do not treat search snippets, scores, overview text, or glossary output as
-    proof.
-[ ] State freshness, coverage, missing MCP surfaces, and any unresolved
-    ambiguity.
-```
+- Record the evidence depth selected from the table above and whether the route
+  ended conceptually, reached source confirmation, or stopped at a missing MCP
+  surface.
+- When operational data is claimed, require an exposed data MCP, read
+  `data_analysis_guide`/`domain_guide` when available, use read-only RDS/Athena
+  `SELECT`, and state sample/cohort limits. Without that surface, limit funnel
+  or conversion answers to SSOT-derived steps, instrumentation points, and
+  hypotheses.
+- When `spec_search` selects a candidate, follow it with `spec_get` and
+  `spec_resolve` in the same route.
+- Run the Final Route Audit and expose only failures that change confidence or
+  scope.
 
-When `spec_search` is used, every selected spec candidate must be followed by `spec_get` and `spec_resolve` in the same route. Do not treat a spec search hit as complete evidence or defer resolve to a later optional step.
+For a complete API inventory, or a complete screen, event, or schedule
+inventory, use `spec_list` with the narrowest known `specKind` and `scopeId`.
+Follow `nextCursor` until `hasNextPage` is false. Do not use ranked
+`spec_search` results as proof that the inventory is complete.
 
 ## Business Document To Source-Near Spec Descent
 
-When the question starts from SOT business context, treat BR/DD/DESIGN/UCL
-documents and items as the map, not as source-near proof:
+When the question starts from exact BR/DD/DESIGN/UCL evidence, use the selected
+item as the bridge rather than rebuilding the whole ladder:
 
 ```text
-business question
--> document_list/document_get/document_item_list
-   [MUST] include DESIGN for product flow, capability, journey, admin workflow,
-   data flow, integration, architecture, or implementation-facing questions
--> document_item_get for exact business item
--> document_resolve(itemId) to follow explicit item links and collect linked
-   api_spec, screen_spec, event_spec, and schedule_spec ids when returned
--> rank linked source-near spec candidates and keep selected spec ids visible
--> spec_list/spec_search only if document_resolve returns no usable link, an
-   incomplete/stale/too-broad linked set, or the exact spec id is unknown
--> when spec_search is used, select candidate specs before making claims
--> spec_get for selected api_spec/screen_spec/event_spec/schedule_spec details
--> spec_resolve to expand selected specs to related docs/items, graph seeds, and code seeds
+document_item_get
+-> document_resolve(itemId)
+-> rank linked api_spec/screen_spec/event_spec/schedule_spec candidates
+-> spec_get for selected exact specs
+-> spec_resolve for reverse anchors and graph/code seeds
 ```
 
-`document_resolve(itemId)` is the first bridge from an exact business item to
-linked source-near specs. Use `document_resolve(documentId)` only when doing
-document-wide inventory before an exact item is selected. `spec_resolve` is not
-the first bridge from business docs to specs; use it after selecting a spec to
-collect reverse anchors, related items/documents, and source seed expansion.
+Use `document_resolve(documentId)` only for document-wide inventory. Prefer
+explicit links and rank by direct link, same epic, entity/field, target, and
+branch intent. Use `spec_search` only when links are absent, incomplete, stale,
+too broad, or leave the exact spec unknown; then read the selected exact specs
+before making source-near claims.
 
-Business document items are routing evidence. For exact API, screen, event, or
-schedule behavior, rank connected `api_spec`, `screen_spec`, `event_spec`, and
-`schedule_spec` candidates before opening details. Direct document/spec links,
-same epic, same entity/field, same route/screen/API/event/schedule target, and
-same branch intent rank first.
-
-Always use explicit links first. `document_resolve(itemId)` is the MCP
-equivalent of following traced business-doc item context into linked specs/items;
-it is the first bridge from exact business evidence to source-near evidence. If
-the selected DESIGN/BR/DD/UCL document or item does not return enough linked
-source-near specs, or returns stale/too-broad candidates, widen with
-`spec_search` using the business terms, route/screen names, table/model names,
-status names, and API/action names discovered from the document. Then read
-`spec_get` and `spec_resolve` for the selected specs before source-near claims.
-Do not open every connected spec up front; rank first, then read the strongest
-candidates.
-
-Memory overlays are correction/constraint/why/context notes attached to the
-overview, epics, documents, items, or specs. They are a required
-selected-surface read, not an optional afterthought. Inspect attached memory
-summary cards at each selected surface: `project_overview_get.overview.memories`,
-`epic_get.memories`, `document_get.memories`, item memories, and spec memories
-when those surfaces return them. If any memory card is relevant to the user
-question, ambiguity, correction, constraint, why, naming, deprecated behavior,
-or operational caveat, call `memory_get` for the exact body before finalizing.
-If the exact body is not read, name the memory as an unread coverage limit. Do
-not treat memory as generated SOT or source proof.
-
-## Retrieval Order
-
-```text
-project context
--> context status
--> capability check
--> Search Clarification Gate when triggers fire
--> project overview with attached overview memory cards inspected
--> glossary_list for broad inventory, comparison, ambiguity, all-alias requests, or blank/conflicting translation; traverse every page when completeness is required
--> glossary_translate for the raw phrase and Korean/English candidates; record matched terms and alias candidates
--> candidate epic
--> candidate BR/DD/DESIGN/UCL document map
--> question branch
--> relevant business document items or exact source-near anchor
--> connected api_spec/screen_spec/event_spec/schedule_spec evidence through
-   document_resolve(itemId) after exact item reads, with spec_search fallback
-   only when explicit links are absent, incomplete, stale, too broad, or unresolved
--> exact spec evidence
--> spec_resolve for connected context and graph/code seeds
--> source-level confirmation only when required
--> Final Route Audit
--> answer with boundary
-```
+Apply the retrieval skill's memory-overlay invariant throughout this descent.
 
 ## Final Route Audit
 
