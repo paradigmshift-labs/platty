@@ -118,7 +118,7 @@ Code가 Platty CLI를 구동하는 법을 가르치는 스킬 모음입니다. P
 이미 구성된 Platty MCP 서버에 대한 원격 MCP 조회, 영향 분석, 메모리, SDD handoff에는
 `platty-mcp:using-platty-mcp`, `platty-mcp:platty-mcp-client-setup`,
 `platty-mcp:platty-mcp-retrieval`, `platty-mcp:platty-mcp-impact-analysis`,
-`platty-mcp:platty-mcp-retrieval-eval`, `platty-mcp:platty-mcp-memory`,
+`platty-mcp:platty-mcp-memory`,
 `platty-mcp:platty-mcp-sdd-spec`,
 `platty-mcp:platty-mcp-sdd-design`를 포함한 `platty-mcp` 플러그인을 설치하세요.
 영향 분석은 선택된 스펙, 그래프 클래스, cross-EPIC 탐색, 저장소 범위, 제한된 소스

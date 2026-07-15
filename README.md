@@ -124,7 +124,6 @@ Included full `platty` skills: `platty:using-platty`,
 For remote MCP retrieval, impact analysis, memory, and SDD handoffs against an already configured Platty MCP server,
 install `platty-mcp`, which includes `platty-mcp:using-platty-mcp`,
 `platty-mcp:platty-mcp-client-setup`, `platty-mcp:platty-mcp-retrieval`,
-`platty-mcp:platty-mcp-retrieval-eval`,
 `platty-mcp:platty-mcp-impact-analysis`, `platty-mcp:platty-mcp-memory`,
 `platty-mcp:platty-mcp-sdd-spec`, and `platty-mcp:platty-mcp-sdd-design`.
 Impact analysis converges selected specs, graph classes, cross-EPIC traversal,
