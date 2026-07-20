@@ -9,6 +9,16 @@ description: Use when Platty CLI and agent skills are already installed and a us
 
 Coordinate the installed first-run journey. This skill does not install the CLI or agent plugin. Route detailed phase behavior and recovery to `platty-setup`, `platty-static-analysis`, `platty-docs-target-curation`, and `platty-generated-docs`.
 
+## Invocation Input
+
+Treat a path appended to an explicit skill invocation as the initial repository
+candidate. `.` means the host session's current working directory. Resolve any
+relative or absolute path to its absolute Git root before setup inspection. If
+the path or Git root is unverifiable, stop and ask for a valid repository path.
+The path identifies the initial repository and is never a project selector; the
+normal project resolution, branch gate, and additional-repository questions
+still apply.
+
 ## Resume First
 
 Use the shared Platty Start Notice, then inspect `platty setup --json`. Inside the private source checkout, translate public commands to `node packages/cli/dist/main.js <command> --json` as required by `AGENTS.md`. If the CLI or agent plugin is missing, stop and route the user to installation; do not install it from this skill.
