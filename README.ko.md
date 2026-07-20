@@ -36,8 +36,18 @@
 
 ## 플래티를 사용해 보세요
 
-- [GETTING_STARTED.md](GETTING_STARTED.md) 에서 무료 CLI 버전을 설치해 보세요.
-- 사용 설명서를 참조하세요 — 한글: [guide/ko/usage-guide.md](guide/ko/usage-guide.md) · 영어: [guide/en/usage-guide.md](guide/en/usage-guide.md)
+CLI를 설치하고 AI 에이전트에 Platty 스킬을 등록하세요:
+
+```bash
+npm install -g @paradigmshift/platty  # CLI 설치
+platty install                        # 에이전트 스킬 등록
+```
+
+새 Codex 또는 Claude Code 세션을 시작한 다음, 분석할 저장소에서
+`platty setup`을 실행하세요.
+
+- 상세 설치 안내: [GETTING_STARTED.md](GETTING_STARTED.md)
+- 사용 설명서 — 한글: [guide/ko/usage-guide.md](guide/ko/usage-guide.md) · 영어: [guide/en/usage-guide.md](guide/en/usage-guide.md)
 
 ## 아이디어 → 배포 속도를 10배 이상 빠르게
 
@@ -62,26 +72,32 @@ AI 코딩, 플래티로 하면 차원이 달라집니다. 그냥 코드베이스
 ## 설치
 
 ```bash
-npm install -g @paradigmshift/platty
-platty version
+npm install -g @paradigmshift/platty  # CLI 설치
+platty install                        # 에이전트 스킬 등록
 ```
 
-런타임에 맞는 전체 에이전트 플러그인을 설치하세요:
+`platty install`은 `PATH`에 있는 Codex와 Claude Code를 감지해 일반
+`platty@platty` 플러그인을 감지된 모든 런타임에 설치합니다. 특정 런타임만
+선택하려면 `platty install --runtime codex` 또는
+`platty install --runtime claude`를 사용하세요.
+
+Codex 수동 설치 대안:
 
 ```bash
-# Codex
 codex plugin marketplace add paradigmshift-labs/platty
 codex plugin add platty@platty
 ```
 
-```text
-# Claude Code
-/plugin marketplace add paradigmshift-labs/platty
-/plugin install platty@platty
+Claude Code 수동 설치 대안:
+
+```bash
+claude plugin marketplace add paradigmshift-labs/platty --scope user
+claude plugin install platty@platty --scope user
 ```
 
 전체 `platty` 운영자 플러그인 경로를 사용할 경우에는
 `platty@platty`를 설치한 뒤, 분석할 저장소에서 `platty setup`을 실행하세요.
+`platty install`은 별도 `platty-mcp` 플러그인을 설치하지 않습니다.
 
 직접 HTTP MCP 설정은 역할별로 나누세요:
 

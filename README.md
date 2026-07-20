@@ -39,8 +39,18 @@ never conflict with your existing services.
 
 ## Try Platty
 
-- Install the free CLI from [GETTING_STARTED.md](GETTING_STARTED.md).
-- Read the usage guide — English: [guide/en/usage-guide.md](guide/en/usage-guide.md) · 한국어: [guide/ko/usage-guide.md](guide/ko/usage-guide.md)
+Install the CLI and register the Platty skills with your AI assistant:
+
+```bash
+npm install -g @paradigmshift/platty  # Install the CLI
+platty install                        # Register the agent skills
+```
+
+Start a new Codex or Claude Code session, then run `platty setup` from the
+repository you want to analyze.
+
+- Detailed installation: [GETTING_STARTED.md](GETTING_STARTED.md)
+- Usage guide — English: [guide/en/usage-guide.md](guide/en/usage-guide.md) · 한국어: [guide/ko/usage-guide.md](guide/ko/usage-guide.md)
 
 ## From idea to deploy — 10× faster
 
@@ -66,26 +76,32 @@ concepts, see [guide/en/how-platty-works.md](guide/en/how-platty-works.md).
 ## Install
 
 ```bash
-npm install -g @paradigmshift/platty
-platty version
+npm install -g @paradigmshift/platty  # Install the CLI
+platty install                        # Register the agent skills
 ```
 
-Install the full agent plugin for your runtime:
+`platty install` detects Codex and Claude Code on your `PATH` and installs the
+ordinary `platty@platty` plugin into every detected runtime. To target one
+runtime explicitly, use `platty install --runtime codex` or
+`platty install --runtime claude`.
+
+Manual fallback for Codex:
 
 ```bash
-# Codex
 codex plugin marketplace add paradigmshift-labs/platty
 codex plugin add platty@platty
 ```
 
-```text
-# Claude Code
-/plugin marketplace add paradigmshift-labs/platty
-/plugin install platty@platty
+Manual fallback for Claude Code:
+
+```bash
+claude plugin marketplace add paradigmshift-labs/platty --scope user
+claude plugin install platty@platty --scope user
 ```
 
 For the full `platty` operator plugin path, install `platty@platty` and then run
 `platty setup` from the repository you want to analyze.
+`platty install` never installs the separate `platty-mcp` plugin.
 
 For direct HTTP MCP setup, split the responsibility by role:
 
