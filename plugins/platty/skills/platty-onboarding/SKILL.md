@@ -11,14 +11,15 @@ Coordinate the installed first-run journey. This skill does not install the CLI 
 
 ## Conversation Language
 
-Determine the conversation language from the user's request at the start. Use
-Korean when the request is Korean, mixes Korean and English, or is ambiguous
-enough that the language cannot be inferred. Use English when the request is in
-English or the user explicitly asks for English. Keep every user-facing
-progress update, explanation, question, approval card, and completion or
-failure report in that language across all routed owner skills. Preserve
-commands, paths, project and repository names, provider values, ids, and error
-codes verbatim.
+Determine the conversation language from the user's request at the start. An
+explicit language instruction takes precedence. Otherwise use Korean when the
+request is Korean, mixes Korean and English, or is ambiguous enough that the
+language cannot be inferred. Use English when the request is in English. Do not
+infer the response language from the repository's source language. Keep every
+user-facing progress update, explanation, question, approval card, and
+completion or failure report in that language across all routed owner skills.
+Preserve commands, paths, project and repository names, provider values, ids,
+and error codes verbatim.
 
 For the shared Start Notice, Progress Checkpoint, and Handoff Card, translate
 all human-readable labels and headings into the conversation language while

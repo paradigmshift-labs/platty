@@ -182,6 +182,17 @@ Use Platty to analyze this repository. Start with platty:using-platty.
 The agent should use the Platty skills to choose the next workflow and explain
 what it is doing.
 
+## Choose The Onboarding Language
+
+Onboarding uses your current conversation language. To choose a language
+explicitly, append the instruction to the invocation. If the conversation
+language is unclear, onboarding defaults to Korean.
+
+```text
+$platty:platty-onboarding . 한국어로 진행해줘
+$platty:platty-onboarding . Continue in English.
+```
+
 ## Troubleshooting
 
 ### `platty` is not found
@@ -210,6 +221,23 @@ npm install -g @paradigmshift/platty
 ```
 
 Then open a new terminal and try `platty version` again.
+
+### Codex needs an update for plugin installation
+
+If `platty install` reports `AGENT_RUNTIME_UPDATE_REQUIRED` or Codex rejects
+`--json`, update Codex using its supported installation method, then retry:
+
+```bash
+codex update
+platty install --runtime codex --json
+```
+
+If updating is not currently possible, use the manual fallback:
+
+```bash
+codex plugin marketplace add paradigmshift-labs/platty
+codex plugin add platty@platty
+```
 
 ### The agent does not mention Platty skills
 

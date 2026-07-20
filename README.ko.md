@@ -64,6 +64,14 @@ $platty:platty-onboarding .
 
 `.`은 AI 에이전트의 현재 작업 디렉터리에 있는 저장소를 뜻합니다.
 
+온보딩은 현재 대화 언어로 진행됩니다. 언어를 명시하려면 호출 뒤에 원하는 언어를
+적어 주세요. 대화 언어가 명확하지 않으면 한국어로 진행합니다.
+
+```text
+$platty:platty-onboarding . 한국어로 진행해줘
+$platty:platty-onboarding . Continue in English.
+```
+
 일반 문장으로 요청해도 됩니다:
 
 ```text
