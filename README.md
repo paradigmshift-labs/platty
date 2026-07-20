@@ -25,10 +25,56 @@ never conflict with your existing services.
 
 > Platty is proprietary software of Paradigm Shift Labs, Inc.
 
+> **Static analysis coverage**
+>
+> **Real-world validated:** TypeScript/JavaScript, including monorepos · Java,
+> including multi-module repositories
+>
+> **Preview:** Kotlin · Python · Dart/Flutter
+>
+> [View the detailed support and validation matrix →](guide/en/support-matrix.md)
+>
+> [Request support for a stack](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
+> · [Report a static-analysis bug](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
+
 ## Try Platty
 
-- Install the free CLI from [GETTING_STARTED.md](GETTING_STARTED.md).
-- Read the usage guide — English: [guide/en/usage-guide.md](guide/en/usage-guide.md) · 한국어: [guide/ko/usage-guide.md](guide/ko/usage-guide.md)
+### 1. Install Platty
+
+```bash
+npm install -g @paradigmshift/platty  # Install the CLI
+platty install                        # Register the agent skills
+```
+
+Start a new AI assistant session after installation.
+
+### 2. Start onboarding
+
+Platty will register the current repository, run static analysis, review the
+documentation scope, and guide you through generating the source of truth.
+
+#### Claude Code
+
+```text
+/platty:platty-onboarding .
+```
+
+#### Codex
+
+```text
+$platty:platty-onboarding .
+```
+
+`.` means the repository in your AI assistant's current working directory.
+
+You can also ask in plain language:
+
+```text
+Onboard this repository with Platty.
+```
+
+- Detailed installation: [GETTING_STARTED.md](GETTING_STARTED.md)
+- Usage guide — English: [guide/en/usage-guide.md](guide/en/usage-guide.md) · 한국어: [guide/ko/usage-guide.md](guide/ko/usage-guide.md)
 
 ## From idea to deploy — 10× faster
 
@@ -54,15 +100,14 @@ concepts, see [guide/en/how-platty-works.md](guide/en/how-platty-works.md).
 ## Install
 
 ```bash
-npm install -g @paradigmshift/platty
-platty version
+npm install -g @paradigmshift/platty  # Install the CLI
+platty install                        # Register the agent skills
 ```
 
-Install the full ordinary agent plugin into every detected runtime:
-
-```bash
-platty install
-```
+`platty install` detects Codex and Claude Code on your `PATH` and installs the
+ordinary `platty@platty` plugin into every detected runtime. To target one
+runtime explicitly, use `platty install --runtime codex` or
+`platty install --runtime claude`.
 
 Manual fallback for Codex:
 
@@ -78,9 +123,12 @@ claude plugin marketplace add paradigmshift-labs/platty --scope user
 claude plugin install platty@platty --scope user
 ```
 
-For the full `platty` operator plugin path, install `platty@platty` and then run
-`platty setup` from the repository you want to analyze.
 `platty install` never installs the separate `platty-mcp` plugin.
+
+### Use the CLI directly
+
+If you prefer a CLI-guided setup, run `platty setup` from the repository you
+want to analyze.
 
 For direct HTTP MCP setup, split the responsibility by role:
 
@@ -110,9 +158,6 @@ codex plugin add platty-mcp@platty
 ```text
 /plugin install platty-mcp@platty
 ```
-
-After installing the full `platty` operator plugin, start a new agent session,
-then run `platty setup` from the repository you want to analyze.
 
 ## This repository
 

@@ -22,10 +22,56 @@
 
 > 플래티는 주식회사 패러다임시프트의 독점 소프트웨어입니다.
 
+> **정적 분석 지원 현황**
+>
+> **실제 저장소 검증 완료:** TypeScript/JavaScript 모노레포 · Java 멀티모듈
+> 저장소
+>
+> **프리뷰:** Kotlin · Python · Dart/Flutter
+>
+> [상세 지원 및 검증 범위 보기 →](guide/ko/support-matrix.md)
+>
+> [스택 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
+> · [정적 분석 버그 신고](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
+
 ## 플래티를 사용해 보세요
 
-- [GETTING_STARTED.md](GETTING_STARTED.md) 에서 무료 CLI 버전을 설치해 보세요.
-- 사용 설명서를 참조하세요 — 한글: [guide/ko/usage-guide.md](guide/ko/usage-guide.md) · 영어: [guide/en/usage-guide.md](guide/en/usage-guide.md)
+### 1. Platty 설치
+
+```bash
+npm install -g @paradigmshift/platty  # CLI 설치
+platty install                        # 에이전트 스킬 등록
+```
+
+설치가 끝나면 새 AI 에이전트 세션을 시작하세요.
+
+### 2. 온보딩 시작
+
+Platty가 현재 저장소를 등록하고 정적 분석을 실행한 뒤, 문서화 범위를 검토하고
+SOT(source of truth) 생성까지 안내합니다.
+
+#### Claude Code
+
+```text
+/platty:platty-onboarding .
+```
+
+#### Codex
+
+```text
+$platty:platty-onboarding .
+```
+
+`.`은 AI 에이전트의 현재 작업 디렉터리에 있는 저장소를 뜻합니다.
+
+일반 문장으로 요청해도 됩니다:
+
+```text
+이 저장소를 Platty에 온보딩해 줘.
+```
+
+- 상세 설치 안내: [GETTING_STARTED.md](GETTING_STARTED.md)
+- 사용 설명서 — 한글: [guide/ko/usage-guide.md](guide/ko/usage-guide.md) · 영어: [guide/en/usage-guide.md](guide/en/usage-guide.md)
 
 ## 아이디어 → 배포 속도를 10배 이상 빠르게
 
@@ -50,15 +96,14 @@ AI 코딩, 플래티로 하면 차원이 달라집니다. 그냥 코드베이스
 ## 설치
 
 ```bash
-npm install -g @paradigmshift/platty
-platty version
+npm install -g @paradigmshift/platty  # CLI 설치
+platty install                        # 에이전트 스킬 등록
 ```
 
-감지된 런타임에 일반 에이전트 플러그인을 설치하세요:
-
-```bash
-platty install
-```
+`platty install`은 `PATH`에 있는 Codex와 Claude Code를 감지해 일반
+`platty@platty` 플러그인을 감지된 모든 런타임에 설치합니다. 특정 런타임만
+선택하려면 `platty install --runtime codex` 또는
+`platty install --runtime claude`를 사용하세요.
 
 Codex 수동 설치 대안:
 
@@ -74,9 +119,11 @@ claude plugin marketplace add paradigmshift-labs/platty --scope user
 claude plugin install platty@platty --scope user
 ```
 
-전체 `platty` 운영자 플러그인 경로를 사용할 경우에는
-`platty@platty`를 설치한 뒤, 분석할 저장소에서 `platty setup`을 실행하세요.
 `platty install`은 별도 `platty-mcp` 플러그인을 설치하지 않습니다.
+
+### CLI에서 직접 시작하기
+
+CLI 안내에 따라 설정하려면 분석할 저장소에서 `platty setup`을 실행하세요.
 
 직접 HTTP MCP 설정은 역할별로 나누세요:
 
@@ -106,9 +153,6 @@ codex plugin add platty-mcp@platty
 ```text
 /plugin install platty-mcp@platty
 ```
-
-전체 `platty` 운영자 플러그인을 설치한 뒤 새 에이전트 세션을 시작하고,
-분석할 저장소에서 `platty setup`을 실행하세요.
 
 ## 이 저장소
 
