@@ -26,6 +26,8 @@ setup, host/port exposure, and `/api/mcp` validation stay in
 
 | Need | Command or skill |
 | --- | --- |
+| Install ordinary Platty agent skills (non-MCP agent plugin) | `platty install --json`; MCP installation stays separate |
+| Installed first end-to-end project journey through repositories, analysis, LLM approval, and SOT output | `platty-onboarding` |
 | Initialize global Platty home (`~/.platty` or `PLATTY_HOME`) | `platty init` via `platty-setup` |
 | Create/select a project | `platty project ...` via `platty-setup` |
 | Register repositories | `platty repo ...` via `platty-setup` |

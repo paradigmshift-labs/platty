@@ -25,18 +25,6 @@ never conflict with your existing services.
 
 > Platty is proprietary software of Paradigm Shift Labs, Inc.
 
-> **Static analysis coverage**
->
-> **Real-world validated:** TypeScript/JavaScript, including monorepos · Java,
-> including multi-module repositories
->
-> **Preview:** Kotlin · Python · Dart/Flutter
->
-> [View the detailed support and validation matrix →](guide/en/support-matrix.md)
->
-> [Request support for a stack](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
-> · [Report a static-analysis bug](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
-
 ## Try Platty
 
 - Install the free CLI from [GETTING_STARTED.md](GETTING_STARTED.md).
@@ -70,22 +58,29 @@ npm install -g @paradigmshift/platty
 platty version
 ```
 
-Install the full agent plugin for your runtime:
+Install the full ordinary agent plugin into every detected runtime:
 
 ```bash
-# Codex
+platty install
+```
+
+Manual fallback for Codex:
+
+```bash
 codex plugin marketplace add paradigmshift-labs/platty
 codex plugin add platty@platty
 ```
 
-```text
-# Claude Code
-/plugin marketplace add paradigmshift-labs/platty
-/plugin install platty@platty
+Manual fallback for Claude Code:
+
+```bash
+claude plugin marketplace add paradigmshift-labs/platty --scope user
+claude plugin install platty@platty --scope user
 ```
 
 For the full `platty` operator plugin path, install `platty@platty` and then run
 `platty setup` from the repository you want to analyze.
+`platty install` never installs the separate `platty-mcp` plugin.
 
 For direct HTTP MCP setup, split the responsibility by role:
 
@@ -127,7 +122,7 @@ not contain the Platty engine, CLI implementation, or backend (proprietary to
 Paradigm Shift Labs, Inc.).
 
 Included full `platty` skills: `platty:using-platty`,
-`platty:platty-cli-router`, `platty:platty-setup`,
+`platty:platty-cli-router`, `platty:platty-onboarding`, `platty:platty-setup`,
 `platty:platty-mcp-server-setup`, `platty:platty-static-analysis`,
 `platty:platty-docs-target-curation`, `platty:platty-generated-docs`,
 `platty:platty-sync`, `platty:platty-sdd-spec`, `platty:platty-sdd-design`,

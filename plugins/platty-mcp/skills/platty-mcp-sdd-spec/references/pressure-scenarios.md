@@ -456,32 +456,27 @@ Failure to prevent:
 - asking initial and follow-up questions in one message;
 - consuming a question on an existing point amount, API, timer, event, table,
   duplicate-prevention key, or source location;
-- treating the later final approval prompt as an interview answer;
-- stopping after two questions while a material surface or journey decision is
-  still unresolved;
-- forcing another question when no material product ambiguity remains.
+- treating the later final approval prompt as one of the two discovery rounds;
+- forcing two questions when the first answer and evidence leave no second
+  material product ambiguity.
 
 Expected route:
 
 ```text
 raw idea contains a 30-second reward threshold but leaves reward cadence unstated
 -> ask once-per-visit/window versus repeated-threshold earning before full-cycle retrieval
--> record the first productInterviewRounds entry and narrow the reward policy
+-> record initialQuestionUsed=true and narrow the reward policy from the answer
 -> retrieve the selected Community branch and existing reward policy
--> run the Behavioral Analogue sweep and find the Store Explore active-scroll precedent
--> recommend the safe existing daily/lifetime limits without consuming the next decision
--> ask whether Community-origin feed detail navigation keeps the same 30-second session
--> research and reclassify after the answer; continue one question at a time until
-   remainingProductDecisions is empty
+-> ask at most one evidence-informed follow-up about Community surface or existing
+   daily/lifetime limits only if that choice remains tied after evidence
 -> draft prd.md and user_stories.md
 -> ask the separate final product approval question
 ```
 
-Observable pass criteria: one question at a time with no arbitrary cap; no FACT
-or DESIGN question; no broad branch restart after an answer; `decisionLedger`,
-`productInterviewRounds`, and `remainingProductDecisions` accurately recorded;
-detail continuity is not silently chosen by design; and final approval remains a
-separate gate.
+Observable pass criteria: one initial product question and at most one
+evidence-informed follow-up; no FACT or DESIGN question; no broad branch restart
+after either answer; `initialQuestionUsed` and `followupQuestionUsed` accurately
+recorded; and final approval excluded from the discovery budget.
 
 ### community-reward-existing-pattern-does-not-skip-initial-question
 
@@ -506,54 +501,15 @@ Expected route:
 ```text
 capability + project context
 -> ask once-per-visit/window versus repeated-threshold earning
--> record the first productInterviewRounds entry
+-> record initialQuestionUsed=true
 -> after the answer, retrieve only the selected reward/community branch
 ```
 
 Observable pass criteria: the first question is asked before overview, glossary,
 EPIC, document, spec, graph, or source retrieval; no existing reward pattern is
-used to silently choose cadence; later surface and journey-continuity decisions
-remain available after the selected branch and existing limits are read.
-
-### community-adaptive-interview-detail-continuity
-
-**Exact prompt**
-
-```text
-커뮤니티 페이지에서 스크롤을 내리고 30초 이상 유지하면 포인트를 주는 기획을 만들어줘.
-```
-
-Evidence reveals `StoreExploreSessionService`: active scrolling starts a timed
-session, supported detail routes preserve it, unrelated routes end it, and server
-rules handle daily and lifetime reward limits.
-
-Failure to prevent:
-
-- spending the last allowed question on safe daily/lifetime defaults and then
-  letting design silently decide Community-origin feed detail continuity;
-- treating detail navigation as a timer implementation detail even though it
-  changes whether the user earns the reward;
-- declaring all timer/session/idempotency work new without reading the Store
-  Explore precedent;
-- asking the user which service, API, table, event, or class to reuse.
-
-Expected route:
-
-```text
-cadence question before broad retrieval
--> behavior-based analogue search finds StoreExploreSessionService
--> existing daily and lifetime limits adopted as a recommendation
--> next PRODUCT question asks whether a Community-origin feed detail page keeps
-   the same 30-second earning session
--> further PRODUCT questions, if material, cover active-dwell meaning and exit boundaries
--> research and reclassify after every answer
--> stop only when remainingProductDecisions is empty
-```
-
-Observable pass criteria: the interview may exceed two questions; surface and
-journey continuity outrank safe-limit confirmation; every question uses product
-language; and the reuse candidate is handed to design without asking the user to
-choose its technical form.
+used to silently choose cadence; the later scope question remains available as
+one possible evidence-informed follow-up, but only when scope remains materially
+tied after the selected branch and existing limits are read.
 
 ## Scenario 17: approval-trimstart-revision-bypass
 

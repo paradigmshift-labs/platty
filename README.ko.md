@@ -22,18 +22,6 @@
 
 > 플래티는 주식회사 패러다임시프트의 독점 소프트웨어입니다.
 
-> **정적 분석 지원 현황**
->
-> **실제 저장소 검증 완료:** TypeScript/JavaScript 모노레포 · Java 멀티모듈
-> 저장소
->
-> **프리뷰:** Kotlin · Python · Dart/Flutter
->
-> [상세 지원 및 검증 범위 보기 →](guide/ko/support-matrix.md)
->
-> [스택 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
-> · [정적 분석 버그 신고](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
-
 ## 플래티를 사용해 보세요
 
 - [GETTING_STARTED.md](GETTING_STARTED.md) 에서 무료 CLI 버전을 설치해 보세요.
@@ -66,22 +54,29 @@ npm install -g @paradigmshift/platty
 platty version
 ```
 
-런타임에 맞는 전체 에이전트 플러그인을 설치하세요:
+감지된 런타임에 일반 에이전트 플러그인을 설치하세요:
 
 ```bash
-# Codex
+platty install
+```
+
+Codex 수동 설치 대안:
+
+```bash
 codex plugin marketplace add paradigmshift-labs/platty
 codex plugin add platty@platty
 ```
 
-```text
-# Claude Code
-/plugin marketplace add paradigmshift-labs/platty
-/plugin install platty@platty
+Claude Code 수동 설치 대안:
+
+```bash
+claude plugin marketplace add paradigmshift-labs/platty --scope user
+claude plugin install platty@platty --scope user
 ```
 
 전체 `platty` 운영자 플러그인 경로를 사용할 경우에는
 `platty@platty`를 설치한 뒤, 분석할 저장소에서 `platty setup`을 실행하세요.
+`platty install`은 별도 `platty-mcp` 플러그인을 설치하지 않습니다.
 
 직접 HTTP MCP 설정은 역할별로 나누세요:
 
@@ -122,7 +117,7 @@ Code가 Platty CLI를 구동하는 법을 가르치는 스킬 모음입니다. P
 구현·백엔드는 포함하지 않습니다(주식회사 패러다임시프트 독점).
 
 전체 `platty` 스킬: `platty:using-platty`, `platty:platty-cli-router`,
-`platty:platty-setup`, `platty:platty-mcp-server-setup`,
+`platty:platty-onboarding`, `platty:platty-setup`, `platty:platty-mcp-server-setup`,
 `platty:platty-static-analysis`, `platty:platty-docs-target-curation`,
 `platty:platty-generated-docs`, `platty:platty-sync`,
 `platty:platty-sdd-spec`, `platty:platty-sdd-design`, `platty:platty-memory`.

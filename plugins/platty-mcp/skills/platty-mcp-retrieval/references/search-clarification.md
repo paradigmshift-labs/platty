@@ -20,9 +20,9 @@ Exact source-near questions that name a specific API, screen, event, schedule,
 file, symbol, spec id, or source anchor can bypass the gate unless one trigger
 still applies.
 
-## Adaptive SDD Product Interview
+## Two-Stage SDD Product Gate
 
-For an SDD product caller, use one question at a time with no arbitrary maximum:
+For an SDD product caller, distinguish two optional rounds:
 
 - **Initial intent:** before deep or full-cycle retrieval, ask one question only
   when the raw request itself names two materially different user-visible
@@ -32,15 +32,14 @@ For an SDD product caller, use one question at a time with no arbitrary maximum:
   once-per-visit/window versus repeated-threshold earning before broad evidence.
   Existing reward behavior may inform a recommendation later but cannot choose
   this user-visible policy.
-- **Post-research interview:** after MCP evidence, rank remaining tied `PRODUCT`
-  questions. Ask the highest-priority one with an evidence-grounded
-  recommendation and visible consequence, research the boundary changed by its
-  answer, then reclassify before asking anything else.
+- **Post-research follow-up:** after MCP evidence, ask at most one remaining tied
+  `PRODUCT` question. Include a recommendation grounded in the evidence and
+  explain the visible consequence of the alternative.
 
-The route may ask zero, one, or many questions. Never ask two questions in one
-message. Continue only while `remainingProductDecisions` is non-empty and stop
-when there are zero unresolved `PRODUCT` decisions. Final product approval is a
-separate gate. `FACT` and `DESIGN` items are not interview questions.
+The route may ask zero, one, or two discovery questions. Ask one at a time and
+never ask two questions in one message. Final product approval is a separate
+gate and does not count toward the two discovery rounds. `FACT` and `DESIGN`
+items never consume this budget.
 
 ## Runtime Rules
 
@@ -61,20 +60,18 @@ separate gate. `FACT` and `DESIGN` items are not interview questions.
   inventory, needs every alias, remains ambiguous after translation, or a
   plausible `glossary_translate` query is blank. Traverse all pages only when
   completeness is required; otherwise stop after the candidate set is clear.
-- Except for the initial intent question above, use configured read-only
+- Except for the bounded initial intent question above, use configured read-only
   MCP tools to reduce ambiguity before asking the user. For vocabulary, choose `glossary_list` for inventory, every-alias,
   unresolved ambiguity, broad comparison, or blank/conflicting translation; use
   `glossary_translate` for an exact raw phrase or candidate term. Then continue
   with `project_overview_get`, `epic_list` / `epic_get`, `document_list` /
   `document_item_list`, `spec_list`, or `spec_get` as the branch requires.
-- At each post-research interview round, ask exactly one clarifying question only when MCP evidence leaves two or
+- At the post-research gate, ask exactly one clarifying question only when MCP evidence leaves two or
   more equally plausible interpretations, choosing one would hide a meaningful
   answer branch, and the choice is a `PRODUCT` decision with materially
   different user-visible consequences rather than a fact available from MCP
   evidence or a technical implementation choice. Include the recommended
-  interpretation in plain product language. Record the answer in
-  `decisionLedger`, research the affected boundary, update
-  `productInterviewRounds`, and re-rank `remainingProductDecisions`.
+  interpretation in plain product language.
 - Do not treat API, DB, field, enum, migration, cache, query, ordering
   implementation, tie-breaker, component, file, test, deployment, or rollback
   alternatives as tied interpretations. Preserve them in the design decision
@@ -95,11 +92,10 @@ Append these runtime-only fields for an SDD caller:
 - Ownership by unresolved item: FACT | PRODUCT | DESIGN
 - Recommended product assumption:
 - Design decision handoff:
-- User decision needed: none | current PRODUCT question
-- decisionLedger:
-- productInterviewRounds:
-- remainingProductDecisions:
-- stopReason: zero unresolved PRODUCT decisions | waiting for product answer | capability gap
+- User decision needed: none | one PRODUCT question
+- initialQuestionUsed: true | false
+- followupQuestionUsed: true | false
+- discoveryQuestionsRemaining: 0 | 1 | 2
 ```
 
 If only `DESIGN` items remain, `User decision needed` is `none`. Return the

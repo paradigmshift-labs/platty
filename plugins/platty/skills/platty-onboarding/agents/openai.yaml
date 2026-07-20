@@ -1,0 +1,4 @@
+interface:
+  display_name: "Platty Onboarding"
+  short_description: "Guide an installed Platty project through its first SOT"
+  default_prompt: "Use $platty-onboarding to set up repositories and continue through verified SOT output."

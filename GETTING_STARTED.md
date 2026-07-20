@@ -52,19 +52,31 @@ If your shell cannot find `platty`, the CLI is not on your `PATH`.
 The plugin gives your agent Platty-specific skills. It does not replace the CLI;
 the global `platty` command must still be installed.
 
-### Codex
+Install it into every detected Codex or Claude Code runtime:
+
+```bash
+platty install
+```
+
+Use `platty install --runtime codex` or `platty install --runtime claude` when
+you want to target one runtime explicitly.
+
+### Codex manual fallback
 
 ```bash
 codex plugin marketplace add paradigmshift-labs/platty
 codex plugin add platty@platty
 ```
 
-### Claude Code
+### Claude Code manual fallback
 
-```text
-/plugin marketplace add paradigmshift-labs/platty
-/plugin install platty@platty
+```bash
+claude plugin marketplace add paradigmshift-labs/platty --scope user
+claude plugin install platty@platty --scope user
 ```
+
+`platty install` installs only the ordinary `platty` plugin. The separate
+`platty-mcp` plugin remains an explicit, independent installation.
 
 ## 4. Restart Your Agent Session
 

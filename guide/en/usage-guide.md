@@ -148,19 +148,26 @@ right order, pausing when a human decision is needed.
 
 **1. Install the plugin.**
 
-Codex:
+```bash
+platty install
+```
+
+Codex manual fallback:
 
 ```bash
 codex plugin marketplace add paradigmshift-labs/platty
 codex plugin add platty@platty
 ```
 
-Claude Code:
+Claude Code manual fallback:
 
-```text
-/plugin marketplace add paradigmshift-labs/platty
-/plugin install platty@platty
+```bash
+claude plugin marketplace add paradigmshift-labs/platty --scope user
+claude plugin install platty@platty --scope user
 ```
+
+The command installs only the ordinary `platty` plugin. Install the separate
+`platty-mcp` plugin explicitly when you need MCP-only workflows.
 
 **2. Start a new agent session** so the skills load (Claude Code also loads its
 session-start hook).

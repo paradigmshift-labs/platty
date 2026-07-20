@@ -47,28 +47,27 @@ Use `platty-mcp-retrieval` alone for retrieval-only answers. Use this skill when
 the task should create SDD planning files from MCP evidence and save them in the
 local Platty specs directory.
 
-## Adaptive Product Interview
+## Product Discovery Budget
 
-Use brainstorming-style progressive clarification with one question at a time
-and no arbitrary question limit. Track `decisionLedger`,
-`productInterviewRounds`, and ranked `remainingProductDecisions` in runtime
-context. After every answer, narrow the Search Brief, research only the affected
-boundary, reclassify unresolved items, and continue only if a material `PRODUCT`
-decision remains. Do not rerun completed evidence branches.
+Use brainstorming-style progressive clarification without turning product
+discovery into an interview. Ask one question per message and allow at most two
+discovery questions:
 
-Zero questions is correct for a specific request whose safe product default is
-supported by current evidence. Five, ten, or more questions are valid when that
-many material product decisions remain. Stop interviewing only when there are
-zero unresolved `PRODUCT` decisions; a numeric question count is never the stop
-condition. The final product approval after both drafts are saved is a separate
-gate, not an interview round.
+1. **Initial question — optional.** Before deep or full-cycle retrieval, ask
+   only when the raw idea itself has materially different user-visible
+   interpretations and choosing the wrong one would redirect the product scope
+   or evidence branch. Ask what the user intends. Do not claim an existing fact
+   and do not expose an implementation alternative.
+2. **Evidence-informed follow-up — optional.** After MCP evidence, ask at most
+   one tied `PRODUCT` question with a plain-language recommendation, reason, and
+   user-visible difference.
 
-Question priority is: target user/eligibility/surface/journey continuity first;
-money/reward/permission/privacy/notification/irreversible result second;
-cadence/duplication/limits/exceptions/failure behavior third; and reversible
-feedback preferences last. A safe existing limit or policy can be a
-recommendation, but it must not displace a material surface, eligibility, or
-journey question.
+Track `initialQuestionUsed`, `followupQuestionUsed`, and
+`discoveryQuestionsRemaining` in runtime context. Resume from the recorded
+Search Brief after each answer instead of restarting discovery. Skip a round
+when unnecessary; zero discovery questions is correct for a specific request
+whose safe product default is supported by current evidence. The final product
+approval after both drafts are saved is a separate gate. Final product approval does not count toward the discovery budget.
 
 One ambiguity is mandatory, not optional: a time-based reward request that gives
 a threshold but omits reward cadence. “Once per visit or eligibility window” and
@@ -79,18 +78,19 @@ source retrieval. An existing reward pattern may support the recommendation,
 but it cannot choose the product policy on the user's behalf. Skip this special
 case only when the raw request already states the cadence or repetition limit.
 
-`FACT` items remain retrieval work and `DESIGN` items remain the
-technical-design handoff. Neither is a product interview question. When a later
-MCP read exposes another material `PRODUCT` ambiguity, add it to
-`remainingProductDecisions` and continue the same adaptive loop.
+If a third material product ambiguity appears, do not ask a third discovery
+question. Preserve it as an open `O-*`, keep both files draft, and report
+`NEEDS_WORK`. `FACT` items remain retrieval work and `DESIGN` items remain the
+technical-design handoff; neither consumes the product-question budget.
 
 ## Operating Flow
 
 1. Confirm MCP capability tier and project context through `using-platty-mcp`.
-2. Build a raw Product Intent Brief. Before deep retrieval, ask only when two
-   materially different user-visible meanings are already present. A time-based
-   reward with an unstated reward cadence must ask before broad evidence. On
-   answer, narrow the target branch and resume the Adaptive Product Interview.
+2. Build a raw Product Intent Brief. Before deep retrieval, use the optional
+   initial question only when two materially different user-visible meanings
+   are already present. A time-based reward with an unstated reward cadence must
+   use the initial question before broad evidence. On answer, narrow the target
+   branch and resume.
 3. Route the narrowed idea through `platty-mcp-retrieval`.
 4. Require a Search Brief for broad, domain-term, policy, data, journey, or
    impact ideas.
@@ -105,10 +105,12 @@ MCP read exposes another material `PRODUCT` ambiguity, add it to
    items instead of exposing the technical part as a product question.
 9. Apply a safe `PRODUCT` recommendation when the user's visible result is
    specific and current evidence supports one reversible existing flow. Record
-   the adopted recommendation as `D-*` and close the related `O-*`. When tied
-   user-visible `PRODUCT` choices remain, rank them by material user effect, ask
-   one question, record it in `decisionLedger`, research the newly affected
-   boundary, and reclassify. Repeat until `remainingProductDecisions` is empty.
+   the adopted recommendation as `D-*` and close the related `O-*`. Ask before
+   drafting only when two materially different user-visible `PRODUCT` choices
+   remain genuinely tied and the evidence-informed follow-up has not been used.
+   Ask one question, record the answer, and resume without rerunning completed
+   retrieval. If the follow-up was already used, preserve the ambiguity as an
+   open `O-*` and keep the pair `NEEDS_WORK`.
 10. Preserve every `DESIGN` item in the Design Decision Handoff. API, DTO, DB,
    index, migration, cache, query, ordering implementation, tie-breaker,
    component, file, test, deployment, and rollback choices do not block product
@@ -297,10 +299,10 @@ SDD Packet
 - confirmedDecisions
 - openQuestions
 - productDiscovery
-  - decisionLedger
-  - productInterviewRounds
-  - remainingProductDecisions
-  - finalApprovalSeparate: true
+  - initialQuestionUsed
+  - followupQuestionUsed
+  - discoveryQuestionsRemaining
+  - finalApprovalExcludedFromBudget: true
 - questionOwnershipAudit
   - factItems
   - productItems
@@ -495,8 +497,8 @@ identifiers with ordinary product language. In this workflow, write `가장
 우선인 공지` instead of ``priority`` or `priority가 가장 낮은 공지`. Exact
 identifiers remain in the saved evidence and design handoff, not in the
 non-developer approval summary.
-The final product approval question is separate from the Adaptive Product
-Interview and cannot close a product decision that the interview left open.
+The final product approval question is not a discovery question and does not
+consume or replenish the two-round Product Discovery Budget.
 Translate internal review statuses too: use `검토 가능` or `보완 필요`, not
 `PASS`, `NEEDS_WORK`, `partial`, `blocking finding`, `coverage gap`, `Local
 persistence`, or `Self Review`. Keep exact filenames only where the user needs
@@ -536,7 +538,7 @@ missing source parity.
 | Re-asking a specific user direction that matches a safe existing flow | Apply it as the recommended product decision, draft first, and include it in the final product approval summary. |
 | Running the full retrieval ladder before clarifying a raw, materially different user-visible scope | Ask one initial product-intent question, narrow the Search Brief from the answer, and then retrieve only the selected branch. |
 | Using an existing reward pattern to choose an unstated time-based reward cadence | Ask once-versus-repeat before broad evidence; existing behavior may inform the recommendation but cannot replace the user's visible earning-policy decision. |
-| Treating final approval as permission to skip an open product decision | Keep approval separate; continue the Adaptive Product Interview until `remainingProductDecisions` is empty. |
+| Treating the final approval prompt as the second discovery round | Keep approval separate; discovery allows an optional initial question and one optional evidence-informed follow-up. |
 | Reimplementing product revision hashes or trimming parsed bodies during approval | Use `sdd-artifacts.mjs` with `parseSddArtifact`, `computeRequestRevision`, and `computeStoriesRevision`; on any revision mismatch, refresh §9 through impact analysis and keep both files `draft` until a later approval. |
 | Leaving ``priority`` or another code-field name in the first review | Rewrite it as the user-visible result, such as `가장 우선인 공지`; keep the exact identifier only in persisted evidence. |
 | Ending the plain-language review with `Local persistence`, `Self Review`, `PASS`, or coverage terminology | Use `저장된 기획 문서` and `자체 검토 결과`, then say `검토 가능` or `보완 필요` and describe the remaining work in ordinary language. |

@@ -34,6 +34,19 @@ platty version
 platty --help
 ```
 
+## Agent Plugin Install
+
+Install the ordinary Platty agent skills into detected Codex and Claude Code
+runtimes:
+
+```bash
+platty install
+```
+
+Use `platty install --runtime codex` or `platty install --runtime claude` to
+select one runtime. This command installs `platty@platty` only; the separate
+`platty-mcp` plugin remains an explicit installation.
+
 ## Output And Usage Contract
 
 People should start with the guided setup flow:
@@ -61,6 +74,7 @@ User-scoped plugin installs expose these skills:
 ```text
 platty:using-platty
 platty:platty-cli-router
+platty:platty-onboarding
 platty:platty-setup
 platty:platty-mcp-server-setup
 platty:platty-static-analysis
@@ -115,6 +129,7 @@ with `platty generate-docs retry-failed` first, then follow the returned command
 
 Use the skills for stage-specific behavior:
 
+- `platty:platty-onboarding` for the installed first project journey from repository registration through static analysis, one LLM approval, and verified SOT/GraphView output.
 - `platty:platty-setup` for global state, projects, and repositories.
 - `platty:platty-static-analysis` for analysis progress and run inspection.
 - `platty:platty-docs-target-curation` before generation when target scope needs review.
@@ -130,6 +145,7 @@ Use the skills for stage-specific behavior:
 Open only what you need:
 
 - Entry point: `skills/using-platty/SKILL.md`
+- Onboarding: `skills/platty-onboarding/SKILL.md`
 - MCP server setup: `skills/platty-mcp-server-setup/SKILL.md`
 - Router: `skills/platty-cli-router/SKILL.md`
 - Setup: `skills/platty-setup/SKILL.md`

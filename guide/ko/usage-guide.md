@@ -151,19 +151,26 @@ Platty는 **Codex**와 **Claude Code**용 에이전트 플러그인을 제공합
 
 **1. 플러그인을 설치합니다.**
 
-Codex:
+```bash
+platty install
+```
+
+Codex 수동 설치 대안:
 
 ```bash
 codex plugin marketplace add paradigmshift-labs/platty
 codex plugin add platty@platty
 ```
 
-Claude Code:
+Claude Code 수동 설치 대안:
 
-```text
-/plugin marketplace add paradigmshift-labs/platty
-/plugin install platty@platty
+```bash
+claude plugin marketplace add paradigmshift-labs/platty --scope user
+claude plugin install platty@platty --scope user
 ```
+
+이 명령은 일반 `platty` 플러그인만 설치합니다. MCP 전용 워크플로가 필요할 때만
+별도 `platty-mcp` 플러그인을 명시적으로 설치하세요.
 
 **2. 스킬이 로드되도록 새 에이전트 세션을 시작합니다**(Claude Code는 세션 시작
 훅도 함께 로드합니다).

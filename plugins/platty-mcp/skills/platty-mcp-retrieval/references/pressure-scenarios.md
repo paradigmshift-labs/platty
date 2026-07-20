@@ -752,39 +752,11 @@ Initial Product Intent Gate detects two visible earning cadences in the raw requ
 -> ask one plain-language cadence question before deep or full-cycle retrieval
 -> narrow the Search Brief from the answer
 -> retrieve only the selected branch
--> run a Behavioral Analogue sweep across adjacent reward/session domains
--> Post-Research Product Gate asks one ranked PRODUCT question at a time
--> research and reclassify until remainingProductDecisions is empty
--> final product approval remains a separate gate
+-> Post-Research Product Gate may ask the Community surface or existing-limit
+   question only if one remains materially tied
+-> final product approval remains outside the two-question discovery budget
 ```
 
-Observable pass criteria: no arbitrary question cap, one question per message,
-no existing-system claim in the initial reason, zero FACT or DESIGN questions,
-and no unresolved journey decision hidden by a safe existing limit.
-
-## Scenario 22: Community Store Explore Behavioral Analogue
-
-An SDD caller describes Community dwell rewards without using the Store Explore
-feature name. The behavior signature is: scroll trigger, active engagement,
-30-second accumulation, optional detail-route continuity, point award, and
-daily/lifetime deduplication.
-
-Failure to prevent:
-
-- searching only `community` and concluding the mechanism is new;
-- stopping at a broad reward policy without reading timer/session continuity;
-- claiming direct reuse from a name match without exact item/spec/source reads.
-
-Expected route:
-
-```text
-derive trigger/activity/time/surface/reward/dedup behavior signature
--> search adjacent EPICs, domains, and repositories with behavior synonyms
--> find StoreExploreSessionService and its reward policy candidates
--> read exact documents/items, connected specs, and bounded source
--> classify each boundary as REUSE, EXTEND, NEW, or NOT_APPLICABLE
--> return evidence and mismatches to impact/design
-```
-
-Observable pass criteria: a `NEW` timer/session/reward/dedup claim is impossible
-until the bounded analogue sweep completes or an exact MCP coverage gap is named.
+Observable pass criteria: at most two discovery questions, one question per
+message, no existing-system claim in the initial reason, and zero FACT or DESIGN
+questions.
