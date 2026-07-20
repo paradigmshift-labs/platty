@@ -46,7 +46,9 @@ npm install -g @paradigmshift/platty  # Install the CLI
 platty install                        # Register the agent skills
 ```
 
-Start a new AI assistant session after installation.
+Rerun `platty install` whenever you want to update an existing Platty plugin to
+the latest published skills. After installation or refresh, start a new Codex
+or Claude Code session.
 
 ### 2. Start onboarding
 
@@ -117,6 +119,10 @@ platty install                        # Register the agent skills
 ordinary `platty@platty` plugin into every detected runtime. To target one
 runtime explicitly, use `platty install --runtime codex` or
 `platty install --runtime claude`.
+
+Rerun `platty install` whenever you want to refresh an existing Platty plugin
+to the latest published skills. After installation or refresh, start a new
+Codex or Claude Code session.
 
 Manual fallback for Codex:
 

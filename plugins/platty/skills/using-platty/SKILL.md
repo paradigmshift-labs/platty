@@ -149,11 +149,13 @@ command, stop and tell the user to reinstall or update the global @paradigmshift
 
 ## Ordinary Agent Plugin Installation
 
-Use `platty install --json` when the user wants to install the ordinary non-MCP
-Platty agent plugin after installing the global CLI. The command detects Codex
-and Claude Code, preserves existing installs, and installs `platty@platty` at
-user scope. Use `--runtime codex`, `--runtime claude`, or `--runtime all` only
-when the user or automation needs an explicit target.
+Use `platty install --json` when the user wants to install or refresh the
+ordinary non-MCP Platty agent plugin after installing the global CLI. The
+command detects Codex and Claude Code, installs a missing `platty@platty`
+plugin, and updates an existing installation from the registered marketplace.
+Use `--runtime codex`, `--runtime claude`, or `--runtime all` only when the user
+or automation needs an explicit target. Start a new agent session after a
+successful install or refresh so the updated skills are loaded.
 
 The separate `platty-mcp` plugin is never installed by `platty install`. Keep
 MCP client registration and MCP-only skill installation on the separate
@@ -182,15 +184,12 @@ Branch rule:
 - If the user names an analysis branch, including `main`, `master`, `develop`,
   or a feature branch, pass it through `--branch`. Do not rely on the source
   checkout being on that branch.
-- If the user does not name a branch, inspect the repository's current checkout
-  and default-branch candidate before `repo add`. Prefer `origin/HEAD`, then
-  `main`, then `master` as the default-branch candidate.
-- If the default-branch candidate differs from the current checkout, ask the
-  user which branch Platty should analyze: the default branch, usually
-  `main`, or the current branch. Do not register the repository until the
-  branch choice is explicit.
-- After the user chooses, include the chosen branch in `repo add` or
-  `repo update` with `--branch <branch>`.
+- When the user omits the analysis branch, resolve `origin/HEAD`, then an
+  existing `main`, then an existing `master`. Recommend that verified default
+  candidate, normally `main` or `master`. If the current branch differs,
+  present it second as an explicit alternative instead. Wait for confirmation,
+  then pass the confirmed value to `repo add` or `repo update` as
+  `--branch <branch>`; never silently register the feature checkout.
 - `platty analyze` uses the repository registration's stored analysis branch
   and prepares an app-managed worktree from that branch. It does not repair an
   omitted branch from `repo add`.
