@@ -22,6 +22,18 @@
 
 > 플래티는 주식회사 패러다임시프트의 독점 소프트웨어입니다.
 
+> **정적 분석 지원 현황**
+>
+> **실제 저장소 검증 완료:** TypeScript/JavaScript 모노레포 · Java 멀티모듈
+> 저장소
+>
+> **프리뷰:** Kotlin · Python · Dart/Flutter
+>
+> [상세 지원 및 검증 범위 보기 →](guide/ko/support-matrix.md)
+>
+> [스택 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
+> · [정적 분석 버그 신고](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
+
 ## 플래티를 사용해 보세요
 
 - [GETTING_STARTED.md](GETTING_STARTED.md) 에서 무료 CLI 버전을 설치해 보세요.

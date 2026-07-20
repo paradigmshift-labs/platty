@@ -25,6 +25,18 @@ never conflict with your existing services.
 
 > Platty is proprietary software of Paradigm Shift Labs, Inc.
 
+> **Static analysis coverage**
+>
+> **Real-world validated:** TypeScript/JavaScript, including monorepos · Java,
+> including multi-module repositories
+>
+> **Preview:** Kotlin · Python · Dart/Flutter
+>
+> [View the detailed support and validation matrix →](guide/en/support-matrix.md)
+>
+> [Request support for a stack](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
+> · [Report a static-analysis bug](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
+
 ## Try Platty
 
 - Install the free CLI from [GETTING_STARTED.md](GETTING_STARTED.md).

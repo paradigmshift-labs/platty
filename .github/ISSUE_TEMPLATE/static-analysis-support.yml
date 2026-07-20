@@ -1,0 +1,97 @@
+name: Static analysis support request
+description: Request coverage for a language, framework, library, or repository layout.
+title: "[Static Analysis Support]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us expand Platty's source-grounded static-analysis coverage.
+
+        Do not include proprietary source code, credentials, secrets, personal data, or private repository URLs. A public example repository or sanitized minimal reproduction is the most useful evidence.
+
+  - type: dropdown
+    id: ecosystem
+    attributes:
+      label: Language ecosystem
+      description: Select the primary ecosystem for this request.
+      options:
+        - TypeScript / JavaScript
+        - Java
+        - Kotlin
+        - Python
+        - Dart / Flutter
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: stack_versions
+    attributes:
+      label: Frameworks, libraries, and versions
+      description: Include the framework, relevant libraries, and known versions.
+      placeholder: "Example: Flutter 3.x, GoRouter 14.x, Dio 5.x"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: repository_layout
+    attributes:
+      label: Repository layout
+      options:
+        - Single repository
+        - Monorepo
+        - Multi-module repository
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: source_pattern
+    attributes:
+      label: Source pattern to recognize
+      description: Describe the public API or source pattern Platty should recognize. Include sanitized snippets only when safe.
+      placeholder: |
+        Which annotations, calls, configuration files, routes, or bindings establish the behavior?
+        What evidence in the source proves the intended connection?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: desired_output
+    attributes:
+      label: Desired static-analysis output
+      description: Select the main output you expect Platty to produce.
+      options:
+        - Route, screen, job, or event entry point
+        - Model or schema
+        - Database access relation
+        - API or navigation relation
+        - Event, queue, or schedule relation
+        - External service relation
+        - Cross-repository service-map connection
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: Current behavior
+      description: Explain what Platty currently emits, misses, or leaves unresolved.
+    validations:
+      required: true
+
+  - type: input
+    id: reproduction
+    attributes:
+      label: Public example or sanitized reproduction
+      description: Link a public repository, gist, or minimal sanitized reproduction when available.
+      placeholder: "https://github.com/..."
+
+  - type: checkboxes
+    id: safe_content
+    attributes:
+      label: Sensitive-data confirmation
+      options:
+        - label: I confirm that this issue contains no proprietary source code, credentials, secrets, personal data, or private repository URLs.
+          required: true
