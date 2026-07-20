@@ -85,7 +85,8 @@ claude plugin install platty@platty --scope user
 ## 4. Restart Your Agent Session
 
 Open a new Codex or Claude Code session after installing or updating the plugin.
-This lets Platty skills load cleanly; Claude Code also loads its session-start hook.
+This lets updated Platty skills be discovered cleanly. Skills load on demand
+when you invoke them or make a matching Platty request.
 
 ## 5. Recommended First Run
 
