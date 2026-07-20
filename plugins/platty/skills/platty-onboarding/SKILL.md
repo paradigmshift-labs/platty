@@ -169,15 +169,39 @@ platty sot export --project <project> --json
 
 Verify non-zero `counts.docs` and `counts.epics`. Record `lastExportAt` as freshness evidence, but a changed timestamp alone is not proof. Report the SOT `outDir` and `graphView.htmlPath` from the same result. If `graphView` is missing or has `graphView.error`, use `platty graph view --project <project> --json` as the fallback and verify its HTML path. Keep worker task counts distinct from stored document counts: tasks describe execution, while `counts.docs` describes final stored business documents.
 
-Finish with one handoff using these sections:
+### Required completion-response shape
 
-1. **Generated results:** terminal stages, final stored business-document and EPIC counts, provider tokens/cost, and zero-failure state.
-2. **Open results:** verified SOT and GraphView paths plus only returned, existing catalog paths.
-3. **Try project search:** when Platty MCP retrieval is configured, explain that the retrieval/search skill finds source-grounded answers across SOT, EPICs, documents, code, and graph relations. Do not invent a sample query; recommend one verification search, then ask: "Shall I search the project now?" When retrieval is unavailable, state that the separate plugin is required and do not offer an impossible action.
-4. **Continue with documents:** give capability descriptions, not example prompts or command dumps. `platty-sdd-spec` turns an idea or change request into grounded `prd.md` and `user_stories.md`; `platty-sdd-design` turns approved product documents into `system_design.md` and executable `tasks.md`.
-5. **Current state:** project selector, provider, terminal counts, last verified next action, and blocker state.
+Finish with one structured response. Render these fields in this exact order and
+translate their user-facing labels and prose into the conversation language:
 
-End with the shared Platty handoff card containing the project, terminal counts, provider usage, SOT path, GraphView path, recommended capability, and blocker state.
+1. **Generated results:** terminal stages, final stored business-document,
+   technical-document, spec, and EPIC counts when returned, provider
+   tokens/cost, and zero-failure state. Keep task execution counts separate from
+   stored document counts.
+2. **Open results:** verified SOT and GraphView paths plus only returned,
+   existing catalog paths.
+3. **Next skills:** explain all three next capabilities as distinct choices.
+   Give capability descriptions, not example prompts or command dumps:
+   - **Project search:** the local `platty-retrieval` retrieval/search skill
+     from the public Platty plugin, when discoverable, or configured Platty MCP retrieval can find
+     source-grounded answers across SOT, EPICs, documents, exact code locations,
+     and graph relations. Do not invent or automatically run a sample query.
+   - **Product specification:** `platty-sdd-spec` turns a product idea or change
+     request into grounded `prd.md` and `user_stories.md` drafts.
+   - **Development design:** `platty-sdd-design` continues from approved product
+     documents into `system_design.md` and executable `tasks.md`.
+4. **Current state:** project selector, provider, terminal counts, last verified
+   next action, and blocker state.
+5. **Platty handoff:** render the shared handoff card with the project, terminal
+   counts, provider usage, SOT path, GraphView path, recommended capability, and
+   blocker state.
+6. **Final invitation:** this is exactly one search-oriented question after the
+   handoff. When retrieval is available, ask the conversation-language
+   equivalent of “Shall I search the project now?” When retrieval is unavailable,
+   state the missing setup in **Next skills**, then ask whether to
+   configure retrieval and search the project. This question is the final user-facing sentence;
+   nothing, including another handoff field or generic
+   closing sentence, follows it.
 
 ## Stop Conditions
 
