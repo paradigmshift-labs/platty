@@ -36,6 +36,12 @@ This skill may author files only inside the selected SDD output directory. It mu
 
 Use the Platty CLI convention from `using-platty`. Inside this repository, `AGENTS.md` overrides public plugin examples: run the local build with `node packages/cli/dist/main.js <command> --json`.
 
+Gather SOT-grounded and source evidence through `platty-retrieval` (SOT
+projection, `platty sot resolve/glossary search`, `graph trace`, `code
+search/snippet`). Consume the Design Decision Handoff from
+`../using-platty/references/sdd-question-ownership.md`, and when design evidence
+changes the approved product result, feed feasibility back to `platty-sdd-spec`.
+
 ## Evidence Flow
 
 1. Read `prd.md` and `user_stories.md`. Treat a new-session handoff containing
@@ -112,6 +118,29 @@ lint, or migration convention. Follow an observed convention unless the design
 names an intentional deviation and its reason.
 
 Do not infer a framework, ORM, vendor, or repository layout from another project.
+
+## Design Decision Handoff
+
+The product phase preserves each unresolved implementation choice as a Design
+Decision Handoff (see `../using-platty/references/sdd-question-ownership.md`).
+Consume every handoff item and resolve it into an implementation-ready decision:
+
+- Resolve reversible, source-grounded `DESIGN` items yourself from SOT/source
+  evidence via `platty-retrieval`, and record the selected option, its
+  `invariantUserResult`, and the confirming evidence in `system_design.md`.
+- Escalate to a technical owner only when the choice materially changes cost or
+  operational responsibility, security or privacy, data loss, irreversible
+  migration, or the approved product result — not for ordinary implementation
+  alternatives.
+- Never re-ask a non-developer to choose an API, DB, field, enum, migration,
+  cache, query, tie-breaker, component, file, or test.
+
+Feasibility feedback: if design evidence shows the approved product result is not
+feasible or must change, return a feasibility feedback packet to
+`platty-sdd-spec` instead of silently closing it as a technical decision. The
+design is implementation-ready only when every handoff item is resolved or
+explicitly escalated, and every affected code path is confirmed or named as
+risk.
 
 ## Authoring
 
