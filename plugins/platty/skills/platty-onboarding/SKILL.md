@@ -9,6 +9,21 @@ description: Use when Platty CLI and agent skills are already installed and a us
 
 Coordinate the installed first-run journey. This skill does not install the CLI or agent plugin. Route detailed phase behavior and recovery to `platty-setup`, `platty-static-analysis`, `platty-docs-target-curation`, and `platty-generated-docs`.
 
+## Conversation Language
+
+Determine the conversation language from the user's request at the start. Use
+Korean when the request is Korean, mixes Korean and English, or is ambiguous
+enough that the language cannot be inferred. Use English when the request is in
+English or the user explicitly asks for English. Keep every user-facing
+progress update, explanation, question, approval card, and completion or
+failure report in that language across all routed owner skills. Preserve
+commands, paths, project and repository names, provider values, ids, and error
+codes verbatim.
+
+For the shared Start Notice, Progress Checkpoint, and Handoff Card, translate
+all human-readable labels and headings into the conversation language while
+preserving the template structure and machine values.
+
 ## Invocation Input
 
 Treat a path appended to an explicit skill invocation as the initial repository
@@ -29,7 +44,22 @@ Resolve the project before project-scoped commands and inspect repositories, ana
 
 ## 1. Project and Repositories
 
-Use `platty-setup`. When no intended project is resolved, ask for the project name and a short description. Create or select the project, then run `repo list` before every `repo add`. For each registration collect the repository path, display name, analysis branch, and optional source root. Follow the owner skill's default-versus-current branch gate when the branch is omitted.
+Use `platty-setup`. When no intended project is resolved and multiple plausible
+projects exist, explain that they are persisted Platty projects from earlier
+runs, not filesystem directories discovered beside the repository. Run `repo
+list` for each candidate and summarize whether the current repository is
+already registered, including source roots only when verified. Offer an
+existing project or a new project in one concise question. Do not render `Platty handoff`
+while waiting for this ordinary, resolvable choice; it is not a
+terminal stop.
+
+When no plausible existing project exists, ask for the project name and short description.
+
+When the user selects a project, or supplies the project name and short description
+for a new one, create or select it and run `repo list` before every
+`repo add`. Reuse every verified registration and add only missing repositories
+or source roots. For each new registration collect the repository path, display name, analysis branch, and optional source root. Follow the owner skill's
+default-versus-current branch gate when the branch is omitted.
 
 Before choosing registrations, inspect the Git root, root manifest, workspace declaration or metadata, and nested app or package manifests. When one Git root has no usable root manifest or workspace declaration but contains multiple independently analyzable nested app manifests, register the same absolute Git repository path once per app with a distinct `--source-root` and unique display names. Do not register application subdirectories as the repository path. Pass an explicit `--branch` on each registration and keep the `repo list`-before-add invariant.
 
@@ -38,6 +68,25 @@ Explain that multi-repository analysis can connect source-grounded routes, model
 ## 2. Static Analysis
 
 Use `platty-static-analysis`. Before starting, say static analysis does not invoke an LLM and does not consume LLM tokens. Explain that it extracts files, symbols, imports, calls, literals, routes, models, database and API access, navigation, events, jobs, storage, and service relations so later documents remain grounded in code.
+
+At the repository-to-analysis boundary, use this required readiness shape in
+the conversation language:
+
+- **Repositories:** list the registered repositories and source roots that will
+  be analyzed.
+- **What static analysis does:** summarize the code evidence it extracts and
+  why that evidence grounds later documents.
+- **LLM use:** state that this phase does not invoke an LLM or consume LLM
+  tokens.
+- **Next action:** state that static analysis is ready to start.
+
+If the user's original request explicitly authorizes static analysis, including
+an end-to-end request to continue through analysis, do not ask a duplicate
+question; proceed after the readiness summary. Otherwise ask one concise
+question to start static analysis and wait for the answer. This is a
+conversational readiness check; it does not add or imply a CLI confirmation
+command. The next CLI action remains
+`platty analyze --project <project> --json`.
 
 After completion, give an intermediate report with the project, analyzed and failed repository counts, completed stages, target counts by useful category when available, the analysis run id, actionable blocking failures, and the state-derived next action. Preserve non-actionable internal unresolved facts in the run evidence, but do not expose them in ordinary onboarding output. Do not paste raw JSON. Stop on the owner skill's failure or stall conditions.
 
@@ -55,6 +104,44 @@ Put the static result, target-review outcome, and approval card in the same user
 - **Execution:** show the resolved provider, how availability was verified including the resolved `command -v` path, parallel workers, and automatic EPIC continuation.
 - **Cost and resume:** warn about LLM tokens and possible provider cost, and explain that persisted run/task state resumes saved work after interruption.
 - **Approval:** say the user may still name targets to deprecate, then request approval.
+
+### Required approval-card shape
+
+Use the following positive recipe in this order. Translate the headings and
+field labels into the conversation language; keep machine values verbatim.
+
+**Generated outputs and why**
+
+- **Technical documents:** explain that they organize each accepted API,
+  screen, event, or job with its source-grounded behavior and evidence.
+- **EPIC grouping:** explain that it connects related technical behavior into
+  coherent product or business capabilities.
+- **Business documents:** explain that they turn the grouped evidence into
+  readable end-to-end flows, rules, and relationships.
+
+**Execution**
+
+- **Provider:** show the resolved CLI provider value.
+- **Availability:** show the verified `command -v` executable path.
+- **Parallel work:** state that independent document tasks can run through
+  multiple workers concurrently.
+- **Automatic continuation:** state that technical documents continue through
+  EPIC drafting, returned-command EPIC confirmation, and business documents
+  without another routine approval.
+
+**Cost and resume**
+
+- **Token and cost:** state that this phase consumes LLM tokens and may incur
+  provider cost; do not invent an exact total before the run.
+- **Resume:** state that Platty persists run and task state, so interruption
+  resumes saved work and does not regenerate already completed documents.
+
+**Approval**
+
+- **Targets:** give the accepted target counts by available kind.
+- **Exclusions:** say the user may still name unwanted or obsolete targets to
+  deprecate before generation.
+- **Question:** ask for explicit approval to start LLM generation.
 
 Wait for explicit approval. Static-analysis completion is not LLM approval.
 
@@ -94,4 +181,12 @@ End with the shared Platty handoff card containing the project, terminal counts,
 
 ## Stop Conditions
 
-Stop on missing installation, ambiguous project/repository/target selection, an unverifiable repository path or branch, static-analysis failure/stall, no local provider, missing LLM approval, a missing run id when required for continuation or confirmation, failed tasks after at most two repair rounds, or unverifiable SOT/GraphView output. Preserve owner-skill evidence and the exact next action in the handoff.
+An ordinary project, repository, or target choice that the user can resolve is
+a guided question, not a terminal stop. Reserve a terminal handoff for missing
+installation, an explicitly deferred workflow, ambiguity that remains
+unrecoverable after one focused question, an unverifiable repository path or
+branch, static-analysis failure or stall, no local provider, missing LLM
+approval, a missing run id required for continuation or confirmation, failed
+tasks after at most two repair rounds, unverifiable SOT or GraphView output, or
+final completion. Preserve owner-skill evidence and the exact next action in
+the handoff.
