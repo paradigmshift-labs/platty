@@ -57,6 +57,12 @@ Reader boundary:
 
 Use the Platty CLI convention from `using-platty`. Inside this repository, `AGENTS.md` overrides public plugin examples: run the local build with `node packages/cli/dist/main.js <command> --json`.
 
+Gather SOT-grounded evidence through `platty-retrieval` (read the SOT projection,
+`platty sot resolve/glossary search`, `graph trace`, `code search/snippet`).
+Before returning any question, classify every unresolved item with
+`../using-platty/references/sdd-question-ownership.md` as `FACT`, `PRODUCT`, or
+`DESIGN`, and run the Adaptive Product Interview below.
+
 ## Evidence Flow
 
 1. Project and SOT state:
@@ -85,30 +91,51 @@ frontmatter paths. Graph trace accelerates scope discovery; it is not exhaustive
 proof and must not by itself establish a write, permission, transaction, response
 shape, or absence of impact.
 
-## Question Loop
+## Adaptive Product Interview
 
-Ask at most three questions at a time. Prefer one question if the answer changes later questions.
+Do not use a fixed question cap. Ask one question at a time and keep going until
+no material `PRODUCT` decision remains. A specific request over a safe,
+reversible existing product flow may need zero questions; a complex policy may
+need many. Follow `../using-platty/references/sdd-question-ownership.md` and
+maintain the runtime-only `decisionLedger`, `productInterviewRounds`, and
+`remainingProductDecisions` state; stop only when `remainingProductDecisions` is
+empty.
 
-Every question should include:
+Question ownership and the non-developer boundary:
 
-- what SOT evidence suggests;
-- why the answer matters;
-- a recommended default;
-- what the default would imply.
+- `FACT` — source-confirmable existing behavior. Resolve it from SOT/source via
+  `platty-retrieval`; never ask the user (a non-developer) to guess it, and
+  never turn a `code search` miss into a negative fact.
+- `PRODUCT` — a choice that changes the visible user result, target user,
+  policy, money, permission, notification, or irreversible outcome. Apply a safe
+  recommendation when one clearly fits; otherwise ask exactly one plain-language
+  product question.
+- `DESIGN` — API, DB, field, enum, migration, cache, query, tie-breaker,
+  component, file, or test choice that preserves the approved result. Preserve
+  it as a Design Decision Handoff for `platty-sdd-design`; do not ask a
+  non-developer to choose it.
 
-Question categories:
+Each `PRODUCT` question uses product language and shows what SOT evidence
+suggests, why it matters, a recommended default, and what the default would
+imply — never an API/DB/field/implementation choice:
 
-- scope: users, entry points, clients, repos;
-- policy: eligibility, limits, permissions, approvals;
-- journey: normal path, empty states, edge paths, rollback/retry;
-- data: source of truth, fields, retention, migration;
-- compatibility: existing BR/UC conflicts, deprecated flows;
-- success: measurable validation and release criteria.
+```text
+정해야 할 것: <사용자에게 보이는 선택>
+추천: <권장안>
+이유: <현재 제품 근거와 사용자 영향>
+달라지는 점: <다른 선택의 사용자 관점 차이>
+```
 
-Confirmed answers go to `§6 Confirmed Decisions`. Unresolved items stay in `§7 Open Questions`.
-When unresolved items affect stories, write the stories from clearly named
-recommended defaults or assumptions and include an assumptions/impact section in
-`user_stories.md` so later edits know what must change.
+Prioritize `remainingProductDecisions` by material user effect: (1) target user,
+eligibility, surface, journey; (2) money, rewards, permissions, privacy,
+notification, irreversible state; (3) cadence, duplication, limits, exceptions,
+failure; (4) reversible feedback or operator preference.
+
+Confirmed answers go to `§6 Confirmed Decisions`. Unresolved items stay in `§7
+Open Questions`. When unresolved items affect stories, write the stories from
+clearly named recommended defaults or assumptions and include an
+assumptions/impact section in `user_stories.md` so later edits know what must
+change. Final product approval is a separate gate, not an interview round.
 
 ## Output Language
 
