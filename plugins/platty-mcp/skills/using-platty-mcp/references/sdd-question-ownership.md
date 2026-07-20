@@ -78,58 +78,36 @@ Ask before drafting only when two or more `PRODUCT` choices remain genuinely
 tied and their user-visible consequences are materially different. Technical
 possibility alone is not a tie.
 
-## Adaptive Product Interview
+## Bounded Product Discovery
 
-Use one question at a time and no arbitrary question limit. Product discovery
-ends because the product result is complete, not because a numeric budget has
-expired. A specific request with a safe, reversible existing product flow may
-still need zero questions; a complex policy may need five, ten, or more.
+An SDD product route has at most two discovery questions. Ask them one at a
+time. The later final product approval is a separate gate and does not count
+toward this budget.
 
-Maintain this runtime-only state:
+1. **Initial product-intent question — optional.** Ask before deep or full-cycle
+   retrieval only when the raw request itself has two materially different
+   user-visible interpretations and choosing the wrong one would change the
+   target user, surface, policy, money, permission, notification promise, or
+   irreversible outcome. This question asks what the user intends; it must not
+   assert an existing-system fact or ask for an implementation choice.
+   The question is mandatory for a time-based reward threshold whose reward
+   cadence is unstated. Once-per-visit/window and repeated-threshold earning are
+   different visible economic policies; an existing reward pattern cannot
+   choose between them for the user.
+2. **Evidence-informed product follow-up — optional.** After MCP evidence, ask
+   at most one remaining tied `PRODUCT` question with a plain-language
+   recommendation and the user-visible consequence of each choice.
 
-```text
-- decisionLedger: every resolved, recommended, or open PRODUCT decision
-- productInterviewRounds: ordered question, answer, evidence read, and effect
-- remainingProductDecisions: ranked unresolved PRODUCT decisions
-- stopReason: zero unresolved PRODUCT decisions | waiting for product answer |
-  capability gap
-```
+Skip either round when it is unnecessary. A specific request with a safe,
+reversible existing product flow may use zero discovery questions, draft first,
+and proceed directly to the separate approval review. Never manufacture a
+second question merely because the budget allows one.
 
-Run the loop in this order:
-
-1. Before deep or full-cycle retrieval, ask only when the raw request itself has
-   a materially different user-visible interpretation whose answer changes the
-   evidence branch. The question must not assert an existing-system fact or ask
-   for an implementation choice. A time-based reward with unstated cadence is
-   one such case: once-per-visit/window and repeated-threshold earning are
-   different economic policies.
-2. Narrow the Search Brief from the answer, read the evidence needed for that
-   branch, then reclassify every unresolved item as `FACT`, `PRODUCT`, or
-   `DESIGN`.
-3. Apply safe recommendations and update `decisionLedger`. If
-   `remainingProductDecisions` is non-empty, ask its highest-priority item in
-   plain language, record the answer, research only the newly affected boundary,
-   and reclassify again.
-4. Stop interviewing only when there are zero unresolved `PRODUCT` decisions.
-   Do not ask a filler question. `FACT` work and `DESIGN` handoff items are not
-   reasons to continue the product interview.
-
-The final product approval after the reviewed drafts are saved is a separate
-gate. It is not an interview round and cannot retroactively close an unresolved
-product decision.
-
-### Question Priority
-
-Rank `remainingProductDecisions` by material user effect:
-
-1. target user, eligibility, product surface, and journey continuity;
-2. money, rewards, permissions, privacy, notification, and irreversible state;
-3. cadence, duplication, limits, exceptions, and failure behavior;
-4. reversible feedback or operator preference.
-
-A safe existing limit or policy may be adopted as a recommendation. It must not
-displace an unresolved surface, journey, eligibility, or reward decision merely
-because the existing default is easier to confirm.
+Track the runtime-only state as `initialQuestionUsed` and
+`followupQuestionUsed`. After the initial answer, narrow the Search Brief and
+retrieval branch before making MCP calls. After the follow-up answer, draft; do
+not start a third discovery round. A newly discovered choice that would require
+a third question stays open in the draft and makes the review `NEEDS_WORK`.
 
 ## PRODUCT Question Shape
 

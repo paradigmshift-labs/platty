@@ -72,7 +72,7 @@ Classify each item into exactly one bucket:
   State what the agent will verify and which design decision it blocks; do not
   ask a person to guess.
 - `technicalOwnerQuestions`: only choices that meet the material cost/operations,
-  security/privacy, data-loss, or irreversible-migration
+  security/privacy, data-loss, irreversible-migration, or product-feasibility
   exception. Name the decision owner, recommendation, trade-off, and affected
   product result.
 
@@ -89,32 +89,6 @@ kickoff decision sheet; if it changes a visible result, route feasibility
 feedback to SDD spec instead. Final design approval is separate from kickoff:
 it occurs only after `system_design.md` is persisted, read back, and presented
 with its current `designRevision`.
-
-### Product Boundary Recheck
-
-Before placing anything in a kickoff bucket, apply the Product Boundary Recheck
-to every `DH-*`, `TQ-*`, and proposed decision. Ask whether different answers
-change whether a user qualifies or earns, which product surface or detail
-navigation is included, surface continuity, money, permission, notification,
-or another visible result. If so, it is `PRODUCT`, not a reversible `DESIGN`
-choice. Split mixed items so implementation mechanics remain in design while the
-user-visible boundary returns to SDD spec.
-
-On any returned product item, emit feasibility feedback, reset `prd.md` and
-`user_stories.md` to a new product revision in draft through SDD spec, and require
-them to be explicitly re-approved. Block `PASS / ready` and do not create or
-overwrite `tasks.md` until the revised product pair is approved and design is
-regenerated. Apply the same recheck when new source evidence appears mid-design;
-kickoff is not permission to swallow a later product decision.
-
-### Behavioral Analogue and Reuse Assessment
-
-Before designing a new timer, session, activity detector, reward, or deduplication
-architecture, require the retrieval/impact Behavioral Analogue sweep. Compare
-candidate behavior signatures and classify each as `REUSE`, `EXTEND`, `NEW`, or
-`NOT_APPLICABLE`. Record why the owning component is reusable, needs extension,
-or cannot cross its current domain boundary. A missing reuse assessment makes
-the design `partial` or `NEEDS_WORK`; it is not ready for task generation.
 
 ## Operating Flow
 
@@ -172,8 +146,7 @@ the design `partial` or `NEEDS_WORK`; it is not ready for task generation.
    edit an Impact Dossier entry from this skill.
 6. Before drafting, update the kickoff `technicalDecisionPacket` from every `DH-*`,
    evidence gap, and proposed TO-BE choice. Classify each unresolved item using
-   the shared question-ownership contract and run the Product Boundary Recheck
-   over every DH/TQ/decision. Resolve source-checkable `FACT`
+   the shared question-ownership contract. Resolve source-checkable `FACT`
    items through the existing impact and bounded-read gates. For each reversible
    `DESIGN` item whose alternatives preserve the approved user result, inspect
    the owning source boundary, choose the safest compatible option, and record
@@ -189,9 +162,7 @@ the design `partial` or `NEEDS_WORK`; it is not ready for task generation.
    result, scope, rule, AC, or success judgment, emit feasibility feedback to
    SDD spec instead of creating a technical `TQ-*`. A source gap remains an
    Evidence-Resolution row and bounded read, not a question asking a
-   non-developer to guess current behavior. Before any `NEW` timer, session,
-   reward, activity detector, or deduplication decision, complete the Behavioral
-   Analogue and Reuse Assessment and cite its exact evidence.
+   non-developer to guess current behavior.
 7. Derive evidence-backed AS-IS facts and system TO-BE decisions from request,
    stories, and impact. Use the dossier's `document_resolve` links to connect
    product documents to selected specs, and use its `graph_trace` result as a

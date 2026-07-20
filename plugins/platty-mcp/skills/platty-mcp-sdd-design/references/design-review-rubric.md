@@ -85,12 +85,6 @@ The full result is the review working record and is summarized in Appendix A.
 
 ### Technical Decision Audit
 
-- Product Boundary Recheck covers every `DH-*`, `TQ-*`, and proposed decision.
-  If an answer changes whether a user qualifies or earns, eligibility, reward,
-  surface continuity, detail navigation, money, permission, notification, or a
-  visible result, return it to SDD spec as a new product revision in draft. The
-  revised product pair must be explicitly re-approved; until then block ready
-  and do not create or overwrite `tasks.md`.
 - A `technicalKickoffPacket` is built before broad or deep source descent and
   classifies every incoming `DH-*` exactly once as an auto-decision,
   evidence-resolution item, or exception-qualified technical-owner question.
@@ -111,11 +105,6 @@ The full result is the review working record and is summarized in Appendix A.
 - If the answer changes visible result, scope, rule, AC, or success judgment,
   the design emits product feasibility feedback instead of closing it as
   `DEC-*` or `TQ-*`.
-- Behavioral Analogue and Reuse Assessment is complete before any new timer,
-  session, reward, activity-detector, or dedup architecture. Every candidate is
-  classified `REUSE`, `EXTEND`, `NEW`, or `NOT_APPLICABLE` with evidence and
-  boundary rationale. A design missing the reuse assessment is `partial` or
-  `NEEDS_WORK`, not ready and not task-eligible.
 
 ### Impact Assessment Audit
 

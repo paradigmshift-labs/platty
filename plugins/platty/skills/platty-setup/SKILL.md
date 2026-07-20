@@ -11,6 +11,15 @@ the user-global Platty home by default (`~/.platty` on macOS/Linux,
 config field named `projectRoot` refers to this Platty home/workspace root, not
 to a repository being analyzed.
 
+If setup returns `PLATTY_DB_MIGRATION_NEWER_THAN_CLI`, stop normal setup. Never
+delete or repair the existing database or default Platty home. Only for a
+user-authorized disposable validation run, use a fresh isolated `PLATTY_HOME`,
+label it as separate test state, and preserve that same `PLATTY_HOME` for every
+command and resume. Record the absolute `PLATTY_HOME` path in a durable
+workflow-state or resume-note artifact outside the analyzed repository, and
+repeat that `PLATTY_HOME` in every pause and handoff. Without that artifact,
+report the exact path and do not promise automatic fresh-context resume.
+
 ## Human Surface
 
 `platty setup` is the preferred human onboarding and workflow-hub command. It
@@ -223,6 +232,15 @@ platty repo list --project <project> --json
 Use `--source-root` when only a subdirectory should be analyzed. Use `--branch`
 when analysis should track a specific branch; without it, `repo add` tracks
 whatever branch the repository currently has checked out.
+
+Before choosing registrations, inspect the Git root, root manifest, workspace
+declaration or metadata, and nested app or package manifests. When one Git root
+has no usable root manifest or workspace declaration but contains multiple
+independently analyzable nested app manifests, register the same absolute Git
+repository path once per app with a distinct `--source-root` and unique display
+names. Do not register application subdirectories as the repository path. Pass
+an explicit `--branch` on each registration and run `repo list` before each
+addition.
 
 Branch rule:
 

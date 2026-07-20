@@ -36,6 +36,8 @@ Use `platty-cli-router` when deciding which Platty root command or skill applies
 
 Common routes:
 
+- Ordinary non-MCP agent plugin installation for Codex/Claude Code: `platty install --json` via `platty-cli-router`
+- Installed first end-to-end project journey through repositories, analysis, one LLM approval, and verified SOT output: `platty-onboarding`
 - Human setup workflow and project management dashboard state: `platty-setup`
 - Context-backend MCP server setup, host/port exposure, and `/api/mcp` validation: `platty-mcp-server-setup`
 - Static analysis progress: `platty-static-analysis`
@@ -144,6 +146,18 @@ Compatibility recovery note:
 Do not route workflows through the legacy static-analysis confirm root.
 Compatibility recovery: if a stale global CLI asks for that legacy confirm
 command, stop and tell the user to reinstall or update the global @paradigmshift/platty package.
+
+## Ordinary Agent Plugin Installation
+
+Use `platty install --json` when the user wants to install the ordinary non-MCP
+Platty agent plugin after installing the global CLI. The command detects Codex
+and Claude Code, preserves existing installs, and installs `platty@platty` at
+user scope. Use `--runtime codex`, `--runtime claude`, or `--runtime all` only
+when the user or automation needs an explicit target.
+
+The separate `platty-mcp` plugin is never installed by `platty install`. Keep
+MCP client registration and MCP-only skill installation on the separate
+`platty-mcp` route.
 
 ## Project Context Gate
 
