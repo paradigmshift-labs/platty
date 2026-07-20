@@ -169,8 +169,8 @@ claude plugin install platty@platty --scope user
 The command installs only the ordinary `platty` plugin. Install the separate
 `platty-mcp` plugin explicitly when you need MCP-only workflows.
 
-**2. Start a new agent session** so the skills load (Claude Code also loads its
-session-start hook).
+**2. Start a new agent session** so updated skills are discovered. Codex and
+Claude Code both load Platty skills natively on demand.
 
 **3. Just ask.** For example:
 

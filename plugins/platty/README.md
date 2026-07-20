@@ -2,7 +2,7 @@
 
 Run Platty repository analysis, target review, generated documentation/business-output, sync, and memory workflows from the terminal.
 
-This plugin is the public agent guidance surface for the Platty CLI. It works in Codex and Claude Code; Claude Code also ships session-start hooks, while Codex uses native skill loading without plugin hooks.
+This plugin is the public agent guidance surface for the Platty CLI. It works in Codex and Claude Code, and both runtimes load its skills natively on demand without a session-start hook.
 
 ## Prerequisite Check
 
