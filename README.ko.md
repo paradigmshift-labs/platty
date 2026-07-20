@@ -31,8 +31,7 @@
 >
 > [상세 지원 및 검증 범위 보기 →](guide/ko/support-matrix.md)
 >
-> [스택 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
-> · [정적 분석 버그 신고](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
+> [문제 제보 또는 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
 
 ## 플래티를 사용해 보세요
 

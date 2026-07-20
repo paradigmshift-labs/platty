@@ -1,0 +1,34 @@
+name: Validate issue intake
+
+on:
+  pull_request:
+    paths:
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/validate-issue-intake.yml"
+      - "README.md"
+      - "README.ko.md"
+      - "guide/**"
+      - "scripts/check-issue-intake.mjs"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/workflows/validate-issue-intake.yml"
+      - "README.md"
+      - "README.ko.md"
+      - "guide/**"
+      - "scripts/check-issue-intake.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/check-issue-intake.mjs

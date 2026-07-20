@@ -1,0 +1,109 @@
+name: Platty issue or support / 문제 제보 또는 지원 요청
+description: Tell us what happened or what Platty should recognize. Partial reports welcome. / 문제나 지원 요청을 아는 만큼 알려주세요.
+title: "[Platty Feedback]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us improve Platty. Please share what you know; you do not need to complete every suggested detail.
+
+        Platty 개선에 도움을 주셔서 감사합니다. 알고 있는 내용만 편하게 알려주세요. 모든 항목을 작성하지 않아도 됩니다.
+
+        Do not include proprietary source code, credentials, secrets, personal data, real internal domains, or private repository URLs. Replace sensitive names and values with `<redacted>`.
+
+        독점 소스 코드, 자격 증명, 비밀 키, 개인정보, 실제 사내 도메인 또는 비공개 저장소 URL은 포함하지 마세요. 민감한 이름과 값은 `<redacted>`로 바꿔 주세요.
+
+  - type: dropdown
+    id: report_type
+    attributes:
+      label: Report type / 제보 유형
+      description: Choose the closest option, or skip this field if you are unsure. / 가장 가까운 항목을 선택하세요. 잘 모르겠다면 건너뛰어도 됩니다.
+      options:
+        - Not sure — please classify it / 잘 모르겠음 — 관리자가 분류해 주세요
+        - Missing or incorrect analysis result / 분석 결과 누락 또는 오인식
+        - New language, framework, library, or repository-layout support / 새로운 언어·프레임워크·라이브러리·저장소 구조 지원
+        - Error or interrupted workflow / 오류 또는 중단된 작업
+        - Feature or usability improvement / 기능 또는 사용성 개선
+
+  - type: markdown
+    attributes:
+      value: |
+        <details>
+        <summary><strong>Evidence that helps us improve Platty / Platty 개선에 도움이 되는 코드 패턴</strong></summary>
+
+        If it is safe to share, include the smallest source pattern that proves the missing behavior. Full files are not needed.
+
+        공개해도 안전하다면 누락된 동작을 보여주는 최소 코드 패턴을 포함해 주세요. 전체 파일은 필요하지 않습니다.
+
+        - **Route:** route declaration, controller annotation, or handler registration / 라우트 선언, 컨트롤러 annotation 또는 handler 등록
+        - **Database relation:** DB client import or initialization and query call / DB client import·초기화와 query 호출
+        - **API relation:** HTTP client configuration and call site / HTTP client 설정과 호출부
+        - **event or job:** producer and consumer or handler / 이벤트 또는 작업의 발행부와 consumer·handler
+        - **Cross-repository:** caller endpoint and receiving route / cross-repository 연결의 호출 endpoint와 수신 route
+
+        Route example / Route 예시:
+
+        ```ts
+        @Controller('/orders')
+        export class OrderController {
+          @Get('/:id')
+          findOrder() { /* ... */ }
+        }
+        ```
+
+        Database example / DB 예시:
+
+        ```ts
+        const order = await prisma.order.findUnique({
+          where: { id: orderId },
+        })
+        ```
+
+        You may change names and values. Where safe, preserve imports, annotations, and call-chain structure because those details help us add analyzer coverage.
+
+        이름과 값은 바꿔도 됩니다. 안전한 범위에서 import, annotation, 호출 체인 구조를 유지하면 분석 패턴을 보강하는 데 도움이 됩니다.
+
+        </details>
+
+  - type: textarea
+    id: report_details
+    attributes:
+      label: What happened? / 어떤 일이 있었나요?
+      description: Tell us what you attempted, what you expected, and what happened instead. Include only what you know. / 시도한 작업, 기대한 결과와 실제 결과를 아는 만큼 알려주세요.
+      placeholder: |
+        Example / 예시:
+
+        I analyzed a NestJS project, but the GET /orders/:id route did not appear in the generated output.
+        NestJS 프로젝트를 분석했는데 GET /orders/:id route가 생성 결과에 나타나지 않았습니다.
+
+        Command / 실행 명령:
+        platty analyze --project my-project
+
+        Expected / 기대 결과:
+        The route and its Order database relation should be present.
+
+        Actual / 실제 결과:
+        OrderController was found, but the route and database relation were missing.
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment / 환경 정보
+      description: If known, include `platty version`, OS, Node.js, and relevant framework or library versions. / 알고 있다면 `platty version`, 운영체제, Node.js 및 관련 프레임워크·라이브러리 버전을 적어 주세요.
+      placeholder: "Example: Platty 0.1.x, macOS 15, Node.js 22, NestJS 11, Prisma 6"
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Sanitized logs or public reproduction / 정리된 로그 또는 공개 재현
+      description: Optional. Share only sanitized logs, a public repository, gist, or minimal example. / 선택사항입니다. 민감정보를 제거한 로그, 공개 저장소·gist 또는 최소 예제만 공유해 주세요.
+
+  - type: checkboxes
+    id: safe_content
+    attributes:
+      label: Sensitive-data confirmation / 민감정보 확인
+      options:
+        - label: I confirm that this public issue contains no proprietary source code, credentials, secrets, personal data, real internal domains, or private repository URLs. / 이 공개 이슈에 독점 소스 코드, 자격 증명, 비밀 키, 개인정보, 실제 사내 도메인 또는 비공개 저장소 URL이 포함되지 않았음을 확인합니다.
+          required: true
