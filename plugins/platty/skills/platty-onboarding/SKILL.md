@@ -130,7 +130,12 @@ field labels into the conversation language; keep machine values verbatim.
 - **Provider:** show the resolved CLI provider value.
 - **Availability:** show the verified `command -v` executable path.
 - **Parallel work:** state that independent document tasks can run through
-  multiple workers concurrently.
+  multiple workers concurrently. State that both Codex CLI and Claude Code CLI
+  start technical-document LLM work with `--docs-llm-concurrency 10`, which is
+  a total technical-document LLM-call budget rather than a document-worker
+  count. Explain that verified provider pressure may reduce it through
+  `10 -> 5 -> 2` while leaving EPIC and business-document worker defaults
+  unchanged.
 - **Automatic continuation:** state that technical documents continue through
   EPIC drafting, returned-command EPIC confirmation, and business documents
   without another routine approval.
@@ -156,10 +161,18 @@ Wait for explicit approval. Static-analysis completion is not LLM approval.
 Use `platty-generated-docs`. After approval run:
 
 ```bash
-platty generate-docs run --project <project> --provider <resolved-provider> --json
+platty generate-docs run --project <project> --provider <resolved-provider> --docs-llm-concurrency 10 --json
 ```
 
 The explicit flag satisfies the provider gate; do not ask a duplicate provider question. Preserve `--project`, `--stage`, `--run-id`, `--provider`, model flags, and `--json` in every continuation or recovery command.
+
+For both `codex_cli` and `claude_code`, preserve the current
+`--docs-llm-concurrency` value in every worker-bearing continuation or recovery
+command. Use the owner skill's provider-pressure rule to reduce the same run
+only through `10 -> 5 -> 2`, with at most two automatic reductions. Do not ask
+for another approval when lowering concurrency. Never lower it for JSON/schema,
+document-validation, grounding, EPIC-assignment, deterministic task, or poll
+failures; keep those on the existing repair-first or polling path.
 
 Continue technical docs -> EPIC draft -> EPIC auto-confirm -> business docs without asking the user to select EPICs. A valid returned `confirm-epics` command is automatic unless the user explicitly requested manual review. If EPIC confirmation is required but the confirmation command or run id is missing, stop instead of guessing.
 

@@ -92,6 +92,48 @@ Keep the selected provider for the whole generated-docs workflow. If
 asked to review EPICs before confirmation. Preserve the same provider flags when
 reconstructing a command.
 
+## Local CLI Technical-Docs Concurrency
+
+Apply the same technical-document LLM concurrency policy to Codex CLI
+(`codex_cli`) and Claude Code CLI (`claude_code`). Start either local CLI
+provider with:
+
+```bash
+platty generate-docs run --project <project> --provider <provider> --docs-llm-concurrency 10 --json
+```
+
+`--docs-llm-concurrency 10` is the total in-flight LLM-call budget for
+`build_docs` compaction and final technical-document generation. It is not the
+repository count, target count, document-worker count, or business-document
+worker count. Keep EPIC and business-document worker defaults unchanged. This
+policy does not apply to `claude_api`; its behavior remains unchanged.
+
+Reduce the current budget only when command output or failed-task evidence
+shows concurrent provider pressure: HTTP `429` or an explicit rate limit,
+provider capacity or concurrency-limit errors, or repeated connection,
+transport, or provider timeout failures across concurrently running tasks. Use
+the exact sequence `10 -> 5 -> 2`. Make at most two automatic concurrency
+reductions in one generated-docs workflow.
+
+Every reduction is same-run recovery, not a fresh generation run. Follow the
+primary active-work or `retry_failed_tasks` action for the existing stage and
+run id, then resume worker-backed generation with the lower
+`--docs-llm-concurrency` value. Preserve `--project`, `--stage`, `--run-id`,
+`--provider`, `--model`, every `--fallback-model`, timeout and progress flags,
+and `--json`. Preserve saved and validated tasks; never use `--full`,
+`--new-run`, or `--force-regenerate` for a concurrency reduction. When a
+returned worker-bearing resume command omits the current execution-only
+concurrency value, reconstruct that command with the current value rather than
+silently returning to the default of `2`.
+
+Do not lower or reduce concurrency for malformed JSON or schema output,
+document validation, grounding or evidence gaps, missing EPIC assignment,
+business-rule coverage, one deterministic task failure, or a status/report
+poll failure. Use the existing repair-first, model-fallback, or polling path
+for those failures. If verified provider pressure remains at `2`, stop after
+the second reduction and report the exact stage, run id, failed tasks, provider
+error evidence, current concurrency, and next recovery action.
+
 ## Public Workflow
 
 Inspect targets before generation:
@@ -103,7 +145,7 @@ platty targets list --project <project> --json
 Start or resume public generated-output work:
 
 ```bash
-platty generate-docs run --project <project> --json
+platty generate-docs run --project <project> --provider <local-provider> --docs-llm-concurrency 10 --json
 ```
 
 With an explicit provider choice:
