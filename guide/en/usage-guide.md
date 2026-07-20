@@ -396,13 +396,17 @@ validation/user error.
 ## Support
 
 For licensing, billing, or feature questions, use the official Platty support
-channel. When reporting an issue, include:
+channel. For a technical problem or unsupported source pattern, use the
+[issue and support form](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml).
+Partial reports are welcome. Include the following details only when they are
+available and safe to publish:
 
 - your runtime (and the agent runtime/version, if using one),
 - your operating system,
 - the output of `platty version`,
 - the exact command that failed,
-- the full error output.
+- relevant error output with proprietary code, credentials, secrets, personal
+  data, internal domains, and private repository URLs removed.
 
 ---
 

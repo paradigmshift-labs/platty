@@ -395,14 +395,17 @@ platty sot export                    # project the SOT to a Markdown tree for gr
 
 ## 지원
 
-라이선스, 결제, 또는 기능 관련 문의는 공식 Platty 지원 채널을 이용하세요. 문제를
-신고할 때는 다음을 포함해 주세요:
+라이선스, 결제, 또는 기능 관련 문의는 공식 Platty 지원 채널을 이용하세요. 기술적
+문제나 미지원 소스 패턴은 [문제 제보 및 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)에
+등록해 주세요. 일부 내용만으로도 제보할 수 있습니다. 공개해도 안전하고 확인할 수
+있는 정보만 포함해 주세요:
 
 - 사용 중인 런타임(에이전트를 사용 중이라면 에이전트 런타임/버전도),
 - 운영 체제,
 - `platty version`의 출력,
 - 실패한 정확한 명령어,
-- 전체 오류 출력.
+- 독점 코드, 자격 증명, 비밀 키, 개인정보, 사내 도메인 및 비공개 저장소 URL을
+  제거한 관련 오류 출력.
 
 ---
 
