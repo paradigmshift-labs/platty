@@ -1,8 +1,18 @@
 # Impact Analysis Pressure Scenarios
 
-These fourteen immutable scenarios preserve the RED baseline. Each exact
+These fifteen immutable scenarios preserve the RED baseline. Each exact
 prompt is copied without paraphrase. Task 7 executes these same entries; do not
 replace them with API or screen micro-tests.
+
+## graph-candidate-limit-overflow
+
+Two live SDD evaluations sent `candidateLimit: 50` and `candidateLimit: 100` to
+`graph_trace`; both failed because the advertised maximum was 20.
+
+- **Expected GREEN route**: read the live tool schema, omit optional limit fields
+  when the default is enough, or set `candidateLimit` to no more than 20.
+- **Observable pass criteria**: no out-of-range request is sent. A parameter error
+  is corrected once and recorded; it is never treated as empty graph evidence.
 
 ## ordinary-policy
 
@@ -190,3 +200,23 @@ MCP 근거로 결제 쿠폰 기능 prd.md와 user_stories.md를 남겨줘. 나�
 - **Owner reference**: `impact-dossier.md` Product Approval Impact Gate.
 - **Observable pass criteria**: Each limit names affected `R/AC/H/US` ids and
   `BLOCKING | NON_BLOCKING`; any BLOCKING row prevents a PASS/approval handoff.
+
+## community-store-explore-behavioral-analogue
+
+**Exact prompt**
+
+```text
+커뮤니티에서 스크롤 후 30초 체류 보상을 만들면 새로 필요한 timer/session/reward/dedup
+구조와 재사용 가능한 구조를 영향도로 정리해줘.
+```
+
+- **Observed RED failure**: Product-name search stayed inside Community and
+  accepted a new-mechanism design without comparing the Store Explore path.
+- **Expected GREEN route**: Build the trigger, activity predicate, time,
+  surface-continuity, reward, and dedup behavior signature; traverse adjacent
+  reward/session EPICs and repositories; read `StoreExploreSessionService` and
+  its connected exact evidence; classify each boundary `REUSE`, `EXTEND`, `NEW`,
+  or `NOT_APPLICABLE`.
+- **Observable pass criteria**: No shared-mechanism `NEW` claim is accepted
+  without the comparison or an explicit MCP coverage limit, and the dossier
+  separates matching behavior from domain-specific mismatches.

@@ -2,6 +2,10 @@
 
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
+import {
+  computeDesignRevision,
+  parseSddArtifact,
+} from '../../using-platty-mcp/scripts/sdd-artifacts.mjs'
 
 const WEIGHTS = new Map([
   ['DESIGN_SCHEMA_VERSION_MISSING', 5],
@@ -35,6 +39,7 @@ const WEIGHTS = new Map([
   ['TASK_EXECUTION_PREFLIGHT_INCOMPLETE', 25],
   ['TASK_TRACEABILITY_INCOMPLETE', 20],
   ['DESIGN_REVIEW_NOT_READY', 25],
+  ['DESIGN_APPROVAL_INVALID', 25],
   ['DESIGN_REVISION_MISMATCH', 25],
   ['PRODUCT_INPUT_FINGERPRINT_MISMATCH', 25],
 ])
@@ -143,23 +148,6 @@ function digest(value) {
   return `sha256:${createHash('sha256').update(JSON.stringify(canonicalValue(value)), 'utf8').digest('hex')}`
 }
 
-function inlineArray(markdown, key) {
-  const encoded = markdown.match(new RegExp(`^${key}:\\s*(\\[[^\\n]*\\])\\s*$`, 'm'))?.[1]
-  if (!encoded) return undefined
-  try {
-    const parsed = JSON.parse(encoded.replaceAll("'", '"'))
-    return Array.isArray(parsed) && parsed.every((value) => typeof value === 'string') ? parsed : undefined
-  } catch {
-    return undefined
-  }
-}
-
-function documentBody(markdown) {
-  const normalized = markdown.replaceAll('\r\n', '\n').replace(/\n*$/, '\n')
-  const match = normalized.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/)
-  return match?.[1]?.replace(/^\n/, '')
-}
-
 const designPath = argument('--design')
 const tasksPath = argument('--tasks')
 
@@ -189,32 +177,21 @@ if (!scalar(design, 'productInputFingerprint')
   || scalar(design, 'productInputFingerprint') !== expectedProductInputFingerprint) {
   criticalFindings.push(finding('PRODUCT_INPUT_FINGERPRINT_MISMATCH', 'productInputFingerprint must be the canonical digest of both current input revisions and statuses.'))
 }
-const body = documentBody(design)
-const derivedFrom = inlineArray(design, 'derivedFrom')
-const stableDesignFrontmatter = {
-  derivedFrom,
-  evidenceFingerprint: scalar(design, 'evidenceFingerprint'),
-  id: scalar(design, 'id'),
-  outputLanguage: scalar(design, 'outputLanguage'),
-  productInputFingerprint: scalar(design, 'productInputFingerprint'),
-  projectId: scalar(design, 'projectId'),
-  requestRevision: scalar(design, 'requestRevision'),
-  requestStatus: scalar(design, 'requestStatus'),
-  review: {
-    readiness: nestedScalar(design, 'review', 'readiness'),
-    verdict: nestedScalar(design, 'review', 'verdict'),
-  },
-  storiesRevision: scalar(design, 'storiesRevision'),
-  storiesStatus: scalar(design, 'storiesStatus'),
-  type: scalar(design, 'type'),
+let expectedDesignRevision
+try {
+  expectedDesignRevision = computeDesignRevision(parseSddArtifact('system_design.md', design))
+} catch {
+  expectedDesignRevision = undefined
 }
-const missingDesignRevisionInput = !body || Object.values(stableDesignFrontmatter)
-  .some((value) => value === undefined || (Array.isArray(value) && value.length === 0))
-const expectedDesignRevision = missingDesignRevisionInput
-  ? undefined
-  : digest({ body, frontmatter: stableDesignFrontmatter })
 if (!expectedDesignRevision || scalar(design, 'designRevision') !== expectedDesignRevision) {
   criticalFindings.push(finding('DESIGN_REVISION_MISMATCH', 'designRevision must match the canonical current design body and stable frontmatter.'))
+}
+if (scalar(design, 'status') !== 'approved'
+  || !expectedDesignRevision
+  || scalar(design, 'approvedRevision') !== expectedDesignRevision
+  || !scalar(design, 'approvedAt')
+  || !scalar(design, 'approvedBy')) {
+  criticalFindings.push(finding('DESIGN_APPROVAL_INVALID', 'Executable tasks require a persisted approved design whose approvedRevision matches the canonical designRevision and includes approvedAt and approvedBy.'))
 }
 const fieldSection = section(design, '#### A-10-2. API 필드 근거 원장')
 let fieldRows = []
@@ -473,15 +450,22 @@ if (isTaskV4) {
     || moduleRows.some((row) => moduleKeys.some((key) => hasPlaceholder(row[key])))) {
     criticalFindings.push(finding('TASK_MODULE_PLAN_MISSING', 'v4 tasks need a complete module execution table with section and verification bindings.'))
   } else {
+    const perChangedModuleMarkers = [
+      'Test:', 'RED:', 'Minimal implementation:', 'GREEN:', 'Regression:',
+      'Self-review — spec coverage:', 'Commit checkpoint:',
+    ]
     const invalidModule = moduleRows.some((row) => {
       const sectionNumber = row['구현 섹션']?.match(/§(\d+)/)?.[1]
       const body = sectionNumber ? numberedSection(tasks, sectionNumber) : undefined
       const changed = !/^(?:NO-CHANGE|REUSE|N\/A)$/i.test(row['변경 유형'] ?? '')
       return !body || (changed && (!/- \[ \]/.test(body)
-        || !/(?:Create|Modify|Delete):\s*`[^`]+`/.test(body)))
+        || !/(?:Create|Modify|Delete):\s*`[^`]+`/.test(body)
+        || perChangedModuleMarkers.some((marker) => !body.includes(`- [ ] ${marker}`))
+        || ['Test:', 'RED:', 'GREEN:', 'Regression:'].some((marker) =>
+          !new RegExp(`- \\[ \\] ${marker.replace(':', '\\:')}\\s*\\x60[^\\x60]+\\x60`).test(body))))
     })
     if (invalidModule || !/[0-9a-f]{40}/.test(tasks)) {
-      criticalFindings.push(finding('TASK_MODULE_CHECKLIST_INCOMPLETE', 'Every changed v4 module needs checkboxes, exact file actions, symbols, and a full source commit.'))
+      criticalFindings.push(finding('TASK_MODULE_CHECKLIST_INCOMPLETE', 'Every changed v4 module needs checkboxes, exact file actions and symbols, Test/RED/minimal implementation/GREEN/regression/spec-review/commit-checkpoint steps, and a full source commit.'))
     }
   }
 

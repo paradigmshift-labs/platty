@@ -7,6 +7,8 @@ description: Use when creating locally saved MCP-grounded SDD technical design a
 
 **Prerequisite:** Read `using-platty-mcp` before acting unless it has already
 been read in this turn.
+Read `../using-platty-mcp/references/sdd-question-ownership.md` before turning
+any unresolved item into a user question.
 
 Create an evidence-gated system design from the approved product inputs and the
 persisted Impact Dossier. The design owns system boundaries, technical decisions,
@@ -26,6 +28,8 @@ paths, status values, and quoted evidence in their original form.
    seed-only` when a packet is missing, then owns dossier-entry changes. In SDD
    context it alone writes or refreshes only PRD §9. Do not invoke retrieval
    directly for that path.
+3. Apply the shared question-ownership contract: retrieval owns `FACT`, SDD
+   spec owns `PRODUCT`, and this skill owns `DESIGN`.
 
 ## Inputs
 
@@ -52,11 +56,79 @@ and limits in PRD §9 before graph and bounded source reads begin. This is
 required even when the user starts a new session with only the SDD folder path
 or `prd.md` as the handoff.
 
+## Technical Design Kickoff
+
+Start technical design with a bounded kickoff before broad or deep source
+descent. This is the first design-stage interaction, not final design approval.
+Build `technicalKickoffPacket` from every `productDesignHandoffs` (`DH-*`), any
+still-visible product constraint, and the existing PRD §9 evidence boundary.
+Classify each item into exactly one bucket:
+
+- `autoDecisions`: reversible implementation choices that preserve the approved
+  user result. State the recommended answer at kickoff and close it as `DEC-*`
+  once the named bounded source read confirms compatibility; do not ask the
+  product approver to choose.
+- `evidenceResolutionItems`: current-system facts that need a named bounded read.
+  State what the agent will verify and which design decision it blocks; do not
+  ask a person to guess.
+- `technicalOwnerQuestions`: only choices that meet the material cost/operations,
+  security/privacy, data-loss, or irreversible-migration
+  exception. Name the decision owner, recommendation, trade-off, and affected
+  product result.
+
+If `technicalOwnerQuestions` is non-empty, present one consolidated kickoff
+decision sheet and stop for a later answer. It may contain multiple `TQ-*` rows
+because its purpose is to answer all carried-over design decisions before deep
+design begins. Record those answers in the packet before continuing. If the
+bucket is empty, show the auto-decisions and evidence plan briefly and proceed
+without manufacturing a question.
+
+Do not ask new technical-owner questions mid-design. If later evidence creates
+a genuinely new exception-qualified decision, stop the revision and issue a new
+kickoff decision sheet; if it changes a visible result, route feasibility
+feedback to SDD spec instead. Final design approval is separate from kickoff:
+it occurs only after `system_design.md` is persisted, read back, and presented
+with its current `designRevision`.
+
+### Product Boundary Recheck
+
+Before placing anything in a kickoff bucket, apply the Product Boundary Recheck
+to every `DH-*`, `TQ-*`, and proposed decision. Ask whether different answers
+change whether a user qualifies or earns, which product surface or detail
+navigation is included, surface continuity, money, permission, notification,
+or another visible result. If so, it is `PRODUCT`, not a reversible `DESIGN`
+choice. Split mixed items so implementation mechanics remain in design while the
+user-visible boundary returns to SDD spec.
+
+On any returned product item, emit feasibility feedback, reset `prd.md` and
+`user_stories.md` to a new product revision in draft through SDD spec, and require
+them to be explicitly re-approved. Block `PASS / ready` and do not create or
+overwrite `tasks.md` until the revised product pair is approved and design is
+regenerated. Apply the same recheck when new source evidence appears mid-design;
+kickoff is not permission to swallow a later product decision.
+
+### Behavioral Analogue and Reuse Assessment
+
+Before designing a new timer, session, activity detector, reward, or deduplication
+architecture, require the retrieval/impact Behavioral Analogue sweep. Compare
+candidate behavior signatures and classify each as `REUSE`, `EXTEND`, `NEW`, or
+`NOT_APPLICABLE`. Record why the owning component is reusable, needs extension,
+or cannot cross its current domain boundary. A missing reuse assessment makes
+the design `partial` or `NEEDS_WORK`; it is not ready for task generation.
+
 ## Operating Flow
 
 1. Confirm MCP tools, project context, and context freshness.
 2. Read the selected local `prd.md` (including §9) and `user_stories.md`.
    Confirm both artifacts belong to the selected project and spec.
+   Use the shared executable helper
+   `../using-platty-mcp/scripts/sdd-artifacts.mjs` (resolved relative to this skill)
+   for all input identity values: parse the persisted inputs with
+   `parseSddArtifact`, then call `computeRequestRevision`,
+   `computeStoriesRevision`, and `computeProductInputFingerprint`. Later design
+   approval must call `computeDesignRevision` from the same helper. Do not reimplement
+   these algorithms, call `trim`/`trimStart`, strip the first body
+   newline, or otherwise normalize artifact bodies outside the helper.
    Build `productInputMetadata` from their persisted metadata: validate canonical
    product metadata directly; adapt legacy product metadata only in this input
    packet and retain its source form. Never rewrite `prd.md` or `user_stories.md`
@@ -75,6 +147,9 @@ or `prd.md` as the handoff.
    either file. Compute `storiesRevision` from stable stories frontmatter and
    body while excluding mutable status/approval values, then compute the
    canonical `productInputFingerprint` from both revisions and current statuses.
+   Parse every PRD `DH-*` row into `productDesignHandoffs`. Preserve its
+   invariant user result and product ids; do not turn its implementation choice
+   back into an `O-*` question.
 3. Stop unless request/story inputs are approved, unless the user explicitly
    asks for draft-only technical design. A draft-only design remains
    `NEEDS_WORK`, is not approval-eligible, and must be regenerated as a new
@@ -86,13 +161,38 @@ or `prd.md` as the handoff.
    story area, invoke `platty-mcp-impact-analysis` before any graph or source
    tool. Record the observed refresh condition and its affected evidence id or
    coverage limit before invoking. Do not rerun it when the existing dossier is
-   sufficient.
+   sufficient. Before broad or deep source descent, build the Technical Design
+   Kickoff packet. Present one consolidated kickoff decision sheet only when its
+   `technicalOwnerQuestions` bucket is non-empty; otherwise record the proposed
+   auto-decisions and bounded evidence-resolution plan and continue.
 5. After impact analysis returns, reread `prd.md`. Keep impact status,
    `impactRevision`, the sorted matrix `evidenceId` snapshot, source parity,
    commits, traversal status, and `impactCoverageLimits` in the working packet
    and the final appendix. Never expose that operational log in frontmatter or
    edit an Impact Dossier entry from this skill.
-6. Derive evidence-backed AS-IS facts and system TO-BE decisions from request,
+6. Before drafting, update the kickoff `technicalDecisionPacket` from every `DH-*`,
+   evidence gap, and proposed TO-BE choice. Classify each unresolved item using
+   the shared question-ownership contract and run the Product Boundary Recheck
+   over every DH/TQ/decision. Resolve source-checkable `FACT`
+   items through the existing impact and bounded-read gates. For each reversible
+   `DESIGN` item whose alternatives preserve the approved user result, inspect
+   the owning source boundary, choose the safest compatible option, and record
+   it as `DEC-*` with rationale, evidence, affected ids, risk, and revisit
+   condition. Do not ask the product approver to choose an API, DTO, table,
+   column, query, ordering implementation, tie-breaker, cache, component, file,
+   test, deployment sequence, or rollback mechanism.
+
+   A technical-owner question is allowed only when evidence cannot close a
+   choice that materially changes cost or operational responsibility, security
+   or privacy, data loss, irreversible migration, or the approved product
+   result. Record why that owner is required. If the answer changes the visible
+   result, scope, rule, AC, or success judgment, emit feasibility feedback to
+   SDD spec instead of creating a technical `TQ-*`. A source gap remains an
+   Evidence-Resolution row and bounded read, not a question asking a
+   non-developer to guess current behavior. Before any `NEW` timer, session,
+   reward, activity detector, or deduplication decision, complete the Behavioral
+   Analogue and Reuse Assessment and cite its exact evidence.
+7. Derive evidence-backed AS-IS facts and system TO-BE decisions from request,
    stories, and impact. Use the dossier's `document_resolve` links to connect
    product documents to selected specs, and use its `graph_trace` result as a
    fast `screen ↔ API ↔ domain ↔ DB` path map. For every hard implementation
@@ -144,30 +244,30 @@ or `prd.md` as the handoff.
    the pair, reset both product inputs to draft, and stop this design revision.
    Do not hide a changed user promise as a technical limitation, invent a field,
    or create tasks from the stale approval.
-7. Draft `system_design.md` from `references/system-design-shape.md`.
-8. Persist and read back `system_design.md`, then report its path for user review.
-9. If Self Review is not `PASS / ready`, reject final approval and stop without
+8. Draft `system_design.md` from `references/system-design-shape.md`.
+9. Persist and read back `system_design.md`, then report its path for user review.
+10. If Self Review is not `PASS / ready`, reject final approval and stop without
    creating or overwriting `tasks.md`; record every Evidence-Resolution item in
    `system_design.md` §11, refresh evidence, and create a new design revision.
-10. If the current design is not explicitly approved, stop without creating or
+11. If the current design is not explicitly approved, stop without creating or
    overwriting `tasks.md`.
-11. On explicit approval, reread `system_design.md`, `prd.md`, and `user_stories.md`.
+12. On explicit approval, reread `system_design.md`, `prd.md`, and `user_stories.md`.
     Recompute both product input revisions and `productInputFingerprint`; reject
     approval when either status is not approved or any stored input value differs.
     Otherwise persist and read back `approvedRevision`, `approvedAt`, and
     `approvedBy` for the current design revision.
-12. During task preflight, reread all three inputs, recompute
+13. During task preflight, reread all three inputs, recompute
     `productInputFingerprint`, then recheck impact status, source parity, source
     commits, context status, and evidence boundary. Recompute
     `evidenceFingerprint`.
-13. If either product-input status is not approved, stop, keep any existing
+14. If either product-input status is not approved, stop, keep any existing
     `tasks.md` stale, and do not create a design revision unless the user later
     makes an explicit draft-only design request.
-14. If both product inputs remain approved and a product-input revision changed,
+15. If both product inputs remain approved and a product-input revision changed,
     its fingerprint changes; create and verify a new unapproved design revision
     and stop without creating tasks. Apply the same transition for an evidence
     fingerprint change.
-15. Otherwise draft `tasks.md` from `references/tasks-shape.md` as
+16. Otherwise draft `tasks.md` from `references/tasks-shape.md` as
     `schemaVersion: sdd-tasks.v4`, `designSchemaVersion: sdd-design.v2`,
     `planKind: implementation-checklist`, and
     `executionReadiness: ready`. Copy only the minimal revision/fingerprint
@@ -189,7 +289,12 @@ or `prd.md` as the handoff.
     explains the nonzero exit; runtime, package-manager, dependency, permission,
     network, workspace, or module-resolution failures remain blockers. The §0
     module table defines actual execution order and maps every row to one numbered section.
-16. Persist and read back `tasks.md`; verify its metadata matches the current
+    Keep each change as a small executable sequence with an exact file path and
+    symbol: RED with its expected failure, minimal implementation, GREEN using
+    the same focused command, adjacent regression, self-review for spec coverage
+    and contract consistency, then a commit checkpoint. A checkpoint records the
+    intended coherent commit boundary; it does not authorize a commit by itself.
+17. Persist and read back `tasks.md`; verify its metadata matches the current
     approved design, then run the rubric's post-task structural audit. Check
     every §0 module row maps to one numbered section; every changed section has
     checkboxes, confirmed exact file actions, symbol/signature, full source
@@ -303,6 +408,12 @@ SDD Design Packet
 - contextStatus
 - evidenceBoundary
 - productInputMetadata
+- productDesignHandoffs
+- technicalKickoffPacket
+- autoDecisions
+- evidenceResolutionItems
+- technicalDecisionPacket
+- technicalOwnerQuestions
 - impactAppendixRef (`prd.md#9`)
 - impactRevision
 - impactEvidenceSnapshot
@@ -390,10 +501,14 @@ asynchronous events or job triggers, and `DATA-*` for state, judgment, or data
 ownership boundaries. Reuse those ids in rules, slices, Appendix A, and tasks;
 do not reconnect the flow through free-text names alone.
 
-Preserve product and technical ownership: `D-*` and `O-*` come from the PRD and
-must not be renumbered or reclassified by design. `DEC-*` is only a confirmed
-technical decision or explicit bounded risk acceptance; `TQ-*` is a new
-technical question. A product `O-*` whose answer changes scope, rules,
+Preserve product and technical ownership: `D-*`, `O-*`, and `DH-*` come from
+the PRD and must not be renumbered or reclassified by design. Each `DH-*` must
+end as a source-grounded `DEC-*`, a bounded Evidence-Resolution row, or an
+owner-qualified `TQ-*`. Reversible choices that preserve the approved user
+result normally become `DEC-*` without a user question. `DEC-*` is only a
+confirmed technical decision or explicit bounded risk acceptance; `TQ-*` is a
+new technical question that satisfies the technical-owner exception. A product
+`O-*` whose answer changes scope, rules,
 acceptance criteria, or success judgment returns to product revision, impact,
 and approval instead of being closed by a design `DEC-*`.
 
@@ -493,7 +608,8 @@ revised design has `status: draft`; `approvedRevision`, `approvedAt`, and
 
 Explicit approval must reread `system_design.md`, `prd.md`, and `user_stories.md`, verify
 the current design revision, recompute the canonical design hash and
-`productInputFingerprint`, and require all stored values to match. Both product
+`productInputFingerprint` through the shared `sdd-artifacts.mjs` functions, and
+require all stored values to match. Both product
 inputs must currently be approved. A non-approved status stops approval without
 creating a revision. When both inputs remain approved, a hash or fingerprint
 mismatch creates a new unapproved revision instead. When every check matches, set
@@ -514,6 +630,10 @@ change creates another revision, resets `status: draft`, and clears approval met
 review it. Do not create or overwrite `tasks.md` until the current design has
 `approvedRevision == designRevision` plus explicit `approvedAt` and
 `approvedBy` values.
+
+The kickoff response and the final design approval are separate interactions.
+Kickoff answers authorize only the recorded design decisions; they never count
+as prospective, blanket, or same-request approval of the later design revision.
 
 A draft-only design derived from an unapproved request or stories file is not
 approval-eligible. After both product inputs become approved, reread them,
@@ -662,6 +782,7 @@ missing source parity.
 | Mistake | Required behavior |
 | --- | --- |
 | Editing dossier entries while designing | Delegate discovery and every `prd.md §9` update to `platty-mcp-impact-analysis`. |
+| Asking a non-developer to choose an API, table, query, tie-breaker, component, or test | Preserve the approved user result, read the owning source boundary, and close the reversible choice as `DEC-*`; use `TQ-*` only for the bounded technical-owner exceptions. |
 | Treating empty output as no impact | Keep `unknown` and record the evidence gap. |
 | Hiding AS-IS only in the evidence appendix | Synthesize the confirmed affected boundary and current critical flow in design §3; keep source proof in Appendix A. |
 | Describing AS-IS and TO-BE without lifecycle classification | Add every affected surface exactly once to §5 as `NEW`, `MODIFY`, `REUSE`, `NO-CHANGE`, `DEPRECATE`, `DELETE`, or `UNKNOWN`, and connect it to `CHG-*`. |
@@ -676,6 +797,7 @@ missing source parity.
 | Creating tasks before design approval | Stop after writing and verifying `system_design.md`; do not create or overwrite `tasks.md`. |
 | Treating user approval as an override for a blocked design | Reject approval and resolve the blocking finding before presenting a new approval-eligible revision. |
 | Treating a stale task plan as current | Compare design approval metadata and regenerate only after the revised design is approved. |
+| Reimplementing artifact hashes or trimming parsed bodies | Use `sdd-artifacts.mjs` for parsing and every request, stories, product-input, and design revision value; a mismatch creates a new unapproved revision. |
 | Inventing task details from partial source parity or `partial-path` coverage | Do not create or overwrite `tasks.md`; preserve the gap and next exact read in design §11 and create a new revision after confirmation. |
 | Weakening a promised user result only in design | Send feasibility feedback to `platty-mcp-sdd-spec`; revise and reapprove the affected product rules and stories before continuing. |
 | Grouping tasks only by data/backend/frontend layers | Inherit the approved design's outcome-oriented `SLICE-*` groups and place layer-specific work inside each slice. |

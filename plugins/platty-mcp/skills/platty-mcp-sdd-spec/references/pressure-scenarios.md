@@ -356,3 +356,234 @@ distinguish attempted, accepted, delivered, and observed notification metrics
 Observable pass criteria: no adopted recommendation remains open, no core
 assumption is silently NON_BLOCKING, and every linked exception scenario can
 coexist with the stated success rule.
+
+## Scenario 15: Home Announcement Draft Before Technical Choice
+
+User asks:
+
+```text
+홈 화면에 공지용 배너를 넣고 싶어. 지금 보여줄 수 있는 공지 중 우선순위가 가장 높은
+것 하나를 홈에서 가장 먼저 보여줘. 기존 서비스 기준으로 조사해서 기획 초안을 만들어줘.
+```
+
+Combined pressure:
+
+- the Korean phrase “공지” also finds separate static announcement pages;
+- the existing Home Banner flow already filters eligible banners and orders the
+  first item, but storage/API alternatives remain technically possible;
+- exhaustive document/spec/source reads make it tempting to surface internal
+  identifiers and implementation choices;
+- the user requested a draft now, not an architecture meeting.
+
+Observed RED baseline question:
+
+```text
+기존 Home Banner에 공지 구분을 추가하고, 노출 가능한 공지 중 priority가 가장 높은
+1건을 기존 배너 슬롯의 첫 항목으로 보여주는 안(추천)으로 진행할까요? 아니면 공지
+전용 목록·우선순위를 별도로 만들고 홈 화면 최상단에 고정 노출할까요?
+```
+
+Failure to prevent:
+
+- asking again whether to reuse the existing Home Banner before drafting;
+- offering a new announcement list, API, DB, field, enum, query, ordering rule,
+  or tie-breaker as a non-developer's product choice;
+- exposing `priority`, source parity, EPIC/spec ids, or internal decision ids in
+  the first review message;
+- withholding `prd.md` and `user_stories.md` because technical details remain;
+- leaving an adopted safe recommendation as an open product question.
+
+Expected route:
+
+```text
+MCP retrieval confirms existing eligibility, ordering, first-item, and host-screen facts
+-> classify FACT / PRODUCT / DESIGN
+-> adopt the existing Home Banner flow as the safe recommended product default
+-> draft and persist prd.md plus user_stories.md together
+-> keep storage/API/query/order/tie-breaker details in the design handoff
+-> Self Review verifies that no technical alternative became a product O-*
+-> first chat review explains only the visible change, recommendation, and any real product conflict
+-> ask once whether to approve the drafted product direction
+```
+
+The first review should be equivalent to:
+
+```text
+이번에 바뀌는 것
+- 기존 홈 배너 체계를 사용해 공지 배너를 운영합니다.
+- 현재 사용자에게 보여줄 수 있는 공지 중 가장 우선인 1건을 첫 배너로 보여줍니다.
+- 보여줄 공지가 없으면 기존 홈 화면을 유지합니다.
+
+제가 적용한 추천안
+- 별도 공지 시스템을 먼저 정하지 않고 기존 홈 배너의 노출 조건과 운영 흐름을 재사용했습니다.
+
+확인이 필요한 충돌
+- 없음
+
+이 방향으로 기획을 승인할까요?
+```
+
+Observable pass criteria: zero pre-draft FACT questions, zero pre-draft
+technical questions, both product artifacts exist before the approval request,
+every unresolved implementation choice remains visible to design rather than
+the non-developer, and the first review says `가장 우선인 공지` without the
+code-field name ``priority`` or any backticked identifier.
+
+## Scenario 16: Community 30-Second Scroll Reward Uses Two-Stage Discovery
+
+User asks:
+
+```text
+커뮤니티 페이지에서 스크롤을 내리며 30초 이상 머문 사용자에게 포인트를 주는 기능을
+기획하고 싶어. 기존 서비스 기준으로 조사해서 기획부터 개발 설계와 구현 계획까지
+이어갈 거야.
+```
+
+Observed RED baseline:
+
+- no initial question;
+- 230,067 tokens and about eight minutes of MCP retrieval before the first
+  question;
+- the eventual product question asked whether the reward covers the whole
+  Community home feed or only the board post list;
+- the route found an existing once-daily five-point Community attendance reward,
+  feed exposure tracking, and backend duplicate prevention before asking.
+
+Failure to prevent:
+
+- reading broad Community and board evidence before clarifying whether the
+  reward repeats every 30 seconds or occurs once per visit/window;
+- asking initial and follow-up questions in one message;
+- consuming a question on an existing point amount, API, timer, event, table,
+  duplicate-prevention key, or source location;
+- treating the later final approval prompt as an interview answer;
+- stopping after two questions while a material surface or journey decision is
+  still unresolved;
+- forcing another question when no material product ambiguity remains.
+
+Expected route:
+
+```text
+raw idea contains a 30-second reward threshold but leaves reward cadence unstated
+-> ask once-per-visit/window versus repeated-threshold earning before full-cycle retrieval
+-> record the first productInterviewRounds entry and narrow the reward policy
+-> retrieve the selected Community branch and existing reward policy
+-> run the Behavioral Analogue sweep and find the Store Explore active-scroll precedent
+-> recommend the safe existing daily/lifetime limits without consuming the next decision
+-> ask whether Community-origin feed detail navigation keeps the same 30-second session
+-> research and reclassify after the answer; continue one question at a time until
+   remainingProductDecisions is empty
+-> draft prd.md and user_stories.md
+-> ask the separate final product approval question
+```
+
+Observable pass criteria: one question at a time with no arbitrary cap; no FACT
+or DESIGN question; no broad branch restart after an answer; `decisionLedger`,
+`productInterviewRounds`, and `remainingProductDecisions` accurately recorded;
+detail continuity is not silently chosen by design; and final approval remains a
+separate gate.
+
+### community-reward-existing-pattern-does-not-skip-initial-question
+
+**Exact prompt**
+
+```text
+커뮤니티 페이지에서 스크롤을 내리며 30초 이상 머문 사용자에게 포인트를 주는 기능을
+기획해줘. 기존 서비스 기준으로 조사해줘.
+```
+
+Observed RED after the first two-round contract change:
+
+- the agent set `initialQuestionUsed: false` because it hoped an existing reward
+  pattern could choose a safe default;
+- it made more than 130 broad map/document calls and emitted 183,652 output
+  tokens before being interrupted;
+- the omitted choice—once per visit/window versus every elapsed 30 seconds—was
+  still a user-visible earning policy, not a source fact.
+
+Expected route:
+
+```text
+capability + project context
+-> ask once-per-visit/window versus repeated-threshold earning
+-> record the first productInterviewRounds entry
+-> after the answer, retrieve only the selected reward/community branch
+```
+
+Observable pass criteria: the first question is asked before overview, glossary,
+EPIC, document, spec, graph, or source retrieval; no existing reward pattern is
+used to silently choose cadence; later surface and journey-continuity decisions
+remain available after the selected branch and existing limits are read.
+
+### community-adaptive-interview-detail-continuity
+
+**Exact prompt**
+
+```text
+커뮤니티 페이지에서 스크롤을 내리고 30초 이상 유지하면 포인트를 주는 기획을 만들어줘.
+```
+
+Evidence reveals `StoreExploreSessionService`: active scrolling starts a timed
+session, supported detail routes preserve it, unrelated routes end it, and server
+rules handle daily and lifetime reward limits.
+
+Failure to prevent:
+
+- spending the last allowed question on safe daily/lifetime defaults and then
+  letting design silently decide Community-origin feed detail continuity;
+- treating detail navigation as a timer implementation detail even though it
+  changes whether the user earns the reward;
+- declaring all timer/session/idempotency work new without reading the Store
+  Explore precedent;
+- asking the user which service, API, table, event, or class to reuse.
+
+Expected route:
+
+```text
+cadence question before broad retrieval
+-> behavior-based analogue search finds StoreExploreSessionService
+-> existing daily and lifetime limits adopted as a recommendation
+-> next PRODUCT question asks whether a Community-origin feed detail page keeps
+   the same 30-second earning session
+-> further PRODUCT questions, if material, cover active-dwell meaning and exit boundaries
+-> research and reclassify after every answer
+-> stop only when remainingProductDecisions is empty
+```
+
+Observable pass criteria: the interview may exceed two questions; surface and
+journey continuity outrank safe-limit confirmation; every question uses product
+language; and the reuse candidate is handed to design without asking the user to
+choose its technical form.
+
+## Scenario 17: approval-trimstart-revision-bypass
+
+An approval run rereads existing home-banner drafts but independently applies
+`trimStart()` to each parsed Markdown body before hashing. It then reports the
+pair approved even though the executable SDD helper computes different values.
+For the captured fixture, the canonical request revision starts with
+`004a9ac4`, while the embedded trim-based revision starts with `a6600f20`.
+
+Failure to prevent:
+
+- reimplementing the documented hash formula during approval;
+- trimming or otherwise normalizing parsed bodies outside the shared helper;
+- changing both statuses to `approved` when PRD §9 is bound to non-canonical
+  revisions;
+- refreshing §9 and approving the newly changed evidence in the same user
+  message.
+
+Expected route:
+
+```text
+later explicit approval
+-> parse both persisted files with the bundled using-platty-mcp/scripts/sdd-artifacts.mjs
+-> computeRequestRevision + computeStoriesRevision
+-> revision mismatch
+-> platty-mcp-impact-analysis refreshes §9 using canonical revisions
+-> keep both files `draft`
+-> require a later explicit product approval
+```
+
+Observable pass criteria: revision computation is delegated to the executable
+helper without `trim` or `trimStart`; a mismatch triggers impact analysis; both
+files remain `draft` until a later user approval sees the refreshed revision.

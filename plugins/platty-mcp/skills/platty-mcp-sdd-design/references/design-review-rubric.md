@@ -21,6 +21,7 @@ blockingFindings: []
 warnings: []
 requirementCoverage: {}
 productInputAudit: {}
+technicalDecisionAudit: {}
 impactAssessmentAudit: {}
 changeCoverage: {}
 verificationCoverage: {}
@@ -63,6 +64,9 @@ The full result is the review working record and is summarized in Appendix A.
   is never silently renumbered or closed by `DEC-*`; a product-changing answer
   returns to the product revision and approval flow.
 - Scope, non-goals, assumptions, and accepted risks do not contradict inputs.
+- Every incoming PRD `DH-*` preserves its invariant user result and maps exactly
+  once to a source-grounded `DEC-*`, a bounded Evidence-Resolution row, or an
+  owner-qualified `TQ-*`.
 - Every promised `WHEN`, universal quantifier, rate, and `H-*` denominator is
   reconciled with all source eligibility gates and intentional suppression/skip
   paths. Any difference between the promised trigger set and the source eligible
@@ -78,6 +82,40 @@ The full result is the review working record and is summarized in Appendix A.
   inputs are approved, generate a new design revision.
 - Approval and every task preflight reread `prd.md` and `user_stories.md` rather
   than trusting stored fields.
+
+### Technical Decision Audit
+
+- Product Boundary Recheck covers every `DH-*`, `TQ-*`, and proposed decision.
+  If an answer changes whether a user qualifies or earns, eligibility, reward,
+  surface continuity, detail navigation, money, permission, notification, or a
+  visible result, return it to SDD spec as a new product revision in draft. The
+  revised product pair must be explicitly re-approved; until then block ready
+  and do not create or overwrite `tasks.md`.
+- A `technicalKickoffPacket` is built before broad or deep source descent and
+  classifies every incoming `DH-*` exactly once as an auto-decision,
+  evidence-resolution item, or exception-qualified technical-owner question.
+- Any technical-owner questions are presented in one consolidated kickoff
+  decision sheet. Their answers are recorded before deep design; a newly found
+  exception stops the revision for a new kickoff instead of creating a mid-design
+  drip of questions.
+- Kickoff answers never count as final design approval. Final approval is a
+  separate later interaction after the persisted design revision is presented.
+- Reversible API, DTO, DB, index, query, ordering implementation, tie-breaker,
+  cache, component, file, test, deployment, and rollback choices that preserve
+  the approved user result are resolved from bounded source evidence as
+  `DEC-*`; they are not questions for the product approver.
+- Every `TQ-*` names the technical owner and exactly one allowed human-decision
+  reason: material cost/operational responsibility, security/privacy, data
+  loss, or irreversible migration. A source fact gap is Evidence-Resolution,
+  not a request for a human guess.
+- If the answer changes visible result, scope, rule, AC, or success judgment,
+  the design emits product feasibility feedback instead of closing it as
+  `DEC-*` or `TQ-*`.
+- Behavioral Analogue and Reuse Assessment is complete before any new timer,
+  session, reward, activity-detector, or dedup architecture. Every candidate is
+  classified `REUSE`, `EXTEND`, `NEW`, or `NOT_APPLICABLE` with evidence and
+  boundary rationale. A design missing the reuse assessment is `partial` or
+  `NEEDS_WORK`, not ready and not task-eligible.
 
 ### Impact Assessment Audit
 
@@ -224,6 +262,10 @@ The full result is the review working record and is summarized in Appendix A.
   decisions or bounded risk acceptance and `TQ-*` owns new technical questions.
   Meeting agenda rows cite `O-*` or `TQ-*`; they do not preassign `DEC-*` to an
   undecided item.
+- `DH-*` remains the PRD-owned design handoff id. Each handoff is visible in the
+  Technical Decision Packet and has exactly one disposition. Reversible
+  implementation alternatives that preserve the approved result do not remain
+  as meeting questions.
 - AS-IS names the affected current boundary and critical call flow using only
   confirmed facts. TO-BE uses the same boundary and stable ids so the delta is
   visually and semantically comparable. Candidate edges are visibly candidate
@@ -287,6 +329,8 @@ The full result is the review working record and is summarized in Appendix A.
   approval does not count. `partial`, `blocked`, or `NEEDS_WORK` never creates or
   overwrites `tasks.md`; Evidence-Resolution stays in design §11.
 - Prospective, blanket, or same-request approval is invalid for the task gate.
+- Technical kickoff answers are decision inputs, not approval of a design that
+  has not yet been persisted and presented.
 - The task gate remains closed while any candidate-only edit target, result-changing
   open `O-*`/`TQ-*`, implicated `UNKNOWN`, missing exact API/screen route, or missing
   test file/symbol/command remains.
@@ -299,7 +343,9 @@ The full result is the review working record and is summarized in Appendix A.
 
 ## Finding Severity
 
-Put missing canonical change rows, blank impact surfaces, invalid negative
+Put missing or duplicated `DH-*` dispositions, an implementation-only question
+aimed at the product approver, a `TQ-*` without an allowed reason/technical
+owner, missing canonical change rows, blank impact surfaces, invalid negative
 claims, unaccepted implicated unknowns, missing `VER-*` mappings, stale required
 impact, incomplete Appendix A-10 ledgers, unavailable fields, incomplete state
 coverage, unproven commands, checkout mismatch, frontend topology gaps, and

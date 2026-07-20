@@ -8,6 +8,11 @@ description: Use when answering Platty project questions through configured read
 **Prerequisite:** Read `using-platty-mcp` before acting unless it has already
 been read in this turn.
 
+For an SDD authoring, impact-approval, or design caller, also read
+`../using-platty-mcp/references/sdd-question-ownership.md` before building the
+Search Brief. Retrieval must distinguish source-confirmable facts, product
+choices, and technical-design choices before it returns a question or handoff.
+
 Platty MCP retrieval is map-first: browse project, epic, document-item, and
 spec maps before search hits.
 
@@ -16,6 +21,17 @@ For broad, domain-term, business-rule, data-field, system-design, capability,
 journey, comparison, inventory, or semantic impact-seed questions, do not answer and do not
 treat search as proof until the Full-Cycle Retrieval Ladder has been completed
 or a required MCP surface is reported missing.
+
+The only exception is the `Initial Product Intent Gate` for an SDD product
+caller. It may ask one raw-intent question before deep or full-cycle retrieval
+when two materially different user-visible interpretations are explicit in the
+request. It must make no existing-system claim and must not ask a `FACT` or
+`DESIGN` question.
+
+For a time-based reward threshold with no stated reward cadence, that exception
+is mandatory: ask once-per-visit/window versus repeated-threshold earning before
+overview, glossary, EPIC, document, or source retrieval. An existing reward
+pattern cannot choose this user-visible earning policy.
 
 Do not call `document_search`, `ssot_search`, `spec_search`, `code_search`, or
 `graph_trace` first. Build project overview, vocabulary when needed, epic map,
@@ -99,15 +115,24 @@ convergence.
 
 1. Resolve project context and context status.
 2. Confirm the MCP capability tier needed for the question.
-3. Run the Search Clarification Gate when the question is broad or ambiguous.
-4. Run the Full-Cycle Retrieval Ladder for broad or semantic branches.
+3. For an SDD product caller, run the Initial Product Intent Gate before deep
+   retrieval and pause only when the raw request has a material user-visible
+   ambiguity. Apply the answer to narrow the Search Brief.
+4. Run the remaining Search Clarification Gate and Full-Cycle Retrieval Ladder
+   for broad or semantic branches.
 5. For an observable impact trigger, produce or reuse the Impact Seed Packet;
    otherwise traverse exact specs or source evidence required by the selected
    retrieval branch.
 6. Account for relevant memory overlays without treating them as SOT or source
    proof.
-7. Run the Final Route Audit.
-8. Answer with evidence boundary, direct evidence, inference, memory overlay,
+7. When the request proposes or compares a timer, session, activity detector,
+   reward, state transition, deduplication, or limit mechanism, run the
+   Behavioral Analogue and Reuse Sweep before returning a `NEW` claim.
+8. Classify unresolved items as `FACT`, `PRODUCT`, or `DESIGN` for an SDD
+   caller. Resolve `FACT`, return safe recommended `PRODUCT` assumptions, and
+   preserve `DESIGN` items for the owning design phase.
+9. Run the Final Route Audit.
+10. Answer with evidence boundary, direct evidence, inference, memory overlay,
    and missing MCP surfaces separated.
 
 If the answer needs correction recording, re-anchoring, refresh, sync, or
@@ -124,7 +149,8 @@ generation, report a boundary gap.
 | Treat `code_search` and MCP `readonly_workspace_shell` as a pair for code claims: find candidate files/symbols, then read bounded source before asserting exact behavior. | Stop at `code_search` when source code must be inspected. |
 | Use `workspace_git_history` and `workspace_sync_status` only for managed-worktree Git questions, preserving `networkChecked: false` and deployment limits. | Call cached refs “latest GitHub” or “production deployment,” or send `git log` through `readonly_workspace_shell`. |
 | After reading an exact BR/DD/DESIGN/UCL item, call `document_resolve(itemId)` before source-near search unless the answer is purely conceptual. | Jump from a business item to `document_search` or `spec_search` without first resolving linked context. |
-| Ask one clarifying question only after MCP evidence leaves tied interpretations. | Ask the user before using MCP evidence to reduce ambiguity. |
+| For SDD product work, use the Adaptive Product Interview: one question at a time, research the affected boundary, reclassify, and continue until no material `PRODUCT` decision remains. | Stop because a question count was reached, ask an existing `FACT`, or ask the user to choose a `DESIGN` item. |
+| Stop expanding the selected branch after the required rungs establish the requested result and remaining uncertainty is design-owned. | Read every remotely related document, spec, or source path merely because it is available. |
 
 ## Code Search And Source Ladder
 
@@ -139,6 +165,33 @@ For exact code claims, follow `workspace_repo_list -> select repo ->
 readonly_workspace_shell search -> exact source read`. The bounded source read
 is required for exact behavior claims. If missing workspace or source tools
 prevent that read, report a partial capability gap and use no local fallback.
+
+## Behavioral Analogue and Reuse Sweep
+
+Before declaring a reusable mechanism `NEW`, derive a behavior signature from
+the proposed user result:
+
+```text
+- trigger
+- activity predicate
+- time or accumulation
+- surface continuity
+- reward or state change
+- deduplication or limits
+```
+
+Search adjacent EPICs, domains, and repositories by behavior synonyms as well
+as feature names. A strong candidate requires exact document/item and connected
+spec reads; implementation reuse claims also require the normal source ladder.
+Classify each candidate as `REUSE`, `EXTEND`, `NEW`, or `NOT_APPLICABLE`, with
+the matching and mismatching signature fields and the boundary that prevents or
+permits reuse. Stop expansion after a strong owning precedent and its relevant
+boundary are confirmed; this is a bounded analogue sweep, not an instruction to
+read every adjacent domain.
+
+The caller must not classify a timer, session, activity detector, reward,
+state-transition, or deduplication mechanism as `NEW` without completing this
+analogue or reuse sweep, or naming the exact MCP coverage gap that prevented it.
 
 ## Workspace Git History And Freshness
 
@@ -198,6 +251,9 @@ Search Brief
 - Question branch:
 - Ambiguity triggers:
 - Candidate interpretations:
+- Ownership by unresolved item: FACT | PRODUCT | DESIGN
+- Recommended product assumption:
+- Design decision handoff:
 - Raw terms:
 - Korean candidate terms:
 - English candidate terms:
@@ -206,11 +262,40 @@ Search Brief
 - Search-assist queries attempted:
 - Candidate MCP route:
 - User decision needed:
+- decisionLedger:
+- productInterviewRounds:
+- remainingProductDecisions:
 ```
 
-Keep the Search Brief in runtime context only. Use MCP evidence before asking
-the user. Ask one clarifying question only when evidence leaves tied
-interpretations, and include the recommended interpretation.
+Keep the Search Brief in runtime context only.
+
+### Initial Product Intent Gate
+
+Before deep retrieval or a full-cycle retrieval, ask one question when the raw idea
+itself has two materially different user-visible interpretations and choosing
+the wrong one would materially redirect the evidence branch. Ask only what the
+user intends, one question per message, without claiming current-system facts.
+Record the round in `productInterviewRounds`, then narrow the Search Brief from the answer.
+Skip this gate when the request is already specific or a safe existing product
+default can be evaluated without choosing between user-visible outcomes. Do not
+apply that skip to a time-based reward whose cadence is unstated; once versus
+repeated earning is itself the material user-visible outcome.
+
+### Post-Research Product Gate
+
+After MCP evidence, rank tied `PRODUCT` interpretations with materially
+different user-visible results and ask the highest-priority one with the
+recommended interpretation. Record it in `decisionLedger` and
+`productInterviewRounds`, research the newly affected boundary, then reclassify
+the remaining items. Source-confirmable `FACT` items are retrieval work.
+API, DB, field, enum, migration, cache, query, ordering implementation,
+tie-breaker, component, file, test, deployment, and rollback alternatives are
+`DESIGN` handoff items, not Search Clarification questions.
+
+This is an Adaptive Product Interview with no arbitrary question cap. Repeat
+research and reclassification until `remainingProductDecisions` is empty. Never
+force a question when no material product ambiguity remains. Final product approval
+is a separate gate and is not an interview round.
 
 ## Full-Cycle Retrieval Ladder
 
@@ -222,6 +307,12 @@ Final Route Audit.
 Each rung is list/map first, exact detail second. Overview, artifacts, catalog
 rows, glossary output, and search hits orient only. For the ladder and audit,
 read `references/full-cycle-retrieval.md`.
+
+Completing the ladder means completing the required rungs for the selected
+question branch and target set. It does not require expanding every adjacent
+EPIC, document payload, connected spec, or source candidate after exact evidence
+has established the requested result. Preserve remaining implementation
+candidates as `DESIGN` handoff instead of extending product retrieval.
 
 ## Branch Table
 
@@ -272,9 +363,12 @@ reads; full-cycle maps cannot be built; only search candidates exist; raw and
 normalized terms split; broad inventory/impact seed lacks a target map; or required
 source confirmation tools are missing.
 
-If MCP evidence leaves tied interpretations, ask one clarifying question with a
-recommended interpretation. Stop only when ambiguity cannot be resolved within
-MCP evidence.
+If the raw idea requires initial product-intent clarification, ask it before
+deep retrieval. If MCP evidence later leaves tied `PRODUCT` interpretations,
+ask one at a time with a recommended interpretation, research the affected
+boundary, and reclassify. Stop interviewing only when there are zero unresolved
+`PRODUCT` decisions. Never stop to ask the user to choose a source-confirmable
+`FACT` or an implementation-only `DESIGN` option.
 
 If evidence is weak, name the next read-only MCP surface. If that requires
 refresh, export, sync, generation, memory write, or local files, report a
@@ -285,6 +379,19 @@ configuration/boundary gap.
 Before every final answer, audit the route in runtime context. If a required
 rung is missing, perform the MCP step or weaken/stop; never turn audit failure
 into a confident claim. Checklist: `references/full-cycle-retrieval.md`.
+
+For an SDD caller, include a runtime-only `questionOwnershipAudit` containing:
+
+```text
+- factItems: resolved evidence or exact coverage limit
+- productItems: adopted recommendation or tied user-visible choice
+- designItems: preserved handoff items
+- decisionLedger: ordered product decisions and evidence effects
+- productInterviewRounds: ordered question and answer history
+- remainingProductDecisions: ranked unresolved PRODUCT decisions
+- userQuestion: none or the current one PRODUCT question
+- stopReason: zero unresolved PRODUCT decisions | waiting for product answer | capability gap
+```
 
 ## Stakeholder Answer Shape
 

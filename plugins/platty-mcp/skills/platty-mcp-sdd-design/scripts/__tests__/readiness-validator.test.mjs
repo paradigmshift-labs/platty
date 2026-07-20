@@ -6,6 +6,10 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import test from 'node:test'
+import {
+  computeDesignRevision,
+  parseSddArtifact,
+} from '../../../using-platty-mcp/scripts/sdd-artifacts.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const skillRoot = resolve(here, '../..')
@@ -33,6 +37,23 @@ const canonical = (value) => Array.isArray(value)
     : value
 const digest = (value) => `sha256:${createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex')}`
 const productInputFingerprint = digest({ requestRevision, requestStatus: 'approved', storiesRevision, storiesStatus: 'approved' })
+
+test('validator accepts the shared helper revision with a normal blank line after frontmatter', () => {
+  const firstPass = validDesign()
+  const withBlankLine = firstPass.replace(/^---\n([\s\S]*?)\n---\n# 설계/, '---\n$1\n---\n\n# 설계')
+  const parsed = parseSddArtifact('system_design.md', withBlankLine)
+  const helperRevision = computeDesignRevision(parsed)
+  const design = withBlankLine.replace(
+    /^designRevision: "[^"]+"$/m,
+    `designRevision: "${helperRevision}"`,
+  ).replace(/^approvedRevision: "[^"]+"$/m, `approvedRevision: "${helperRevision}"`)
+
+  const { run, report } = validate(design, validTasks(design))
+
+  assert.equal(run.status, 0)
+  assert.equal(report.verdict, 'PASS')
+  assert.equal(report.criticalFindings.length, 0)
+})
 
 function validDesign(
   commandResult = 'EXPECTED_RED',
@@ -98,6 +119,7 @@ ${responseFieldRow}
 schemaVersion: "sdd-design.v2"
 id: "SPEC-test"
 type: "sdd-design"
+status: "approved"
 projectId: "P"
 outputLanguage: "ko"
 derivedFrom: ["prd.md", "user_stories.md"]
@@ -106,6 +128,9 @@ requestStatus: "approved"
 storiesRevision: "${storiesRevision}"
 storiesStatus: "approved"
 designRevision: "${designRevision}"
+approvedRevision: "${designRevision}"
+approvedAt: "2026-07-19T00:00:00Z"
+approvedBy: "user"
 productInputFingerprint: "${productInputFingerprint}"
 evidenceFingerprint: "${evidenceFingerprint}"
 review:
@@ -213,8 +238,11 @@ query.from: LocalDate (required)
 ### 2.3 backend 검증
 - [ ] Test: \`src/X.test.ts\` — \`returnsX\`
 - [ ] RED: \`npm test -- X.test.ts\` — endpoint가 없어 404 assertion 실패를 확인한다.
+- [ ] Minimal implementation: \`src/X.ts\`와 \`src/XResponse.ts\`에 endpoint와 mapper만 추가한다.
 - [ ] GREEN: \`npm test -- X.test.ts\` — 200과 response schema가 통과한다.
 - [ ] Regression: \`npm test -- Existing.test.ts\` — 기존 조회 계약이 통과한다.
+- [ ] Self-review — spec coverage: CHG-01 / VER-01 / API-01의 변경과 검증 연결을 확인한다.
+- [ ] Commit checkpoint: backend API 변경을 하나의 검토 가능한 경계로 기록한다.
 
 설계 근거: CHG-01 / VER-01 / API-01 / EDIT-01 / NOEDIT-01
 
@@ -475,6 +503,29 @@ test('rejects a v4 checklist without exact RED GREEN and regression commands', (
   const { run, report } = validate(design, broken)
   assert.equal(run.status, 1)
   assert.ok(report.criticalFindings.some((finding) => finding.code === 'TASK_VERIFICATION_CHECKLIST_INCOMPLETE'))
+})
+
+test('rejects a v4 changed module that omits its minimal implementation, spec review, or commit checkpoint', () => {
+  const design = validDesign()
+  const broken = validV4Tasks(design)
+    .replace('- [ ] Minimal implementation:', '- [ ] 구현:')
+    .replace('- [ ] Self-review — spec coverage:', '- [ ] 자체 검토:')
+    .replace('- [ ] Commit checkpoint:', '- [ ] 커밋:')
+  const { run, report } = validate(design, broken)
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'TASK_MODULE_CHECKLIST_INCOMPLETE'))
+})
+
+test('rejects tasks projected from a design without persisted approval metadata', () => {
+  const approved = validDesign()
+  const draft = approved
+    .replace('status: "approved"', 'status: "draft"')
+    .replace(/^approvedRevision:.*\n/m, '')
+    .replace(/^approvedAt:.*\n/m, '')
+    .replace(/^approvedBy:.*\n/m, '')
+  const { run, report } = validate(draft, validV4Tasks(approved))
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'DESIGN_APPROVAL_INVALID'))
 })
 
 test('rejects a design body changed without a new canonical designRevision', () => {
