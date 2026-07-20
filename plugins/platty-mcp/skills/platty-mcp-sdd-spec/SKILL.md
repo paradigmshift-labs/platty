@@ -15,6 +15,9 @@ then uses `platty-mcp-impact-analysis` to persist the impact snapshot under
 
 Use `../using-platty-mcp/references/sdd-revision-contract.md` for every product
 revision and downstream fingerprint value.
+Use `../using-platty-mcp/references/sdd-question-ownership.md` before turning
+retrieval uncertainty into a product assumption, open question, blocker, or
+design handoff.
 
 All reader-facing output is Korean. Keep code identifiers, API paths, file
 paths, status values, and quoted evidence in their original form.
@@ -26,6 +29,7 @@ paths, status values, and quoted evidence in their original form.
 3. Use `platty-mcp-impact-analysis` for a product-scope review covering policy,
    journey, data, EPIC, API, and screen impact, then build the impact snapshot
    after the request and story drafts exist.
+4. Apply the shared SDD question-ownership contract to every unresolved item.
 
 This impact review checks product requirements for the affected policy, journey,
 data, EPIC, API, and screen scope before the drafts are finalized.
@@ -43,23 +47,77 @@ Use `platty-mcp-retrieval` alone for retrieval-only answers. Use this skill when
 the task should create SDD planning files from MCP evidence and save them in the
 local Platty specs directory.
 
+## Adaptive Product Interview
+
+Use brainstorming-style progressive clarification with one question at a time
+and no arbitrary question limit. Track `decisionLedger`,
+`productInterviewRounds`, and ranked `remainingProductDecisions` in runtime
+context. After every answer, narrow the Search Brief, research only the affected
+boundary, reclassify unresolved items, and continue only if a material `PRODUCT`
+decision remains. Do not rerun completed evidence branches.
+
+Zero questions is correct for a specific request whose safe product default is
+supported by current evidence. Five, ten, or more questions are valid when that
+many material product decisions remain. Stop interviewing only when there are
+zero unresolved `PRODUCT` decisions; a numeric question count is never the stop
+condition. The final product approval after both drafts are saved is a separate
+gate, not an interview round.
+
+Question priority is: target user/eligibility/surface/journey continuity first;
+money/reward/permission/privacy/notification/irreversible result second;
+cadence/duplication/limits/exceptions/failure behavior third; and reversible
+feedback preferences last. A safe existing limit or policy can be a
+recommendation, but it must not displace a material surface, eligibility, or
+journey question.
+
+One ambiguity is mandatory, not optional: a time-based reward request that gives
+a threshold but omits reward cadence. “Once per visit or eligibility window” and
+“repeat whenever the threshold elapses” create materially different earnings,
+abuse incentives, and budget exposure. The route must use the initial question
+to select that user-visible policy before overview, glossary, EPIC, document, or
+source retrieval. An existing reward pattern may support the recommendation,
+but it cannot choose the product policy on the user's behalf. Skip this special
+case only when the raw request already states the cadence or repetition limit.
+
+`FACT` items remain retrieval work and `DESIGN` items remain the
+technical-design handoff. Neither is a product interview question. When a later
+MCP read exposes another material `PRODUCT` ambiguity, add it to
+`remainingProductDecisions` and continue the same adaptive loop.
+
 ## Operating Flow
 
 1. Confirm MCP capability tier and project context through `using-platty-mcp`.
-2. Route the idea through `platty-mcp-retrieval`.
-3. Require a Search Brief for broad, domain-term, policy, data, journey, or
+2. Build a raw Product Intent Brief. Before deep retrieval, ask only when two
+   materially different user-visible meanings are already present. A time-based
+   reward with an unstated reward cadence must ask before broad evidence. On
+   answer, narrow the target branch and resume the Adaptive Product Interview.
+3. Route the narrowed idea through `platty-mcp-retrieval`.
+4. Require a Search Brief for broad, domain-term, policy, data, journey, or
    impact ideas.
-4. Require the retrieval full-cycle ladder before SDD product claims.
-5. Stop if minimum retrieval or a selected branch's required evidence surface is
+5. Require the retrieval full-cycle ladder before SDD product claims.
+6. Stop if minimum retrieval or a selected branch's required evidence surface is
    missing.
-6. Require the retrieval packet to distinguish document-map evidence resolved
-   with `document_resolve` from candidates, then build an SDD packet from direct evidence, inference boundaries,
-   coverage limits, assumptions, confirmed decisions, and open questions.
-7. Draft `prd.md` content through §8 by applying the request template.
-8. Always draft `user_stories.md` with `prd.md` by applying the stories template.
+7. Require the retrieval packet to distinguish document-map evidence resolved
+   with `document_resolve` from candidates and include its runtime-only
+   `questionOwnershipAudit`.
+8. Classify each unresolved item as `FACT`, `PRODUCT`, or `DESIGN`. Resolve
+   `FACT` through retrieval or record its exact evidence boundary. Split mixed
+   items instead of exposing the technical part as a product question.
+9. Apply a safe `PRODUCT` recommendation when the user's visible result is
+   specific and current evidence supports one reversible existing flow. Record
+   the adopted recommendation as `D-*` and close the related `O-*`. When tied
+   user-visible `PRODUCT` choices remain, rank them by material user effect, ask
+   one question, record it in `decisionLedger`, research the newly affected
+   boundary, and reclassify. Repeat until `remainingProductDecisions` is empty.
+10. Preserve every `DESIGN` item in the Design Decision Handoff. API, DTO, DB,
+   index, migration, cache, query, ordering implementation, tie-breaker,
+   component, file, test, deployment, and rollback choices do not block product
+   drafting when they preserve the proposed user result.
+11. Draft `prd.md` content through §8 by applying the request template.
+12. Always draft `user_stories.md` with `prd.md` by applying the stories template.
    If the request has unresolved questions, keep stories as draft and surface the
    assumptions used to split scenarios.
-9. Before detailed source descent, build a **Macro Approval Packet** across the
+13. Before detailed source descent, build a **Macro Approval Packet** across the
    raw idea, users, problem, scope/non-scope, proposed `R-*`/`AC-*`, stories,
    and `H-*`. Mark each promise approval-critical when it adds or changes money
    movement, privileged mutation, permission, irreversible state, notification
@@ -67,21 +125,21 @@ local Platty specs directory.
    facts needed to decide whether those promises are feasible and safe; defer
    exact edit targets, exhaustive consumers, tests, and implementation details
    that do not change the product promise to `platty-mcp-sdd-design`.
-10. Run product Self Review across the raw idea, requirement inputs, retrieval
+14. Run product Self Review across the raw idea, requirement inputs, retrieval
    packet, PRD §0–§8, and all stories. Apply `review -> revise -> review` until
    the product pair is internally consistent. Do not run impact against a product
    body that may still be revised.
-11. Persist both draft files together. The PRD may contain the §9 heading and a
+15. Persist both draft files together. The PRD may contain the §9 heading and a
     pending marker at this point; no impact claim may be made from that marker.
-12. Compute the finalized `productSegmentRevision` from PRD §0–§8 and
+16. Compute the finalized `productSegmentRevision` from PRD §0–§8 and
     `storiesRevision` from stable stories frontmatter and body, excluding the
     mutable status. Review policy,
     journey, data, EPIC, API, and screen impact, then invoke
     `platty-mcp-impact-analysis` with both revisions and the seed packet.
-13. Impact analysis alone replaces the final §9 and binds the dossier to those
+17. Impact analysis alone replaces the final §9 and binds the dossier to those
     two revisions. Reread `prd.md` and verify the bound revisions,
     `impactRevision`, status, freshness, source parity, and coverage limits.
-14. Run final cross-document Self Review without rewriting §0–§8 or stories.
+18. Run final cross-document Self Review without rewriting §0–§8 or stories.
     Require every §9 coverage limit to name affected product/story ids and an
     approval impact of `BLOCKING` or `NON_BLOCKING`. A missing required retrieval
     rung, unread permission/write/payment/notification branch, or unverified new
@@ -95,9 +153,9 @@ local Platty specs directory.
     BLOCKING until proven, narrowed out of scope, or explicitly decided.
     If
     a product change is required, update both product files, reset their status
-    to `draft`, and restart from step 9 so impact is regenerated for the new
+    to `draft`, and restart from step 12 so impact is regenerated for the new
     revisions. Persist and read back the final pair before reporting completion.
-15. Accept a feasibility-feedback packet from `platty-mcp-sdd-design` when
+19. Accept a feasibility-feedback packet from `platty-mcp-sdd-design` when
     bounded source reads disprove an approved product premise or show that a
     requirement needs data, attribution, policy, or a user surface that the
     approved scope forbids. Reopen only the affected `R-*`, `AC-*`, `D-*`,
@@ -160,12 +218,16 @@ PRD §0 must name what the current review is being asked to approve by linking
 the existing scope, `R-*`/`AC-*`, `O-*`, and `H-*` items. PRD §8 must make a
 success decision possible: record the observed baseline, target or decision
 rule, measurement period, owner, and linked rules. Unknown baselines or targets
-stay attached to `A-*` or `O-*`; do not invent a number to complete the table.
+stay attached to `A-*`, `O-*`, or a bounded baseline-collection decision; do not
+invent a number to complete the table or ask the user to guess one.
 `baseline 대비 개선`, `측정 후 확정`, or an unbounded directional goal is not
 an executable success decision. Every `H-*` needs either a numeric target or a
 decision rule with a comparison window, minimum sample or guardrail when
-relevant, owner, and the exact outcome of pass versus fail. If that cannot be
-chosen yet, keep the pair `NEEDS_WORK` and link the gap to an open `O-*`.
+relevant, owner, and the exact outcome of pass versus fail. When the approved
+visible result does not depend on an unknown number, a bounded collection
+window plus an executable post-collection pass/fail decision is sufficient;
+instrumentation remains `DESIGN`. If neither a product target nor such a rule
+can be chosen, keep the pair `NEEDS_WORK` and link the gap to an open `O-*`.
 
 ## Local Persistence
 
@@ -234,6 +296,19 @@ SDD Packet
 - assumptions
 - confirmedDecisions
 - openQuestions
+- productDiscovery
+  - decisionLedger
+  - productInterviewRounds
+  - remainingProductDecisions
+  - finalApprovalSeparate: true
+- questionOwnershipAudit
+  - factItems
+  - productItems
+  - designItems
+  - userQuestion
+  - stopReason
+- recommendedProductAssumptions
+- designDecisionHandoff
 - coverageLimits
 - impactSeedPacket
 - impactDossier
@@ -270,12 +345,29 @@ Carry forward the local `platty-sdd-spec` request states:
 - `approved` only after explicit user approval.
 
 On a later explicit approval message, reread both persisted files and the final
-Self Review result. Recompute `productSegmentRevision` and `storiesRevision`,
+Self Review result. Recompute `productSegmentRevision` and `storiesRevision`
+with the shared executable helper at
+`../using-platty-mcp/scripts/sdd-artifacts.mjs` (resolved relative to this skill):
+parse the persisted files with `parseSddArtifact`, then call
+`computeRequestRevision` and `computeStoriesRevision` on those parsed
+artifacts. Do not reimplement the revision algorithm, strip the first body
+newline, call `trim`/`trimStart`, or otherwise normalize document bodies outside
+that helper.
+
+If either recomputed revision differs from the revision embedded in PRD §9,
+treat it as a revision mismatch: invoke `platty-mcp-impact-analysis` to refresh
+§9 against the canonical helper values, keep both files `draft`, reread them,
+and stop for a later explicit product approval. The approval message that
+exposed the mismatch cannot also approve the refreshed evidence revision.
+
+Only when the canonical revisions already match may the approval gate
 verify that PRD §9 is bound to both values and has no blocking coverage finding,
 then change both statuses to `approved` in one operation. Also verify that every
 approval-critical promise has no open product decision and every `H-*` has an
 executable success decision. Technical implementation detail may remain for
-design only when it cannot change the promised user result. Read both files back
+design only when it cannot change the promised user result. It must remain in
+the PRD's Design Decision Handoff or the exact §9 coverage limit rather than
+becoming a product `O-*`. Read both files back
 and report the approved revisions. If either file changed, §9 is stale, or a
 blocking finding remains, keep both files `draft` and return to the relevant
 review/impact step. Any later product edit resets both statuses to `draft`.
@@ -310,6 +402,8 @@ Apply this review sequence:
    BR/DD/DESIGN/UCL maps, exact items, `document_get` and attached memory
    overlays when relevant, `document_resolve`, selected `spec_get` plus
    `spec_resolve`, source snippets for exact claims, and unread surfaces.
+   Import `questionOwnershipAudit` and verify every unresolved item has exactly
+   one owner or was deliberately split into product and technical parts.
 3. Check statuses, enums, thresholds, metrics, scope, and terminology for
    contradictions or unsupported promotion from inference to decision.
    When review is triggered by design feasibility feedback, distinguish a
@@ -322,6 +416,9 @@ Apply this review sequence:
    Also verify the inverse: when the recommended answer was adopted, the
    matching `O-*` is closed and linked to `D-*`. A future revisit condition does
    not make the current decision open.
+   Reject any open `O-*` whose answer is source-confirmable `FACT` or
+   implementation-only `DESIGN`. Verify every deferred technical item appears
+   in the Design Decision Handoff with the invariant user result.
 5. Verify that the story overview exactly matches the detailed story ids,
    users, outcomes, scenario ids/counts, rule/acceptance links, and affected
    assumptions/questions.
@@ -342,8 +439,11 @@ Apply this review sequence:
    every §9-8 limit has affected ids and `BLOCKING | NON_BLOCKING`; any BLOCKING
    row or BLOCKED promise makes the verdict `NEEDS_WORK`.
 10. Reject success hypotheses whose target is only directional or deferred.
-    Require a numeric target or executable pass/fail decision rule; otherwise
-    keep the linked `O-*` open and the verdict `NEEDS_WORK`.
+    Require a numeric target or executable pass/fail decision rule. A bounded
+    baseline-collection window plus an exact post-collection decision rule can
+    satisfy this when the current product promise does not depend on the number;
+    its instrumentation stays design-owned. Otherwise keep the linked `O-*`
+    open and the verdict `NEEDS_WORK`.
 11. Compare every `H-*` pass/fail rule with every linked normal and exception
     scenario. Distinguish notification attempted, provider accepted, delivered,
     and user-observed outcomes; a channel-failure scenario cannot coexist with
@@ -360,25 +460,47 @@ does not mean user approval.
 
 ## Answer Contract
 
-Use this default response shape:
+Use this default response shape. The first review surface is product language;
+do not lead with full markdown or internal ids:
 
 ```text
-## prd.md draft
-<full markdown>
+## 이번에 바뀌는 것
+- <사용자 관점 변화 3~5개>
 
-## user_stories.md draft
-<full markdown>
+## 제가 적용한 추천안
+- <평이한 결정과 이유>
 
-## Local persistence
-Saved:
+## 확인이 필요한 충돌
+- <없음 또는 진짜 PRODUCT 충돌 하나>
+
+이 방향으로 기획을 승인할까요?
+
+## 저장된 기획 문서
 - ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/prd.md
 - ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/user_stories.md
 
-Impact evidence is the final §9 of `prd.md`; it is not a separate path.
+조사 근거는 기획서 마지막에 함께 저장했습니다.
 
-## Self Review
-<verdict, blocking findings, warnings, and remaining coverage gaps>
+## 자체 검토 결과
+<검토 가능 또는 보완 필요, 승인을 막는 내용, 설계에서 이어서 정할 내용>
 ```
+
+The saved files retain full `R-*`, `AC-*`, `D-*`, `A-*`, `O-*`, `H-*`,
+evidence, and design handoff detail. Show the full markdown in chat only when
+the user asks for it.
+
+Before sending the first review, perform a wording audit over the chat response:
+replace code-field names, English implementation labels, and backticked
+identifiers with ordinary product language. In this workflow, write `가장
+우선인 공지` instead of ``priority`` or `priority가 가장 낮은 공지`. Exact
+identifiers remain in the saved evidence and design handoff, not in the
+non-developer approval summary.
+The final product approval question is separate from the Adaptive Product
+Interview and cannot close a product decision that the interview left open.
+Translate internal review statuses too: use `검토 가능` or `보완 필요`, not
+`PASS`, `NEEDS_WORK`, `partial`, `blocking finding`, `coverage gap`, `Local
+persistence`, or `Self Review`. Keep exact filenames only where the user needs
+the saved-document links. Show raw statuses and evidence labels only on request.
 
 Use "확인됨" only for exact MCP reads. Use "후보", "근거상 보임", or
 "추가 확인 필요" for search candidates, partial evidence, inferred behavior, or
@@ -410,6 +532,14 @@ missing source parity.
 | Returning a prose SDD summary | Apply the request/stories templates and include all required sections. |
 | Treating story Rule coverage as complete requirement coverage | Compare every user input and MCP evidence source in Requirement Coverage. |
 | Skipping retrieval audit because files are readable | Import the Final Route Audit and return `NEEDS_WORK` when a required rung is missing. |
+| Asking the non-developer to choose an API, table, field, query, ordering implementation, or tie-breaker | Keep the visible result in product scope and preserve technical alternatives in the Design Decision Handoff. |
+| Re-asking a specific user direction that matches a safe existing flow | Apply it as the recommended product decision, draft first, and include it in the final product approval summary. |
+| Running the full retrieval ladder before clarifying a raw, materially different user-visible scope | Ask one initial product-intent question, narrow the Search Brief from the answer, and then retrieve only the selected branch. |
+| Using an existing reward pattern to choose an unstated time-based reward cadence | Ask once-versus-repeat before broad evidence; existing behavior may inform the recommendation but cannot replace the user's visible earning-policy decision. |
+| Treating final approval as permission to skip an open product decision | Keep approval separate; continue the Adaptive Product Interview until `remainingProductDecisions` is empty. |
+| Reimplementing product revision hashes or trimming parsed bodies during approval | Use `sdd-artifacts.mjs` with `parseSddArtifact`, `computeRequestRevision`, and `computeStoriesRevision`; on any revision mismatch, refresh §9 through impact analysis and keep both files `draft` until a later approval. |
+| Leaving ``priority`` or another code-field name in the first review | Rewrite it as the user-visible result, such as `가장 우선인 공지`; keep the exact identifier only in persisted evidence. |
+| Ending the plain-language review with `Local persistence`, `Self Review`, `PASS`, or coverage terminology | Use `저장된 기획 문서` and `자체 검토 결과`, then say `검토 가능` or `보완 필요` and describe the remaining work in ordinary language. |
 | Letting design silently weaken an approved product promise | Reopen the affected product rows, reset both files to draft, regenerate §9, and require later explicit approval before ready design or tasks. |
 
 ## Verification

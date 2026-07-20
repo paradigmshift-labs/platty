@@ -85,6 +85,11 @@ order, and SOT projection boundary, read
 For SDD revision, approval, evidence fingerprint, and stale-plan calculations,
 read `references/sdd-revision-contract.md`.
 
+For SDD question ownership, safe product recommendations, non-developer review
+language, and technical-decision handoff, read
+`references/sdd-question-ownership.md` before retrieval for an SDD authoring
+route, product Self Review, impact approval review, or technical design.
+
 For SOT file roots and stored file content behavior, read
 `references/artifact-access.md`.
 
@@ -151,6 +156,11 @@ request, policy change, PRD need, or requirements discussion, use
 
 That skill must use `platty-mcp-retrieval` for evidence and invoke
 `platty-mcp-impact-analysis` for the final §9 Engineering Discovery appendix.
+It classifies unresolved items through the shared SDD question-ownership
+contract: retrieval owns source-confirmable facts, spec owns user-visible
+product decisions, and design owns implementation choices that preserve the
+approved result. Technical alternatives do not block the product drafts or
+become non-developer questions.
 It writes `prd.md` and `user_stories.md` directly to
 `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`, then verifies both files,
 including the final PRD §9 section. Impact binds §9 to the finalized product and
@@ -163,7 +173,9 @@ It may read both inputs from the selected SDD directory,
 writes `system_design.md`, and writes `tasks.md` only after explicit approval of the
 current design. It delegates Impact Dossier creation
 or refresh to `platty-mcp-impact-analysis`, which alone updates PRD §9 in this
-route.
+route. Design consumes the shared technical-decision handoff, resolves
+source-grounded reversible choices itself, and returns any product-result
+change to the product revision flow instead of silently deciding it.
 
 ## Memory Lifecycle Routing
 

@@ -30,8 +30,14 @@ and downstream fingerprints.
    confirmed edges, candidates, relation candidates, omissions, and truncation.
    Use `graph_trace` as the fast structural map of `screen ↔ API ↔ domain ↔ DB`
    plus related event/job/external paths; it never proves detailed behavior alone.
+   Follow the live MCP schema for every optional bound. Prefer to omit optional limit
+   fields when the default is sufficient; when setting `candidateLimit`, use the
+   current maximum 20. Never guess a larger value from another limit field.
 4. Traverse confirmed cross-EPIC evidence through
    `references/cross-epic-traversal.md`.
+   When a caller proposes a timer, session, activity detector, reward, state
+   transition, or deduplication mechanism, perform the Behavioral Analogue and
+   Reuse Assessment below across adjacent EPICs, domains, and repositories.
 5. Apply the affected-code-path coverage gate to every implementation anchor.
    The bounded path is not the whole repository: start at the affected UI/caller
    or API/event entry and cover the reachable domain/orchestration,
@@ -77,6 +83,20 @@ and downstream fingerprints.
    byte-for-byte, then verify the resulting `prd.md` is readable. If the PRD is
    absent, return control to `platty-mcp-sdd-spec` to persist the reviewed
    product pair first; do not create the PRD from impact analysis.
+
+## Behavioral Analogue and Reuse Assessment
+
+Converge cross-domain candidates by behavior, not only by feature name. Build a
+signature containing `trigger`, `activity predicate`, `time or accumulation`,
+`surface continuity`, `reward or state change`, and `deduplication or limits`.
+Use behavior synonyms to inspect adjacent EPICs, domains, and repositories, then
+read exact items, specs, graph paths, and bounded source for any strong candidate.
+
+Classify the result in the dossier handoff as `REUSE`, `EXTEND`, `NEW`, or
+`NOT_APPLICABLE`. Record matching fields, mismatches, ownership boundary, source
+commit, and the next read for any uncertainty. The impact route must not accept a
+`NEW` shared-mechanism claim without a completed analogue or reuse assessment,
+or an explicit coverage limit showing why that assessment could not be completed.
 
 ## Completion Gate
 

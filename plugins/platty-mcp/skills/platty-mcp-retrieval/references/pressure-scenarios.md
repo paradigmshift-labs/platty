@@ -17,6 +17,7 @@ expected route.
   exact-spec route
 - Scenario 17: managed-worktree Git history and deployment-boundary labeling
 - Scenarios 18-19: complete spec inventory versus exact targeted lookup
+- Scenario 20: product result already chosen while implementation alternatives remain
 
 ## Scenario 1: Korean Domain Term
 
@@ -692,3 +693,98 @@ after project overview and the relevant EPIC/document map are established
 -> spec_get(projectId, id=<selected-spec-id>)
 -> spec_resolve(projectId, id=<selected-spec-id>)
 ```
+
+## Scenario 20: Implementation Alternatives Are Not Tied Product Interpretations
+
+An SDD caller asks:
+
+```text
+홈 화면에 공지용 배너를 넣고 싶어. 지금 보여줄 수 있는 공지 중 우선순위가 가장 높은
+것 하나를 홈에서 가장 먼저 보여줘. 기존 서비스 기준으로 조사해서 기획 초안을 만들어줘.
+```
+
+MCP evidence shows an existing Home Banner flow that filters currently eligible
+banners and displays the smallest priority first. It also shows separate static
+announcement pages, so an agent could imagine either reusing Home Banner or
+creating a new announcement store, API, and ordering contract.
+
+Failure to prevent:
+
+- treating reuse versus new storage/API as tied product interpretations after
+  the requested visible result and safe existing host flow are already clear;
+- asking the user to choose a collection, API, field, enum, query, ordering
+  implementation, or tie-breaker;
+- translating a `DESIGN` alternative into a product clarification merely
+  because both implementations are technically possible;
+- continuing broad discovery after exact evidence is sufficient to return the
+  existing product flow, recommended product assumption, and design handoff.
+
+Expected route:
+
+```text
+Search Brief preserves the requested visible result
+-> confirm the existing Home Banner eligibility, order, first-item, and host-screen facts
+-> classify confirmed AS-IS behavior as FACT
+-> classify "eligible notice with the highest rank is the first banner" as PRODUCT
+-> return reuse of the existing visible flow as the recommended product assumption
+-> classify storage/API/field/query/order/tie-breaker alternatives as DESIGN handoff
+-> no user clarification because only technical alternatives remain
+-> SDD caller drafts first and asks for one plain-language product approval later
+```
+
+Observable pass criteria: retrieval returns no user question about technical
+alternatives, retains every unresolved technical item for design, and does not
+claim a new storage/API contract as product fact.
+
+## Scenario 21: Initial Community Reward Cadence Before Full Retrieval
+
+An SDD caller asks for a 30-second scroll reward but leaves once-per-visit/window
+versus repeated-threshold earning unstated.
+
+Observed RED baseline: retrieval asked no initial question and used 230,067
+tokens before an after-research PRODUCT question selected between those two
+surfaces.
+
+Expected route:
+
+```text
+Initial Product Intent Gate detects two visible earning cadences in the raw request
+-> ask one plain-language cadence question before deep or full-cycle retrieval
+-> narrow the Search Brief from the answer
+-> retrieve only the selected branch
+-> run a Behavioral Analogue sweep across adjacent reward/session domains
+-> Post-Research Product Gate asks one ranked PRODUCT question at a time
+-> research and reclassify until remainingProductDecisions is empty
+-> final product approval remains a separate gate
+```
+
+Observable pass criteria: no arbitrary question cap, one question per message,
+no existing-system claim in the initial reason, zero FACT or DESIGN questions,
+and no unresolved journey decision hidden by a safe existing limit.
+
+## Scenario 22: Community Store Explore Behavioral Analogue
+
+An SDD caller describes Community dwell rewards without using the Store Explore
+feature name. The behavior signature is: scroll trigger, active engagement,
+30-second accumulation, optional detail-route continuity, point award, and
+daily/lifetime deduplication.
+
+Failure to prevent:
+
+- searching only `community` and concluding the mechanism is new;
+- stopping at a broad reward policy without reading timer/session continuity;
+- claiming direct reuse from a name match without exact item/spec/source reads.
+
+Expected route:
+
+```text
+derive trigger/activity/time/surface/reward/dedup behavior signature
+-> search adjacent EPICs, domains, and repositories with behavior synonyms
+-> find StoreExploreSessionService and its reward policy candidates
+-> read exact documents/items, connected specs, and bounded source
+-> classify each boundary as REUSE, EXTEND, NEW, or NOT_APPLICABLE
+-> return evidence and mismatches to impact/design
+```
+
+Observable pass criteria: a `NEW` timer/session/reward/dedup claim is impossible
+until the bounded analogue sweep completes or an exact MCP coverage gap is named.
