@@ -60,7 +60,12 @@ When the user selects a project, or supplies the project name and short descript
 for a new one, create or select it and run `repo list` before every
 `repo add`. Reuse every verified registration and add only missing repositories
 or source roots. For each new registration collect the repository path, display name, analysis branch, and optional source root. Follow the owner skill's
-default-versus-current branch gate when the branch is omitted.
+default-versus-current branch gate when the branch is omitted: resolve
+`origin/HEAD`, then an existing `main`, then an existing `master`; recommend the
+verified default branch, normally `main` or `master`; present a differing
+current branch second as an explicit alternative instead; wait for confirmation;
+then pass the confirmed value as `--branch <branch>`. Never silently register a
+feature checkout.
 
 Before choosing registrations, inspect the Git root, root manifest, workspace declaration or metadata, and nested app or package manifests. When one Git root has no usable root manifest or workspace declaration but contains multiple independently analyzable nested app manifests, register the same absolute Git repository path once per app with a distinct `--source-root` and unique display names. Do not register application subdirectories as the repository path. Pass an explicit `--branch` on each registration and keep the `repo list`-before-add invariant.
 

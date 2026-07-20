@@ -43,7 +43,9 @@ npm install -g @paradigmshift/platty  # CLI 설치
 platty install                        # 에이전트 스킬 등록
 ```
 
-설치가 끝나면 새 AI 에이전트 세션을 시작하세요.
+기존 Platty 플러그인을 갱신하려면 `platty install`을 다시 실행해 최신 게시
+스킬을 받으세요. 설치 또는 갱신 후에는 새 Codex 또는 Claude Code 세션을
+시작하세요.
 
 ### 2. 온보딩 시작
 
@@ -112,6 +114,10 @@ platty install                        # 에이전트 스킬 등록
 `platty@platty` 플러그인을 감지된 모든 런타임에 설치합니다. 특정 런타임만
 선택하려면 `platty install --runtime codex` 또는
 `platty install --runtime claude`를 사용하세요.
+
+기존 Platty 플러그인을 갱신하려면 `platty install`을 다시 실행해 최신 게시
+스킬을 받으세요. 설치 또는 갱신 후에는 새 Codex 또는 Claude Code 세션을
+시작하세요.
 
 Codex 수동 설치 대안:
 

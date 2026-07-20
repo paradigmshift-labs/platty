@@ -247,15 +247,12 @@ Branch rule:
 - If the user says analysis should use `main`, the default branch, or any named
   branch, include `--branch <branch>` in `repo add`; do not assume `analyze`
   will move the source checkout.
-- If the user does not name a branch, inspect the repository's current checkout
-  and default-branch candidate before registering it. Prefer `origin/HEAD`,
-  then `main`, then `master` as the default-branch candidate.
-- If the default-branch candidate differs from the current checkout, ask the
-  user which branch Platty should analyze: the default branch, usually `main`,
-  or the current branch. Do not register the repository until the branch choice
-  is explicit.
-- After the user chooses, pass the chosen branch explicitly with
-  `--branch <branch>`.
+- When the user omits the analysis branch, resolve `origin/HEAD`, then an
+  existing `main`, then an existing `master`. Recommend that verified default
+  candidate, normally `main` or `master`. If the current branch differs,
+  present it second as an explicit alternative instead. Wait for confirmation,
+  then pass the confirmed value explicitly as `--branch <branch>`; never
+  silently register the feature checkout.
 - If a repository is already registered on the wrong branch, fix the
   registration before analysis:
 

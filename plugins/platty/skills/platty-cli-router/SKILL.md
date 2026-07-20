@@ -32,7 +32,7 @@ in `platty-mcp-server-setup`.
 | Need | Command or skill |
 | --- | --- |
 | Answer a question about the analyzed codebase locally (domain terms, epics, docs, specs, code locations, source confirmation) | `platty-retrieval` (read SOT projection + `platty sot resolve/glossary search`, `graph trace`, `code search/snippet`) |
-| Install ordinary Platty agent skills (non-MCP agent plugin) | `platty install --json`; MCP installation stays separate |
+| Install or refresh ordinary Platty agent skills (non-MCP agent plugin) | `platty install --json`; restart the agent session after success; MCP installation stays separate |
 | Installed first end-to-end project journey through repositories, analysis, LLM approval, and SOT output | `platty-onboarding` |
 | Initialize global Platty home (`~/.platty` or `PLATTY_HOME`) | `platty init` via `platty-setup` |
 | Create/select a project | `platty project ...` via `platty-setup` |

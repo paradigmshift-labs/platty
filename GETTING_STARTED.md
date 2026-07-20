@@ -61,6 +61,10 @@ platty install
 Use `platty install --runtime codex` or `platty install --runtime claude` when
 you want to target one runtime explicitly.
 
+Rerun `platty install` whenever you want to update an existing Platty plugin to
+the latest published skills. After installation or refresh, start a new Codex
+or Claude Code session.
+
 ### Codex manual fallback
 
 ```bash
@@ -165,9 +169,11 @@ platty init
 platty project list
 platty project create "My Project" --description "Repository analysis workspace"
 platty project use PROJECT
-platty repo add REPOSITORY_PATH --project PROJECT
+platty repo add REPOSITORY_PATH --project PROJECT --branch main
 platty status --project PROJECT
 ```
+
+Use `master` instead of `main` when `master` is the repository's default branch.
 
 Follow the `Next:` line printed by `platty status` or by the previous command.
 
