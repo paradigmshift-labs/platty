@@ -67,6 +67,15 @@ $platty:platty-onboarding .
 
 `.` means the repository in your AI assistant's current working directory.
 
+Onboarding uses your current conversation language. To choose a language
+explicitly, append the instruction to the invocation. If the conversation
+language is unclear, onboarding defaults to Korean.
+
+```text
+$platty:platty-onboarding . 한국어로 진행해줘
+$platty:platty-onboarding . Continue in English.
+```
+
 You can also ask in plain language:
 
 ```text
