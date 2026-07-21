@@ -83,6 +83,13 @@ You can also ask in plain language:
 Onboard this repository with Platty.
 ```
 
+> **Generating documentation for large projects:** Projects with a large
+> codebase or many documentation targets may reach the AI provider's usage
+> limit. Subscription-based providers such as Claude Code may temporarily stop
+> generation when the plan's usage limit is reached. Completed documents are
+> preserved, so running the workflow again resumes from the remaining work
+> instead of starting over.
+
 - Detailed installation: [GETTING_STARTED.md](GETTING_STARTED.md)
 - Usage guide — English: [guide/en/usage-guide.md](guide/en/usage-guide.md) · 한국어: [guide/ko/usage-guide.md](guide/ko/usage-guide.md)
 
