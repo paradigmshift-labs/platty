@@ -119,6 +119,20 @@ follow-up `generate-docs confirm-epics` command.
 > account. The static-analysis phase does not — start on a small repository to
 > gauge usage before running large projects.
 
+### Generating documentation for large projects
+
+Projects with a large codebase or many documentation targets may take a long
+time to generate technical documents, EPICs, and business documents, and may
+reach the AI provider's usage limit. Subscription-based providers such as
+Claude Code may temporarily stop generation when the plan's usage limit is
+reached.
+
+You do not need to restart from the beginning. Platty saves completed work and
+progress, so you can run the workflow again after provider capacity becomes
+available. Completed work is preserved and generation resumes from the
+remaining work. If any tasks failed, follow the recovery command provided by
+Platty before continuing.
+
 ### Recovery
 
 If a stage reports failed tasks, repair the same run with
