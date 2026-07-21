@@ -9,6 +9,22 @@ description: Use when Platty CLI and agent skills are already installed and a us
 
 Coordinate the installed first-run journey. This skill does not install the CLI or agent plugin. Route detailed phase behavior and recovery to `platty-setup`, `platty-static-analysis`, `platty-docs-target-curation`, and `platty-generated-docs`.
 
+## Analytics Attribution
+
+For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-onboarding` on
+every Platty CLI process in this workflow. If an outer user-facing workflow
+routes here, the outer workflow label wins and overrides this default. Preserve
+the active label across routed owner skills, retries, resumes, and every
+`nextCommand` or `nextAction.command` execution.
+
+Primary command patterns:
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-onboarding platty analyze --project <project> --json
+PLATTY_INVOCATION_SOURCE=platty-onboarding platty generate-docs run --project <project> --provider <resolved-provider> --docs-llm-concurrency 10 --json
+PLATTY_INVOCATION_SOURCE=platty-onboarding platty sot export --project <project> --json
+```
+
 ## Conversation Language
 
 Determine the conversation language from the user's request at the start. An

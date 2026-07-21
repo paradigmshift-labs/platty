@@ -5,6 +5,18 @@ description: Use when generating, validating, reviewing, resuming, or repairing 
 
 # Platty Generated Docs
 
+## Analytics Attribution
+
+For direct invocation, set
+`PLATTY_INVOCATION_SOURCE=platty-generated-docs` on every Platty CLI process in
+this workflow. If an outer user-facing workflow routes here, the outer workflow
+label wins and overrides this default. Preserve the active label for retries,
+resumes, and every `nextCommand` or `nextAction.command` execution.
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-generated-docs platty generate-docs run --project <project> --json
+```
+
 Use this skill for the public generated-output workflow:
 
 ```text

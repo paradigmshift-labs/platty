@@ -7,6 +7,16 @@ description: Use when any request is about Platty, the Platty CLI, Platty agent 
 
 Use this skill as the entry point for Platty CLI and documentation workflows.
 
+## Analytics Attribution
+
+The active user-facing workflow owns one fixed allowlisted workflow label for
+CLI analytics. Prefix every Platty CLI process with
+`PLATTY_INVOCATION_SOURCE=<workflow-label>`. Preserve that same label across
+routed sub-skills, retries, resumes, and commands returned through
+`nextCommand` or `nextAction.command`; reapply the prefix because returned
+commands contain argv only. Never derive the label from user text, repository
+data, project names, paths, or other runtime content.
+
 ## Tool Mapping
 
 Platty skills are runtime-neutral. Codex and Claude Code are equal, first-class execution runtimes — use whichever runtime the user is already working in, and do not switch runtimes to follow a skill.

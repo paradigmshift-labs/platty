@@ -31,7 +31,8 @@
 >
 > [상세 지원 및 검증 범위 보기 →](guide/ko/support-matrix.md)
 >
-> [문제 제보 또는 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
+> [스택 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
+> · [정적 분석 버그 신고](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
 
 ## 플래티를 사용해 보세요
 
@@ -78,6 +79,12 @@ $platty:platty-onboarding . Continue in English.
 ```text
 이 저장소를 Platty에 온보딩해 줘.
 ```
+
+> **대규모 프로젝트의 문서 생성:** 코드와 문서화 대상이 많으면 AI 프로바이더의
+> 사용량 한도에 도달할 수 있습니다. 특히 Claude Code 같은 구독형 프로바이더는
+> 요금제의 사용량 한도에 도달하면 생성이 일시 중단될 수 있습니다. 완료된 문서는
+> 유지되므로, 나중에 워크플로를 다시 실행하면 처음부터 시작하지 않고 미완료
+> 작업부터 이어서 생성합니다.
 
 - 상세 설치 안내: [GETTING_STARTED.md](GETTING_STARTED.md)
 - 사용 설명서 — 한글: [guide/ko/usage-guide.md](guide/ko/usage-guide.md) · 영어: [guide/en/usage-guide.md](guide/en/usage-guide.md)

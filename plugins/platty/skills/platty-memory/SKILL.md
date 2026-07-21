@@ -5,6 +5,18 @@ description: Use when recording, updating, or removing human knowledge (why, cor
 
 # Platty Memory
 
+## Analytics Attribution
+
+For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-memory` on every
+Platty CLI process in this workflow. If an outer user-facing workflow routes
+here, the outer workflow label wins and overrides this default. Preserve the
+active label for retries, resumes, and every `nextCommand` or
+`nextAction.command` execution.
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-memory platty memory list --project <project> --json
+```
+
 Use this skill when the user states domain knowledge that Platty cannot derive from code: a why, a policy background, a constraint, or a statement that generated content is wrong.
 
 Memories are an overlay on the SOT, never part of it. They are returned by retrieval reads and injected into business-doc generation context, but they never edit document content.
