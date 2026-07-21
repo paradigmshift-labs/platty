@@ -135,8 +135,11 @@ Think of the first onboarding run as paying once to save repeatedly. If a usage
 limit pauses generation midway, completed documents are preserved, so rerunning
 the workflow resumes from the remaining work instead of starting over.
 
-For large company or institutional projects, contact the Platty team. We can
-provide a separate API path so you can run the analysis at no cost.
+> [!TIP]
+> **Analyzing a large project?**
+>
+> For large company or institutional projects, contact the Platty team. We can
+> provide a separate API path so you can run the analysis at no cost.
 
 ---
 
