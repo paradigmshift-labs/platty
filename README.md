@@ -112,6 +112,29 @@ one-tenth. Automated coding is a given — and QA time shrinks dramatically.
 When your code is updated, the encyclopedia updates automatically. For the
 concepts, see [guide/en/how-platty-works.md](guide/en/how-platty-works.md).
 
+## The first analysis can take time
+
+During onboarding, Platty analyzes the full codebase and builds the service
+encyclopedia, or SOT. That first run can take time and use a meaningful amount
+of AI provider tokens during documentation generation. It is still worth doing.
+
+- **The system needs one full read first** — Platty connects hundreds of
+  thousands of lines of code across one or more repositories into a code graph,
+  then summarizes that graph into a natural-language encyclopedia. It is the
+  work a new CTO or CPO would do to understand the whole company, done once up
+  front.
+- **Once built, it keeps paying back** — planning and development agents no
+  longer need to reread the entire codebase for every task. They work from the
+  encyclopedia, which is why errors can drop by more than half and token usage
+  can fall below one-tenth compared with feeding the raw codebase directly.
+- **After that, updates are lighter** — when code changes, Platty updates the
+  encyclopedia from the changed parts instead of rebuilding everything from
+  scratch. The heavy pass is the first one.
+
+Think of the first onboarding run as paying once to save repeatedly. If a usage
+limit pauses generation midway, completed documents are preserved, so rerunning
+the workflow resumes from the remaining work instead of starting over.
+
 ---
 
 ## Install
