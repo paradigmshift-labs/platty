@@ -5,6 +5,18 @@ description: Use when initializing Platty, creating/selecting/switching projects
 
 # Platty Setup
 
+## Analytics Attribution
+
+For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-setup` on every
+Platty CLI process in this workflow. If an outer user-facing workflow routes
+here, the outer workflow label wins and overrides this default. Preserve the
+active label for retries, resumes, and every `nextCommand` or
+`nextAction.command` execution.
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-setup platty setup --json
+```
+
 Use this for Platty setup and setup-state decisions. Platty stores CLI state in
 the user-global Platty home by default (`~/.platty` on macOS/Linux,
 `%APPDATA%\Platty` on Windows). `PLATTY_HOME` overrides that location. The CLI

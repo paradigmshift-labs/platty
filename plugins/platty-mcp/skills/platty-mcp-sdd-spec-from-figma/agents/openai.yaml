@@ -1,0 +1,4 @@
+interface:
+  display_name: "Platty MCP Spec From Figma"
+  short_description: "Create or augment product SDD from Figma evidence"
+  default_prompt: "Treat a Figma-backed product plan, planning document, feature brief, PRD, user-story, or 기획서 정리/작성/생성/보강 request as canonical product authoring. Internally use $platty-mcp-figma-design-sync and $platty-mcp-retrieval to inspect the current service, auto-select AUGMENT or CREATE, and require an ExistingSurfaceResolution for every major Figma screen before delegating prd.md and user_stories.md to $platty-mcp-sdd-spec. Persist both files plus validated figma_handoff.json and report their paths; an inline draft or partial component/API match is not complete. Continue retrieval for unresolved current facts; never ask the user to supply current source facts, fabricate source paths, or start technical design without a separate user request."

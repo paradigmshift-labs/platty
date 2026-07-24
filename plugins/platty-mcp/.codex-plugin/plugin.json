@@ -1,7 +1,7 @@
 {
   "name": "platty-mcp",
-  "version": "0.0.14+codex.20260715023447",
-  "description": "Platty MCP retrieval, impact, memory, and SDD handoff skills for configured remote context servers.",
+  "version": "0.0.28+codex.20260724030022",
+  "description": "Platty MCP retrieval, Figma evidence, impact, memory, and SDD handoff skills for configured context servers.",
   "author": {
     "name": "Paradigm Shift Labs"
   },
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Platty MCP",
-    "shortDescription": "Platty MCP retrieval, impact, memory, and SDD handoffs",
-    "longDescription": "Use Platty MCP skills for read-only retrieval and impact analysis against configured remote Platty context, memory lifecycle requests, and local SDD handoffs that write prd.md, user_stories.md, and system_design.md before generating approval-gated tasks.md, without running local CLI lifecycle commands.",
+    "shortDescription": "Platty MCP retrieval, Figma evidence, and SDD handoffs",
+    "longDescription": "Use Platty MCP skills for read-only retrieval and impact analysis against configured remote Platty context, revisioned Figma evidence reports, memory lifecycle requests, and local SDD handoffs that write prd.md, user_stories.md, and system_design.md before generating approval-gated tasks.md, without running local CLI lifecycle commands.",
     "developerName": "Paradigm Shift Labs",
     "category": "Developer Tools",
     "capabilities": [
@@ -28,13 +28,9 @@
       "Read"
     ],
     "defaultPrompt": [
-      "Search my configured Platty MCP context.",
-      "Answer from Platty MCP evidence.",
-      "Draft prd.md and user_stories.md in Korean.",
-      "Draft system_design.md for review.",
-      "After I approve system_design.md, generate tasks.md.",
-      "Manage Platty MCP memory.",
-      "Draft an MCP-grounded SDD handoff."
+      "Search and answer from my configured Platty MCP context.",
+      "With a Figma URL or 기획서 request, inspect the current service via Platty MCP, save prd.md and user_stories.md, then stop.",
+      "Use figma_handoff.json in new design sessions; align approved PRD with Figma, then draft system_design.md."
     ]
   }
 }

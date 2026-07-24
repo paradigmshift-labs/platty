@@ -91,10 +91,11 @@ causes repeated misses, promote it into a new reference file and add a row here.
 ## SOT Resolve Gate (Local transport CLI or MCP equivalent)
 
 The commands below are local-transport-only. In MCP mode, use configured
-resolver/read tools such as `ssot_resolve`, `document_get`, `spec_get`, or the
-closest server-provided equivalent. If the MCP server cannot expose an
-equivalent resolver/read path, stop with a configuration/boundary gap. Do not
-read `~/.platty/sot/` or run local `platty` commands from MCP mode.
+resolver/read tools such as `epic_get`, `document_get`,
+`document_spec_resolve`, `spec_get`, `spec_document_resolve`, or
+`spec_impact_resolve`. If the MCP server cannot expose an equivalent
+resolver/read path, stop with a configuration/boundary gap. Do not read
+`~/.platty/sot/` or run local `platty` commands from MCP mode.
 
 When you already have an EPIC id, document id, item key, or model id/name and
 need connected APIs, screens, events, schedules, models, or graph-trace seeds,
@@ -136,10 +137,12 @@ table/field impact questions.
 
 The numbered flow below is the local-transport SOT projection path. In MCP
 mode, mirror the same judgment through configured MCP tools such as
-`context_status`, `ssot_search`, `ssot_get`, `ssot_resolve`, `document_get`,
-and `spec_get`. If the MCP server cannot expose the required overview, catalog,
-document, or resolver surfaces, stop with a configuration/boundary gap instead
-of reading local files or running local CLI commands.
+`context_status`, `epic_list`, `epic_get`, `document_search`, `document_get`,
+`document_spec_resolve`, `spec_get`, `spec_document_resolve`, and
+`spec_impact_resolve`. If the MCP server cannot expose the required overview,
+catalog, document, or resolver surfaces, stop with a
+configuration/boundary gap instead of reading local files or running local CLI
+commands.
 
 Before choosing a retrieval strategy, classify the project state from generic SOT structure.
 

@@ -9,7 +9,7 @@ Use these gates before making factual claims from Platty MCP retrieval.
 | Epic map | Candidate scope and available document/spec surfaces | Final behavior or proof that adjacent candidates are absent |
 | Search hit | Candidate discovery | A fact by itself |
 | BR/DD/DESIGN/UCL item | Semantic routing and documented intent | Source-confirmed enforcement or implementation |
-| Document resolution | Connected specs and source-near anchors | Behavior without exact reads |
+| Directional document-to-Spec resolution | Connected Specs and source-near anchors | Behavior without exact reads |
 | Source-near spec | API/screen/event/schedule behavior close to source | Source truth when spec is thin, stale, or contradicted |
 | Graph trace | Confirmed static edges for the chosen anchor/options | Exhaustive impact, especially when omitted/candidate edges exist |
 | `code_search` | Candidate files, symbols, routes, or source locations | Exact implementation behavior without bounded source reads |
@@ -40,8 +40,7 @@ Use these gates before making factual claims from Platty MCP retrieval.
 
 A search miss is not absence evidence. Do not claim that a concept, campaign
 type, permission, API, field, screen, or impact does not exist from empty
-`ssot_search`, `document_search`, `spec_search`, `code_search`, or glossary
-output alone.
+`document_search`, `spec_search`, `code_search`, or glossary output alone.
 
 Negative claims require one of:
 

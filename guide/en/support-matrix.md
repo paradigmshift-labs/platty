@@ -53,8 +53,8 @@ relevant source evidence reaches its document context. Platty preserves
 reviewable unresolved evidence where it can, but does not invent a target or
 connection that the source cannot prove.
 
-If a stack or repository layout you need is missing, submit an
-[issue or support request](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
+If a stack or repository layout you need is missing,
+[report an issue or request support](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
 with a public example or sanitized minimal reproduction.
 
 ---
@@ -141,9 +141,9 @@ services** across these categories:
 
 ## Requests and bug reports
 
-- Use the [issue and support form](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
+- Use the [unified feedback form](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
   for an unlisted language, framework, library, or repository layout.
-- Use the same [issue and support form](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
+- Use the [unified feedback form](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
   when Platty misses or incorrectly identifies a route, model, relation, or
   cross-repository connection in an available analyzer.
 

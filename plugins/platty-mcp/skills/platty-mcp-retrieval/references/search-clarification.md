@@ -12,7 +12,7 @@ Create a Search Brief when any trigger is present:
 - the question asks for all, every, which screens, each, the whole flow,
   difference, impact, what breaks, or another broad inventory;
 - the question can be read as business meaning or implementation fact;
-- one `ssot_search`, `document_search`, `spec_search`, `code_search`, or graph
+- one `document_search`, `spec_search`, `code_search`, or graph
   hit could look sufficient while missing the target set;
 - raw and normalized vocabulary candidates may point to different concepts.
 

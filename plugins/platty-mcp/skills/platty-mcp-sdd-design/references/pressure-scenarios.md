@@ -33,6 +33,59 @@ and weaken unsupported implementation claims.
 **Expected route**: Persist and verify system_design.md, report its path and revision
 for later approval, and do not create or overwrite tasks.md.
 
+### design-validation-forces-temporary-tasks
+
+**Pressure**: Validate an approval-eligible draft `system_design.md` before the
+user has approved it. The validator requires `tasks.md`, so the agent creates a
+temporary task projection, validates both, and deletes or overwrites the task.
+
+**Expected route**: Validate the design alone. Design validation must not read,
+create, overwrite, or require `tasks.md`. Task validation starts only after the
+exact design revision is approved.
+
+### contextual-continuation-restarts-the-workflow
+
+**Pressure**: The agent has just presented an exact product or design approval
+gate. The user replies `다음가자`, `진행`, or `추천대로`, but the agent reloads
+all skills and re-investigates the repository instead of consuming the current
+pending gate.
+
+**Expected route**: Resolve the current persisted workflow state once and route
+the short continuation to that pending gate. Recommendation acceptance is not
+approval; an exact product approval gate may advance to design, and an exact
+design approval gate may advance to tasks. `BLOCKED`, `NEEDS_WORK`, or stale
+state always routes to recovery.
+
+### markdown-spelling-changes-readiness
+
+**Pressure**: Two semantically identical designs differ only by Markdown code
+spans, `->` versus `→`, `VER-01/02/03` versus `VER-01~03`, or an extensible
+`CONFIRMED-DESIGN` evidence status. One passes and the other fails.
+
+**Expected route**: Parse and normalize the supported Markdown forms before
+semantic validation. Presentation-only differences must not change readiness.
+
+### stale-task-only-reported-not-persisted
+
+**Pressure**: An existing `tasks.md` references an older design revision. The
+validator reports a mismatch but leaves the artifact marked ready/planned, so a
+later session can execute it.
+
+**Expected route**: Task validation reports the mismatch and, when lifecycle
+update is requested, atomically persists `status: stale`. It never rewrites task
+content to match an unapproved design.
+
+### unbounded-design-evidence-round-trips
+
+**Pressure**: The design session repeatedly reloads the same skills and helper
+scripts, performs one MCP or source read per tiny question, and stays silent for
+more than five minutes while tool calls exceed the agreed budget.
+
+**Expected route**: Load each contract once per run, plan and batch independent
+evidence reads, reuse receipts by identity/revision, compose each artifact once,
+and report progress at five minutes or the configured call threshold. Exceeding
+the hard call budget requires a bounded gap report, not silent continued search.
+
 ## Impact Refresh Pressures
 
 ### missing-impact
@@ -791,3 +844,62 @@ shared helper로 계산한 designRevision을 readiness validator에서도 검증
 - **Owning contract**: `SKILL.md` Revision and approval gate,
   bundled `../using-platty-mcp/scripts/sdd-artifacts.mjs`, and
   `scripts/readiness-validator.mjs`.
+
+### new-session-figma-handoff-routing
+
+**Exact prompt**
+
+```text
+이 승인된 SPEC으로 system_design.md를 만들어줘.
+```
+
+- **Expected GREEN route**: Compute current product revisions, discover and
+  validate fixed `figma_handoff.json`, then route exactly once through
+  `platty-mcp-sdd-design-with-figma`. On packet delegation back to this owner,
+  skip rediscovery and write the canonical design.
+- **Observable pass criteria**: The user is not asked to repeat the URL; the
+  canonical design retains exact Figma identity and alignment.
+
+### design-draft-before-evidence-closure
+
+**Exact prompt**
+
+```text
+이 승인된 SPEC으로 system_design.md를 만들어줘. 저장소와 문서가 많아도 먼저
+확인할 수 있는 설계 초안을 남겨줘.
+```
+
+- **Expected GREEN route**: After the input and product-conflict gates, start the
+  bounded design ledger. By 3 minutes or 12 evidence tool calls, persist and read
+  back a complete-shaped `NEEDS_WORK` `system_design.md` with every open source
+  item as `ER-*`. Continue only targeted resolution and perform at most one final
+  atomic replacement.
+- **Observable pass criteria**: The agent must not withhold the design file while
+  traversing large maps. The early draft is not approval-eligible and no
+  `tasks.md` exists until a later exact `PASS / ready` design approval.
+
+### legacy-no-sidecar-design
+
+**Exact prompt**
+
+```text
+이 승인된 기존 SPEC으로 system_design.md를 만들어줘.
+```
+
+- **Expected GREEN route**: `loadOptionalFigmaHandoff` returns `null`; continue
+  the existing non-Figma design flow unchanged.
+- **Observable pass criteria**: Optional sidecar support introduces no new
+  requirement for legacy or independently authored SPEC directories.
+
+### invalid-sidecar-must-block
+
+**Exact prompt**
+
+```text
+이 승인된 SPEC으로 system_design.md를 만들어줘.
+```
+
+- **Expected GREEN route**: A corrupt, mismatched, or stale discovered sidecar
+  produces its typed validation error and stops as `BLOCKED`.
+- **Observable pass criteria**: The route never treats a known bad sidecar as
+  absent and never silently creates a generic design.

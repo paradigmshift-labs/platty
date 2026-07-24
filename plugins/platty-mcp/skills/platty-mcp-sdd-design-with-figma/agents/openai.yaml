@@ -1,0 +1,4 @@
+interface:
+  display_name: "Platty MCP Design With Figma"
+  short_description: "Align approved PRD and Figma before technical design"
+  default_prompt: "Only on a separate technical-design request, use validated figma_handoff.json automatically in a new session or ask for a node-specific Figma URL only when it is absent, then resolve evidence internally with $platty-mcp-figma-design-sync. Align CONNECTED or INDEPENDENT approved product documents, block invalid or stale sidecars, route PRODUCT_CONFLICT to $platty-mcp-sdd-spec, otherwise delegate system_design.md to $platty-mcp-sdd-design, and create Figma-traced tasks.md only after exact design approval."

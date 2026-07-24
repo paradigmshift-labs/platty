@@ -5,6 +5,18 @@ description: Use when listing, filtering, including, deprecating, or reviewing P
 
 # Platty Docs Target Curation
 
+## Analytics Attribution
+
+For direct invocation, set
+`PLATTY_INVOCATION_SOURCE=platty-docs-target-curation` on every Platty CLI
+process in this workflow. If an outer user-facing workflow routes here, the
+outer workflow label wins and overrides this default. Preserve the active label
+for retries, resumes, and every `nextCommand` or `nextAction.command` execution.
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-docs-target-curation platty targets list --project <project> --json
+```
+
 Use this before technical document generation when the user wants to inspect or narrow API, screen, event, or job targets.
 
 ## Flow

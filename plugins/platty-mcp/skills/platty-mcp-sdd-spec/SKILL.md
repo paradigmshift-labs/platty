@@ -98,7 +98,7 @@ technical-design handoff; neither consumes the product-question budget.
 6. Stop if minimum retrieval or a selected branch's required evidence surface is
    missing.
 7. Require the retrieval packet to distinguish document-map evidence resolved
-   with `document_resolve` from candidates and include its runtime-only
+   with `document_spec_resolve` from candidates and include its runtime-only
    `questionOwnershipAudit`.
 8. Classify each unresolved item as `FACT`, `PRODUCT`, or `DESIGN`. Resolve
    `FACT` through retrieval or record its exact evidence boundary. Split mixed
@@ -149,6 +149,16 @@ technical-design handoff; neither consumes the product-question budget.
     `BLOCKING` row forces `NEEDS_WORK`; document length, call volume, or a merely
     readable pair can never override it. A partial dossier may pass only when all
     partial limits are explicitly `NON_BLOCKING` for the approved product result.
+    A bounded missing route, caller, component, API, or exact edit target is a
+    `NON_BLOCKING design guard` when the product promise is defined independently,
+    does not depend on a claimed current-system fact, and the missing evidence can
+    only change implementation placement. Exact edit targets are deferred to
+    technical design in that case. You must not mark or classify such a gap `BLOCKING` merely
+    because the approved change has a user-facing surface. Carry the affected ids,
+    searched scope, and required design recheck into the handoff. It remains
+    `BLOCKING` when resolving the source could change feasibility, money movement,
+    permission, persistence ownership, notification guarantees, or the promised
+    user result.
     An adopted recommendation is a decision: record it as `D-*` and close the
     related `O-*`; do not keep it open merely as a possible future revision.
     Any `A-*` or `O-*` that can change an approval-critical user result is
@@ -402,8 +412,9 @@ Apply this review sequence:
 2. Import the `platty-mcp-retrieval` Final Route Audit into
    `searchRouteAudit`, including Search Brief completeness, selected EPIC and
    BR/DD/DESIGN/UCL maps, exact items, `document_get` and attached memory
-   overlays when relevant, `document_resolve`, selected `spec_get` plus
-   `spec_resolve`, source snippets for exact claims, and unread surfaces.
+   overlays when relevant, `document_spec_resolve`, selected `spec_get`, the
+   requested `spec_document_resolve` or `spec_impact_resolve` direction, source
+   snippets for exact claims, and unread surfaces.
    Import `questionOwnershipAudit` and verify every unresolved item has exactly
    one owner or was deliberately split into product and technical parts.
 3. Check statuses, enums, thresholds, metrics, scope, and terminology for

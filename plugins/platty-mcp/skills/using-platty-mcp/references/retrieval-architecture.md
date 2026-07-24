@@ -1,148 +1,142 @@
 # MCP Retrieval Architecture
 
-Use this reference when a user asks how Platty MCP search works, how documents
-and specs are stored, whether `spec_list` or `spec_resolve` are part of the
-route, or how DB evidence relates to stored SOT files.
+Use this reference when explaining how Platty MCP retrieval works, how business
+documents and Specs connect, or why the route changes direction.
 
 ## Boundary
 
-Platty MCP is a read-model transport over an already prepared Platty context DB.
-It does not analyze a repo, generate docs, export files, refresh caches, mutate
+Platty MCP is a typed read model over an already prepared context DB. It does
+not analyze repositories, regenerate documents, refresh caches, mutate
 projects, or run the local Platty CLI.
 
-The primary evidence store is `PLATTY_CONTEXT_DB_PATH`. Stored SOT files under
-`PLATTY_CONTEXT_SOT_ROOT` are an optional projection for file content access.
-They are not the primary retrieval path.
+The context DB is the primary evidence store. Stored SOT files are an optional
+projection for explicit file-body requests through `sot_file_get`; they are not
+the normal factual retrieval path.
 
 ## Route First
 
-Explain MCP architecture by the tool route first. Mention DB structure only to
-explain why the next tool is needed.
-
 ```text
 question
--> choose project and check freshness
--> choose business map or source-near route
--> read exact document/item/spec detail
--> resolve connected context when crossing surfaces
--> use graph/code tools only when source confirmation or impact is required
+-> project and freshness
+-> EPIC map
+-> epic_get.documentRefs
+-> typed business document map
+-> exact business items
+-> selected Specs
+-> optional reverse business context or technical impact
+-> exact source read when the claim requires it
 ```
 
-## Route Map
+Search is a fallback for unknown IDs. It does not replace the map-first route.
 
-| Question shape | Primary route | Proof threshold |
+## Three Separate Bridges
+
+The former bidirectional expansion is split so every response has one purpose:
+
+| Direction | Tool | Returns |
 | --- | --- | --- |
-| Project scope, freshness, available context | `project_list` -> `project_get` when needed -> `context_status` -> `project_overview_get` | status/overview can frame scope, not prove detailed behavior |
-| Exact, unambiguous domain term or raw phrase | `glossary_translate`; if it is blank/conflicting while plausible candidates remain, call `glossary_list` next before translating additional Korean/English candidates | glossary is normalization/routing evidence, not behavior or source proof |
-| Vocabulary inventory, comparison, ambiguity, or every-alias request | `glossary_list` first -> paginate only until targeted candidates are clear, or through `pageInfo.hasNextPage: false` for complete inventory -> `glossary_translate` on the raw phrase and candidates | keep `aliases`, `generatedAliases`, and `memoryAliases` distinct; memory aliases are overlays and no glossary field proves behavior |
-| Broad policy, business rule, design, data, journey | `epic_list` -> `epic_get` -> `document_list` -> `document_get` -> `document_item_list` -> `document_item_get` | exact item read is the business-document proof |
-| Business item to source-near API/screen/event/schedule | `document_resolve(itemId)` -> rank linked `api_spec`/`screen_spec` candidates -> `spec_list` or `spec_search` when more mapping is needed -> `spec_get` -> `spec_resolve` | exact spec read is the source-near proof; item-level resolve completes connected context |
-| Known exact spec id | `spec_get` -> `spec_resolve` | exact spec read proves the spec; resolve completes connected context |
-| Impact, dependency, implementation location | `document_resolve(itemId)` or `spec_resolve` -> `graph_trace` / `code_search` -> `readonly_workspace_shell` | graph/code candidates plus bounded source reads when exact source confirmation is required; state missing-tool caveats |
-| Original stored SOT file request | `sot_file_get` | file content only; not proof for behavior unless paired with structured evidence |
+| Business item -> Spec | `document_spec_resolve(itemIds)` | directly stored API, screen, event, and schedule Spec refs plus code-evidence refs |
+| Spec -> business | `spec_document_resolve(specIds)` | directly linked business items, their documents, and owning EPIC refs |
+| Spec -> technical | `spec_impact_resolve(specIds, direction)` | one-hop technical upstream/downstream edges |
 
-## Canonical Execution Order
+These tools do not recursively return full document or Spec bodies. Select IDs,
+then use `document_item_get` or `spec_get`.
 
-The executable map-first order, evidence-depth rules, and completion audit live
-only in `platty-mcp-retrieval/references/full-cycle-retrieval.md`. This
-architecture reference explains tool and storage roles; it does not redefine
-that order.
+Each result is grouped by the exact input key: `itemId` for
+`document_spec_resolve`, and `specId` for `spec_document_resolve` or
+`spec_impact_resolve`. Each `to` is a lightweight linked target. This grouping
+keeps batched results traceable without repeating a `from` object.
 
-## Why These Tools Exist
+## Typed Business Documents
 
-The tools expose DB relationships without requiring the agent to query tables
-directly:
+`epic_get` returns the four core `documentRefs`: BR, DESIGN, DD, and UCL. They
+are fixed EPIC children, so open their IDs directly with `document_get`.
+
+| Type | `document_get` role | Exact-read continuation |
+| --- | --- | --- |
+| BR | item map; hides duplicated document body | `document_item_get(itemIds)` then `document_spec_resolve(itemIds)` |
+| UCL | use-case item map | `document_item_get(itemIds)` then `document_spec_resolve(itemIds)` |
+| DESIGN | authored topics plus authored design-item map | `document_item_get(itemIds)` then `document_spec_resolve(itemIds)` |
+| DD / `data_dictionary` | Entity map | `document_item_get(itemIds, detail=summary\|full)` and follow Entity item relationships |
+
+DD does not normally traverse to Specs. A table/code impact question may start
+from an explicit returned graph node and use `graph_trace`.
+
+`document_item_list` is for pagination, an explicit complete item inventory, or
+an item-type filter. It is not a mandatory call after every `document_get`.
+
+## Spec Routes
+
+- `spec_list(projectId, epicId, specKind?)` is the complete, paginated inventory
+  for one EPIC.
+- `spec_search` discovers a specific Spec when its ID is unknown.
+- `spec_get` reads exact authored Spec detail.
+- `spec_document_resolve` adds reverse business context only when needed.
+- `spec_impact_resolve` adds direct technical impact only when needed.
+
+API, screen, event, and schedule are separate typed Specs. A selected
+`spec_get` response is the source-near proof; graph or source reads raise the
+proof tier when implementation truth is required.
+
+## Graph And Code
+
+`graph_trace(nodeIds, direction)` starts from explicit code, service-map, DB, or
+external node IDs. It returns one-hop confirmed edges, unresolved candidates,
+and frontier node IDs. Multi-depth impact is an agent workflow:
+
+```text
+graph_trace(current nodeIds)
+-> inspect confirmed/candidate separation
+-> select only relevant frontier nodeIds
+-> graph_trace(frontier nodeIds)
+-> stop at the requested depth or coverage boundary
+```
+
+Maintain a visited-node set. Empty edges mean only `no_graph_anchor` or
+`no_edges` for that anchor, not “no business impact.”
+
+For code-first questions:
+
+```text
+code_search
+-> select repository and exact candidate
+-> readonly_workspace_shell exact source read
+-> graph_trace(code nodeId) when reverse impact is requested
+```
+
+`code_search` finds metadata candidates. The bounded source read proves exact
+implementation behavior.
+
+## Storage Relationships
+
+The read model projects these stored relationships without exposing raw table
+payloads:
 
 ```text
 project
 -> epics
--> documents
-   - business documents: br, design, data_dictionary, ucl, ucs
-   - source-near specs: api_spec, screen_spec, event_spec, schedule_spec
--> document_items
-   - item-level business/design/data/use-case evidence
--> document_item_document_links
-   - item -> connected document or spec
--> document_item_item_links
-   - item -> related item
--> document_item_relation_links
-   - item -> graph/code relation candidate, source node, target, evidence nodes
--> document_item_model_links
-   - item -> model or field evidence
+-> epic-owned business documents
+-> document items
+-> direct item-to-Spec links
+-> Specs
+-> direct Spec-to-business reverse links
+-> direct Spec-to-technical relations
+-> service-map and code graph nodes
 ```
 
-Memory is a separate overlay. It can correct, explain, or constrain an answer,
-but it does not replace generated documents, specs, graph evidence, or source
-snippets.
+Memory remains a separate overlay. It can correct or constrain an answer but
+does not replace generated documents, Specs, graph evidence, or source.
 
-## Evidence Stores
+## Evidence Rules
 
-| Store | What it contains | MCP role |
-| --- | --- | --- |
-| Context DB | projects, repositories, epics, documents, document items, specs, links, graph/code evidence, models, memories | primary structured retrieval through tools |
-| SOT root | Markdown/JSON projection such as catalogs, epic files, specs, indexes, memories, questions | optional stored file content through `sot_file_get` |
-
-Use DB-backed tools for factual answers. Use `sot_file_get` only when the user
-asks to read an original stored SOT file by project-relative path.
-
-## Tool Roles
-
-| Tool | Role |
-| --- | --- |
-| `glossary_list` | inventory and candidate discovery for comparison, ambiguity, every-alias, or blank/conflicting translation routes; targeted or complete pagination depends on the request |
-| `glossary_translate` | normalizes an exact/raw phrase and selected Korean/English candidates; blank/conflicting output may require list-based discovery |
-| `document_list` | finds business docs or source-near docs by type/scope |
-| `document_get` | reads one document summary/content envelope |
-| `document_item_list` | finds item-level BR/DD/DESIGN/UCL/UCS evidence |
-| `document_item_get` | reads exact item content |
-| `document_resolve` | first bridge from exact item evidence to linked specs, linked docs, items, relation candidates; use `itemId` after `document_item_get`, and reserve `documentId` for document-wide inventory |
-| `spec_list` | lists source-near specs by kind, scope, status, or filters |
-| `spec_search` | targeted discovery when the exact spec id is unknown |
-| `spec_get` | reads exact source-near spec detail before source-near claims |
-| `spec_resolve` | post-selection expansion from a spec to related docs/items plus graph/code seeds |
-| `graph_trace` | follows graph impact or dependency paths when exposed |
-| `code_search` / `readonly_workspace_shell` | `code_search` finds candidate files/symbols; `readonly_workspace_shell` reads bounded source before exact implementation claims |
-| `sot_file_get` | reads stored SOT file content only; not proof by itself |
-
-## SOT Projection Shape
-
-The SOT root mirrors DB evidence for human/file access. Common paths include:
-
-```text
-overview.md
-catalog/epics.md
-catalog/apis.md
-catalog/screens.md
-catalog/events.md
-catalog/schedules.md
-epics/<epic-id>/br.md
-epics/<epic-id>/design.md
-epics/<epic-id>/data_dictionary.md
-epics/<epic-id>/usecases/ucl.md
-epics/<epic-id>/usecases/ucs.md
-specs/api/<name>.md
-specs/screen/<name>.md
-specs/event/<name>.md
-specs/schedule/<name>.md
-project/glossary.index.json
-project/claim.index.json
-```
-
-Treat these files as a stored projection. If the user asks about architecture,
-search order, policy, behavior, or impact, prefer structured MCP tools first
-and use SOT files only as requested file content.
-
-## Common Mistakes
-
-- Do not treat `sot_file_get`, catalog text, or artifact paths as the proof path
-  for behavior claims.
-- Do not use old bundle/download tool names. This MCP profile exposes
-  `sot_file_get` for stored file content only.
-- Do not answer broad business questions from `spec_search` alone. Walk the
-  project/epic/document/item map first unless the user gave an exact spec id.
-- Do not answer exact API, screen, event, schedule, graph, or code claims before
-  reading `spec_get`; use source tools when the branch requires code parity.
-- Do not skip `spec_resolve` after selected spec reads in source-near branches;
-  it completes related document/item and graph/code seed context.
-- Do not fall back to local files or the local Platty CLI when MCP tools or
-  artifact access are missing.
+- Project overview and EPIC cards orient scope.
+- `epic_get.documentRefs` is the primary business-document routing source.
+- Document and search cards contain summaries, not full bodies.
+- Exact business claims require the selected `document_item_get` payload.
+- Exact source-near claims require `spec_get`.
+- Exact implementation claims require bounded source reads when available.
+- Directional resolve and graph results are relationship evidence, not full
+  target bodies.
+- Unresolved candidates stay candidates.
+- No host-local file or CLI fallback is allowed when an MCP capability is
+  missing.
