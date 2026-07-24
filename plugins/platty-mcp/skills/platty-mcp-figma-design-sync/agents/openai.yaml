@@ -1,0 +1,4 @@
+interface:
+  display_name: "Platty MCP Figma Design Sync"
+  short_description: "Create revisioned Figma evidence for Platty SDD"
+  default_prompt: "Use $platty-mcp-figma-design-sync to capture one exact Figma target as a validated FigmaEvidencePacket without inventing product intent."

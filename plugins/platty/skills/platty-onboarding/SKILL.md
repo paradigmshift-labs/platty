@@ -9,6 +9,22 @@ description: Use when Platty CLI and agent skills are already installed and a us
 
 Coordinate the installed first-run journey. This skill does not install the CLI or agent plugin. Route detailed phase behavior and recovery to `platty-setup`, `platty-static-analysis`, `platty-docs-target-curation`, and `platty-generated-docs`.
 
+## Analytics Attribution
+
+For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-onboarding` on
+every Platty CLI process in this workflow. If an outer user-facing workflow
+routes here, the outer workflow label wins and overrides this default. Preserve
+the active label across routed owner skills, retries, resumes, and every
+`nextCommand` or `nextAction.command` execution.
+
+Primary command patterns:
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-onboarding platty analyze --project <project> --json
+PLATTY_INVOCATION_SOURCE=platty-onboarding platty generate-docs run --project <project> --provider <resolved-provider> --docs-llm-concurrency 10 --json
+PLATTY_INVOCATION_SOURCE=platty-onboarding platty sot export --project <project> --json
+```
+
 ## Conversation Language
 
 Determine the conversation language from the user's request at the start. An
@@ -102,12 +118,39 @@ Inspect the terminal result's automatic `sotExport`. Verify and report its `outD
 
 Use `platty-docs-target-curation`. Summarize only active APIs, screens, events, and jobs as curatable target kinds. Let the user describe unused or obsolete targets in natural language, resolve them against a fresh list, and mutate only exact target ids. Ask one focused question on ambiguity. Explicitly include the accepted active ids when nothing is excluded. In this public onboarding path, do not run the lower-level `docs shared-segments` compatibility commands; continue through the public `generate-docs` facade, which rebuilds the required segments.
 
-Resolve the local provider before approval. Determine the current runtime from the host session context, not from executable ordering, then verify its matching CLI with `command -v codex` or `command -v claude`. Map a detected `codex` executable to the CLI provider value `codex_cli`, and a detected `claude` executable to `claude_code`; `<resolved-provider>` below always means one of those CLI enum values, never the executable name. Otherwise select the one available local CLI. If both exist and the runtime gives no preference, ask once. Do not select `claude_api` implicitly. Stop if neither local provider exists.
+### Explicit direct API selection
+
+First inspect whether the user already explicitly selected a direct API in the
+current conversation. If so, branch here before any local provider resolution.
+Honor OpenAI API as `openai_api` and route its `OPENAI_API_KEY` credential check
+through `platty-generated-docs`; do not add an extra provider question. When
+neither Codex nor Claude CLI is installed and the required key is ready,
+continue to the cost disclosure and approval below. Do not run `command -v`
+checks and do not apply the local-provider stop to this branch.
+
+A present `OPENAI_API_KEY` is readiness evidence only and never enters this
+branch, selects, or overrides a provider without the user's explicit choice.
+Readiness is not spend approval and never replaces the LLM approval below.
+Before that approval, explain that direct API calls consume provider tokens and
+may incur account cost or provider charges. Preserve every explicit provider
+and model through continuation, confirmation, and recovery.
+
+### Otherwise resolve a local CLI
+
+When no direct API was explicitly selected, resolve the local provider before
+approval. Determine the current runtime from the host session context, not from
+executable ordering, then verify its matching CLI with `command -v codex` or
+`command -v claude`. Map a detected `codex` executable to `codex_cli`, and map a
+detected `claude` executable to `claude_code`;
+`<resolved-provider>` below always means one of those CLI enum values, never the
+executable name. Otherwise select the one available local CLI. If both exist
+and the runtime gives no preference, ask once. Do not select `claude_api` implicitly.
+Do not select `openai_api` implicitly. Stop if neither local provider exists.
 
 Put the static result, target-review outcome, and approval card in the same user-facing response. Do not pause between them; pause only at the explicit approval request. Divide the card into these sections:
 
 - **Generated outputs and why:** explain why technical docs, EPIC grouping, and business docs are generated.
-- **Execution:** show the resolved provider, how availability was verified including the resolved `command -v` path, parallel workers, and automatic EPIC continuation.
+- **Execution:** show the resolved provider, how availability was verified (the resolved `command -v` path for a local CLI, or the nonblank key source without its value for a direct API), parallel workers, and automatic EPIC continuation.
 - **Cost and resume:** warn about LLM tokens and possible provider cost, and explain that persisted run/task state resumes saved work after interruption.
 - **Approval:** say the user may still name targets to deprecate, then request approval.
 
@@ -128,7 +171,9 @@ field labels into the conversation language; keep machine values verbatim.
 **Execution**
 
 - **Provider:** show the resolved CLI provider value.
-- **Availability:** show the verified `command -v` executable path.
+- **Availability:** show the verified `command -v` executable path for a local
+  CLI, or the shell / `~/.platty/.env` key source for a direct API without
+  exposing its value.
 - **Parallel work:** state that independent document tasks can run through
   multiple workers concurrently. State that both Codex CLI and Claude Code CLI
   start technical-document LLM work with `--docs-llm-concurrency 10`, which is
@@ -162,6 +207,13 @@ Use `platty-generated-docs`. After approval run:
 
 ```bash
 platty generate-docs run --project <project> --provider <resolved-provider> --docs-llm-concurrency 10 --json
+```
+
+That command is for resolved local providers (`codex_cli` and `claude_code`).
+For an explicitly selected direct API, do not inherit local concurrency `10`:
+
+```bash
+platty generate-docs run --project <project> --provider openai_api --json
 ```
 
 The explicit flag satisfies the provider gate; do not ask a duplicate provider question. Preserve `--project`, `--stage`, `--run-id`, `--provider`, model flags, and `--json` in every continuation or recovery command.

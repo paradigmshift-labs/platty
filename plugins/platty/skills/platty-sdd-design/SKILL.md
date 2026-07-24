@@ -5,6 +5,18 @@ description: Use when creating technical SDD design or implementation-task docum
 
 # Platty SDD Design
 
+## Analytics Attribution
+
+For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-sdd-design` on every
+Platty CLI process in this workflow. If an outer user-facing workflow routes
+here, the outer workflow label wins and overrides this default. Preserve the
+active label for retries, resumes, and every `nextCommand` or
+`nextAction.command` execution.
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-sdd-design platty graph trace --project <project> --from <trace-id> --json
+```
+
 Use this skill to create the technical half of an SDD workflow: developer-facing
 `system_design.md` and evidence-linked `tasks.md` or `tasks-<area>.md`.
 

@@ -1,193 +1,188 @@
 # Full-Cycle Retrieval Ladder
 
-Use this reference when `platty-mcp-retrieval` routes a broad, semantic,
-comparison, inventory, or impact question. Each rung is list/map first, exact
-detail second.
-
-## Contents
-
-- Exact Item Fast Path
-- Evidence Depth By Question Type
-- Canonical Ladder
-- Runtime Evidence Checklist
-- Business Document To Source-Near Spec Descent
-- Final Route Audit
+Use this reference for broad, semantic, comparison, inventory, or impact
+questions. Each rung is map first, exact detail second.
 
 ## Exact Item Fast Path
 
-When an exact BR/DD/DESIGN/UCL item has already been selected, do not widen with
-search first. Use the item as the bridge into source-near evidence:
+When exact business item IDs are known, do not widen with search:
 
 ```text
-document_item_get
--> document_resolve(itemId)
--> rank linked api_spec/screen_spec/event_spec/schedule_spec candidates
--> spec_get for selected source-near behavior
--> spec_resolve for related docs/items, graph seeds, and code seeds
+document_item_get(projectId, itemIds=[...], detail=summary|full)
+-> document_spec_resolve(projectId, itemIds=[...])
+-> rank linked api_spec/screen_spec/event_spec/schedule_spec IDs
+-> spec_get(projectId, id=<selected Spec ID>)
 ```
 
-Prefer `document_resolve(itemId)` over `document_resolve(documentId)` for a
-selected routing card or item. Whole-document resolve is useful for inventory,
-but it can return broad candidates; item-level resolve is the fast path for
-screen/API/event/schedule descent.
+`document_item_get` and `document_spec_resolve` accept 1-5 unique `itemIds`.
+Split a larger set into multiple calls. Results preserve request order and
+group links by the input item.
+
+This Spec descent applies to BR, UCL, and DESIGN. DD does not use the Spec
+bridge: read its Entity items, follow returned Entity item IDs, and use an
+explicit DB/code graph node only when technical impact is requested.
 
 ## Evidence Depth By Question Type
 
-Use the minimum evidence depth that can support the claim. Do not force
-source-near specs or source reads for pure concept overviews, but do not stop at
-overview/search for flows, policies, implementation-facing behavior, or data
-claims.
-
 | Question type | Required depth |
 | --- | --- |
-| Service overview, user-type explanation, high-level product inventory with no implementation/API/screen/data claim | `project_overview_get` -> `epic_list`/`epic_get` -> optional `ssot_search`/`ssot_get`; stop here if the answer remains conceptual and states coverage limits. |
-| Product flow, capability, journey, admin workflow, or user action | Project/epic map -> DESIGN business document map as near-mandatory -> BR/DD/UCL as needed -> exact document/item reads -> source-near specs. |
-| Business policy, eligibility, status transition, or rule enforcement | BR and relevant DESIGN/DD/UCL exact items -> connected specs -> source read when claiming enforcement. |
-| Data shape, table, field, state distribution, funnel, conversion, or operational bottleneck | DD and relevant DESIGN/BR exact items -> connected specs when behavior matters. If a data MCP is exposed, read its guide and use read-only queries for observed metrics. If no operational data source is exposed, stop at measurable funnel steps, instrumentation points, and SSOT-based bottleneck hypotheses; do not claim actual conversion causes. |
-| API, screen, event, schedule, job, integration, permission, response shape, DB write, emit, external call, or implementation behavior | Selected `api_spec`/`screen_spec`/`event_spec`/`schedule_spec` -> `spec_resolve` -> `code_search` -> bounded `readonly_workspace_shell` when exact source confirmation is required or the spec is thin/ambiguous. |
+| Conceptual project overview with no behavior claim | `project_overview_get` -> `epic_list`/`epic_get`; state coverage limits |
+| Product flow, capability, journey, or admin workflow | EPIC map -> DESIGN map -> BR/UCL as needed -> exact items -> selected Specs |
+| Policy, eligibility, status transition, or enforcement | BR plus relevant DESIGN/UCL items -> connected Specs -> source read for exact enforcement |
+| Entity, table, field, or data shape | DD Entity summary/full; add source or graph evidence only for exact usage/impact |
+| API, screen, event, schedule, permission, response shape, write, emit, or integration | exact `spec_get`; add reverse business or technical impact only when asked; bounded source read for exact implementation truth |
 
-`readonly_workspace_shell` means the MCP-provided read-only source tool. It is
-allowed when exposed and required by the evidence gate. Treat it as the
-source-reading half of the `code_search` path: `code_search` locates candidate
-files/symbols, then `readonly_workspace_shell` reads the bounded source region.
-Do not stop at `code_search` when the claim requires source inspection. Do not
-replace a missing MCP source tool with local filesystem or local shell reads.
-
-If a conceptual answer would include concrete behavior such as "this API writes
-X", "this screen calls Y", "this status changes when Z", or "users drop here",
-the route is no longer a pure overview. Escalate to the deeper branch before
-making that claim.
+`code_search` locates source candidates. `readonly_workspace_shell` reads the
+bounded source region. Do not use host-local files or shell when the MCP source
+surface is missing.
 
 ## Canonical Ladder
 
-BR, DD, DESIGN, and UCL are semantic document families. For `document_list`
-tool arguments, use MCP filter values (`br`, `data_dictionary`, `design`,
-`ucl`) unless the live MCP schema advertises a different value set. DD maps to
-`data_dictionary`, not `dd`.
+BR, DESIGN, DD, and UCL are the four core business-document families. DD maps
+to `data_dictionary`; UCS is not part of the current route.
 
 ```text
 project_list/project_get/context_status
--> project_overview_get; inspect project_overview_get.overview.memories summary cards before narrowing scope and use memory_get for exact bodies when a card is relevant
--> glossary_list for broad inventory, comparison, ambiguity, all-alias requests, or blank/conflicting translation; traverse every page when completeness is required
--> glossary_translate for the raw phrase and Korean/English candidates; record matched terms and alias candidates
+-> project_overview_get
+   inspect project_overview_get.overview.memories summary cards
+   call memory_get for every relevant exact body
+-> glossary_list for broad inventory or ambiguity
+-> glossary_translate for the raw phrase and Korean/English candidates
+   retain matched terms and alias candidates
 -> epic_list
--> epic_get for each plausible candidate epic before discarding it; inspect epic_get.memories summary cards before discarding or selecting the epic
--> document_list for the selected branch:
-   documentType=br for policy/rule/eligibility
-   documentType=data_dictionary for entity, table, field, or data-shape questions
-   [MUST] documentType=design for product flow, capability, journey, admin workflow,
-   system design, integration, data flow, architecture, or implementation-facing
-   questions
-   documentType=ucl for capability, journey, screen, or user action questions
--> document_get/document_item_list to map candidate items; inspect document_get.memories and item memory summaries before discarding or selecting documents/items
--> document_item_get for exact BR/DD/DESIGN/UCL evidence; inspect item memories before finalizing the item claim
--> document_resolve(itemId) after exact item reads; use document_resolve(documentId)
-   only for document-wide inventory. Follow explicit links to connected API,
-   screen, event, schedule, data, service, or spec anchors and collect linked
-   api_spec/screen_spec/event_spec/schedule_spec spec ids when returned
--> rank linked api_spec, screen_spec, event_spec, and schedule_spec candidates
-   and keep the selected spec ids visible; use spec_list/spec_search only after
-   document_resolve when the explicit linked set is absent, incomplete, stale,
-   too broad, or the exact spec id is unknown
--> when spec_search is used, select candidate specs before making claims
--> spec_get for exact source-near behavior
--> spec_resolve to expand selected specs to related documents, items, graph seeds, and code seeds; inspect spec memories when returned
--> code_search only when source address is incomplete and configured
--> readonly_workspace_shell to read the bounded candidate source before claiming
-   exact code behavior, implementation absence, writes, emits, permissions, or response shape
+   inspect memoryCount; select candidates, do not call memory_list blindly
+-> epic_get for every plausible EPIC before discarding it
+   inspect epic_get.memories
+   call memory_get for each relevant exact body named by response.next
+   read epic_get.documentRefs
+-> document_get directly for the BR, DESIGN, DD, and UCL IDs in documentRefs
+   inspect document_get.memories for direct document Memory and item memoryCount values
+   call memory_get only for relevant exact bodies named by response.next
+   [MUST] DESIGN for system design, integration, architecture, product flow,
+   capability, journey, admin workflow, data flow, or implementation-facing work
+-> document_item_list only for pagination, explicit complete inventory, or itemType filtering
+-> document_item_get(itemIds) for selected exact items
+   inspect each items[*].memories and call memory_get for relevant exact bodies
+-> for BR/UCL/DESIGN: document_spec_resolve(itemIds)
+-> rank linked api_spec/screen_spec/event_spec/schedule_spec IDs
+-> spec_get for each selected exact Spec
+   inspect spec_get.memories and call memory_get for relevant exact bodies
+-> optional spec_document_resolve(specIds) for reverse business context
+-> optional spec_impact_resolve(specIds, direction) for one-hop technical impact
+-> optional graph_trace(frontier nodeIds) to continue one selected hop
+-> code_search and readonly_workspace_shell exact source read when required
+-> only after the direct map cannot identify an ID, use document_search or spec_search
 ```
 
-If a map/list surface required by the ladder is missing, report an MCP
-capability gap instead of replacing the rung with search.
+Search is deliberately last. `document_search` searches non-Spec business
+documents/items. `spec_search` searches Specs. Selected hits must be opened
+with the corresponding exact-read tool.
+
+The Memory route is likewise card first and exact body last:
+
+```text
+list/map/search card.memoryCount
+-> epic_get | document_get | document_item_get | spec_get
+-> inspect attached memories summary cards
+-> memory_get only for selected relevant memoryId values from response.next
+```
+
+Use `memory_list` only for an explicit scoped inventory or when an exact
+selected surface lacks attached Memory cards.
+
+## Typed `document_get` Continuations
+
+- BR: the response is an item map. Read selected rule IDs with
+  `document_item_get`, then resolve their Specs.
+- UCL: the response is a use-case item map. Read selected use cases, then
+  resolve their Specs.
+- DESIGN: the response contains authored topics and authored DESIGN items.
+  Read selected items, then resolve their Specs.
+- DD: the response is an Entity map. Read Entity items with `detail=summary`
+  first and `detail=full` only when required fields are needed.
+
+`document_item_list` is not a compulsory extra call when `document_get` already
+returned the needed cards.
+
+## Spec-First And Code-First Routes
+
+For a known Spec:
+
+```text
+spec_get(id)
+-> spec_document_resolve(specIds=[id]) only when business context is needed
+-> spec_impact_resolve(specIds=[id], direction) only when technical impact is needed
+```
+
+For complete API, screen, event, or schedule inventory, call
+`spec_list(projectId, epicId, specKind?)` and follow `nextCursor` until
+`hasNextPage` is false. Ranked `spec_search` results never prove completeness.
+
+For code-first impact:
+
+```text
+code_search(one identifier or symbol)
+-> workspace_repo_list/select repo
+-> readonly_workspace_shell exact source read
+-> graph_trace(nodeIds=[selected code node], direction=upstream|downstream|both)
+```
+
+`graph_trace` is one-hop. Its result separates confirmed edges, unresolved
+candidates, and `frontier`. Continue only needed frontier IDs with another
+call, maintain a visited-node set, and do not infer “no impact” from an empty
+edge set.
+
+For code-first business impact, do not restart from the EPIC map merely to find
+the already named implementation target:
+
+```text
+exact file, symbol, route, or source anchor
+-> code_search plus bounded source read
+-> spec_search/spec_get when an exact connected Spec must be recovered
+-> spec_document_resolve(specIds) for reverse business context
+-> continue through only the returned business items, documents, and EPICs
+```
+
+If no exact Spec can be recovered, report that reverse business coverage is
+partial. Do not substitute broad document source links for the missing direct
+item-to-Spec connection.
 
 ## Runtime Evidence Checklist
 
-Use this only for branch-level completion state; do not restate the Canonical
-Ladder in runtime context or the final answer.
-
-- Record the evidence depth selected from the table above and whether the route
-  ended conceptually, reached source confirmation, or stopped at a missing MCP
-  surface.
-- When operational data is claimed, require an exposed data MCP, read
-  `data_analysis_guide`/`domain_guide` when available, use read-only RDS/Athena
-  `SELECT`, and state sample/cohort limits. Without that surface, limit funnel
-  or conversion answers to SSOT-derived steps, instrumentation points, and
-  hypotheses.
-- When `spec_search` selects a candidate, follow it with `spec_get` and
-  `spec_resolve` in the same route.
+- Record the selected evidence depth and whether the route ended conceptually,
+  reached exact Spec/source proof, or stopped at a missing capability.
+- For operational metrics, require an exposed data MCP. Without one, report
+  instrumentation or hypotheses rather than observed conversion causes.
+- Keep memory overlays separate from generated SOT and source evidence.
+- Preserve IDs returned by directional resolvers so exact follow-up reads are
+  reproducible.
 - Run the Final Route Audit and expose only failures that change confidence or
   scope.
 
-For a complete API inventory, or a complete screen, event, or schedule
-inventory, use `spec_list` with the narrowest known `specKind` and `scopeId`.
-Follow `nextCursor` until `hasNextPage` is false. Do not use ranked
-`spec_search` results as proof that the inventory is complete.
-
-## Business Document To Source-Near Spec Descent
-
-When the question starts from exact BR/DD/DESIGN/UCL evidence, use the selected
-item as the bridge rather than rebuilding the whole ladder:
-
-```text
-document_item_get
--> document_resolve(itemId)
--> rank linked api_spec/screen_spec/event_spec/schedule_spec candidates
--> spec_get for selected exact specs
--> spec_resolve for reverse anchors and graph/code seeds
-```
-
-Use `document_resolve(documentId)` only for document-wide inventory. Prefer
-explicit links and rank by direct link, same epic, entity/field, target, and
-branch intent. Use `spec_search` only when links are absent, incomplete, stale,
-too broad, or leave the exact spec unknown; then read the selected exact specs
-before making source-near claims.
-
-Apply the retrieval skill's memory-overlay invariant throughout this descent.
-
 ## Final Route Audit
 
-For broad, ambiguous, Korean/English, comparison, inventory, impact, or mixed
-business-vs-implementation questions, all of these must be true before making a
-confident answer:
+Before a confident broad or mixed answer, verify:
 
-1. Search Brief exists and preserves the raw user phrase.
-2. Raw terms, Korean candidate terms and English candidate terms are both visible
-   when Korean/English vocabulary may not line up.
-3. Glossary/vocabulary output was used only for routing, not as behavior proof.
-4. Project overview, attached overview memory cards, and epic map were read
-   before choosing the final scope.
-5. Relevant candidate EPICs were not discarded from one search miss, snippet, or
-   weak score.
-6. Candidate BR/DD/DESIGN/UCL document maps were built for the selected branch.
-7. Memory summary cards returned by every selected overview, epic, document,
-   item, or spec were inspected before discarding candidates or finalizing
+1. The Search Brief preserves the raw user phrase.
+2. Korean and English candidates remain visible when vocabulary may differ.
+3. Glossary output was used for routing, not behavior proof.
+4. Project overview and relevant memory cards were inspected.
+5. Plausible EPICs were read with `epic_get`, not discarded from a search miss.
+6. `epic_get.documentRefs` routed the four core business maps directly.
+7. Exact business items were read before business, design, journey, or data
    claims.
-8. Every relevant memory card was followed with `memory_get`, or named as an
-   unread coverage limit.
-9. Exact document items were read before making business, data, design, or
-   capability claims.
-10. If a selected document exposes item summaries but `document_item_list` returns
-   empty, the answer reports an item-tier coverage gap or retries without
-   narrowing filters instead of claiming exact BR/DD/DESIGN/UCL evidence from
-   the document body.
-11. If any exact BR/DD/DESIGN/UCL item was read, `document_resolve(itemId)` was
-    run before source-near search, or the answer explicitly remains conceptual.
-12. Connected context was resolved before following source-near specs.
-13. Linked `api_spec`, `screen_spec`, `event_spec`, and `schedule_spec`
-    candidates were ranked before exact source-near spec reads when starting
-    from business docs, and returned spec ids were kept visible for the selected
-    candidates. `spec_search` fallback was used only after `document_resolve`
-    returned no usable links, incomplete/stale/too-broad links, or no exact spec
-    id.
-14. Exact specs were read before source-near behavior claims.
-15. `spec_resolve` was run after selected spec reads to expose related
-    docs/items, graph seeds, code seeds, and reverse anchors.
-16. Bounded exact source regions were read with MCP `readonly_workspace_shell`
-    after any needed `code_search`; code search hits alone were not used for
-    exact source claims.
-17. Negative claims such as "not present", "not independent", "not used", or
-    "no impact" have the evidence tier required by Evidence Gates.
-18. Unread but plausible surfaces are named as coverage limits or next MCP
-    reads.
-19. The final answer separates direct evidence, inference, memory overlay,
-    freshness, and missing MCP surfaces.
+8. BR/UCL/DESIGN items used `document_spec_resolve` before Spec search unless
+   the answer explicitly remains conceptual.
+9. DD stayed on the Entity route unless an explicit graph/code impact question
+   required more.
+10. Linked Spec IDs were ranked before fallback `spec_search`.
+11. Exact Specs were read before source-near claims.
+12. Reverse business context used `spec_document_resolve` only when needed.
+13. Technical impact used `spec_impact_resolve` first, then selected one-hop
+    `graph_trace` frontier calls if needed.
+14. Exact source regions were read after `code_search` when the claim requires
+    source truth.
+15. Negative claims have the complete map or source tier they require.
+16. Unread plausible surfaces and missing capabilities remain explicit.
+17. The final answer separates direct evidence, inference, memory overlay,
+    freshness, and coverage limits.

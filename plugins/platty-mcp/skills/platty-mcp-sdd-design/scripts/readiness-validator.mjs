@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import {
   computeDesignRevision,
   parseSddArtifact,
@@ -40,8 +41,10 @@ const WEIGHTS = new Map([
   ['TASK_TRACEABILITY_INCOMPLETE', 20],
   ['DESIGN_REVIEW_NOT_READY', 25],
   ['DESIGN_APPROVAL_INVALID', 25],
+  ['DESIGN_LIFECYCLE_NARRATIVE_CONFLICT', 20],
   ['DESIGN_REVISION_MISMATCH', 25],
   ['PRODUCT_INPUT_FINGERPRINT_MISMATCH', 25],
+  ['TASK_FIGMA_REGISTRY_INCOMPLETE', 25],
 ])
 
 function argument(name) {
@@ -77,14 +80,42 @@ function numberedSection(markdown, sectionNumber) {
   return collected.join('\n')
 }
 
+function normalizeCell(value) {
+  const trimmed = value.trim()
+  return /^`[^`]*`$/.test(trimmed) ? trimmed.slice(1, -1).trim() : trimmed
+}
+
+function tableCells(line) {
+  const body = line.trim().slice(1, -1)
+  const result = []
+  let current = ''
+  let inCode = false
+  for (let index = 0; index < body.length; index += 1) {
+    const character = body[index]
+    if (character === '\\' && body[index + 1] === '|') {
+      current += '|'
+      index += 1
+    } else if (character === '`') {
+      inCode = !inCode
+      current += character
+    } else if (character === '|' && !inCode) {
+      result.push(normalizeCell(current))
+      current = ''
+    } else {
+      current += character
+    }
+  }
+  result.push(normalizeCell(current))
+  return result
+}
+
 function tableRows(markdownSection) {
   if (!markdownSection) return []
   const lines = markdownSection.split(/\r?\n/).filter((line) => /^\s*\|.*\|\s*$/.test(line))
   if (lines.length < 3) return []
-  const cells = (line) => line.trim().slice(1, -1).split('|').map((cell) => cell.trim())
-  const headers = cells(lines[0])
+  const headers = tableCells(lines[0])
   return lines.slice(2).map((line) => {
-    const values = cells(line)
+    const values = tableCells(line)
     return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? '']))
   })
 }
@@ -106,7 +137,7 @@ function parseDispositionMap(value) {
   const result = new Map()
   if (!value) return { result, valid: false }
   for (const entry of value.replaceAll('`', '').split(',').map((item) => item.trim()).filter(Boolean)) {
-    const parts = entry.split('->').map((item) => item.trim())
+    const parts = entry.split(/\s*(?:->|→)\s*/).map((item) => item.trim())
     if (parts.length !== 2 || !parts[0] || !parts[1] || result.has(parts[0])) {
       return { result, valid: false }
     }
@@ -125,13 +156,45 @@ function nestedScalar(markdown, parent, key) {
 
 function ids(markdown, prefix) {
   const result = new Set()
-  const pattern = new RegExp(`${prefix}-(\\d+(?:/(?:${prefix}-)?\\d+)*)`, 'g')
+  const pattern = new RegExp(`${prefix}-(\\d+)(?:(?:~|-|–)(?:${prefix}-)?(\\d+)|((?:/(?:${prefix}-)?\\d+)+))?`, 'g')
   for (const match of markdown.matchAll(pattern)) {
-    for (const suffix of match[1].split('/')) {
+    const first = match[1]
+    result.add(`${prefix}-${first}`)
+    if (match[2]) {
+      const start = Number(first)
+      const end = Number(match[2])
+      if (end >= start && end - start <= 1000) {
+        const width = Math.max(first.length, match[2].length)
+        for (let value = start + 1; value <= end; value += 1) {
+          result.add(`${prefix}-${String(value).padStart(width, '0')}`)
+        }
+      }
+    }
+    for (const suffix of (match[3] ?? '').split('/').filter(Boolean)) {
       result.add(`${prefix}-${suffix.replace(new RegExp(`^${prefix}-`), '')}`)
     }
   }
   return result
+}
+
+function isEvidenceStatus(value) {
+  return /^(?:CONFIRMED|APPROVED)(?:-[A-Z0-9_]+)*$/i.test(value ?? '')
+}
+
+function setFrontmatterScalar(markdown, key, value) {
+  const boundary = markdown.indexOf('\n---', 4)
+  if (!markdown.startsWith('---\n') || boundary === -1) return markdown
+  const frontmatter = markdown.slice(0, boundary)
+  const updated = new RegExp(`^${key}:.*$`, 'm').test(frontmatter)
+    ? frontmatter.replace(new RegExp(`^${key}:.*$`, 'm'), `${key}: "${value}"`)
+    : `${frontmatter}\n${key}: "${value}"`
+  return `${updated}${markdown.slice(boundary)}`
+}
+
+function atomicWrite(path, content) {
+  const temporaryPath = `${path}.tmp-${process.pid}-${Date.now()}`
+  writeFileSync(temporaryPath, content)
+  renameSync(temporaryPath, path)
 }
 
 function canonicalValue(value) {
@@ -148,16 +211,23 @@ function digest(value) {
   return `sha256:${createHash('sha256').update(JSON.stringify(canonicalValue(value)), 'utf8').digest('hex')}`
 }
 
-const designPath = argument('--design')
+const requestedMode = argument('--mode')
+const explicitDesignPath = argument('--design')
 const tasksPath = argument('--tasks')
+const mode = requestedMode ?? (tasksPath ? 'tasks' : 'design')
+const designPath = explicitDesignPath ?? (mode === 'tasks' && tasksPath
+  ? resolve(dirname(tasksPath), 'system_design.md')
+  : undefined)
 
-if (!designPath || !tasksPath) {
-  process.stderr.write('Usage: readiness-validator.mjs --design <system_design.md> --tasks <tasks.md> --json\n')
+if (!['design', 'tasks'].includes(mode)
+  || !designPath
+  || (mode === 'tasks' && !tasksPath)) {
+  process.stderr.write('Usage: readiness-validator.mjs --mode <design|tasks> --design <system_design.md> [--tasks <tasks.md>] --json\n')
   process.exit(2)
 }
 
 const design = readFileSync(designPath, 'utf8')
-const tasks = readFileSync(tasksPath, 'utf8')
+const tasks = mode === 'tasks' ? readFileSync(tasksPath, 'utf8') : undefined
 const criticalFindings = []
 
 if (!/^schemaVersion:\s*["']?sdd-design\.v2["']?\s*$/m.test(design)) {
@@ -186,12 +256,24 @@ try {
 if (!expectedDesignRevision || scalar(design, 'designRevision') !== expectedDesignRevision) {
   criticalFindings.push(finding('DESIGN_REVISION_MISMATCH', 'designRevision must match the canonical current design body and stable frontmatter.'))
 }
-if (scalar(design, 'status') !== 'approved'
-  || !expectedDesignRevision
-  || scalar(design, 'approvedRevision') !== expectedDesignRevision
-  || !scalar(design, 'approvedAt')
-  || !scalar(design, 'approvedBy')) {
-  criticalFindings.push(finding('DESIGN_APPROVAL_INVALID', 'Executable tasks require a persisted approved design whose approvedRevision matches the canonical designRevision and includes approvedAt and approvedBy.'))
+const designStatus = scalar(design, 'status')
+const approvalValid = designStatus === 'approved'
+  && Boolean(expectedDesignRevision)
+  && scalar(design, 'approvedRevision') === expectedDesignRevision
+  && Boolean(scalar(design, 'approvedAt'))
+  && Boolean(scalar(design, 'approvedBy'))
+const cleanDraft = designStatus === 'draft'
+  && !scalar(design, 'approvedRevision')
+  && !scalar(design, 'approvedAt')
+  && !scalar(design, 'approvedBy')
+if ((mode === 'tasks' && !approvalValid) || (mode === 'design' && !approvalValid && !cleanDraft)) {
+  criticalFindings.push(finding('DESIGN_APPROVAL_INVALID', mode === 'tasks'
+    ? 'Executable tasks require a persisted approved design whose approvedRevision matches the canonical designRevision and includes approvedAt and approvedBy.'
+    : 'Design validation accepts a clean draft or a complete approval bound to the canonical designRevision.'))
+}
+if (approvalValid && (/(?:^|\n)[^\n]*\bDRAFT\b/i.test(design)
+  || /(?:이\s+(?:문서|설계|draft)|현재\s+(?:문서|설계|draft))[^\n]*(?:tasks\.md|구현 작업 목록)[^\n]*(?:생성하지|없(?:다|음)|승인 전)/i.test(design))) {
+  criticalFindings.push(finding('DESIGN_LIFECYCLE_NARRATIVE_CONFLICT', 'An approved design must replace current-draft or no-task narration with its approved lifecycle and current task state.'))
 }
 const fieldSection = section(design, '#### A-10-2. API 필드 근거 원장')
 let fieldRows = []
@@ -204,7 +286,7 @@ if (!fieldSection) {
     ['API', 'direction', 'field', 'type/null', 'value origin', 'source/formula', 'consumer', 'status']
       .some((key) => hasPlaceholder(row[key]))
     || !/^(stored|derived|constant)$/i.test(row['value origin'])
-    || !/^(CONFIRMED|APPROVED)$/i.test(row.status)
+    || !isEvidenceStatus(row.status)
   )
   const directionsByApi = new Map()
   for (const row of rows) {
@@ -338,7 +420,7 @@ if (!frontendSection) {
   const rows = tableRows(frontendSection)
   const keys = ['screen', 'route', 'server entry', 'client component', 'API hook/client', 'type', 'test', 'evidence', 'status']
   const invalid = rows.length === 0 || rows.some((row) =>
-    keys.some((key) => hasPlaceholder(row[key])) || !/^(CONFIRMED|APPROVED)$/i.test(row.status)
+    keys.some((key) => hasPlaceholder(row[key])) || !isEvidenceStatus(row.status)
   )
   if (invalid) {
     criticalFindings.push(finding('FRONTEND_TOPOLOGY_INCOMPLETE', 'Each changed screen needs route, server/client boundary, API client, type, test target, and evidence.'))
@@ -361,7 +443,7 @@ if (paginatedApis.size > 0) {
       || rows.some((row) =>
         ['API', 'strategy', 'total order', 'tie-breaker', 'hasNext rule', 'evidence', 'status']
           .some((key) => hasPlaceholder(row[key]))
-        || !/^(CONFIRMED|APPROVED)$/i.test(row.status)
+        || !isEvidenceStatus(row.status)
       )
     if (invalid) {
       criticalFindings.push(finding('PAGINATION_CONTRACT_INCOMPLETE', 'Pagination needs strategy, total order, unique tie-breaker, hasNext rule, and evidence for every paginated API.'))
@@ -398,25 +480,51 @@ if (sliceRows.length === 0) {
   }
 }
 
-const isTaskV3 = /^schemaVersion:\s*["']?sdd-tasks\.v3["']?\s*$/m.test(tasks)
-const isTaskV4 = /^schemaVersion:\s*["']?sdd-tasks\.v4["']?\s*$/m.test(tasks)
-if ((!isTaskV3 && !isTaskV4)
-  || !/^designSchemaVersion:\s*["']?sdd-design\.v2["']?\s*$/m.test(tasks)) {
-  criticalFindings.push(finding('TASK_SCHEMA_VERSION_UNSUPPORTED', 'tasks.md must use supported sdd-tasks.v3 or sdd-tasks.v4 and bind sdd-design.v2.'))
-}
-const bindingKeys = ['designRevision', 'productInputFingerprint', 'evidenceFingerprint']
-const bindingMismatch = bindingKeys.some((key) => !scalar(design, key)
-  || !scalar(tasks, key)
-  || scalar(design, key) !== scalar(tasks, key))
-  || !scalar(tasks, 'approvedRevision')
-  || scalar(tasks, 'approvedRevision') !== scalar(tasks, 'designRevision')
-if (bindingMismatch) {
-  criticalFindings.push(finding('TASK_REVISION_BINDING_MISMATCH', 'Task design, product, evidence, and approved revisions must bind exactly to the current design.'))
-}
-if (/(?:\bTBD\b|\bTODO\b|미정|확인 필요|경로 미정|적절히|Similar to Task)/i.test(tasks)) {
-  criticalFindings.push(finding('TASK_PLACEHOLDER_FOUND', 'Executable tasks cannot contain placeholders or defer implementation decisions.'))
-}
-if (isTaskV3) {
+let taskLifecycle
+if (mode === 'tasks') {
+  taskLifecycle = 'current'
+  const isTaskV3 = /^schemaVersion:\s*["']?sdd-tasks\.v3["']?\s*$/m.test(tasks)
+  const isTaskV4 = /^schemaVersion:\s*["']?sdd-tasks\.v4["']?\s*$/m.test(tasks)
+  if ((!isTaskV3 && !isTaskV4)
+    || !/^designSchemaVersion:\s*["']?sdd-design\.v2["']?\s*$/m.test(tasks)) {
+    criticalFindings.push(finding('TASK_SCHEMA_VERSION_UNSUPPORTED', 'tasks.md must use supported sdd-tasks.v3 or sdd-tasks.v4 and bind sdd-design.v2.'))
+  }
+  const bindingKeys = ['designRevision', 'productInputFingerprint', 'evidenceFingerprint']
+  const bindingMismatch = bindingKeys.some((key) => !scalar(design, key)
+    || !scalar(tasks, key)
+    || scalar(design, key) !== scalar(tasks, key))
+    || !scalar(tasks, 'approvedRevision')
+    || scalar(tasks, 'approvedRevision') !== scalar(tasks, 'designRevision')
+  if (bindingMismatch) {
+    criticalFindings.push(finding('TASK_REVISION_BINDING_MISMATCH', 'Task design, product, evidence, and approved revisions must bind exactly to the current design.'))
+  }
+  if (/(?:\bTBD\b|\bTODO\b|미정|확인 필요|경로 미정|적절히|Similar to Task)/i.test(tasks)) {
+    criticalFindings.push(finding('TASK_PLACEHOLDER_FOUND', 'Executable tasks cannot contain placeholders or defer implementation decisions.'))
+  }
+  const taskSurfaceIds = new Set([...tasks.matchAll(/FIGMA-SURFACE-\d+/g)].map((match) => match[0]))
+  if (taskSurfaceIds.size > 0) {
+    const figmaHeading = '## Figma 구현 기준'
+    const figmaSection = section(tasks, figmaHeading)
+    const figmaRows = tableRows(figmaSection)
+    const registrySurfaceIds = new Set(figmaRows.map((row) => row['surface ID']).filter(Boolean))
+    const taskReferences = new Set([
+      ...(figmaSection ? tasks.replace(figmaSection, '').matchAll(/FIGMA-SURFACE-\d+/g) : []),
+    ].map((match) => match[0]))
+    const registryAfterPlan = tasks.indexOf(figmaHeading) === -1
+      || (tasks.indexOf('## 0.') !== -1 && tasks.indexOf(figmaHeading) > tasks.indexOf('## 0.'))
+    const invalidRegistryRow = figmaRows.length === 0 || figmaRows.some((row) =>
+      hasPlaceholder(row['surface ID'])
+      || hasPlaceholder(row.canonicalUrl)
+      || hasPlaceholder(row.fileKey)
+      || hasPlaceholder(row['expected sourceRevision'])
+      || !/\b\d+:\d+\b/.test(row['exact Figma node IDs'] ?? '')
+    )
+    const missingRegistryBinding = [...taskReferences].some((surfaceId) => !registrySurfaceIds.has(surfaceId))
+    if (registryAfterPlan || invalidRegistryRow || taskReferences.size === 0 || missingRegistryBinding) {
+      criticalFindings.push(finding('TASK_FIGMA_REGISTRY_INCOMPLETE', 'Figma-connected tasks need one exact-node registry before section 0, and every FIGMA-SURFACE task reference must resolve to a registry row.'))
+    }
+  }
+  if (isTaskV3) {
   const taskCards = tasks.split(/^###\s+(?=TASK-)/m).slice(1)
   if (!tasks.includes('## 2. 계약·화면 빠른 참조')
     || taskCards.length === 0
@@ -440,9 +548,9 @@ if (isTaskV3) {
   if (incompletePacket) {
     criticalFindings.push(finding('TASK_IMPLEMENTATION_PACKET_INCOMPLETE', 'Every v3 task needs a confirmed edit target and complete behavior, failure, RED/GREEN, regression, completion, and handoff fields.'))
   }
-}
+  }
 
-if (isTaskV4) {
+  if (isTaskV4) {
   const moduleSection = section(tasks, '## 0. 변경 범위와 실행 순서')
   const moduleRows = tableRows(moduleSection)
   const moduleKeys = ['순서', '모듈', '변경 결과', '변경 유형', '구현 섹션', '선행 작업', '완료 검증']
@@ -504,26 +612,42 @@ if (isTaskV4) {
   if (missingDeferredExecution) {
     criticalFindings.push(finding('TASK_EXECUTION_PREFLIGHT_INCOMPLETE', 'Every SOURCE_CONFIRMED command must be copied into task Execution Preflight and actually executed before implementation.'))
   }
-}
-const designChangeIds = ids(design, 'CHG')
-const designVerificationIds = ids(design, 'VER')
-const taskChangeIds = ids(tasks, 'CHG')
-const taskVerificationIds = ids(tasks, 'VER')
-const missingTrace = [...designChangeIds].some((id) => !taskChangeIds.has(id))
-  || [...designVerificationIds].some((id) => !taskVerificationIds.has(id))
-if (missingTrace) {
-  criticalFindings.push(finding('TASK_TRACEABILITY_INCOMPLETE', 'Every design CHG and VER id must appear in at least one executable task checklist.'))
+  }
+  const designChangeIds = ids(design, 'CHG')
+  const designVerificationIds = ids(design, 'VER')
+  const taskChangeIds = ids(tasks, 'CHG')
+  const taskVerificationIds = ids(tasks, 'VER')
+  const missingTrace = [...designChangeIds].some((id) => !taskChangeIds.has(id))
+    || [...designVerificationIds].some((id) => !taskVerificationIds.has(id))
+  if (missingTrace) {
+    criticalFindings.push(finding('TASK_TRACEABILITY_INCOMPLETE', 'Every design CHG and VER id must appear in at least one executable task checklist.'))
+  }
+
+  const staleCodes = new Set([
+    'DESIGN_APPROVAL_INVALID',
+    'DESIGN_REVISION_MISMATCH',
+    'PRODUCT_INPUT_FINGERPRINT_MISMATCH',
+    'TASK_REVISION_BINDING_MISMATCH',
+  ])
+  if (criticalFindings.some((item) => staleCodes.has(item.code))) {
+    taskLifecycle = 'stale'
+    if (process.argv.includes('--mark-stale')) {
+      atomicWrite(tasksPath, setFrontmatterScalar(tasks, 'status', 'stale'))
+    }
+  }
 }
 
 const score = Math.max(0, 100 - criticalFindings.reduce((sum, item) => sum + (WEIGHTS.get(item.code) ?? 0), 0))
 const passes = criticalFindings.length === 0 && score >= 95
 const report = {
+  mode,
   verdict: passes ? 'PASS' : 'NEEDS_WORK',
   readiness: passes ? 'ready' : 'blocked',
   score,
   criticalFindings,
   warnings: [],
-  artifacts: { design: designPath, tasks: tasksPath },
+  ...(taskLifecycle ? { taskLifecycle } : {}),
+  artifacts: { design: designPath, ...(tasksPath ? { tasks: tasksPath } : {}) },
 }
 
 process.stdout.write(`${JSON.stringify(report, null, process.argv.includes('--json') ? 2 : 0)}\n`)

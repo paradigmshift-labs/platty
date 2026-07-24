@@ -5,6 +5,18 @@ description: Use when turning a plain product idea into a source-grounded spec v
 
 # Platty Ultra-Spec
 
+## Analytics Attribution
+
+For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-ultra-spec` on every
+Platty CLI process in this workflow. If an outer user-facing workflow routes
+here, the outer workflow label wins and overrides this default. Preserve the
+active label for retries, resumes, and every `nextCommand` or
+`nextAction.command` execution.
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-ultra-spec platty spec generate "<idea>" --project <project> --json
+```
+
 Turn an idea into a source-grounded spec through the `platty spec` command. Unlike `platty-sdd-spec` (free-form prd.md + user_stories.md), this pipeline compiles the idea into **typed registry facts**, **diffs them against the canonical SOT** (the code's as-is behavior), and renders a **one-page confirmation** — the planner sees that one page, the compiled docs stay internal. It is a *natural-language compiler*: when an idea has blocking ambiguity it **stops and asks before minting** (the dialogue gate) — concretizing the plan instead of guessing.
 
 Inside this repository, `AGENTS.md` overrides public examples: run `node packages/cli/dist/main.js spec ... --json`.
@@ -13,7 +25,7 @@ Inside this repository, `AGENTS.md` overrides public examples: run `node package
 
 1. Resolve a Platty project before any `spec` command (a repo path is never a selector).
 2. The project must have business docs (SOT) for the diff to be meaningful; otherwise findings degrade to static-only.
-3. Pick a provider explicitly when not defaulting: `--provider codex_cli | claude_code | claude_api`.
+3. Pick a provider explicitly when not defaulting: `--provider codex_cli | claude_code | claude_api | openai_api`.
 4. Treat the one-page summary's **⚠️ conflicts** and **❓ open questions** as the only things needing a human decision; everything else is auto-derived.
 5. **Honor the dialogue gate.** If `spec generate` returns `status: "needs_answers"`, **nothing was minted** — the spec does not exist yet. Relay the `blockingQuestions` to the human, get their answers, and re-run with `--answer "<question>=<answer>"` (repeatable). Pass `--accept-open-questions` ONLY when the human explicitly chooses to proceed without answering. Never answer blocking questions yourself.
 

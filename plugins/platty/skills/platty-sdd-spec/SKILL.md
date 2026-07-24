@@ -5,6 +5,18 @@ description: Use when turning a rough product idea, feature request, PRD need, o
 
 # Platty SDD Spec
 
+## Analytics Attribution
+
+For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-sdd-spec` on every
+Platty CLI process in this workflow. If an outer user-facing workflow routes
+here, the outer workflow label wins and overrides this default. Preserve the
+active label for retries, resumes, and every `nextCommand` or
+`nextAction.command` execution.
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-sdd-spec platty sot glossary search --project <project> --query <term> --json
+```
+
 Use this skill to create the product half of an SDD workflow: planner-facing
 `prd.md` and `user_stories.md`, plus the supporting `impact.md` evidence dossier.
 

@@ -5,6 +5,18 @@ description: Use when generating, validating, reviewing, resuming, or repairing 
 
 # Platty Generated Docs
 
+## Analytics Attribution
+
+For direct invocation, set
+`PLATTY_INVOCATION_SOURCE=platty-generated-docs` on every Platty CLI process in
+this workflow. If an outer user-facing workflow routes here, the outer workflow
+label wins and overrides this default. Preserve the active label for retries,
+resumes, and every `nextCommand` or `nextAction.command` execution.
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-generated-docs platty generate-docs run --project <project> --json
+```
+
 Use this skill for the public generated-output workflow:
 
 ```text
@@ -59,6 +71,7 @@ Ask in the user's language. For Korean users, ask:
 1. Codex CLI - 기본값, PATH의 `codex exec` headless JSON 실행
 2. Claude Code CLI - PATH의 `claude` JSON 실행
 3. Claude API - Anthropic API 키 필요
+4. OpenAI API - OpenAI API 키 필요
 ```
 
 Map the answer to command flags:
@@ -68,9 +81,13 @@ Map the answer to command flags:
 | Codex CLI | omit `--provider` or use `--provider codex_cli`; requires installed Codex CLI available on `PATH` |
 | Claude Code CLI | `--provider claude_code`; requires installed Claude Code CLI available on `PATH` |
 | Claude API | `--provider claude_api` |
+| OpenAI API | `--provider openai_api` |
 
-If the user chooses Claude API, `claude_api` requires `ANTHROPIC_API_KEY`.
-The shell environment takes precedence; the CLI also loads `~/.platty/.env`.
+Direct API providers require a nonblank credential: `claude_api` requires
+`ANTHROPIC_API_KEY`, and `openai_api` requires `OPENAI_API_KEY`. The shell environment
+takes precedence; the CLI also loads `~/.platty/.env`. Verify only
+that the required value is nonblank; never display, print, echo, or otherwise
+expose the key value.
 
 ```bash
 open ~/.platty/.env
@@ -80,9 +97,11 @@ The file must contain an uncommented line:
 
 ```env
 ANTHROPIC_API_KEY=<anthropic-api-key>
+OPENAI_API_KEY=<openai-api-key>
 ```
 
-If the CLI returns `ANTHROPIC_API_KEY_REQUIRED`, follow the response's
+If the CLI returns `ANTHROPIC_API_KEY_REQUIRED` or `OPENAI_API_KEY_REQUIRED`,
+follow the response's
 `nextCommand` or `nextAction.command`, let the user add the key, then retry the
 same command.
 
@@ -90,7 +109,8 @@ Keep the selected provider for the whole generated-docs workflow. If
 `generate-docs run` reaches EPIC confirmation, run the returned
 `generate-docs confirm-epics` command automatically unless the user explicitly
 asked to review EPICs before confirmation. Preserve the same provider flags when
-reconstructing a command.
+reconstructing a command, and preserve every explicitly selected provider and
+model through continuation, confirmation, and recovery.
 
 ## Local CLI Technical-Docs Concurrency
 
@@ -106,7 +126,9 @@ platty generate-docs run --project <project> --provider <provider> --docs-llm-co
 `build_docs` compaction and final technical-document generation. It is not the
 repository count, target count, document-worker count, or business-document
 worker count. Keep EPIC and business-document worker defaults unchanged. This
-policy does not apply to `claude_api`; its behavior remains unchanged.
+local CLI `10 -> 5 -> 2` policy does not apply to direct API providers
+`claude_api` or `openai_api`; direct API commands do not inherit concurrency
+`10`.
 
 Reduce the current budget only when command output or failed-task evidence
 shows concurrent provider pressure: HTTP `429` or an explicit rate limit,
@@ -134,6 +156,13 @@ for those failures. If verified provider pressure remains at `2`, stop after
 the second reduction and report the exact stage, run id, failed tasks, provider
 error evidence, current concurrency, and next recovery action.
 
+For a direct API, start with the command's conservative provider default. Only
+verified HTTP `429`, rate-limit, or provider-capacity evidence may justify a
+lower exposed concurrency; preserve and resume the same run with that lower
+value. Direct API JSON, schema, validation, grounding, or quality failures must
+never lower or reduce concurrency. Keep them on the repair-first,
+model-fallback, or polling path.
+
 ## Public Workflow
 
 Inspect targets before generation:
@@ -152,6 +181,7 @@ With an explicit provider choice:
 
 ```bash
 platty generate-docs run --project <project> --provider claude_api --json
+platty generate-docs run --project <project> --provider openai_api --json
 ```
 
 `epics_confirmation_required` is a machine handoff, not a human gate. EPIC
@@ -175,10 +205,10 @@ The only times you pause before confirming are:
 A plain `epics_confirmation_required` with a valid `nextCommand` is never a
 reason to ask the user — confirm it and continue to business docs.
 
-If a provider was selected earlier, preserve it:
+If a provider or model was selected earlier, preserve both explicit values:
 
 ```bash
-platty generate-docs confirm-epics --project <project> --run-id <run-id> --provider claude_api --json
+platty generate-docs confirm-epics --project <project> --run-id <run-id> --provider openai_api --model <model> --json
 ```
 
 ### Finalize: export the SOT projection

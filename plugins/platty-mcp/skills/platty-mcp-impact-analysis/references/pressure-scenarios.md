@@ -4,13 +4,13 @@ These fifteen immutable scenarios preserve the RED baseline. Each exact
 prompt is copied without paraphrase. Task 7 executes these same entries; do not
 replace them with API or screen micro-tests.
 
-## graph-candidate-limit-overflow
+## graph-removed-limit-knob
 
-Two live SDD evaluations sent `candidateLimit: 50` and `candidateLimit: 100` to
-`graph_trace`; both failed because the advertised maximum was 20.
+Two live SDD evaluations sent a removed candidate-specific limit field to
+`graph_trace`; both failed because retrieval contract v2 exposes only `limit`.
 
 - **Expected GREEN route**: read the live tool schema, omit optional limit fields
-  when the default is enough, or set `candidateLimit` to no more than 20.
+  when the default is enough, or set the shared `limit` to no more than 500.
 - **Observable pass criteria**: no out-of-range request is sent. A parameter error
   is corrected once and recorded; it is never treated as empty graph evidence.
 

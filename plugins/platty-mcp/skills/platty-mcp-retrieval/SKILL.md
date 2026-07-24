@@ -13,14 +13,43 @@ For an SDD authoring, impact-approval, or design caller, also read
 Search Brief. Retrieval must distinguish source-confirmable facts, product
 choices, and technical-design choices before it returns a question or handoff.
 
-Platty MCP retrieval is map-first: browse project, epic, document-item, and
-spec maps before search hits.
+Platty MCP retrieval is map-first for semantic and business questions and
+direct-first for exact source-near anchors.
+
+## Question Route Precedence
+
+Classify the question before selecting the first discovery tool:
+
+- Exact Spec ID, API route, screen route, event, schedule, file, symbol, or
+  source anchor: use the direct-first source-near branch. Start with `spec_get`
+  when the Spec ID is known, `spec_search` when an exact Spec anchor is known
+  but its ID is not, or `code_search` plus bounded source read for an exact code
+  anchor.
+- Business meaning, business rule, capability, journey, broad comparison, or
+  inventory: use the map-first semantic branch through project, EPIC, and typed
+  business-document maps.
+- Exact code or Spec impact that asks for business context: start direct-first,
+  confirm the source-near target, then traverse `spec_document_resolve` back to
+  business items and EPIC context.
+- A mixed business-to-implementation question with no exact source anchor:
+  establish the semantic map first, then descend through connected Specs and
+  bounded source reads.
+
+Direct-first changes discovery order, not evidence quality. A search hit is
+still only a routing candidate and must be followed by `spec_get` or an exact
+source read.
+
+`projectId` is an opaque ID, never a display name or project name. When the
+request names a project but does not provide its exact ID, call `project_list`
+once before the first project-scoped tool, select the matching returned `id`,
+and reuse that ID for the remaining route.
 
 <HARD-GATE>
 For broad, domain-term, business-rule, data-field, system-design, capability,
-journey, comparison, inventory, or semantic impact-seed questions, do not answer and do not
-treat search as proof until the Full-Cycle Retrieval Ladder has been completed
-or a required MCP surface is reported missing.
+journey, comparison, inventory, or semantic impact-seed questions without an
+exact source anchor, do not answer and do not treat search as proof until the
+Full-Cycle Retrieval Ladder has been completed or a required MCP surface is
+reported missing.
 
 The only exception is the `Initial Product Intent Gate` for an SDD product
 caller. It may ask one raw-intent question before deep or full-cycle retrieval
@@ -33,17 +62,24 @@ is mandatory: ask once-per-visit/window versus repeated-threshold earning before
 overview, glossary, EPIC, document, or source retrieval. An existing reward
 pattern cannot choose this user-visible earning policy.
 
-Do not call `document_search`, `ssot_search`, `spec_search`, `code_search`, or
-`graph_trace` first. Build project overview, vocabulary when needed, epic map,
-and selected BR/DD/DESIGN/UCL map first. Search narrows candidates after maps;
-it cannot replace exact `epic_get`, `document_list`, `document_item_get`,
-`document_resolve`, `spec_get`, or `readonly_workspace_shell` reads.
+For questions governed by this broad/semantic hard gate, do not call
+`document_search`, `spec_search`, `code_search`, or `graph_trace` first. Build
+project overview, vocabulary when needed, and the EPIC map first.
+Call `epic_get`, then open its BR, DESIGN, DD, and UCL `documentRefs` directly
+with `document_get`. Search narrows candidates only when an exact ID is absent;
+it cannot replace exact `epic_get`, `document_get`, `document_item_get`,
+`document_spec_resolve`, `spec_get`, or `readonly_workspace_shell` reads.
+Use `document_search` only after this direct route cannot identify the needed
+business document or item.
 
 Use `spec_list` for a complete API, screen, event, or schedule inventory. Apply
-`specKind` and `scopeId` filters when known and follow every `nextCursor` until
-`hasNextPage` is false. Use `spec_search` only for targeted discovery when the
-exact spec id is unknown, then confirm selected hits with `spec_get` and
-`spec_resolve`.
+the required `epicId` and optional `specKind`, then follow every `nextCursor`
+until `hasNextPage` is false. Use `spec_search` only for targeted discovery when
+the exact Spec ID is unknown, then confirm selected hits with `spec_get`.
+When filtering, `specKind` must use the stored values `api_spec`, `screen_spec`,
+`event_spec`, or `schedule_spec`. Never pass the shorthand values `api`,
+`screen`, `event`, or `schedule`; omit `specKind` when unsure and narrow from
+the returned cards instead.
 </HARD-GATE>
 
 ## MCP Tool Boundary
@@ -57,15 +93,27 @@ exact spec id is unknown, then confirm selected hits with `spec_get` and
 Stored SOT files are available only through MCP artifact tools and need exact
 evidence reads before behavior claims.
 
-Memory overlay reads are a first-class retrieval rung. At every selected
-overview, epic, document, item, and spec read, inspect returned memory summary
-cards before discarding a candidate or finalizing an answer. If a memory
-`title`, `contentPreview`, kind, level, trust, or alias is related to the user
-question, ambiguity, correction, constraint, why, naming, deprecated behavior,
-or operational caveat, call `memory_get` for the exact body before the final
-answer. Broad reads may return summary cards; use `memory_list` for scoped
-discovery and `memory_get` for exact bodies. Unread relevant memory is an
+Memory overlay reads are a first-class retrieval rung. List, map, and search
+cards expose `memoryCount`, not Memory bodies. Select a relevant candidate,
+follow its exact-read continuation (`epic_get`, `document_get`,
+`document_item_get`, or `spec_get`), inspect the returned `memories` summary
+cards, and call `memory_get` only for related exact bodies.
+Follow `next` for Memory routing instead of inventing a parallel call order.
+
+At every selected overview, epic, document, item, and spec read, inspect
+returned Memory `title`, `contentPreview`, kind, level, trust, and alias before
+discarding a candidate or finalizing an answer. Read the exact body when it is
+related to the user question, ambiguity, correction, constraint, why, naming,
+deprecated behavior, or operational caveat. Unread relevant Memory is an
 incomplete route, not an optional omission.
+
+Normal attached-card locations are `project_overview_get.overview.memories`,
+`epic_get.memories`, `document_get.memories`,
+`document_item_get.items[*].memories`, and `spec_get.memories`. A document
+exact read carries direct document Memory; item cards retain their own
+`memoryCount` and item exact reads carry item Memory. Use `memory_list` only for
+an explicit scoped Memory inventory or as a fallback when the selected exact
+read cannot expose attached cards. Never call it blindly for every candidate.
 
 ## When To Use
 
@@ -139,13 +187,15 @@ generation, report a boundary gap.
 
 | Do | Don't |
 | --- | --- |
-| Build project, epic, BR/DD/DESIGN/UCL, spec, and source maps in order. | Treat one search hit, snippet, or score as proof. |
+| For semantic and business questions, build project, epic, BR/DESIGN/DD/UCL, Spec, and source maps in order. For exact anchors, take the direct-first branch. | Treat one search hit, snippet, or score as proof. |
 | On every table/field route, inspect parent `data_dictionary` document memories before item-level conclusions; use `memory_list(documentId)` if attached cards are unavailable. | Read only the `dd_field` item and skip a parent DD fallback memory. |
 | Normalize vocabulary when terms may not line up. | Treat glossary normalization as behavior evidence. |
 | Read exact item/spec/source evidence before implementation claims. | Claim response shape, permissions, writes, emits, or absence without the required evidence tier. |
 | Treat `code_search` and MCP `readonly_workspace_shell` as a pair for code claims: find candidate files/symbols, then read bounded source before asserting exact behavior. | Stop at `code_search` when source code must be inspected. |
 | Use `workspace_git_history` and `workspace_sync_status` only for managed-worktree Git questions, preserving `networkChecked: false` and deployment limits. | Call cached refs “latest GitHub” or “production deployment,” or send `git log` through `readonly_workspace_shell`. |
-| After reading an exact BR/DD/DESIGN/UCL item, call `document_resolve(itemId)` before source-near search unless the answer is purely conceptual. | Jump from a business item to `document_search` or `spec_search` without first resolving linked context. |
+| After reading exact BR/UCL/DESIGN items, batch up to five `itemIds` through `document_spec_resolve`; DD follows Entity items instead of a Spec bridge. | Jump from a business item to search without first using its stored directional link. |
+| After `spec_get`, call `spec_document_resolve` only for reverse business context and `spec_impact_resolve` only for technical impact. | Expand every direction when the question needs only one. |
+| Treat `graph_trace` as one hop; continue only selected frontier node IDs and maintain a visited set. | Ask the server for an implicit recursive graph walk. |
 | For SDD product work, use the optional initial intent question before deep retrieval and at most one evidence-informed follow-up after MCP evidence. | Ask an initial question about an existing fact, ask more than two discovery questions, or ask the user to choose a `FACT` or `DESIGN` item. |
 | Stop expanding the selected branch after the required rungs establish the requested result and remaining uncertainty is design-owned. | Read every remotely related document, spec, or source path merely because it is available. |
 
@@ -264,11 +314,47 @@ tie-breaker, component, file, test, deployment, and rollback alternatives are
 Across both gates, ask at most two discovery questions. Final product approval does not count toward this budget. Never force either question when no material
 product ambiguity remains, and never open a third discovery round.
 
+## Typed Document And Spec Routing
+
+`document_get` is itself the normal map read:
+
+- BR and UCL return item maps. Select exact IDs, then call
+  `document_item_get(itemIds, detail=summary|full)`.
+- DESIGN returns authored topics and design-item cards. Select exact IDs, then
+  call `document_item_get`.
+- DD returns Entity cards. Read `summary` first and `full` only when field
+  details are required. DD does not normally traverse to Specs.
+
+Use `document_item_list` only for pagination, a complete item inventory, or an
+explicit `itemType` filter. A batched ID argument accepts 1-5 unique IDs;
+split larger selections into multiple calls. Follow the response's shared
+`next` hints rather than repeating routing instructions per item. When a
+selected card has `memoryCount > 0`, the exact read comes before `memory_get`;
+do not treat the count itself as a Memory body.
+
+For BR, UCL, and DESIGN:
+
+```text
+document_item_get(itemIds)
+-> document_spec_resolve(itemIds)
+-> selected spec_get(id)
+```
+
+For a Spec-first question:
+
+```text
+spec_get(id)
+-> spec_document_resolve(specIds) when business context is required
+-> spec_impact_resolve(specIds, direction) when technical impact is required
+-> graph_trace(frontier nodeIds) only for a deeper selected branch
+```
+
 ## Full-Cycle Retrieval Ladder
 
 Use the ladder for broad, semantic, comparison, inventory, or impact-seed: project
-context -> overview -> vocabulary -> epic map -> BR/DD/DESIGN/UCL map -> exact
-items -> connected specs -> exact specs -> source confirmation when required ->
+context -> overview -> vocabulary -> epic map -> `epic_get.documentRefs` ->
+BR/DESIGN/DD/UCL maps -> exact items -> directional Spec links -> exact Specs ->
+source confirmation when required ->
 Final Route Audit.
 
 Each rung is list/map first, exact detail second. Overview, artifacts, catalog
@@ -297,24 +383,20 @@ absence.
 - Vocabulary normalization is not proof.
 - Search hits, snippets, and scores are candidates, not facts.
 - Project overview and epic rows choose scope, not final behavior.
-- BR, DD, DESIGN, and UCL are semantic routers.
+- BR, DESIGN, DD, and UCL are typed semantic routers.
 - Memory overlays are human/agent notes. Use them for corrections, constraints,
   why/context, and ambiguity, but separate them from generated SOT and source
   evidence.
 - Source-near behavior claims require exact spec evidence.
-- Follow selected `spec_search` candidates with `spec_get` and `spec_resolve`.
+- Follow selected `spec_search` candidates with `spec_get`. Add
+  `spec_document_resolve` or `spec_impact_resolve` only for the requested
+  direction.
 - Exact implementation, response shape, permission, DB write, event emit,
   external call, or negative source evidence requires source-level confirmation
   when the MCP server exposes it. Use `code_search` to locate candidates, then
   actively use MCP `readonly_workspace_shell` to read the bounded source region.
-- If `document_item_list` with `itemType` returns no rows but reports
-  available items or emits
-  `DOCUMENT_ITEM_FILTER_EMPTY_WITH_AVAILABLE_ITEMS`, retry the same document
-  without the narrowing filter before treating the item as absent.
-- If `document_list` or `document_get` shows document-level `content.items`, but
-  `document_item_list` returns no rows or reports `itemTier: inconsistent`,
-  report an MCP item-tier gap and weaken to document-level evidence unless exact
-  `document_item_get` is available.
+- If an explicit `document_item_list` filter returns no rows, retry without the
+  narrowing filter before treating the item as absent.
 - If a required read-only surface is missing, report an MCP capability gap. Do
   not switch to surfaces outside configured MCP tools.
 - Stored SOT file content and artifact paths are transport evidence only.

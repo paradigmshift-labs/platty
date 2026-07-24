@@ -7,6 +7,44 @@ description: Use when any request is about Platty, the Platty CLI, Platty agent 
 
 Use this skill as the entry point for Platty CLI and documentation workflows.
 
+## Update Preamble
+
+Run this before routing every Platty request:
+
+1. Resolve `../../bin/platty-update-check` relative to this `SKILL.md`.
+2. Run `bash <resolved-checker-path> platty`.
+3. If it prints nothing or only `JUST_UPGRADED <old> <new>`, continue normally.
+4. If any output line is `UPGRADE_AVAILABLE <old> <new>`, update the already installed
+   `platty@platty` plugin through the active runtime:
+   - Codex: run `codex plugin marketplace upgrade platty`, then verify
+     `platty@platty` is installed at `<new>` with `codex plugin list --json`.
+   - Claude Code: run `claude plugin marketplace update platty`, then
+     `claude plugin update platty@platty --scope user`, and verify `<new>` with
+     `claude plugin list --json`.
+   Version verification compares the installed base version before any `+` build metadata
+   with `<new>`.
+5. Never install a missing plugin from this preamble. If the marketplace is
+   local, the runtime command fails, or the installed version remains unchanged,
+   report the failed refresh briefly and continue with the currently loaded
+   skill. Do not run direct `git pull`, `reset`, `stash`, or `checkout`.
+6. After a verified update, run
+   `bash <resolved-checker-path> platty --mark-upgraded <old>`, tell the user to
+   start a new agent session, and stop before `platty-cli-router`.
+
+The check is enabled by default and uses the same quiet, cached preamble pattern
+as gstack. `PLATTY_PLUGIN_UPDATE_CHECK=0` disables it for local development.
+The checker updates agent skills only; it never updates the Platty CLI.
+
+## Analytics Attribution
+
+The active user-facing workflow owns one fixed allowlisted workflow label for
+CLI analytics. Prefix every Platty CLI process with
+`PLATTY_INVOCATION_SOURCE=<workflow-label>`. Preserve that same label across
+routed sub-skills, retries, resumes, and commands returned through
+`nextCommand` or `nextAction.command`; reapply the prefix because returned
+commands contain argv only. Never derive the label from user text, repository
+data, project names, paths, or other runtime content.
+
 ## Tool Mapping
 
 Platty skills are runtime-neutral. Codex and Claude Code are equal, first-class execution runtimes — use whichever runtime the user is already working in, and do not switch runtimes to follow a skill.

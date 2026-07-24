@@ -105,7 +105,7 @@ User asks:
 
 Failure to prevent:
 
-- answering from one `ssot_search`, `document_search`, or `spec_search` hit;
+- answering from one `document_search` or `spec_search` hit;
 - treating one spec as the full impact map;
 - converting empty graph evidence into "no impact".
 
@@ -116,8 +116,8 @@ Search Brief classifies the question as policy-impact and broad inventory
 normalize domain terms
 -> choose epic
 -> read business-rule items
--> resolve connected specs
--> selected spec_get/spec_resolve
+-> document_spec_resolve selected business item IDs
+-> selected spec_get and spec_impact_resolve
 -> Impact Seed Packet
 -> platty-mcp-impact-analysis for graph/source convergence and limits
 ```
@@ -242,9 +242,10 @@ Search Brief: policy/rule plus impact/blast radius
 -> epic_list / epic_get
 -> document_list(documentType=br)
 -> document_item_list(rule items)
--> document_resolve(itemId) connected specs after exact business item reads
+-> document_spec_resolve(itemIds) connected Specs after exact business item reads
 -> spec_get selected specs
--> spec_resolve selected specs and source seeds
+-> spec_impact_resolve selected Specs for one-hop technical edges
+-> graph_trace returned target node ids when another frontier hop is required
 -> Impact Seed Packet
 -> platty-mcp-impact-analysis; preserve target-map and MCP capability limits
 ```
@@ -396,8 +397,8 @@ preserve raw Korean terms
 -> document_list(documentType=data_dictionary) for entity/type/status meaning when terms map to data fields
 -> document_get/document_item_list to map candidate items
 -> document_item_get exact candidate items
--> document_resolve(itemId) connected specs after exact item reads
--> spec_list/spec_resolve when connected APIs/specs must be mapped
+-> document_spec_resolve(itemIds) connected Specs after exact item reads
+-> spec_list(projectId, epicId, specKind?) when complete EPIC Spec inventory is needed
 -> spec_get for source-near behavior claims
 -> code_search/readonly_workspace_shell only if exact implementation or negative source evidence is claimed
 -> Final Route Audit
@@ -435,8 +436,8 @@ Search Brief classifies the question as mixed domain-term, policy/rule, data-fie
 -> document_list(documentType=br) and document_item_get for timing policy
 -> document_list(documentType=data_dictionary) and document_item_get for campaign type/status fields
 -> document_list(documentType=ucl) and document_item_get for user/admin capability
--> document_resolve(itemId) connected specs after exact item reads
--> spec_list/spec_resolve when multiple specs are connected
+-> document_spec_resolve(itemIds) connected Specs after exact item reads
+-> spec_list(projectId, epicId, specKind?) when complete EPIC Spec inventory is needed
 -> spec_get for exact API/screen behavior
 -> code_search for incomplete source addresses, then bounded readonly_workspace_shell source reads for calculation/source confirmation
 -> Final Route Audit
@@ -456,8 +457,8 @@ Failure to prevent:
 
 - reading a DESIGN or UCL item about the time-deal/store-explore flow and then
   jumping to `document_search`, `spec_search`, or `code_search`;
-- treating broad `document_resolve(documentId)` candidates as enough after an
-  exact item is known;
+- repeating a broad document inventory after an exact item is known instead of
+  following its directional Spec links;
 - making screen/API behavior claims from BR/DESIGN prose without ranking linked
   `screen_spec` and `api_spec` candidates;
 - hiding that exact scroll thresholds remain unconfirmed when no linked screen
@@ -473,10 +474,12 @@ Search Brief preserves raw Korean terms and English candidates: time-deal, store
 -> document_list(documentType=design) and document_list(documentType=ucl)
 -> document_get/document_item_list
 -> document_item_get exact time-deal/store-explore design and user-action items
--> document_resolve(itemId) for each selected exact item
+-> document_spec_resolve(itemIds) for the selected exact items, in batches of at most five
 -> rank linked screen_spec and api_spec candidates before search fallback
 -> spec_get selected API/screen specs
--> spec_resolve selected specs for related docs/items, graph seeds, and code seeds
+-> spec_document_resolve selected Specs only for reverse business context
+-> spec_impact_resolve selected Specs for direct one-hop technical impact
+-> graph_trace returned target node ids when another frontier hop is required
 -> code_search/readonly_workspace_shell only if exact scroll threshold or source behavior is claimed
 -> Final Route Audit names any unresolved scroll/page-navigation limits
 ```
@@ -513,7 +516,7 @@ Search Brief classifies the term as mixed coupon issuance, point spending, check
 -> document_list/document_item_list for BR, DESIGN, UCL, and DD under both candidate epics
 -> if itemType filtering returns empty but diagnostics show available rows, retry document_item_list without the itemType filter
 -> document_item_get exact coupon issuance and checkout discount items
--> document_resolve(itemId) linked specs after exact item reads
+-> document_spec_resolve(itemIds) linked Specs after exact item reads
 -> spec_get for exact API/screen behavior
 -> code_search/readonly_workspace_shell only if exact implementation or absence is claimed
 -> Final Route Audit
@@ -575,7 +578,7 @@ Expected route:
 capability gate classifies glossary_list as conditional and confirms the exact-spec route tools are present
 -> project context/context_status
 -> spec_get(projectId, id=spec:checkout:get)
--> spec_resolve(projectId, id=spec:checkout:get) when exposed by the listed exact-spec route tools
+-> spec_document_resolve(projectId, specIds=[spec:checkout:get]) only when reverse business context is requested
 -> answer from exact spec evidence with the normal evidence boundary
 -> if the request changes to a route that requires glossary_list, stop and report that conditional capability gap
 ```
@@ -664,10 +667,10 @@ Expected route:
 
 ```text
 establish project and Survey EPIC scope
--> spec_list(projectId, specKind=api_spec, scopeId=<survey-epic-id>)
+-> spec_list(projectId, epicId=<survey-epic-id>, specKind=api_spec)
 -> follow nextCursor until hasNextPage=false
 -> spec_get selected ids
--> spec_resolve when connected evidence matters
+-> spec_document_resolve when reverse business evidence matters
 ```
 
 ## Scenario 19: Exact Tally Webhook Uses Targeted Search
@@ -682,16 +685,19 @@ Failure to prevent:
 
 - treating `/api/` as a request for every API;
 - starting with a complete `spec_list` traversal when one exact target is known;
+- passing the invalid shorthand filter `specKind=api`; use `api_spec` or omit
+  the filter when the stored kind is not yet confirmed;
 - stopping at a search hit without exact spec and connected-context reads.
 
 Expected route:
 
 ```text
-after project overview and the relevant EPIC/document map are established
+project context when projectId is not already known
 -> spec_search(projectId, query="POST /api/v2/surveys/tally/webhook")
 -> select the exact route candidate
 -> spec_get(projectId, id=<selected-spec-id>)
--> spec_resolve(projectId, id=<selected-spec-id>)
+-> spec_document_resolve only when reverse business context is requested
+-> spec_impact_resolve(projectId, specIds=[<selected-spec-id>]) only when technical impact is requested
 ```
 
 ## Scenario 20: Implementation Alternatives Are Not Tied Product Interpretations
@@ -760,3 +766,54 @@ Initial Product Intent Gate detects two visible earning cadences in the raw requ
 Observable pass criteria: at most two discovery questions, one question per
 message, no existing-system claim in the initial reason, and zero FACT or DESIGN
 questions.
+
+## Scenario 22: Exact Code Location Bypasses The EPIC Map
+
+User asks:
+
+```text
+kars에서 OrderController.remove 구현 파일과 실제 예외 처리 코드를 찾아줘.
+```
+
+Failure to prevent:
+
+- starting with `epic_list` merely because the code belongs to a business
+  feature;
+- using a natural-language keyword bag in one `code_search`;
+- stopping at a code-search card without reading the bounded source region;
+- adding reverse business traversal when the user asked only for code.
+
+Expected route:
+
+```text
+project context when projectId is not already known
+-> workspace_repo_list when repoId is unknown
+-> code_search(projectId, query="OrderController.remove")
+-> readonly_workspace_shell exact bounded source read
+-> answer the code-location and behavior question
+```
+
+## Scenario 23: Exact Code Impact Traverses Back To Business
+
+User asks:
+
+```text
+OrderController.remove를 바꾸면 어떤 비즈니스 규칙과 사용자 흐름이 영향을 받아?
+```
+
+Failure to prevent:
+
+- discarding the exact code anchor and restarting with a broad EPIC inventory;
+- treating one code or Spec search hit as proof;
+- using `spec_impact_resolve` as a substitute for reverse business context;
+- promoting legacy broad document source links to exact business evidence.
+
+Expected route:
+
+```text
+exact code search and bounded source read
+-> recover the exact DELETE /order/:id Spec with spec_search/spec_get
+-> spec_document_resolve(specIds=[<delete-spec-id>])
+-> read only the returned exact business items/documents/EPIC context
+-> use spec_impact_resolve only when technical blast radius is also requested
+```

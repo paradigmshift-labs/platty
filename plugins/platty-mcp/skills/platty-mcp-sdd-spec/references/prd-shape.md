@@ -121,7 +121,7 @@ source confidence 설명은 쓰지 않고 §9 근거로 보낸다.
 
 ## 작성 규칙
 
-- `document_resolve`로 연결한 제품 문서와 `graph_trace` 결과의 상세는 §9에
+- `document_spec_resolve`로 연결한 제품 문서와 `graph_trace` 결과의 상세는 §9에
   남긴다.
 - 확인되지 않은 구현 경로를 제품 결정처럼 쓰지 않는다.
 - §0~§8은 사용자·운영·정책 언어로 쓴다. 클래스명, 함수명, 파일·라인, code node,

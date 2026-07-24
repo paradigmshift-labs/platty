@@ -30,9 +30,10 @@ Final Route Audit to every branch below. Branch sections add only their extra
 document families and completion conditions.
 
 Document family names such as BR, DD, DESIGN, and UCL are semantic labels in
-this guide. When passing them to `document_list.documentType`, use the MCP
-filter values (`br`, `data_dictionary`, `design`, `ucl`) unless the live tool
-schema says otherwise. DD maps to `data_dictionary`, not `dd`.
+this guide. Open the IDs from `epic_get.documentRefs` directly with
+`document_get`. When an explicit scoped inventory needs `document_list`, use
+the MCP filter values (`br`, `data_dictionary`, `design`, `ucl`). DD maps to
+`data_dictionary`, not `dd`.
 
 ## Routing Precedence
 
@@ -114,15 +115,16 @@ Completion:
 
 ## System Design Or Integration
 
-Use the Full-Cycle Retrieval Ladder. Required document family: DESIGN. For
-selected design items, use `document_resolve(itemId)` before search and rank
-linked API/screen/event/schedule candidates before exact spec reads.
+Use the Full-Cycle Retrieval Ladder. Required document family: DESIGN. Open the
+DESIGN ID from `epic_get.documentRefs`; for selected design items, use
+`document_spec_resolve(itemIds)` before search and rank linked
+API/screen/event/schedule candidates before exact Spec reads.
 
 Completion:
 
 - state the design item or connection read;
-- prefer item-level `document_resolve` before `document_resolve(documentId)` or
-  search when a design item has been selected;
+- prefer batched item-level `document_spec_resolve` before search when design
+  items have been selected;
 - resolve connected source-near evidence before asserting exact implementation.
 
 ## Capability, Journey, User Action
@@ -131,15 +133,15 @@ Use the Full-Cycle Retrieval Ladder. Required document families: UCL for user
 action/journey; DESIGN is required when the question asks about product flow,
 screen behavior, admin workflow, data flow, integration, architecture, or
 implementation-facing behavior. For selected DESIGN/UCL items, use
-`document_resolve(itemId)` before source-near search.
+`document_spec_resolve(itemIds)` before source-near search.
 
 Completion:
 
 - include DESIGN as the product/system map before UCL when the question asks
   about product flow, capability, journey, screen, admin workflow, or
   implementation-facing behavior;
-- use `document_resolve(itemId)` as the first bridge from selected design/UCL
-  items to screen/API specs; use `spec_search` only when linked context is
+- use `document_spec_resolve(itemIds)` as the first bridge from selected
+  design/UCL items to screen/API Specs; use `spec_search` only when linked context is
   absent, incomplete, stale, too broad, or leaves the exact spec id unknown;
 - identify the user action or capability item;
 - separate journey evidence from implementation evidence.
@@ -156,8 +158,10 @@ Completion:
 Use the exact source-near branch of the Full-Cycle Retrieval Ladder. Start from
 `spec_get` when the exact spec id is known. When an exact route, title, symbol,
 or trace is known but the spec id is unknown, use `spec_search`, then
-`spec_get`, then `spec_resolve` for selected hits. Use `spec_list` only for a
-complete inventory and follow every page.
+`spec_get` for selected hits. Use `spec_document_resolve` only when reverse
+business context is requested and `spec_impact_resolve` only when technical
+impact is requested. Use `spec_list` only for a complete EPIC-scoped inventory
+and follow every page.
 
 Completion:
 
@@ -168,8 +172,9 @@ Completion:
 ## Impact Or Blast Radius
 
 Use the Full-Cycle Retrieval Ladder to map the semantic target first. Then
-resolve connected specs, read selected source-near specs, run `spec_resolve`,
-and produce an Impact Seed Packet for `platty-mcp-impact-analysis`.
+resolve connected Specs with `document_spec_resolve`, read selected source-near
+Specs, run `spec_impact_resolve`, and produce an Impact Seed Packet for
+`platty-mcp-impact-analysis`.
 
 Completion:
 
@@ -183,9 +188,11 @@ Completion:
 
 ## Code Location Or Source Absence
 
-Use the source-near branch of the Full-Cycle Retrieval Ladder. Prefer a known
-spec id when available; otherwise use code search only after the semantic route
-has fixed the target scope.
+Use the source-near branch. When the question names an exact file, symbol, route, or Spec anchor,
+route directly through `spec_get`, `spec_search`, or `code_search` plus bounded
+source read; do not require an EPIC map first. When the question supplies only a
+semantic product description and no exact source anchor, use the map-first route
+to fix the target scope before code search.
 
 Completion:
 
@@ -201,8 +208,8 @@ Completion:
 - require source-level confirmation when the answer claims exact code absence,
   lack of writes/emits/calls, or a permission/validation path is not present;
 - if the question mixes a source-location request with a business term, keep
-  both routes visible in the Search Brief: semantic route first, source-near
-  confirmation second.
+  both routes visible in the Search Brief. Start with the exact anchor when one
+  is present; otherwise use the semantic route first.
 
 ## Mixed Questions
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -27,6 +27,28 @@ function validate(designMarkdown, tasksMarkdown) {
   return { run, report: JSON.parse(run.stdout) }
 }
 
+function validateDesign(designMarkdown) {
+  const directory = mkdtempSync(resolve(tmpdir(), 'sdd-readiness-design-'))
+  const designPath = resolve(directory, 'system_design.md')
+  writeFileSync(designPath, designMarkdown)
+  const run = spawnSync(process.execPath, [validator, '--mode', 'design', '--design', designPath, '--json'], {
+    encoding: 'utf8',
+  })
+  return { run, report: JSON.parse(run.stdout), designPath }
+}
+
+function validateTasksFromDirectory(designMarkdown, tasksMarkdown, ...extraArgs) {
+  const directory = mkdtempSync(resolve(tmpdir(), 'sdd-readiness-tasks-'))
+  const designPath = resolve(directory, 'system_design.md')
+  const tasksPath = resolve(directory, 'tasks.md')
+  writeFileSync(designPath, designMarkdown)
+  writeFileSync(tasksPath, tasksMarkdown)
+  const run = spawnSync(process.execPath, [validator, '--mode', 'tasks', '--tasks', tasksPath, '--json', ...extraArgs], {
+    encoding: 'utf8',
+  })
+  return { run, report: JSON.parse(run.stdout), designPath, tasksPath }
+}
+
 const requestRevision = 'sha256:request'
 const storiesRevision = 'sha256:stories'
 const evidenceFingerprint = 'sha256:evidence'
@@ -37,6 +59,37 @@ const canonical = (value) => Array.isArray(value)
     : value
 const digest = (value) => `sha256:${createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex')}`
 const productInputFingerprint = digest({ requestRevision, requestStatus: 'approved', storiesRevision, storiesStatus: 'approved' })
+
+function canonicalizeDesign(design) {
+  const revision = computeDesignRevision(parseSddArtifact('system_design.md', design))
+  return design
+    .replace(/^designRevision:.*$/m, `designRevision: "${revision}"`)
+    .replace(/^approvedRevision:.*$/m, `approvedRevision: "${revision}"`)
+}
+
+function readyDraftDesign() {
+  return validDesign()
+    .replace('status: "approved"', 'status: "draft"')
+    .replace(/^approvedRevision:.*$/m, 'approvedRevision: ""')
+    .replace(/^approvedAt:.*$/m, 'approvedAt: ""')
+    .replace(/^approvedBy:.*$/m, 'approvedBy: ""')
+}
+
+test('validates an approval-eligible design draft without creating or requiring tasks', () => {
+  const { run, report } = validateDesign(readyDraftDesign())
+  assert.equal(run.status, 0, run.stderr)
+  assert.equal(report.mode, 'design')
+  assert.equal(report.verdict, 'PASS')
+  assert.equal(report.artifacts.tasks, undefined)
+})
+
+test('validates tasks independently by resolving sibling system_design.md', () => {
+  const design = validDesign()
+  const { run, report } = validateTasksFromDirectory(design, validV4Tasks(design))
+  assert.equal(run.status, 0, run.stderr)
+  assert.equal(report.mode, 'tasks')
+  assert.equal(report.verdict, 'PASS')
+})
 
 test('validator accepts the shared helper revision with a normal blank line after frontmatter', () => {
   const firstPass = validDesign()
@@ -528,6 +581,55 @@ test('rejects tasks projected from a design without persisted approval metadata'
   assert.ok(report.criticalFindings.some((finding) => finding.code === 'DESIGN_APPROVAL_INVALID'))
 })
 
+test('rejects stale draft or no-task narration in an approved design', () => {
+  const design = canonicalizeDesign(validDesign().replace(
+    '# 설계',
+    '# 설계\n\n> **DRAFT - 설계 승인 대기.** 이 문서는 승인 전 clean draft이며 `tasks.md`는 생성하지 않는다.',
+  ))
+  const { run, report } = validate(design, validV4Tasks(design))
+
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'DESIGN_LIFECYCLE_NARRATIVE_CONFLICT'))
+})
+
+test('accepts Figma task references backed by one exact-node registry near the top', () => {
+  const design = validDesign()
+  const tasks = validV4Tasks(design).replace(
+    '# 구현 계획',
+    `# 구현 계획
+## Figma 구현 기준
+| surface ID | canonicalUrl | fileKey | exact Figma node IDs | expected sourceRevision |
+| --- | --- | --- | --- | --- |
+| FIGMA-SURFACE-01 | https://www.figma.com/design/file/example?node-id=10-20 | file | 10:20, 10:21 | revision |`,
+  ).replace(
+    'N/A — 이번 변경에는 사용자 화면이 없다.',
+    'Figma trace: FIGMA-SURFACE-01 nodes 전부 -> R-01 / AC-01 -> US-01-S01 -> DEC-01 -> TASK-UI-01',
+  )
+  const { run, report } = validate(design, tasks)
+
+  assert.equal(run.status, 0, JSON.stringify(report.criticalFindings))
+  assert.equal(report.verdict, 'PASS')
+})
+
+test('rejects Figma task references missing an exact-node registry row', () => {
+  const design = validDesign()
+  const tasks = validV4Tasks(design).replace(
+    '# 구현 계획',
+    `# 구현 계획
+## Figma 구현 기준
+| surface ID | canonicalUrl | fileKey | exact Figma node IDs | expected sourceRevision |
+| --- | --- | --- | --- | --- |
+| FIGMA-SURFACE-01 | https://www.figma.com/design/file/example?node-id=10-20 | file | nodes 전부 | revision |`,
+  ).replace(
+    'N/A — 이번 변경에는 사용자 화면이 없다.',
+    'Figma trace: FIGMA-SURFACE-02 nodes 전부 -> R-01 / AC-01 -> US-01-S01 -> DEC-01 -> TASK-UI-01',
+  )
+  const { run, report } = validate(design, tasks)
+
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'TASK_FIGMA_REGISTRY_INCOMPLETE'))
+})
+
 test('rejects a design body changed without a new canonical designRevision', () => {
   const original = validDesign()
   const changed = original.replace('조회 추가', '조회 계약 추가')
@@ -541,4 +643,35 @@ test('rejects a non-canonical product input fingerprint', () => {
   const { run, report } = validate(design, validTasks(design))
   assert.equal(run.status, 1)
   assert.ok(report.criticalFindings.some((finding) => finding.code === 'PRODUCT_INPUT_FINGERPRINT_MISMATCH'))
+})
+
+test('accepts semantically equivalent Markdown arrows ranges code spans and extensible statuses', () => {
+  const hash = '0123456789abcdef0123456789abcdef01234567'
+  const design = canonicalizeDesign(validDesign(undefined, undefined, 'VER-01/02/03')
+    .replace('VER-01/02/03 | backend 독립', 'VER-01~03 | backend 독립')
+    .replace(`${hash} | ${hash}`, `\`${hash}\` | \`${hash}\``)
+    .replace('A->OPEN,B->CLOSED,C->EXCLUDED', '`A→OPEN,B→CLOSED,C→EXCLUDED`')
+    .replace('| COMPLETE |', '| `COMPLETE` |')
+    .replace('| MATCHED |', '| `MATCHED` |')
+    .replaceAll('| APPROVED |', '| APPROVED-DESIGN |')
+    .replaceAll('| CONFIRMED |', '| CONFIRMED-DESIGN |')
+    .replace('npm test -- XClient.test.ts |', '`npm test -- XClient.test.ts` |'))
+  const tasks = validV4Tasks(design).replaceAll('VER-01', 'VER-01~03')
+  const { run, report } = validate(design, tasks)
+  assert.equal(run.status, 0, JSON.stringify(report.criticalFindings))
+  assert.equal(report.verdict, 'PASS')
+})
+
+test('persists stale task lifecycle state without rebinding task content', () => {
+  const design = validDesign()
+  const staleTasks = validV4Tasks(design)
+    .replace('schemaVersion: "sdd-tasks.v4"', 'schemaVersion: "sdd-tasks.v4"\nstatus: "planned"')
+    .replace(/^designRevision:.*$/m, 'designRevision: "sha256:old"')
+  const { run, report, tasksPath } = validateTasksFromDirectory(design, staleTasks, '--mark-stale')
+  const persisted = readFileSync(tasksPath, 'utf8')
+
+  assert.equal(run.status, 1)
+  assert.equal(report.taskLifecycle, 'stale')
+  assert.match(persisted, /^status:\s*"?stale"?$/m)
+  assert.match(persisted, /^designRevision:\s*"sha256:old"$/m)
 })

@@ -213,7 +213,7 @@ Expected route:
 
 ```text
 spec_search(exact route/name, specKind=api_spec when supported)
--> spec_get exact candidate -> spec_resolve when identity remains unclear
+-> spec_get exact candidate -> spec_document_resolve only when reverse business context is required
 -> one exact spec id or ask
 -> memory_list(documentId=spec.id)
 -> memory_add/update(kind=correction or constraint)

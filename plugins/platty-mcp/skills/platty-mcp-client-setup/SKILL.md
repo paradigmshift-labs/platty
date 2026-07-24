@@ -65,10 +65,11 @@ visible.
    `project_list`, `context_status`, `project_overview_get`,
    `glossary_translate`, `epic_list`, `epic_get`, `document_list`,
    `document_get`, `document_item_list`, `document_item_get`,
-   `document_resolve`, and `spec_get`.
-3. If `ssot_search`, `ssot_get`, `ssot_resolve`, `document_search`,
-   `spec_list`, `spec_search`, or `spec_resolve` are also visible, note that
-   the search-assist tier is available.
+   `document_spec_resolve`, and `spec_get`.
+3. If `document_search`, `spec_list`, or `spec_search` are also visible, note
+   that the search-assist tier is available. If `spec_document_resolve` and
+   `spec_impact_resolve` are visible, note that reverse business context and
+   directional technical impact are available.
 4. If `graph_trace` or `code_search` is also visible, note that graph/code
    discovery is available.
 5. If `workspace_repo_list` or `readonly_workspace_shell` are also visible,

@@ -25,14 +25,14 @@ and downstream fingerprints.
    packet. Otherwise invoke retrieval with `routeMode: seed-only` and require it
    to return the packet to this caller without escalating back to impact. Read
    `references/impact-seed-packet.md`.
-3. Resolve selected business-document items with `document_resolve` before
-   graph tracing, then trace graph upstream/downstream while preserving
-   confirmed edges, candidates, relation candidates, omissions, and truncation.
-   Use `graph_trace` as the fast structural map of `screen ↔ API ↔ domain ↔ DB`
-   plus related event/job/external paths; it never proves detailed behavior alone.
-   Follow the live MCP schema for every optional bound. Prefer to omit optional limit
-   fields when the default is sufficient; when setting `candidateLimit`, use the
-   current maximum 20. Never guess a larger value from another limit field.
+3. Resolve selected BR/UCL/DESIGN items with `document_spec_resolve`, read the
+   selected Specs, then call `spec_impact_resolve` for direct upstream,
+   downstream, or both-direction technical impact. DD remains on its Entity
+   route. Use `graph_trace(nodeIds, direction)` as a one-hop structural map of
+   `screen ↔ API ↔ domain ↔ DB` plus event/job/external paths. Preserve
+   confirmed edges, unresolved candidates, omissions, truncation, and frontier.
+   Continue only selected frontier node IDs and maintain a visited set; graph
+   evidence alone never proves detailed behavior.
 4. Traverse confirmed cross-EPIC evidence through
    `references/cross-epic-traversal.md`.
 5. Apply the affected-code-path coverage gate to every implementation anchor.

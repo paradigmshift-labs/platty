@@ -56,8 +56,9 @@ proved. It must not contain a complete source file or an unbounded snippet.
 
 For every anchor that can produce an implementation claim, add one row. The
 goal is to read the complete *known affected path*, not to claim that the whole
-repository was read. Follow this order: `document_resolve` selects linked
-context; `graph_trace` maps both directions and exposes candidates; `code_search`
+repository was read. Follow this order: `document_spec_resolve` selects linked
+Specs; `spec_impact_resolve` exposes direct technical impact; one-hop
+`graph_trace` maps selected frontier directions and exposes candidates; `code_search`
 finds exact symbols; `readonly_workspace_shell` reads the bounded source.
 
 ```text
@@ -215,8 +216,10 @@ Use these headings verbatim:
 ### 9-8. 조사 한계와 다음 확인
 ```
 
-`document_resolve`로 선택한 문서 항목과 연결 스펙을 확인한 뒤,
-`graph_trace`로 `화면 ↔ API ↔ 도메인 ↔ DB/외부 연동` 경로를 기록한다.
+`document_spec_resolve`로 선택한 문서 항목과 연결 스펙을 확인하고
+`spec_impact_resolve`로 직접 기술 영향을 확인한 뒤, one-hop
+`graph_trace`를 필요한 frontier에 반복해
+`화면 ↔ API ↔ 도메인 ↔ DB/외부 연동` 경로를 기록한다.
 경로 지도에는 시작 앵커, 확인된 홉, 후보/미확인 홉, 누락·절단 정보, 다음 원문
 확인을 표로 남긴다. Graph trace만으로 쓰기, 권한, 트랜잭션, 계약, 영향 부재를
 확정하지 않는다.

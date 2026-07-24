@@ -95,10 +95,10 @@ knowledge, but a conflict must be reported rather than silently resolved.
 | User knowledge | Preferred anchor | Discovery route |
 | --- | --- | --- |
 | Capability-wide product reason or policy background | EPIC | `epic_list/get`; use document retrieval only to disambiguate the feature |
-| One business rule, use case, or design flow | Exact BR/UCL/design document item when present; otherwise its document | `document_search` -> `document_get` -> `document_item_list/get` -> `document_resolve` |
+| One business rule, use case, or design flow | Exact BR/UCL/DESIGN item when present; otherwise its document | `epic_get.documentRefs` -> `document_get` -> `document_item_get`; use `document_search` only when the ID is unknown |
 | Table or field meaning, history, deprecation, or constraint | Exact `data_dictionary` `dd_field` item; otherwise the matching DD document | `document_list(documentType=data_dictionary)` plus `document_search` -> exact item reads |
-| API implementation knowledge, retirement, or usage constraint | Exact `api_spec` document | `spec_search` -> select `specKind=api_spec` -> `spec_get`; `spec_resolve` if identity is unclear |
-| Screen, event, or schedule implementation knowledge | Exact `screen_spec`, `event_spec`, or `schedule_spec` document | `spec_search` -> select the matching `specKind` -> `spec_get/spec_resolve` |
+| API implementation knowledge, retirement, or usage constraint | Exact `api_spec` | `spec_search` -> select `specKind=api_spec` -> `spec_get`; use `spec_document_resolve` only to recover business context |
+| Screen, event, or schedule implementation knowledge | Exact matching Spec | `spec_search` -> select the matching `specKind` -> `spec_get`; use `spec_document_resolve` only to recover business context |
 | Project-wide background with no narrower owner | Project overview document | `project_overview_get`; use `overview.id` as `documentId` |
 
 For a table or field memory, first resolve one exact parent `data_dictionary`

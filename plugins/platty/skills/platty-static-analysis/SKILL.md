@@ -5,6 +5,18 @@ description: Use when running, resuming, inspecting, or troubleshooting Platty s
 
 # Platty Static Analysis
 
+## Analytics Attribution
+
+For direct invocation, set
+`PLATTY_INVOCATION_SOURCE=platty-static-analysis` on every Platty CLI process
+in this workflow. If an outer user-facing workflow routes here, the outer
+workflow label wins and overrides this default. Preserve the active label for
+retries, resumes, and every `nextCommand` or `nextAction.command` execution.
+
+```bash
+PLATTY_INVOCATION_SOURCE=platty-static-analysis platty analyze --project <project> --json
+```
+
 Use this after a project has at least one registered repository.
 
 ## Flow

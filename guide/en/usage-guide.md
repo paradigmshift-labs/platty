@@ -100,19 +100,22 @@ docs, so you choose a provider when you run it:
 | `claude_api` | Your own Anthropic API key. |
 | `claude_code` | A local Claude Code installation. |
 | `codex_cli` | A local Codex CLI installation. |
+| `openai_api` | Your own OpenAI API key. |
 
 > 🚧 **The provider list is expanding.** More AI providers will be added over
-> time — the three above are what's available today.
+> time — the four above are what's available today.
 
 ```bash
 # Generated docs default to codex_cli; pass --provider to choose another
-platty generate-docs run --provider claude_api --model <model>
+platty generate-docs run --provider openai_api --model <model>
 ```
 
-`generate-docs` defaults to `codex_cli`. The `claude_api` provider reads your key
-from the `ANTHROPIC_API_KEY` environment variable (or `~/.platty/.env`). If
-generation pauses for EPIC confirmation, **keep the same `--provider`** on the
-follow-up `generate-docs confirm-epics` command.
+`generate-docs` defaults to `codex_cli`. API providers are explicit opt-in:
+having a key does not override that default. `claude_api` reads
+`ANTHROPIC_API_KEY`, while `openai_api` reads `OPENAI_API_KEY`, from the shell
+environment or `~/.platty/.env`. If generation pauses for EPIC confirmation,
+**keep the same `--provider` and any explicit `--model`** on the follow-up
+`generate-docs confirm-epics` command.
 
 > 💡 **About cost:** the documentation phase sends your extracted map to an AI
 > model, so it consumes provider tokens and may incur cost on your AI provider
@@ -410,17 +413,13 @@ validation/user error.
 ## Support
 
 For licensing, billing, or feature questions, use the official Platty support
-channel. For a technical problem or unsupported source pattern, use the
-[issue and support form](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml).
-Partial reports are welcome. Include the following details only when they are
-available and safe to publish:
+channel. When reporting an issue, include:
 
 - your runtime (and the agent runtime/version, if using one),
 - your operating system,
 - the output of `platty version`,
 - the exact command that failed,
-- relevant error output with proprietary code, credentials, secrets, personal
-  data, internal domains, and private repository URLs removed.
+- the full error output.
 
 ---
 

@@ -30,6 +30,10 @@ paths, status values, and quoted evidence in their original form.
    directly for that path.
 3. Apply the shared question-ownership contract: retrieval owns `FACT`, SDD
    spec owns `PRODUCT`, and this skill owns `DESIGN`.
+4. Use `platty-mcp-sdd-design-with-figma` as the alignment gate when a current
+   Figma sidecar or explicit Figma input is discovered. The alignment gate
+   returns a `FigmaDesignAlignmentPacket`; this skill remains the sole canonical
+   design/task writer.
 
 ## Inputs
 
@@ -37,13 +41,47 @@ paths, status values, and quoted evidence in their original form.
 - SDD directory id or spec slug containing `prd.md` (including §9) and
   `user_stories.md`.
 - Optional target repo, API, screen, table, event, or job areas.
+- Optional `figma_handoff.json` in the selected SDD directory. Product-stage
+  Figma authoring creates this small revision-bound sidecar so a new session can
+  recover the exact Figma source without requiring the user to repeat its URL.
+- An optional `FigmaDesignAlignmentPacket` from
+  `platty-mcp-sdd-design-with-figma`. It contains validated `fileKey`, exact
+  `nodeId`, `reportId`, `sourceRevision`, and semantic alignment rows linking
+  Figma evidence to product ids and proposed design decisions. This skill does
+  not invoke Figma MCP or reconstruct that packet.
+
+Without Figma input, preserve the existing design flow and artifact shapes.
+When the optional packet exists, project its validated evidence into the
+conditional sections below without treating layout as product approval.
+
+## Optional Figma Routing Gate
+
+After parsing the selected product pair and computing its exact request/story
+revisions, call `loadOptionalFigmaHandoff` from
+`../using-platty-mcp/scripts/figma-handoff.mjs` with the selected directory and
+expected `projectId`, `specId`, `requestRevision`, and `storiesRevision`.
+
+- If optional `figma_handoff.json` is absent, preserve the standard design flow
+  unchanged, including its existing non-Figma artifact shapes and gates.
+- If it is present and valid, automatically route once to
+  `platty-mcp-sdd-design-with-figma` with the loaded handoff and stop this
+  unaligned pass. That gate refreshes Figma evidence, aligns it, and delegates a
+  `FigmaDesignAlignmentPacket` back to this canonical owner.
+- If a `FigmaDesignAlignmentPacket` is already supplied by that gate, do not
+  rediscover or reroute; continue canonical design exactly once.
+- If the sidecar is corrupt or invalid, project/spec mismatched, or stale
+  against either product revision, set the run to `BLOCKED` and stop. Never
+  silently downgrade an existing sidecar to the standard no-Figma design flow.
+
+Use the helper rather than ad hoc JSON parsing or path selection. Only the fixed
+filename in the selected SPEC directory is eligible for automatic routing.
 
 ## New-Session Context Recovery Gate
 
 `prd.md` is the product decision record; it is not a substitute for the SOT
 context that led to those decisions. Before inspecting code, decide whether the
 selected PRD §9 has a reusable SOT context: selected business documents,
-their `document_resolve` results, terminology/EPIC mapping, freshness, evidence
+their `document_spec_resolve` results, terminology/EPIC mapping, freshness, evidence
 boundary, and the scope limits that apply to this design.
 
 When that context is missing, stale, partial in a required product area, or the
@@ -51,7 +89,7 @@ session cannot show that it was read, do not jump from `prd.md` to code search.
 **Invoke `platty-mcp-impact-analysis` before any graph trace, code search, or
 source read.** Its seed route must
 recover the SOT context through `platty-mcp-retrieval`, resolve the selected
-business documents with `document_resolve`, and preserve the recovered context
+business items with `document_spec_resolve`, and preserve the recovered context
 and limits in PRD §9 before graph and bounded source reads begin. This is
 required even when the user starts a new session with only the SDD folder path
 or `prd.md` as the handoff.
@@ -89,6 +127,22 @@ kickoff decision sheet; if it changes a visible result, route feasibility
 feedback to SDD spec instead. Final design approval is separate from kickoff:
 it occurs only after `system_design.md` is persisted, read back, and presented
 with its current `designRevision`.
+
+## Design Draft Persistence Gate
+
+Start a design-stage wall-clock deadline and evidence-call counter immediately
+after the input and optional Figma routing gates. Check both before and after every tool call or batch.
+After the product-conflict scan, persist a complete-
+shaped `system_design.md` no later than 3 minutes or 12 evidence tool calls,
+whichever comes first. Use `UNKNOWN` and explicit `ER-*` rows for unclosed
+source fields and mark the draft `NEEDS_WORK`; never fabricate a ready decision.
+
+The owner must not withhold `system_design.md` while waiting for exhaustive
+source closure, a large document map, command receipts, or every repository
+read. The first bounded draft is allowed one final atomic replacement after the
+targeted evidence rows close. Read back and validate both writes. This exception
+does not authorize `tasks.md`: tasks still require a separately approved exact
+`PASS / ready` design revision.
 
 ## Operating Flow
 
@@ -164,8 +218,9 @@ with its current `designRevision`.
    Evidence-Resolution row and bounded read, not a question asking a
    non-developer to guess current behavior.
 7. Derive evidence-backed AS-IS facts and system TO-BE decisions from request,
-   stories, and impact. Use the dossier's `document_resolve` links to connect
-   product documents to selected specs, and use its `graph_trace` result as a
+   stories, and impact. Use the dossier's `document_spec_resolve` links to
+   connect product items to selected Specs, use `spec_impact_resolve` for direct
+   technical impact, and use its one-hop `graph_trace` result as a
    fast `screen ↔ API ↔ domain ↔ DB` path map. For every hard implementation
    claim, require the dossier's matching `confirmed-path` coverage row: the
    entry/caller, orchestration, persistence or external boundary, consumers,
@@ -215,30 +270,47 @@ with its current `designRevision`.
    the pair, reset both product inputs to draft, and stop this design revision.
    Do not hide a changed user promise as a technical limitation, invent a field,
    or create tasks from the stale approval.
-8. Draft `system_design.md` from `references/system-design-shape.md`.
-9. Persist and read back `system_design.md`, then report its path for user review.
-10. If Self Review is not `PASS / ready`, reject final approval and stop without
+8. When `FigmaDesignAlignmentPacket` exists, validate that its product and
+   target identity matches the selected project/spec and product input. Preserve
+   `fileKey`, exact `nodeId`, `reportId`, and `sourceRevision`; map every retained
+   row through `Figma node -> R/AC -> US/scenario -> design decision`. A missing,
+   stale, conflicting, or incomplete required row is an Evidence-Resolution item
+   and blocks `PASS / ready`; do not infer a product rule from visual placement.
+   Without Figma input, skip this conditional projection and preserve the
+   existing design flow.
+9. Apply the Design Draft Persistence Gate, then draft `system_design.md` from
+   `references/system-design-shape.md`.
+   When the optional packet exists, include its conditional Figma evidence
+   summary, semantic alignment rows, and complete `FIGMA-SURFACE-*` registry in
+   §2. The registry retains every exact node ID and owns the implementation-time
+   Figma MCP preflight contract.
+10. Persist and read back `system_design.md`, then run
+    `scripts/readiness-validator.mjs --mode design --design <system_design.md> --json`.
+    This validates the approval-eligible design by itself; it must not create,
+    require, or read a temporary `tasks.md`. Report the design path and exact
+    validator findings for user review.
+11. If Self Review or design-mode validation is not `PASS / ready`, reject final approval and stop without
    creating or overwriting `tasks.md`; record every Evidence-Resolution item in
    `system_design.md` §11, refresh evidence, and create a new design revision.
-11. If the current design is not explicitly approved, stop without creating or
+12. If the current design is not explicitly approved, stop without creating or
    overwriting `tasks.md`.
-12. On explicit approval, reread `system_design.md`, `prd.md`, and `user_stories.md`.
+13. On explicit approval, reread `system_design.md`, `prd.md`, and `user_stories.md`.
     Recompute both product input revisions and `productInputFingerprint`; reject
     approval when either status is not approved or any stored input value differs.
     Otherwise persist and read back `approvedRevision`, `approvedAt`, and
     `approvedBy` for the current design revision.
-13. During task preflight, reread all three inputs, recompute
+14. During task preflight, reread all three inputs, recompute
     `productInputFingerprint`, then recheck impact status, source parity, source
     commits, context status, and evidence boundary. Recompute
     `evidenceFingerprint`.
-14. If either product-input status is not approved, stop, keep any existing
-    `tasks.md` stale, and do not create a design revision unless the user later
+15. If either product-input status is not approved, stop, atomically set any
+    existing `tasks.md` frontmatter to `status: stale`, and do not create a design revision unless the user later
     makes an explicit draft-only design request.
-15. If both product inputs remain approved and a product-input revision changed,
+16. If both product inputs remain approved and a product-input revision changed,
     its fingerprint changes; create and verify a new unapproved design revision
     and stop without creating tasks. Apply the same transition for an evidence
     fingerprint change.
-16. Otherwise draft `tasks.md` from `references/tasks-shape.md` as
+17. Otherwise draft `tasks.md` from `references/tasks-shape.md` as
     `schemaVersion: sdd-tasks.v4`, `designSchemaVersion: sdd-design.v2`,
     `planKind: implementation-checklist`, and
     `executionReadiness: ready`. Copy only the minimal revision/fingerprint
@@ -265,7 +337,19 @@ with its current `designRevision`.
     the same focused command, adjacent regression, self-review for spec coverage
     and contract consistency, then a commit checkpoint. A checkpoint records the
     intended coherent commit boundary; it does not authorize a commit by itself.
-17. Persist and read back `tasks.md`; verify its metadata matches the current
+    When Figma alignment exists, project the design's complete
+    `FIGMA-SURFACE-*` registry once at the top of `tasks.md`, before §0. It retains
+    canonicalUrl, expected sourceRevision, every exact node, live screenshot and
+    bounded design-context reads, and the single preflight receipt. Every
+    Figma-sensitive UI/interaction task references its surface id and preserves
+    the complete `Figma node -> R/AC -> US/scenario -> design decision -> task`
+    chain; do not duplicate the full registry in each task. Authentication/read
+    failure, missing nodes, unavailable
+    required reads, identity mismatch, or drift blocks code edits and returns to
+    Figma refresh, alignment, new design revision, and approval. Backend, data,
+    and operational tasks include Figma ids only when the design row directly
+    constrains them; do not spray node ids across unrelated tasks.
+18. Persist and read back `tasks.md`; verify its metadata matches the current
     approved design, then run the rubric's post-task structural audit. Check
     every §0 module row maps to one numbered section; every changed section has
     checkboxes, confirmed exact file actions, symbol/signature, full source
@@ -278,12 +362,23 @@ with its current `designRevision`.
     The validator must recompute the canonical product-input fingerprint and
     `designRevision` from the persisted design rather than comparing stored
     strings only.
-    Run `scripts/readiness-validator.mjs` against the persisted design and task
-    artifact. Any score below 95 or any critical finding makes task generation
+    Run `scripts/readiness-validator.mjs --mode tasks --tasks <tasks.md> --json`;
+    it resolves sibling `system_design.md` automatically. The explicit legacy
+    form `--design <system_design.md> --tasks <tasks.md>` remains supported. Any
+    score below 95 or any critical finding makes task generation
     incomplete even when prose Self Review says `PASS / ready`.
     Apply `review -> revise -> read back -> review` to `tasks.md` until the audit
-    passes. If it cannot pass, report task generation incomplete with the exact
-    structural findings; do not report the task artifact as verified.
+    passes. If a current binding or approval mismatch is found, rerun with
+    `--mark-stale` so the existing task frontmatter is atomically persisted as
+    `status: stale` without rebinding its revisions. If validation cannot pass,
+    report task generation incomplete with the exact structural findings; do not
+    report the task artifact as verified.
+
+An approved design with active `DRAFT`, approval-waiting, or no-task narration is
+invalid. Before computing the final approved revision, remove or replace every
+such statement, including claims that `tasks.md` has not been created. The
+body must describe the current lifecycle; changing that text after approval makes
+the old approval and any projected tasks stale.
 
 ## Impact Ownership And Refresh Gate
 
@@ -308,8 +403,9 @@ Show only the compact path map needed for implementation, reference dossier
 evidence ids, and reference PRD §9 for detailed evidence.
 
 Hard implementation claims require the relevant bounded evidence and source
-parity plus `confirmed-path` coverage. `document_resolve` selects connected
-document context; `graph_trace` accelerates path discovery; `code_search` finds
+parity plus `confirmed-path` coverage. `document_spec_resolve` selects connected
+Specs; `spec_impact_resolve` selects direct technical impact; one-hop
+`graph_trace` accelerates selected frontier discovery; `code_search` finds
 exact source candidates; and `readonly_workspace_shell` reads the bounded
 source. Graph output does not prove writes, permissions, contracts,
 transactions, retries, or absence. Empty graph/search results are not proof of
@@ -318,8 +414,9 @@ no impact. A candidate-only or `partial-path` result is not a confirmed claim.
 ## Local SDD File Access
 
 This is the only local file exception in the MCP SDD design route. Read only the
-selected `prd.md` (including §9) and `user_stories.md`, then write only the design
-and approval-gated task outputs in:
+selected `prd.md` (including §9), `user_stories.md`, and fixed optional
+`figma_handoff.json`, then write only the design and approval-gated task outputs
+in:
 
 ```text
 ~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/
@@ -330,6 +427,9 @@ Rules:
 - Create the target directory if needed.
 - Resolve `~` to the current user's home directory before file operations.
 - Confirm the directory project id matches the selected MCP project context.
+- Discover and validate the optional sidecar only through
+  `loadOptionalFigmaHandoff`; do not accept an arbitrary JSON path as automatic
+  Figma lineage.
 - Do not read local SOT, run local Platty CLI commands, or inspect unrelated
   local files.
 - `platty-mcp-impact-analysis` owns every PRD §9 update and dossier edit.
@@ -426,7 +526,7 @@ maps above the title.
 Write the body in the fixed reader order from `system-design-shape.md`:
 
 1. meeting goal and decision agenda;
-2. product understanding and user flows;
+2. product understanding, user flows, and the conditional Figma evidence link;
 3. evidence-backed AS-IS structure, current call flow, and constraints;
 4. TO-BE structure, responsibilities, and target call flow;
 5. the single canonical component change map;
@@ -443,7 +543,7 @@ The meeting-facing §1–§11 may use SDD stable ids and the user/system contrac
 being discussed. Keep MCP document/spec/repository ids, tool-call names,
 candidate files/symbols, source-confidence narration, and graph/search detail in
 Appendix A. A meeting agenda or `TQ-*` row points to an appendix evidence gap;
-it does not embed a `spec_get`, `document_resolve`, `graph_trace`, or code-search
+it does not embed a `spec_get`, `document_spec_resolve`, `graph_trace`, or code-search
 instruction in the body.
 
 The body must let a developer answer, in order: what the product intends; how
@@ -508,6 +608,16 @@ at the end of the applicable module; never make the reader decode IDs to learn
 what to implement. Candidate targets never enter `tasks.md`. An open product
 `O-*` or technical `TQ-*` that can change the result remains in design §11 and
 blocks task creation.
+
+When `FigmaDesignAlignmentPacket` exists, `system_design.md` owns the complete
+`FIGMA-SURFACE-*` registry and `tasks.md` projects it once near the top. A
+Figma-sensitive UI/interaction task references the applicable surface id and
+preserves the approved chain from its exact nodes through product ids,
+story/scenario, and design decision to the task. The top registry performs the
+design-approved live Figma MCP preflight before code edits and stops on failed
+reads or drift. Do not add Figma references to unrelated implementation work.
+Without Figma input, this conditional rule is absent and the existing design
+flow remains unchanged.
 
 Any open `O-*`/`TQ-*` decision that changes the result blocks task creation;
 do not create or overwrite `tasks.md` until a new ready design resolves them.
@@ -723,6 +833,9 @@ missing source parity.
 ## Stop Conditions
 
 - MCP tools are not configured.
+- An existing `figma_handoff.json` is corrupt/invalid, belongs to another
+  project/spec, or is stale against the current request/story revisions. Stop
+  as `BLOCKED`; do not continue as though no Figma input existed.
 - Request/story inputs are not approved and draft-only design was not requested.
 - Impact refresh is required but `platty-mcp-impact-analysis` cannot run or its
   artifact cannot be read back.
@@ -769,6 +882,7 @@ missing source parity.
 | Treating user approval as an override for a blocked design | Reject approval and resolve the blocking finding before presenting a new approval-eligible revision. |
 | Treating a stale task plan as current | Compare design approval metadata and regenerate only after the revised design is approved. |
 | Reimplementing artifact hashes or trimming parsed bodies | Use `sdd-artifacts.mjs` for parsing and every request, stories, product-input, and design revision value; a mismatch creates a new unapproved revision. |
+| Ignoring a bad Figma sidecar | Validate the fixed `figma_handoff.json` with `loadOptionalFigmaHandoff`; an invalid, mismatched, or stale sidecar blocks instead of falling back to non-Figma design. |
 | Inventing task details from partial source parity or `partial-path` coverage | Do not create or overwrite `tasks.md`; preserve the gap and next exact read in design §11 and create a new revision after confirmation. |
 | Weakening a promised user result only in design | Send feasibility feedback to `platty-mcp-sdd-spec`; revise and reapprove the affected product rules and stories before continuing. |
 | Grouping tasks only by data/backend/frontend layers | Inherit the approved design's outcome-oriented `SLICE-*` groups and place layer-specific work inside each slice. |
