@@ -410,8 +410,9 @@ platty sot export                    # project the SOT to a Markdown tree for gr
 
 ## 지원
 
-라이선스, 결제, 또는 기능 관련 문의는 공식 Platty 지원 채널을 이용하세요. 문제를
-신고할 때는 다음을 포함해 주세요:
+라이선스, 결제, 또는 기능 관련 문의는 공식 Platty 지원 채널을 이용하세요.
+[이슈를 신고하거나 지원을 요청할 때](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)는
+다음을 포함해 주세요:
 
 - 사용 중인 런타임(에이전트를 사용 중이라면 에이전트 런타임/버전도),
 - 운영 체제,

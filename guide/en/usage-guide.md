@@ -413,7 +413,8 @@ validation/user error.
 ## Support
 
 For licensing, billing, or feature questions, use the official Platty support
-channel. When reporting an issue, include:
+channel. [Report an issue or request support](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
+with:
 
 - your runtime (and the agent runtime/version, if using one),
 - your operating system,
