@@ -49,6 +49,19 @@ function validateTasksFromDirectory(designMarkdown, tasksMarkdown, ...extraArgs)
   return { run, report: JSON.parse(run.stdout), designPath, tasksPath }
 }
 
+function validateTasksWithFigmaHandoff(designMarkdown, tasksMarkdown, figmaHandoff) {
+  const directory = mkdtempSync(resolve(tmpdir(), 'sdd-readiness-figma-handoff-'))
+  const designPath = resolve(directory, 'system_design.md')
+  const tasksPath = resolve(directory, 'tasks.md')
+  writeFileSync(designPath, designMarkdown)
+  writeFileSync(tasksPath, tasksMarkdown)
+  writeFileSync(resolve(directory, 'figma_handoff.json'), `${JSON.stringify(figmaHandoff, null, 2)}\n`)
+  const run = spawnSync(process.execPath, [validator, '--mode', 'tasks', '--tasks', tasksPath, '--json'], {
+    encoding: 'utf8',
+  })
+  return { run, report: JSON.parse(run.stdout), designPath, tasksPath }
+}
+
 const requestRevision = 'sha256:request'
 const storiesRevision = 'sha256:stories'
 const evidenceFingerprint = 'sha256:evidence'
@@ -81,6 +94,17 @@ test('validates an approval-eligible design draft without creating or requiring 
   assert.equal(report.mode, 'design')
   assert.equal(report.verdict, 'PASS')
   assert.equal(report.artifacts.tasks, undefined)
+})
+
+test('rejects approval-eligible draft narration that would change after approval', () => {
+  const design = canonicalizeDesign(readyDraftDesign().replace(
+    '# 설계',
+    '# 설계\n\n> **Lifecycle: `DRAFT — 승인 대기`.** 승인 전에는 `tasks.md`를 생성하지 않는다.',
+  ))
+  const { run, report } = validateDesign(design)
+
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'DESIGN_LIFECYCLE_NARRATIVE_CONFLICT'))
 })
 
 test('validates tasks independently by resolving sibling system_design.md', () => {
@@ -428,6 +452,28 @@ test('rejects CHG or VER ids that are absent from all task cards', () => {
   assert.ok(report.criticalFindings.some((finding) => finding.code === 'TASK_TRACEABILITY_INCOMPLETE'))
 })
 
+test('rejects a task claim that is absent from the approved design', () => {
+  const design = validDesign()
+  const tasks = validV4Tasks(design).replace(
+    '설계 근거: CHG-01 / VER-01 / API-01 / EDIT-01 / NOEDIT-01',
+    '설계 근거: CHG-01 / CHG-99 / VER-01 / API-01 / EDIT-01 / NOEDIT-01',
+  )
+  const { run, report } = validate(design, tasks)
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'TASK_UNAPPROVED_CLAIM'))
+})
+
+test('rejects a changed module section without an approved CHG and VER citation', () => {
+  const design = validDesign()
+  const tasks = validV4Tasks(design).replace(
+    /## 2\. backend[\s\S]*?(?=## 3\.)/i,
+    (section) => section.replaceAll('CHG-01', '').replaceAll('VER-01', ''),
+  )
+  const { run, report } = validate(design, tasks)
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'TASK_UNAPPROVED_CLAIM'))
+})
+
 test('rejects a source state mapped to an undefined response disposition', () => {
   const design = validDesign().replace('B->CLOSED', 'B->UNKNOWN_BUCKET')
   const { run, report } = validate(design, validTasks(design))
@@ -592,15 +638,37 @@ test('rejects stale draft or no-task narration in an approved design', () => {
   assert.ok(report.criticalFindings.some((finding) => finding.code === 'DESIGN_LIFECYCLE_NARRATIVE_CONFLICT'))
 })
 
+test('rejects approval-waiting lifecycle narration after the design is approved', () => {
+  const design = canonicalizeDesign(validDesign().replace(
+    '# 설계',
+    '# 설계\n\n> **Lifecycle: `READY — 설계 승인 대기`.** 구현 계약은 준비됐다.',
+  ))
+  const { run, report } = validate(design, validV4Tasks(design))
+
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'DESIGN_LIFECYCLE_NARRATIVE_CONFLICT'))
+})
+
+test('accepts a domain Draft term that does not describe the design lifecycle', () => {
+  const design = canonicalizeDesign(validDesign().replace(
+    '# 설계',
+    '# 설계\n\n임시저장(Draft) 글 정책은 이번 변경 범위 밖이며 기존 동작을 유지한다.',
+  ))
+  const { run, report } = validate(design, validV4Tasks(design))
+
+  assert.equal(run.status, 0, JSON.stringify(report.criticalFindings))
+  assert.equal(report.verdict, 'PASS')
+})
+
 test('accepts Figma task references backed by one exact-node registry near the top', () => {
   const design = validDesign()
   const tasks = validV4Tasks(design).replace(
     '# 구현 계획',
     `# 구현 계획
 ## Figma 구현 기준
-| surface ID | canonicalUrl | fileKey | exact Figma node IDs | expected sourceRevision |
-| --- | --- | --- | --- | --- |
-| FIGMA-SURFACE-01 | https://www.figma.com/design/file/example?node-id=10-20 | file | 10:20, 10:21 | revision |`,
+| surface ID | canonicalUrl | fileKey | exact Figma node IDs | expected sourceRevision | required live reads | receipt |
+| --- | --- | --- | --- | --- | --- | --- |
+| FIGMA-SURFACE-01 | https://www.figma.com/design/file/example?node-id=10-20 | file | 10:20, 10:21 | revision | screenshot + bounded design context | queriedAt=2026-07-24; observedSourceRevision=revision; stable |`,
   ).replace(
     'N/A — 이번 변경에는 사용자 화면이 없다.',
     'Figma trace: FIGMA-SURFACE-01 nodes 전부 -> R-01 / AC-01 -> US-01-S01 -> DEC-01 -> TASK-UI-01',
@@ -609,6 +677,59 @@ test('accepts Figma task references backed by one exact-node registry near the t
 
   assert.equal(run.status, 0, JSON.stringify(report.criticalFindings))
   assert.equal(report.verdict, 'PASS')
+})
+
+test('accepts the conditional Figma registry heading emitted by the tasks template', () => {
+  const design = validDesign()
+  const tasks = validV4Tasks(design).replace(
+    '# 구현 계획',
+    `# 구현 계획
+## Figma 구현 기준 (조건부)
+| surface ID | canonicalUrl | fileKey | exact Figma node IDs | expected sourceRevision | required live reads | receipt |
+| --- | --- | --- | --- | --- | --- | --- |
+| FIGMA-SURFACE-01 | https://www.figma.com/design/file/example?node-id=10-20 | file | 10:20, 10:21 | revision | screenshot + bounded design context | queriedAt=2026-07-24; observedSourceRevision=revision; stable |`,
+  ).replace(
+    'N/A — 이번 변경에는 사용자 화면이 없다.',
+    'Figma trace: FIGMA-SURFACE-01 nodes 전부 -> R-01 / AC-01 -> US-01-S01 -> DEC-01 -> TASK-UI-01',
+  )
+  const { run, report } = validate(design, tasks)
+
+  assert.equal(run.status, 0, JSON.stringify(report.criticalFindings))
+  assert.equal(report.verdict, 'PASS')
+})
+
+test('rejects a Figma registry that omits required live reads or its preflight receipt', () => {
+  const design = validDesign()
+  const tasks = validV4Tasks(design).replace(
+    '# 구현 계획',
+    `# 구현 계획
+## Figma 구현 기준
+| surface ID | canonicalUrl | fileKey | exact Figma node IDs | expected sourceRevision |
+| --- | --- | --- | --- | --- |
+| FIGMA-SURFACE-01 | https://www.figma.com/design/file/example?node-id=10-20 | file | 10:20 | revision |`,
+  ).replace(
+    'N/A — 이번 변경에는 사용자 화면이 없다.',
+    'Figma trace: FIGMA-SURFACE-01 -> R-01 / AC-01 -> US-01-S01 -> DEC-01 -> TASK-UI-01',
+  )
+  const { run, report } = validate(design, tasks)
+
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'TASK_FIGMA_REGISTRY_INCOMPLETE'))
+})
+
+test('rejects tasks that omit the Figma registry when the approved design is Figma-connected', () => {
+  const design = canonicalizeDesign(validDesign().replace(
+    '# 설계',
+    `# 설계
+### Figma 근거 연결
+| surface ID | canonicalUrl | fileKey | exact Figma node IDs | reportId | expected sourceRevision |
+| --- | --- | --- | --- | --- | --- |
+| FIGMA-SURFACE-01 | https://www.figma.com/design/file/example?node-id=10-20 | file | 10:20 | report | revision |`,
+  ))
+  const { run, report } = validate(design, validV4Tasks(design))
+
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'TASK_FIGMA_REGISTRY_INCOMPLETE'))
 })
 
 test('rejects Figma task references missing an exact-node registry row', () => {
@@ -628,6 +749,44 @@ test('rejects Figma task references missing an exact-node registry row', () => {
 
   assert.equal(run.status, 1)
   assert.ok(report.criticalFindings.some((finding) => finding.code === 'TASK_FIGMA_REGISTRY_INCOMPLETE'))
+})
+
+test('rejects design and tasks that silently drop mapped nodes from sibling Figma handoff', () => {
+  const design = canonicalizeDesign(validDesign().replace(
+    '# 설계',
+    `# 설계
+### Figma 근거 연결
+| surface ID | canonicalUrl | fileKey | exact Figma node IDs | reportId | expected sourceRevision |
+| --- | --- | --- | --- | --- | --- |
+| FIGMA-SURFACE-01 | https://www.figma.com/design/file/example?node-id=10-20 | file | 10:20 | report | revision |`,
+  ))
+  const tasks = validV4Tasks(design).replace(
+    '# 구현 계획',
+    `# 구현 계획
+## Figma 구현 기준
+| surface ID | canonicalUrl | fileKey | exact Figma node IDs | expected sourceRevision | required live reads | receipt |
+| --- | --- | --- | --- | --- | --- | --- |
+| FIGMA-SURFACE-01 | https://www.figma.com/design/file/example?node-id=10-20 | file | 10:20 | revision | screenshot + bounded design context | queriedAt=2026-07-24; observedSourceRevision=revision; stable |`,
+  ).replace(
+    'N/A — 이번 변경에는 사용자 화면이 없다.',
+    'Figma trace: FIGMA-SURFACE-01 10:20 -> R-01 / AC-01 -> US-01-S01 -> DEC-01 -> TASK-UI-01',
+  )
+  const figmaHandoff = {
+    schemaVersion: 1,
+    coverageStatus: 'complete',
+    mappings: [
+      {
+        disposition: 'DESIGN_DETAIL',
+        figmaNodeIds: ['10:20', '10:21'],
+        productIds: ['R-01'],
+        storyScenarioIds: ['US-01-S01'],
+      },
+    ],
+  }
+  const { run, report } = validateTasksWithFigmaHandoff(design, tasks, figmaHandoff)
+
+  assert.equal(run.status, 1)
+  assert.ok(report.criticalFindings.some((finding) => finding.code === 'FIGMA_HANDOFF_NODE_COVERAGE_INCOMPLETE'))
 })
 
 test('rejects a design body changed without a new canonical designRevision', () => {

@@ -104,10 +104,11 @@ draft alignment report, but no canonical design write follows from it.
    conflicts.
 9. When all blocking rows are resolved, pass the packet, exact product identity,
    Figma evidence references, and Impact Dossier to `platty-mcp-sdd-design`.
-   Once the product-conflict scan is clear, do not delay delegation while
-   collecting non-conflict source details: the canonical owner's Design Draft
-   Persistence Gate must run by its 3-minute or 12-call boundary, with unresolved
-   alignment/source details represented as `ER-*` rows.
+   Once the product-conflict scan is clear, delegate the complete alignment
+   packet. The canonical owner uses accuracy-first evidence closure by default;
+   elapsed time or call count must not force unresolved alignment/source details
+   into `ER-*` rows. A time-boxed `fast-draft` is allowed only when the user
+   explicitly requests it.
 10. The owning design skill writes and reads back `system_design.md`. It creates
    no `tasks.md` until explicit design approval of the exact `designRevision`.
 11. Require the canonical `system_design.md` to retain the exact Figma evidence
@@ -117,7 +118,11 @@ draft alignment report, but no canonical design write follows from it.
     `FIGMA-SURFACE-*` ids. Each row contains the canonical URL, every exact Figma
     node used for that surface, expected sourceRevision, required live screenshot
     and bounded design-context reads, and the drift/failure action. This is the
-    implementation-time Figma MCP preflight contract.
+    implementation-time Figma MCP preflight contract. The registry node union
+    must equal the node union in every mapping of the validated
+    `figma_handoff.json`; retain `DESIGN_DETAIL`, `FIGMA_GAP`, and
+    product-excluded/no-edit nodes even when they do not create an implementation
+    change.
 12. After exact design approval, require every Figma-sensitive UI task in
     `tasks.md` to reference its `FIGMA-SURFACE-*` id plus its R/AC, US/scenario,
     and design-decision links. Project the complete registry once near the top of
@@ -140,7 +145,10 @@ rows consumed by technical decisions. `tasks.md` must project that registry once
 near the top, before its module execution plan. Every UI or interaction task
 references the applicable surface id and retains its R/AC, scenario, and
 design-decision links. Non-visual backend tasks retain product/design links only
-when the same change directly constrains them.
+when the same change directly constrains them. The design and task registries
+must each contain every mapped node from the validated sibling
+`figma_handoff.json`; dispositions may become no-edit boundaries, but nodes may
+not disappear.
 
 The preflight is an execution gate, not a reminder. Authentication or Figma read
 failure, a missing node, an identity mismatch, unavailable screenshot or design

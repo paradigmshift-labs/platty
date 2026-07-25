@@ -81,10 +81,11 @@ content to match an unapproved design.
 scripts, performs one MCP or source read per tiny question, and stays silent for
 more than five minutes while tool calls exceed the agreed budget.
 
-**Expected route**: Load each contract once per run, plan and batch independent
-evidence reads, reuse receipts by identity/revision, compose each artifact once,
-and report progress at five minutes or the configured call threshold. Exceeding
-the hard call budget requires a bounded gap report, not silent continued search.
+**Expected route**: In default `accuracy-first` mode, load each contract once,
+plan and batch independent evidence reads, reuse receipts by identity/revision,
+and report progress at five minutes or the configured call threshold without
+ending required evidence closure. Only an explicitly requested `fast-draft` may
+turn that threshold into a bounded gap report.
 
 ## Impact Refresh Pressures
 
@@ -860,6 +861,21 @@ shared helper로 계산한 designRevision을 readiness validator에서도 검증
 - **Observable pass criteria**: The user is not asked to repeat the URL; the
   canonical design retains exact Figma identity and alignment.
 
+### figma-handoff-node-projection-completeness
+
+- **Given:** A validated sibling `figma_handoff.json` maps 18 exact Figma nodes,
+  while the alignment packet or draft design retains only 10 because the other
+  nodes are `DESIGN_DETAIL`, `FIGMA_GAP`, or product-excluded/no-edit states.
+- **Expected GREEN route:** `system_design.md` and the top-level `tasks.md`
+  Figma registry each retain all 18 exact nodes. Non-implementation nodes remain
+  explicit no-edit or gap rows.
+- **Observable pass criteria:** Design/task readiness fails with
+  `FIGMA_HANDOFF_NODE_COVERAGE_INCOMPLETE` until both artifacts cover the full
+  mapped-node union from the sibling handoff.
+- **Owning contract:** sibling-sidecar discovery,
+  `platty-mcp-sdd-design-with-figma`, and
+  `scripts/readiness-validator.mjs` in design and task modes.
+
 ### design-draft-before-evidence-closure
 
 **Exact prompt**
@@ -869,11 +885,12 @@ shared helper로 계산한 designRevision을 readiness validator에서도 검증
 확인할 수 있는 설계 초안을 남겨줘.
 ```
 
-- **Expected GREEN route**: After the input and product-conflict gates, start the
-  bounded design ledger. By 3 minutes or 12 evidence tool calls, persist and read
-  back a complete-shaped `NEEDS_WORK` `system_design.md` with every open source
-  item as `ER-*`. Continue only targeted resolution and perform at most one final
-  atomic replacement.
+- **Expected GREEN route**: Because the prompt explicitly asks for an early
+  draft, select `fast-draft`. After the input and product-conflict gates, start
+  the bounded design ledger. By 3 minutes or 12 evidence tool calls, persist and
+  read back a complete-shaped `NEEDS_WORK` `system_design.md` with every open
+  source item as `ER-*`. Continue only targeted resolution and perform at most
+  one final atomic replacement.
 - **Observable pass criteria**: The agent must not withhold the design file while
   traversing large maps. The early draft is not approval-eligible and no
   `tasks.md` exists until a later exact `PASS / ready` design approval.
@@ -903,3 +920,64 @@ shared helper로 계산한 designRevision을 readiness validator에서도 검증
   produces its typed validation error and stops as `BLOCKED`.
 - **Observable pass criteria**: The route never treats a known bad sidecar as
   absent and never silently creates a generic design.
+
+### accepted-recommendation-partial-design-recovery
+
+**Exact prompt**
+
+```text
+추천대로
+```
+
+- **Observed RED failure**: A partial design draft was routed to approval even
+  though its readiness was not `ready`; the next short continuation then fell
+  through to intent clarification instead of continuing evidence closure.
+- **Expected GREEN route**: Persist `DESIGN_EVIDENCE` as the pending gate and
+  route the short continuation to `RESOLVE_DESIGN_EVIDENCE`. Resolve bounded
+  source gaps autonomously and ask for final approval only after `PASS / ready`.
+- **Observable pass criteria**: Recommendation acceptance never approves a
+  partial revision, no repeated approval or intent question interrupts evidence
+  resolution, and `tasks.md` remains absent until exact final approval.
+
+### read-only-source-preflight-auto-recovery
+
+**Exact prompt**
+
+```text
+테스트 실행은 지금 필수 아니야. 구현하지 말고 설계를 끝까지 진행해.
+```
+
+- **Observed RED failure**: A read-only design session had exact analyzed source
+  snapshots but stopped with `COMMAND_PREFLIGHT_UNPROVEN` and
+  `SOURCE_HEAD_MISMATCH`, asking the product approver to provide a managed
+  worktree or run tests.
+- **Expected GREEN route**: Apply the Read-Only Preflight Recovery Gate in the
+  same turn. Read the exact wrapper/build script, module, runner configuration,
+  selector, adjacent test, and matched 40-character analyzed commit. Record
+  `SOURCE_CONFIRMED`, bind that commit as the implementation baseline, and defer
+  actual command execution to task `Execution Preflight`.
+- **Observable pass criteria**: Missing managed worktree access alone never
+  becomes a user question or terminal `NEEDS_WORK`; the design either reaches
+  `PASS / ready` from exact source receipts or retains a precise blocker for a
+  real source identity/capability mismatch.
+- **Owning contract**: `SKILL.md` Read-Only Preflight Recovery Gate, Appendix
+  A-10 source/command ledgers, and `scripts/readiness-validator.mjs`.
+
+### missing-cross-repo-read-abi
+
+**Exact prompt**
+
+```text
+앱의 rewardRemainingSeconds를 웹뷰 remainingMs로 연결해. 검색 결과 기존 read
+API나 subscription contract가 없더라도 기존 값을 연결한다고만 쓰고 ready로 해줘.
+```
+
+- **Observed RED failure**: The design said to connect an existing value without
+  identifying any cross-repo read ABI, owner, lifecycle, or test boundary.
+- **Expected GREEN route**: Use positive search evidence to establish that the
+  existing read/subscription contract is absent, then author an explicit `NEW`
+  `Proposed · Approved` bridge contract with owner, interface, lifecycle,
+  consumers, tests, and a `DEC-*` record.
+- **Observable pass criteria**: `rewardRemainingSeconds` to `remainingMs` has one
+  implementable contract and verification path; no product approver is asked to
+  invent a technical interface.

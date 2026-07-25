@@ -54,6 +54,19 @@ Figma를 수정하거나 시각적 배치에서 제품 의도를 추론하기 �
 `inferred`나 `missing` 근거를 제품 약속으로 승격하지 않는다. 모든 주장에 원본 node ID와
 정확한 관찰 내용을 보존한다.
 
+## Design Context Equivalence Gate
+
+필수 결과는 범위가 제한된 구조 design context이며 `get_design_context`라는 특정 tool surface
+자체가 필수는 아니다. `get_design_context`가 selected layer 없음 또는 node 크기 때문에만
+실패하면 node별 metadata, screenshot, read-only `use_figma`로 계속한다. 정확한 node
+identity, hierarchy, visible text/property, bounds, 관련 reaction 또는 부재를 기록한 범위 제한
+`use_figma` node read는 구조 context 요구를 충족하는 동등한 근거다.
+
+정확한 node ID가 URL에 있는데 발생한 desktop selected-layer/selection-state 오류는 인증 또는
+capability 실패가 아니다. node별 read-only 실행으로 해석할 수 있다면 사용자/operator에게
+layer 선택을 요청하거나 요구하지 않는다. 직접 design-context surface와 범위 제한 구조 fallback
+모두가 채택 State Frame의 필수 근거를 만들지 못할 때만 completeness를 중단한다.
+
 ## 필수 워크플로
 
 `references/workflow.md`를 순서대로 따른다.
@@ -73,8 +86,9 @@ Figma를 수정하거나 시각적 배치에서 제품 의도를 추론하기 �
    stateFrames + excluded === semanticCandidates
    ```
 
-6. 채택한 각 State Frame에 대해 node별 metadata, screenshot, 범위가 제한된 design context를
-   수집한다. capability와 근거가 존재하면 명시적인 annotation, interaction, component,
+6. 채택한 각 State Frame에 대해 node별 metadata, screenshot, 직접 surface 또는 Design
+   Context Equivalence Gate에서 얻은 범위 제한 design context를 수집한다. capability와
+   근거가 존재하면 명시적인 annotation, interaction, component,
    token, asset도 수집한다.
 7. assertion 단위의 `direct` / `inferred` / `missing` 근거를 만들고 warning과 구현 gap을
    기록한다.

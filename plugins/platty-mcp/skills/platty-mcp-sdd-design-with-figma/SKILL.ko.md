@@ -92,10 +92,11 @@ report를 요청할 수는 있지만 그 결과로 canonical design을 작성하
 8. layout, token, component, spacing, color, visual hierarchy 등 제품 의미를 보존하는 차이는
    `DESIGN_DETAIL`로 둔다. 제품 충돌이 아니다.
 9. blocking row가 모두 해결되면 packet, 정확한 product identity, Figma evidence reference,
-   Impact Dossier를 `platty-mcp-sdd-design`에 전달한다. product-conflict scan이 끝난 뒤에는
-   non-conflict source detail을 더 수집하느라 위임을 늦추지 않는다. canonical owner의
-   Design Draft Persistence Gate가 3분 또는 12-call 경계 안에 실행돼야 하며 미해결 alignment와
-   source detail은 `ER-*` row로 표시한다.
+   Impact Dossier를 `platty-mcp-sdd-design`에 전달한다. 기본값은 **accuracy-first**이며,
+   시간이나 call count는 진행 telemetry일 뿐 불완전한 alignment/source detail을 `ER-*` row로
+   강제하거나 필수 evidence closure를 끝내는 조건이 아니다. 사용자가 preview, timebox 또는
+   범위가 제한된 초안을 명시적으로 요청했을 때만 **fast-draft**를 사용하고 결과를
+   `NEEDS_WORK`로 유지한다.
 10. owning design skill이 `system_design.md`를 쓰고 다시 읽는다. 정확한 `designRevision`이
     명시적으로 승인되기 전에는 `tasks.md`를 만들지 않는다.
 11. canonical `system_design.md`에 정확한 Figma evidence identity(`canonicalUrl`, `fileKey`,
@@ -103,7 +104,9 @@ report를 요청할 수는 있지만 그 결과로 canonical design을 작성하
     alignment row를 보존한다. stable `FIGMA-SURFACE-*` ID 기반의 완전한 registry 하나를
     소유해야 한다. 각 row에는 canonical URL, surface에 쓰인 모든 정확한 Figma node,
     예상 sourceRevision, 필수 live screenshot 및 제한된 design-context 조회, drift/failure
-    action이 포함된다. 이것이 구현 시점 Figma MCP preflight 계약이다.
+    action이 포함된다. 이것이 구현 시점 Figma MCP preflight 계약이다. registry의 node 합집합은
+    검증된 `figma_handoff.json`의 모든 mapping node 합집합과 같아야 한다. 구현 변경을 만들지
+    않더라도 `DESIGN_DETAIL`, `FIGMA_GAP`, 제품 제외/no-edit node를 보존한다.
 12. 정확한 설계 승인 뒤 `tasks.md`의 모든 Figma-sensitive UI task가 `FIGMA-SURFACE-*` ID,
     R/AC, US/scenario, design-decision link를 참조해야 한다. module 실행 계획 전에 `tasks.md`
     상단 근처에 완전한 registry를 한 번 투영해 새 세션 구현자가 개별 task를 훑지 않고도
@@ -120,7 +123,9 @@ report를 요청할 수는 있지만 그 결과로 canonical design을 작성하
 registry와 기술 결정이 소비하는 검토 가능한 alignment row를 투영해야 한다. `tasks.md`는 module
 실행 계획 전에 상단 근처에 registry를 한 번 투영한다. 모든 UI 또는 interaction task는 적용되는
 surface ID를 참조하고 R/AC, scenario, design-decision link를 보존한다. 같은 변경이 직접 제약하는
-경우가 아니라면 non-visual backend task에는 product/design link만 유지한다.
+경우가 아니라면 non-visual backend task에는 product/design link만 유지한다. 설계와 task
+registry는 각각 검증된 sibling `figma_handoff.json`의 모든 mapped node를 포함해야 한다.
+disposition은 no-edit 경계가 될 수 있지만 node가 사라져서는 안 된다.
 
 preflight는 알림이 아니라 실행 gate다. 인증 또는 Figma 조회 실패, missing node, identity 불일치,
 screenshot이나 design context 사용 불가, source drift가 있으면 코드 편집을 중단하고 차단한다.

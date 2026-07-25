@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto'
-import { readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import {
   computeDesignRevision,
@@ -39,12 +39,14 @@ const WEIGHTS = new Map([
   ['TASK_VERIFICATION_CHECKLIST_INCOMPLETE', 25],
   ['TASK_EXECUTION_PREFLIGHT_INCOMPLETE', 25],
   ['TASK_TRACEABILITY_INCOMPLETE', 20],
+  ['TASK_UNAPPROVED_CLAIM', 25],
   ['DESIGN_REVIEW_NOT_READY', 25],
   ['DESIGN_APPROVAL_INVALID', 25],
   ['DESIGN_LIFECYCLE_NARRATIVE_CONFLICT', 20],
   ['DESIGN_REVISION_MISMATCH', 25],
   ['PRODUCT_INPUT_FINGERPRINT_MISMATCH', 25],
   ['TASK_FIGMA_REGISTRY_INCOMPLETE', 25],
+  ['FIGMA_HANDOFF_NODE_COVERAGE_INCOMPLETE', 25],
 ])
 
 function argument(name) {
@@ -222,13 +224,45 @@ const designPath = explicitDesignPath ?? (mode === 'tasks' && tasksPath
 if (!['design', 'tasks'].includes(mode)
   || !designPath
   || (mode === 'tasks' && !tasksPath)) {
-  process.stderr.write('Usage: readiness-validator.mjs --mode <design|tasks> --design <system_design.md> [--tasks <tasks.md>] --json\n')
+  process.stderr.write('Usage: readiness-validator.mjs --mode <design|tasks> --design <system_design.md> [--tasks <tasks.md>] [--figma-handoff <figma_handoff.json>] --json\n')
   process.exit(2)
 }
 
 const design = readFileSync(designPath, 'utf8')
 const tasks = mode === 'tasks' ? readFileSync(tasksPath, 'utf8') : undefined
 const criticalFindings = []
+const siblingFigmaHandoffPath = resolve(dirname(designPath), 'figma_handoff.json')
+const figmaHandoffPath = argument('--figma-handoff')
+  ?? (existsSync(siblingFigmaHandoffPath) ? siblingFigmaHandoffPath : undefined)
+if (figmaHandoffPath) {
+  try {
+    const handoff = JSON.parse(readFileSync(figmaHandoffPath, 'utf8'))
+    const mappedNodeIds = new Set((handoff.mappings ?? [])
+      .flatMap((mapping) => mapping.figmaNodeIds ?? [])
+      .filter((nodeId) => /^\d+:\d+$/.test(nodeId)))
+    const designNodeIds = new Set([...design.matchAll(/\b\d+:\d+\b/g)].map((match) => match[0]))
+    const taskNodeIds = new Set([...(tasks ?? '').matchAll(/\b\d+:\d+\b/g)].map((match) => match[0]))
+    const missingFromDesign = [...mappedNodeIds].filter((nodeId) => !designNodeIds.has(nodeId))
+    const missingFromTasks = mode === 'tasks'
+      ? [...mappedNodeIds].filter((nodeId) => !taskNodeIds.has(nodeId))
+      : []
+    if (mappedNodeIds.size === 0 || missingFromDesign.length > 0 || missingFromTasks.length > 0) {
+      const details = [
+        missingFromDesign.length > 0 ? `design missing: ${missingFromDesign.join(', ')}` : undefined,
+        missingFromTasks.length > 0 ? `tasks missing: ${missingFromTasks.join(', ')}` : undefined,
+      ].filter(Boolean).join('; ')
+      criticalFindings.push(finding(
+        'FIGMA_HANDOFF_NODE_COVERAGE_INCOMPLETE',
+        `Every mapped Figma handoff node must remain explicit in system_design.md${mode === 'tasks' ? ' and tasks.md' : ''}.${details ? ` ${details}.` : ''}`,
+      ))
+    }
+  } catch (error) {
+    criticalFindings.push(finding(
+      'FIGMA_HANDOFF_NODE_COVERAGE_INCOMPLETE',
+      `The Figma handoff could not be read as a complete node mapping: ${error.message}`,
+    ))
+  }
+}
 
 if (!/^schemaVersion:\s*["']?sdd-design\.v2["']?\s*$/m.test(design)) {
   criticalFindings.push(finding('DESIGN_SCHEMA_VERSION_MISSING', 'system_design.md must declare sdd-design.v2.'))
@@ -266,14 +300,17 @@ const cleanDraft = designStatus === 'draft'
   && !scalar(design, 'approvedRevision')
   && !scalar(design, 'approvedAt')
   && !scalar(design, 'approvedBy')
+const reviewReady = nestedScalar(design, 'review', 'verdict') === 'PASS'
+  && nestedScalar(design, 'review', 'readiness') === 'ready'
 if ((mode === 'tasks' && !approvalValid) || (mode === 'design' && !approvalValid && !cleanDraft)) {
   criticalFindings.push(finding('DESIGN_APPROVAL_INVALID', mode === 'tasks'
     ? 'Executable tasks require a persisted approved design whose approvedRevision matches the canonical designRevision and includes approvedAt and approvedBy.'
     : 'Design validation accepts a clean draft or a complete approval bound to the canonical designRevision.'))
 }
-if (approvalValid && (/(?:^|\n)[^\n]*\bDRAFT\b/i.test(design)
+if ((approvalValid || reviewReady) && (/(?:^|\n)\s*(?:>\s*)?(?:\*\*|`)?(?:Lifecycle:\s*`?)?DRAFT\b[^\n]*(?:\*\*|`)?\s*(?:$|\n)/i.test(design)
+  || /(?:Lifecycle|READY)[^\n]*승인\s*대기/i.test(design)
   || /(?:이\s+(?:문서|설계|draft)|현재\s+(?:문서|설계|draft))[^\n]*(?:tasks\.md|구현 작업 목록)[^\n]*(?:생성하지|없(?:다|음)|승인 전)/i.test(design))) {
-  criticalFindings.push(finding('DESIGN_LIFECYCLE_NARRATIVE_CONFLICT', 'An approved design must replace current-draft or no-task narration with its approved lifecycle and current task state.'))
+  criticalFindings.push(finding('DESIGN_LIFECYCLE_NARRATIVE_CONFLICT', 'A PASS / ready design must not contain draft, approval-waiting, or current no-task narration that would require a body edit after exact-revision approval.'))
 }
 const fieldSection = section(design, '#### A-10-2. API 필드 근거 원장')
 let fieldRows = []
@@ -483,6 +520,9 @@ if (sliceRows.length === 0) {
 let taskLifecycle
 if (mode === 'tasks') {
   taskLifecycle = 'current'
+  const designChangeIds = ids(design, 'CHG')
+  const designVerificationIds = ids(design, 'VER')
+  let changedModuleHasUnapprovedTrace = false
   const isTaskV3 = /^schemaVersion:\s*["']?sdd-tasks\.v3["']?\s*$/m.test(tasks)
   const isTaskV4 = /^schemaVersion:\s*["']?sdd-tasks\.v4["']?\s*$/m.test(tasks)
   if ((!isTaskV3 && !isTaskV4)
@@ -502,9 +542,11 @@ if (mode === 'tasks') {
     criticalFindings.push(finding('TASK_PLACEHOLDER_FOUND', 'Executable tasks cannot contain placeholders or defer implementation decisions.'))
   }
   const taskSurfaceIds = new Set([...tasks.matchAll(/FIGMA-SURFACE-\d+/g)].map((match) => match[0]))
-  if (taskSurfaceIds.size > 0) {
+  const designSurfaceIds = new Set([...design.matchAll(/FIGMA-SURFACE-\d+/g)].map((match) => match[0]))
+  if (taskSurfaceIds.size > 0 || designSurfaceIds.size > 0) {
     const figmaHeading = '## Figma 구현 기준'
     const figmaSection = section(tasks, figmaHeading)
+      ?? section(tasks, `${figmaHeading} (조건부)`)
     const figmaRows = tableRows(figmaSection)
     const registrySurfaceIds = new Set(figmaRows.map((row) => row['surface ID']).filter(Boolean))
     const taskReferences = new Set([
@@ -518,10 +560,14 @@ if (mode === 'tasks') {
       || hasPlaceholder(row.fileKey)
       || hasPlaceholder(row['expected sourceRevision'])
       || !/\b\d+:\d+\b/.test(row['exact Figma node IDs'] ?? '')
+      || !/screenshot/i.test(row['required live reads'] ?? '')
+      || !/bounded\s+design\s+context/i.test(row['required live reads'] ?? '')
+      || hasPlaceholder(row.receipt)
     )
-    const missingRegistryBinding = [...taskReferences].some((surfaceId) => !registrySurfaceIds.has(surfaceId))
-    if (registryAfterPlan || invalidRegistryRow || taskReferences.size === 0 || missingRegistryBinding) {
-      criticalFindings.push(finding('TASK_FIGMA_REGISTRY_INCOMPLETE', 'Figma-connected tasks need one exact-node registry before section 0, and every FIGMA-SURFACE task reference must resolve to a registry row.'))
+    const expectedRegistryIds = new Set([...designSurfaceIds, ...taskReferences])
+    const missingRegistryBinding = [...expectedRegistryIds].some((surfaceId) => !registrySurfaceIds.has(surfaceId))
+    if (registryAfterPlan || invalidRegistryRow || missingRegistryBinding) {
+      criticalFindings.push(finding('TASK_FIGMA_REGISTRY_INCOMPLETE', 'A Figma-connected design or task needs one complete exact-node registry before section 0, and every design or task FIGMA-SURFACE reference must resolve to a registry row.'))
     }
   }
   if (isTaskV3) {
@@ -562,6 +608,16 @@ if (mode === 'tasks') {
       'Test:', 'RED:', 'Minimal implementation:', 'GREEN:', 'Regression:',
       'Self-review — spec coverage:', 'Commit checkpoint:',
     ]
+    for (const row of moduleRows) {
+      const sectionNumber = row['구현 섹션']?.match(/§(\d+)/)?.[1]
+      const body = sectionNumber ? numberedSection(tasks, sectionNumber) : undefined
+      const changed = !/^(?:NO-CHANGE|REUSE|N\/A)$/i.test(row['변경 유형'] ?? '')
+      if (changed && body) {
+        const approvedChange = [...ids(body, 'CHG')].some((id) => designChangeIds.has(id))
+        const approvedVerification = [...ids(body, 'VER')].some((id) => designVerificationIds.has(id))
+        changedModuleHasUnapprovedTrace ||= !approvedChange || !approvedVerification
+      }
+    }
     const invalidModule = moduleRows.some((row) => {
       const sectionNumber = row['구현 섹션']?.match(/§(\d+)/)?.[1]
       const body = sectionNumber ? numberedSection(tasks, sectionNumber) : undefined
@@ -613,14 +669,18 @@ if (mode === 'tasks') {
     criticalFindings.push(finding('TASK_EXECUTION_PREFLIGHT_INCOMPLETE', 'Every SOURCE_CONFIRMED command must be copied into task Execution Preflight and actually executed before implementation.'))
   }
   }
-  const designChangeIds = ids(design, 'CHG')
-  const designVerificationIds = ids(design, 'VER')
   const taskChangeIds = ids(tasks, 'CHG')
   const taskVerificationIds = ids(tasks, 'VER')
   const missingTrace = [...designChangeIds].some((id) => !taskChangeIds.has(id))
     || [...designVerificationIds].some((id) => !taskVerificationIds.has(id))
   if (missingTrace) {
     criticalFindings.push(finding('TASK_TRACEABILITY_INCOMPLETE', 'Every design CHG and VER id must appear in at least one executable task checklist.'))
+  }
+  const unapprovedTrace = [...taskChangeIds].some((id) => !designChangeIds.has(id))
+    || [...taskVerificationIds].some((id) => !designVerificationIds.has(id))
+    || changedModuleHasUnapprovedTrace
+  if (unapprovedTrace) {
+    criticalFindings.push(finding('TASK_UNAPPROVED_CLAIM', 'Every task CHG and VER must exist in the approved design, and every changed module must cite at least one approved CHG and VER in its implementation section.'))
   }
 
   const staleCodes = new Set([

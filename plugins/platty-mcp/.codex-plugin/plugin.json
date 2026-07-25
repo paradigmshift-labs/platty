@@ -1,6 +1,6 @@
 {
   "name": "platty-mcp",
-  "version": "0.0.28+codex.20260724030022",
+  "version": "0.0.29+codex.20260724160614",
   "description": "Platty MCP retrieval, Figma evidence, impact, memory, and SDD handoff skills for configured context servers.",
   "author": {
     "name": "Paradigm Shift Labs"

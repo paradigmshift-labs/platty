@@ -24,6 +24,17 @@ Record each required or conditional capability as `complete`, `partial`,
 Load `figma:figma-use` immediately before every `use_figma` call. Record the
 actual capability used; tool visibility alone is not successful execution.
 
+### Design Context Equivalence Gate
+
+`get_design_context` is not mandatory when another configured read surface
+produces the same bounded structural outcome. If it fails because no desktop
+layer is selected or the target is too large, use node-specific metadata and
+screenshot plus bounded read-only `use_figma`. Record exact node identity,
+hierarchy, visible text/properties, bounds, and reactions or their absence. That
+successful node-specific structural read satisfies bounded design context.
+Never ask the user to select a layer solely to recover this tool-specific
+selection-state error. Mark structural context missing only if both paths fail.
+
 ## 3. Overview and initial metadata
 
 For a page target, take an overview screenshot and a bounded metadata read that
@@ -65,7 +76,8 @@ For every State Frame:
 
 1. capture a screenshot of that exact node;
 2. read node-specific metadata;
-3. obtain bounded design context when supported and safe for node size;
+3. obtain bounded design context from the direct tool or the Design Context
+   Equivalence Gate;
 4. collect explicit copy and annotations;
 5. collect prototype reactions or record their absence;
 6. identify component instances and variants;

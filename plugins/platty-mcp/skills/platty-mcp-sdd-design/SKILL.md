@@ -131,18 +131,18 @@ with its current `designRevision`.
 ## Design Draft Persistence Gate
 
 Start a design-stage wall-clock deadline and evidence-call counter immediately
-after the input and optional Figma routing gates. Check both before and after every tool call or batch.
-After the product-conflict scan, persist a complete-
-shaped `system_design.md` no later than 3 minutes or 12 evidence tool calls,
-whichever comes first. Use `UNKNOWN` and explicit `ER-*` rows for unclosed
-source fields and mark the draft `NEEDS_WORK`; never fabricate a ready decision.
+after the input and optional Figma routing gates. Check both before and after every tool call or batch. **accuracy-first** is the default: counters are
+progress telemetry and must not force a draft, skip a required evidence gate, or
+end targeted source closure. Persist a `NEEDS_WORK` `system_design.md` only when
+the required evidence boundary itself is reached, a capability is unavailable,
+or the user explicitly cancels the run; never fabricate a ready decision.
 
-The owner must not withhold `system_design.md` while waiting for exhaustive
-source closure, a large document map, command receipts, or every repository
-read. The first bounded draft is allowed one final atomic replacement after the
-targeted evidence rows close. Read back and validate both writes. This exception
-does not authorize `tasks.md`: tasks still require a separately approved exact
-`PASS / ready` design revision.
+Use **fast-draft** only when the user explicitly requests a preview, time-boxed
+draft, or bounded exploration. It may persist a complete-shaped
+`system_design.md` at 3 minutes or 12 evidence tool calls with every unclosed
+field as `UNKNOWN`/`ER-*`, then perform at most one final atomic replacement.
+Fast-draft never authorizes `tasks.md`: tasks still require a separately
+approved exact `PASS / ready` design revision.
 
 ## Operating Flow
 
@@ -217,6 +217,13 @@ does not authorize `tasks.md`: tasks still require a separately approved exact
    SDD spec instead of creating a technical `TQ-*`. A source gap remains an
    Evidence-Resolution row and bounded read, not a question asking a
    non-developer to guess current behavior.
+   When bounded exact reads establish with positive search evidence that an
+   existing read contract or subscription contract is absent, do not leave a vague
+   `MODIFY` instruction such as "connect the existing value." Create an explicit
+   `NEW` `Proposed · Approved` contract that names its owner, interface, and
+   tests; record the choice as `DEC-*` with its evidence and cross-repo
+   consumers. This is not a user question: do not ask the product approver to
+   invent the missing implementation contract.
 7. Derive evidence-backed AS-IS facts and system TO-BE decisions from request,
    stories, and impact. Use the dossier's `document_spec_resolve` links to
    connect product items to selected Specs, use `spec_impact_resolve` for direct
@@ -249,6 +256,21 @@ does not authorize `tasks.md`: tasks still require a separately approved exact
    any implementation edit. A plausible command or package script name alone is
    not source confirmation. A `confirmed-path` label without those
    rows is not implementation evidence.
+
+   **Read-Only Preflight Recovery Gate.** If design-mode validation is otherwise
+   complete and the remaining findings are `COMMAND_PREFLIGHT_UNPROVEN` and/or
+   `SOURCE_HEAD_MISMATCH`, do not return or respond with `NEEDS_WORK` for the user
+   or product approver to resolve, and do not ask them to run tests. Continue the
+   bounded source reads in the same design turn. Read the exact wrapper/build
+   script, module, runner configuration, selector, adjacent test, and matched
+   40-character analyzed commit for every affected repository. When the source
+   tool is contractually read-only and these receipts match, record
+   `SOURCE_CONFIRMED`, bind the analyzed commit as the implementation baseline,
+   copy the exact command into task `Execution Preflight`, revise the design, and
+   rerun validation. A missing managed worktree alone is not a user decision or
+   a reason to stop; a real identity mismatch or unavailable exact source remains
+   an evidence-resolution blocker.
+
    Before drafting TO-BE contracts, run a product-feasibility reconciliation:
    compare every promised user result with fields, attribution, state coverage,
    existing surfaces, and the approved no-change/no-write boundaries. For every
@@ -276,6 +298,11 @@ does not authorize `tasks.md`: tasks still require a separately approved exact
    row through `Figma node -> R/AC -> US/scenario -> design decision`. A missing,
    stale, conflicting, or incomplete required row is an Evidence-Resolution item
    and blocks `PASS / ready`; do not infer a product rule from visual placement.
+   Treat every node in every mapping of the validated sibling
+   `figma_handoff.json` as retained projection input, including
+   `DESIGN_DETAIL`, `FIGMA_GAP`, and product-excluded/no-edit rows. Every such
+   node must remain explicit in both the design registry and the later task
+   registry; a narrower alignment packet must not silently discard it.
    Without Figma input, skip this conditional projection and preserve the
    existing design flow.
 9. Apply the Design Draft Persistence Gate, then draft `system_design.md` from
@@ -363,7 +390,8 @@ does not authorize `tasks.md`: tasks still require a separately approved exact
     `designRevision` from the persisted design rather than comparing stored
     strings only.
     Run `scripts/readiness-validator.mjs --mode tasks --tasks <tasks.md> --json`;
-    it resolves sibling `system_design.md` automatically. The explicit legacy
+    it resolves sibling `system_design.md` and `figma_handoff.json`
+    automatically. The explicit legacy
     form `--design <system_design.md> --tasks <tasks.md>` remains supported. Any
     score below 95 or any critical finding makes task generation
     incomplete even when prose Self Review says `PASS / ready`.
@@ -374,11 +402,15 @@ does not authorize `tasks.md`: tasks still require a separately approved exact
     report task generation incomplete with the exact structural findings; do not
     report the task artifact as verified.
 
-An approved design with active `DRAFT`, approval-waiting, or no-task narration is
-invalid. Before computing the final approved revision, remove or replace every
-such statement, including claims that `tasks.md` has not been created. The
-body must describe the current lifecycle; changing that text after approval makes
-the old approval and any projected tasks stale.
+A `PASS / ready` design with active `DRAFT`, approval-waiting, or current
+no-task narration is invalid even before approval. Before presenting the exact
+revision for approval, remove or replace every such statement, including claims
+that `tasks.md` has not been created, and rerun design-mode validation. Use
+lifecycle-neutral contract wording that remains true before and after
+exact-revision approval. Do not edit the body merely to record approval;
+changing body text after approval changes the revision and creates a second,
+avoidable approval loop. An approved design that retains stale lifecycle
+narration is also invalid.
 
 ## Impact Ownership And Refresh Gate
 

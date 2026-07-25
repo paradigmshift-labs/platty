@@ -58,6 +58,23 @@ Every material assertion is classified as exactly one of:
 Never promote `inferred` or `missing` evidence into a product promise. Keep the
 source node IDs and the precise observation behind every assertion.
 
+## Design Context Equivalence Gate
+
+Bounded structural design context is the required evidence outcome;
+`get_design_context` is one tool surface, not a mandatory tool name. When
+`get_design_context` fails only because no layer is selected or because a node
+is too large, continue with node-specific metadata, screenshots, and read-only
+`use_figma`. A successful bounded `use_figma` node read that records exact node
+identity, hierarchy, visible text/properties, bounds, and relevant reactions or
+their absence satisfies the structural-context requirement.
+
+A desktop selected-layer or selection-state error is not an authentication or
+capability failure for a URL containing an exact node ID. Do not ask or require
+the user or operator to select a layer when node-specific read-only execution
+can resolve that node. Stop completeness only when neither design-context
+surface nor the bounded structural fallback can produce the required evidence
+for an admitted State Frame.
+
 ## Required Workflow
 
 Follow `references/workflow.md` in order.
@@ -78,7 +95,8 @@ Follow `references/workflow.md` in order.
    ```
 
 6. Capture each admitted State Frame using node-specific metadata, screenshot,
-   and bounded design context. Capture explicit annotations, interactions,
+   and bounded design context from either the direct surface or the Design
+   Context Equivalence Gate. Capture explicit annotations, interactions,
    components, tokens, and assets when their capabilities and evidence exist.
 7. Build assertion-level `direct` / `inferred` / `missing` evidence and record
    warnings plus implementation gaps.
