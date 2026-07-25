@@ -167,6 +167,13 @@ technical-design handoff; neither consumes the product-question budget.
     a product change is required, update both product files, reset their status
     to `draft`, and restart from step 12 so impact is regenerated for the new
     revisions. Persist and read back the final pair before reporting completion.
+    After every final write or approval-status transition, run
+    `node scripts/product-readiness-validator.mjs --prd <prd.md> --stories <user_stories.md> --json`
+    from this skill directory. When the caller supplies an independent AUGMENT
+    PRD, append `--augment-prd <original-prd.md>`. Require `PASS`, score 100, and
+    zero critical findings before requesting approval or responding. Repair the
+    canonical metadata, scenario IDs, spec identity, or preserved original rows
+    and rerun the validator; readable prose or Self Review cannot waive it.
 19. Accept a feasibility-feedback packet from `platty-mcp-sdd-design` when
     bounded source reads disprove an approved product premise or show that a
     requirement needs data, attribution, policy, or a user surface that the
@@ -189,6 +196,15 @@ freshness, evidence boundary, impact status/revision, source parity, coverage
 limits, review detail, `localPersistenceTarget`, raw MCP payloads, and
 transient candidates do not belong above the title. Durable evidence metadata
 is stored in PRD §9; runtime-only metadata stays in the SDD packet.
+
+Every new or newly authored `user_stories.md` MUST use the PRD's exact spec ID,
+canonical `type: sdd-stories`, and `derivedFrom: prd.md`. Reject and must not
+write legacy aliases such as `sdd-user-stories`, a synthesized
+`SPEC-...-stories` ID, or `derivedFrom` pointing to a spec ID. After persistence,
+read back both files and audit canonical frontmatter before requesting approval
+or responding. Input alias normalization is allowed only in runtime metadata for
+reading an existing legacy artifact; it never changes the canonical shape of a
+new write.
 
 Do not include raw MCP payloads, shell transcripts, or source bodies. The
 evidence table, review findings, and source references belong only in the final

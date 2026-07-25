@@ -52,6 +52,7 @@ function taskBindingsCurrent(tasks = {}, design = {}) {
 
 export function deriveSddWorkflowState(snapshot = {}) {
   const { product, design, tasks, figmaHandoff } = snapshot
+  const activeTasks = tasks?.status === 'stale' ? undefined : tasks
   const designRoute = figmaHandoff?.status === 'current' ? 'FIGMA' : 'PLAIN'
 
   if (snapshot.blocked || ['BLOCKED', 'NEEDS_WORK'].includes(snapshot.state)) {
@@ -71,27 +72,28 @@ export function deriveSddWorkflowState(snapshot = {}) {
   if (!design) return { state: 'PRODUCT_APPROVED', nextAction: 'CREATE_DESIGN', designRoute }
 
   if (!designProductBindingsCurrent(design, product)) {
-    return tasks
+    return activeTasks
       ? { state: 'TASKS_STALE', nextAction: 'MARK_TASKS_STALE', designRoute }
       : { state: 'NEEDS_WORK', nextAction: 'REGENERATE_DESIGN', designRoute }
   }
 
-  if (tasks && !taskBindingsCurrent(tasks, design)) {
+  if (activeTasks && !taskBindingsCurrent(activeTasks, design)) {
     return { state: 'TASKS_STALE', nextAction: 'MARK_TASKS_STALE', designRoute }
   }
   if (design.status !== 'draft' && !designApproved(design)) {
     return { state: 'NEEDS_WORK', nextAction: 'RECOVER_BLOCKER', designRoute }
   }
   if (!designApproved(design)) {
+    const designReady = design.readiness === 'ready'
     return {
       state: 'DESIGN_DRAFT',
-      nextAction: 'REQUEST_DESIGN_APPROVAL',
-      pendingGate: design.readiness === 'ready' ? 'DESIGN_APPROVAL' : undefined,
+      nextAction: designReady ? 'REQUEST_DESIGN_APPROVAL' : 'RESOLVE_DESIGN_EVIDENCE',
+      pendingGate: designReady ? 'DESIGN_APPROVAL' : 'DESIGN_EVIDENCE',
       designReadiness: design.readiness,
       designRoute,
     }
   }
-  if (!tasks) return { state: 'DESIGN_APPROVED', nextAction: 'CREATE_TASKS', designRoute }
+  if (!activeTasks) return { state: 'DESIGN_APPROVED', nextAction: 'CREATE_TASKS', designRoute }
   return { state: 'TASKS_READY', nextAction: 'REPORT_IMPLEMENTATION_READY', designRoute }
 }
 
@@ -104,11 +106,15 @@ export function routeSddContinuation(workflow, utterance) {
     return { action: 'ACCEPT_RECOMMENDATION' }
   }
   if (workflow.state === 'PRODUCT_DRAFT'
-    && workflow.pendingGate === 'PRODUCT_APPROVAL'
-    && !workflow.hasOpenProductQuestions) {
+    && workflow.pendingGate === 'PRODUCT_APPROVAL') {
     return { action: 'APPROVE_PRODUCT_THEN_CREATE_DESIGN' }
   }
   if (workflow.state === 'PRODUCT_APPROVED') return { action: 'CREATE_DESIGN' }
+  if (workflow.state === 'DESIGN_DRAFT'
+    && workflow.pendingGate === 'DESIGN_EVIDENCE'
+    && workflow.designReadiness !== 'ready') {
+    return { action: 'RESOLVE_DESIGN_EVIDENCE' }
+  }
   if (workflow.state === 'DESIGN_DRAFT'
     && workflow.pendingGate === 'DESIGN_APPROVAL'
     && workflow.designReadiness === 'ready') {

@@ -23,9 +23,20 @@ must not publish mixed-revision evidence as current.
 
 ## missing-figma-capability
 
-Screenshots work but bounded design context or metadata does not. The skill may
-save a blocked or partial receipt, but must stop completeness and must not claim
-structural evidence from pixels alone.
+Screenshots work but neither bounded design context nor an equivalent
+node-specific structural `use_figma` read works, or metadata does not work. The
+skill may save a blocked or partial receipt, but must stop completeness and
+must not claim structural evidence from pixels alone.
+
+## selection-state-design-context-fallback
+
+`get_design_context` fails because the desktop has no selected layer, while the
+URL has an exact node ID. Node-specific metadata and screenshots succeed, and
+bounded read-only `use_figma` returns exact identity, hierarchy, visible
+text/properties, bounds, and reactions or their absence. The skill records the
+actual capability and treats that structural read as equivalent bounded design
+context. It must not ask the user to select a layer or stop completeness merely
+because the direct tool surface has a selection-state error.
 
 ## unchanged-report-reuse
 

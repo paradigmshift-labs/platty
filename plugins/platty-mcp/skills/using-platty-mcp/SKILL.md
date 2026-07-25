@@ -43,6 +43,12 @@ Run this before MCP capability checks and routing:
    `bash <resolved-checker-path> platty-mcp --mark-upgraded <old>`, tell the user
    to start a new agent session, and stop before the capability gate.
 
+Checker stdout is the sole update signal and authority. Empty stdout must not
+produce an update or upgrade claim, message, or commentary; continue silently.
+Parse exactly `UPGRADE_AVAILABLE <old> <new>`; only then may the runtime attempt
+an upgrade. Do not infer availability from a marketplace name, cached
+plugin path, remembered version, or the existence of the checker itself.
+
 The check is enabled by default and uses the same quiet, cached preamble pattern
 as gstack. `PLATTY_PLUGIN_UPDATE_CHECK=0` disables it for local development.
 This plugin-manager preflight is the only update exception to the MCP boundary:
@@ -121,6 +127,24 @@ Before relying on MCP evidence:
 4. Call `project_list` when no project is already selected.
 5. Call `context_status` for the selected project before freshness-sensitive
    answers.
+
+### Deferred Figma Capability Discovery
+
+When the selected route contains a Figma URL or handoff, run the runtime's tool
+search or discovery mechanism for configured Figma reads in addition to listing
+Platty tools. Search explicitly for metadata, screenshot, design-context, and
+read-only Figma execution capabilities such as `get_metadata`,
+`get_screenshot`, `get_design_context`, and `use_figma`. A capability that is
+not initially visible in the active tool list may be deferred; the initially
+visible list is not evidence of absence or unavailability.
+
+Do not report a capability gap or `BLOCKED` merely because Figma tools were not
+initially visible. First complete deferred discovery and attempt the discovered
+read capability. If one design-context read fails because of target selection
+or response size, continue with bounded node-specific metadata, screenshot, and
+read-only execution fallbacks. A Figma capability is unavailable only after
+runtime discovery finds no configured read surface, or an actual invocation
+proves authentication/access failure.
 
 `glossary_list` is a conditional vocabulary inventory/ambiguity capability, not
 an unconditional minimum retrieval tool. Its absence does not block an
@@ -233,6 +257,7 @@ do not restart discovery or reload every skill to infer intent again.
 | `PRODUCT_DRAFT` | product decision | `추천대로` accepts the recommendation only; it is not approval. Persist the answer and continue the remaining product questions. |
 | `PRODUCT_DRAFT` | exact product approval | `다음가자` or `진행` approves the current eligible product revisions, then counts as the separate technical-design request and proceeds to design. |
 | `PRODUCT_APPROVED` | none | `다음가자` or `진행` starts technical design; a current Figma handoff selects the Figma route, otherwise use plain design. |
+| `DESIGN_DRAFT` | partial or blocked design evidence | `추천대로`, `다음가자`, or `진행` routes to `RESOLVE_DESIGN_EVIDENCE`. Resolve the bounded evidence autonomously and do not request approval or start tasks until the design reaches `PASS / ready`. |
 | `DESIGN_DRAFT` | exact ready `designRevision` approval | `다음가자` or `진행` approves that revision and proceeds to `tasks.md`; a design decision or kickoff recommendation is not final approval. |
 | `DESIGN_APPROVED` | none | Generate and validate `tasks.md`. |
 | `TASKS_READY` | none | Report implementation readiness without rerunning design discovery. |
@@ -242,7 +267,7 @@ The approval transitions above apply only when the exact approval question was
 the immediately pending gate and the relevant revision remains unchanged. A new
 question, changed artifact, or stale evidence cancels that interpretation.
 
-## SDD Run Budget
+## SDD Run Progress and Execution Profiles
 
 Maintain a `LoadedContractSet` for the current run. Load each skill, reference,
 or helper script once and reuse it unless its path or content revision changes.
@@ -251,15 +276,22 @@ source tools when the runtime supports batching. Reuse exact receipts by project
 source commit, Figma sourceRevision, and query identity instead of repeating a
 successful read.
 
-- At 5 minutes or 30 tool calls, whichever comes first, report completed gates,
-  current evidence gaps, and the bounded remaining work. Treat this as an
-  operational wall-clock deadline: check it before and after every tool call or
-  batch, stop launching broad discovery, and cancel or stop waiting for an
-  oversized batch when the runtime permits. A product-authoring route persists
-  a bounded `NEEDS_WORK` draft when its owning skill allows draft persistence.
-- 50 tool calls is the maximum hard budget for one product-to-design or
-  design-to-tasks transition. Before exceeding it, stop broad discovery and
-  return a bounded gap/recovery report unless the user explicitly expands scope.
+- **accuracy-first** is the default for customer-facing SDD work. Elapsed-time
+  and tool-call counters are progress telemetry: report a progress receipt at
+  10 minutes or every 20 retrieval calls, but the counters must not end required
+  evidence closure, skip a mandatory gate, create a synthetic coverage limit, or
+  force canonical draft persistence. Bound work by the selected evidence scope
+  and stop only for a real capability/access failure, unrecoverable stale
+  identity, explicit user cancellation, or an owning skill's semantic stop
+  condition.
+- **fast-draft** is explicit opt-in only. When the user asks for a preview,
+  time-boxed draft, or bounded exploration, use a 5 minutes / 30 tool calls
+  boundary unless the owning skill defines a narrower phase boundary. At that
+  boundary, persist only a `NEEDS_WORK` draft with exact completed receipts,
+  remaining reads, and coverage limits; never report it as approval-ready.
+- A route-specific execution profile may refine progress-receipt frequency or a
+  fast-draft phase boundary, but it must not weaken accuracy-first evidence
+  gates.
 - Compose each canonical artifact fully before persistence. Use a single write
   followed by one read back; do not accumulate dozens of partial patches. The
   design owner's explicit Design Draft Persistence Gate may write one complete-
@@ -407,8 +439,10 @@ them through generic `memory_add/update/delete`.
 - A discovered `figma_handoff.json` is corrupt/invalid, project/spec mismatched,
   or stale against the selected product revisions. Stop as `BLOCKED`; do not
   silently continue through the standard design route.
-- A Figma evidence route lacks exact target identity, configured Figma MCP, or
-  a capability required to make the requested completeness claim.
+- After Deferred Figma Capability Discovery and an attempted discovered read, a
+  Figma evidence route still lacks exact target identity, configured Figma MCP,
+  authentication, or a capability required to make the requested completeness
+  claim.
 - A retrieval branch needs a missing search-assist or source-parity tool.
 - A Git-history or worktree-freshness branch needs its missing
   `workspace_git_history` or `workspace_sync_status` capability.

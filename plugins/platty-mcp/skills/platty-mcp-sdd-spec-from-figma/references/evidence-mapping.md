@@ -51,10 +51,76 @@ Create one record for every major Figma screen before product mapping is
 complete. A major Figma screen is a frame or flow state tied to a requirement,
 story/scenario, user action, or user-visible state.
 
+### Intent, Pool, And Match Boundary
+
+Finish all `ScreenIntentSeed` rows before Platty retrieval. Group them through
+`ScreenToEpicRoutingTable`, then build one `EpicScreenSpecPool` per selected
+EPIC and Design map. The pool owns the union of relevant exact DESIGN/UCL
+document items, their `document_spec_resolve` receipts, the complete union of explicitly
+linked `screen_spec` IDs and `linkOrigins`, `specGetAccounting` for every
+candidate, and `spec_impact_resolve` for every plausible candidate.
+
+Build the full `Figma-screen x screen_spec` accounting matrix before source
+closure or current-surface classification. Each row compares purpose, entry
+context, essential action, fields/controls, states/transitions, and applicable
+data behavior. Use exactly:
+
+- `exact`: every essential action and control is explained;
+- `partial`: some behavior matches but a product-visible gap remains;
+- `analogous`: the surface is similar but belongs to another entry path/flow;
+- `not_matching`: a named essential action or state is not explained; or
+- `ambiguous`: multiple identities remain plausible.
+
+`이 계좌 저장하기` is `not_matching` against a generic input-only spec unless
+the resolved candidate explains that control. A metadata-rejected candidate
+still appears in the accounting matrix with its exact rejection reason.
+Plausible candidates require resolved detailed rows.
+
+If `partial` or `analogous` is the best result and an alternate ranked EPIC
+remains, inspect that EPIC before source closure. After exhaustion, `partial`
+may enter source closure as a `MODIFY` candidate; `analogous` may enter closure
+but cannot authorize `REUSE` by analogy alone. Exhausted `ambiguous` remains
+`UNKNOWN` / `unresolved` / `NEEDS_WORK`.
+
+### Surface Resolution Checklist
+
+The orchestrator's `SurfaceResolutionChecklist` is a blocking completion gate,
+not optional working notes. For each major screen, retain the receipts below in
+the packet and mark each item `complete` or `coverage_limit`:
+
+1. Figma node / screen purpose and `ScreenIntentSeed`.
+2. Ranked candidate EPICs and the owning `EpicScreenSpecPool`.
+3. One conditional memory-overlay decision from that EPIC pool: record `not
+   relevant` with its reason, or use `memory_list` then selected `memory_get`
+   reads. Retain selected memory IDs, revisions, and affected fields once and
+   reuse them for screens in the same candidate EPIC.
+4. Pool-level exact document-item and `document_spec_resolve` receipts.
+5. The complete linked screen_spec candidates union and link origins.
+6. `spec_get` accounting for every candidate and `spec_impact_resolve` for every
+   plausible candidate.
+7. The full per-screen matching matrix.
+8. `screenSpecReceipt`: selected/rejected candidate IDs, receipts, match result,
+   alternate-EPIC status, and next exact read.
+9. Applicable `api_spec` candidates or `not_applicable` with evidence reason.
+10. Final `ExistingSurfaceResolution` and comparison.
+
+Memory is a correction/constraint/context overlay, not source-near proof. It
+must not establish a `FACT`, route, API, screen, or source absence. If relevant
+memory cannot be read because the MCP capability is unavailable, preserve the
+capability boundary as `coverage_limit`; do not call it `not relevant`.
+
+An empty direct `screen_spec` list is not `not_found` evidence. Before recording
+`not_found` or “no existing screen”, the checklist must show the Design document
+map and `document_spec_resolve` receipt, then the bounded candidate/repository scope,
+analyzed commit, and next exact read. If the targeted budget ends first, record
+`coverage_limit` and retain the surface as `unresolved`; do not silently convert
+the gap into `not_found`, `UNKNOWN`, or approval-ready completion.
+
 ```text
 ExistingSurfaceResolution
 - status: exact | analogous | not_found | unresolved
 - figmaNodeIds
+- screenSpecReceipt
 - route
 - entryCaller
 - entryGuards
@@ -70,6 +136,23 @@ ExistingSurfaceResolution
 
 Never omit a field. Use an explicit `not_applicable`, `none_observed`, or
 bounded `not_found` value with evidence instead of leaving an unknown blank.
+
+### Screen-spec-first Current-surface Classification
+
+`screenSpecReceipt` is required before current-surface classification. It must
+reference the complete EPIC pool, show every accounted candidate, selected and
+rejected IDs with reasons, and the `spec_get` outcome for all candidates plus
+the `spec_impact_resolve` outcome for every plausible candidate. If a
+candidate fails to explain an essential Figma action, field, or persistence
+control, record `not_matching` and return to the candidate EPIC/Design map; a
+generic, broad, component-only, or API-only hit is not a receipt.
+
+Before this receipt, you must not do any of the following: assign `REUSE`,
+`MODIFY`, `NEW`, or `UNKNOWN`; state a current `FACT`; or create an `O-*`
+question about a Figma-visible control's behavior or persistence policy. Keep
+the surface `unresolved` with a `coverage_limit` and next exact read. A
+desired-future `PRODUCT` question may remain open only when explicitly requested
+and independent of interpreting that control; it must not claim the current state.
 
 - `exact`: the actual route and rendered component are connected. The entry
   caller and guards are identified, including an evidenced external/registry
