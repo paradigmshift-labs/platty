@@ -1,0 +1,38 @@
+{
+  "name": "platty-design",
+  "version": "0.2.0",
+  "description": "Platty Design System setup, Rapid Prototype, and conversation-first capture workflows for Codex and Claude Code.",
+  "author": {
+    "name": "Paradigm Shift Labs"
+  },
+  "homepage": "https://github.com/paradigmshift-labs/platty",
+  "repository": "https://github.com/paradigmshift-labs/platty",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "keywords": [
+    "platty",
+    "design-system",
+    "prototype",
+    "capture",
+    "skills",
+    "codex",
+    "claude"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Platty Design",
+    "shortDescription": "Design setup, prototypes, and review captures",
+    "longDescription": "Use Platty Design to register a local Design System, build a product-only Rapid Prototype, and review exhaustive page/state captures in the conversation.",
+    "developerName": "Paradigm Shift Labs",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Register the current local Design System repository for this Platty project.",
+      "Build and audit a Rapid Prototype from the current PRD and User Stories.",
+      "Capture every source-required page and state and show the review set here."
+    ]
+  }
+}

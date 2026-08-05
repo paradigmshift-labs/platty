@@ -11,8 +11,8 @@ set -euo pipefail
 umask 077
 
 PLUGIN_NAME="${1:-}"
-if [ "$PLUGIN_NAME" != "platty" ] && [ "$PLUGIN_NAME" != "platty-mcp" ]; then
-  echo "Usage: platty-update-check <platty or platty-mcp> [--force | --mark-upgraded <old-version>]" >&2
+if [ "$PLUGIN_NAME" != "platty" ] && [ "$PLUGIN_NAME" != "platty-mcp" ] && [ "$PLUGIN_NAME" != "platty-design" ]; then
+  echo "Usage: platty-update-check <platty, platty-mcp, or platty-design> [--force | --mark-upgraded <old-version>]" >&2
   exit 2
 fi
 shift

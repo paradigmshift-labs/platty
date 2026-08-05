@@ -1,0 +1,4 @@
+interface:
+  display_name: "Platty Design: Rapid Prototype"
+  short_description: "Build an auditable HTML prototype from product evidence"
+  default_prompt: "Use $platty-design-rapid-prototype to build and audit a Rapid Prototype from the current PRD and User Stories."

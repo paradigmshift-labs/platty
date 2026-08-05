@@ -25,6 +25,16 @@
       "category": "development",
       "source": "./plugins/platty-mcp",
       "homepage": "https://github.com/paradigmshift-labs/platty"
+    },
+    {
+      "name": "platty-design",
+      "description": "Platty Design System setup, Rapid Prototype, and conversation-first capture workflows.",
+      "author": {
+        "name": "Paradigm Shift Labs"
+      },
+      "category": "development",
+      "source": "./plugins/platty-design",
+      "homepage": "https://github.com/paradigmshift-labs/platty"
     }
   ]
 }

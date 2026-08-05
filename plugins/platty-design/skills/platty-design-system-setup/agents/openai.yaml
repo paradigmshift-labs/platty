@@ -1,0 +1,4 @@
+interface:
+  display_name: "Platty Design: Design System Setup"
+  short_description: "Register an existing local Design System Git repository"
+  default_prompt: "Use $platty-design-system-setup to validate and register this local Design System repository for the current Platty project."

@@ -144,7 +144,9 @@ claude plugin marketplace add paradigmshift-labs/platty --scope user
 claude plugin install platty@platty --scope user
 ```
 
-`platty install` never installs the separate `platty-mcp` plugin.
+`platty install` never installs the separate `platty-mcp` or optional
+`platty-design` plugins. Install those independently when their workflows are
+needed.
 
 ### Use the CLI directly
 
@@ -173,11 +175,22 @@ For remote read-only retrieval against an already configured Platty MCP server,
 install the MCP-only `platty-mcp` plugin:
 
 ```bash
-codex plugin add platty-mcp@platty
+codex plugin add platty-mcp@platty --json
 ```
 
-```text
-/plugin install platty-mcp@platty
+```bash
+claude plugin install platty-mcp@platty --scope user
+```
+
+For Design System setup and auditable Rapid Prototypes, optionally install the
+separate `platty-design` plugin:
+
+```bash
+codex plugin add platty-design@platty --json
+```
+
+```bash
+claude plugin install platty-design@platty --scope user
 ```
 
 ## This repository

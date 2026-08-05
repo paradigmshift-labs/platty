@@ -138,7 +138,8 @@ claude plugin marketplace add paradigmshift-labs/platty --scope user
 claude plugin install platty@platty --scope user
 ```
 
-`platty install`은 별도 `platty-mcp` 플러그인을 설치하지 않습니다.
+`platty install`은 별도 `platty-mcp` 또는 선택적 `platty-design` 플러그인을
+설치하지 않습니다. 필요한 워크플로에 따라 각각 별도로 설치하세요.
 
 ### CLI에서 직접 시작하기
 
@@ -166,11 +167,22 @@ remote -> https://<context-backend-domain>/api/mcp
 대신 MCP 전용 `platty-mcp` 플러그인을 설치하세요:
 
 ```bash
-codex plugin add platty-mcp@platty
+codex plugin add platty-mcp@platty --json
 ```
 
-```text
-/plugin install platty-mcp@platty
+```bash
+claude plugin install platty-mcp@platty --scope user
+```
+
+Design System 설정과 감사 가능한 Rapid Prototype이 필요하면 별도
+`platty-design` 플러그인을 선택적으로 설치하세요:
+
+```bash
+codex plugin add platty-design@platty --json
+```
+
+```bash
+claude plugin install platty-design@platty --scope user
 ```
 
 ## 이 저장소

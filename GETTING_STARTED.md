@@ -80,7 +80,8 @@ claude plugin install platty@platty --scope user
 ```
 
 `platty install` installs only the ordinary `platty` plugin. The separate
-`platty-mcp` plugin remains an explicit, independent installation.
+`platty-mcp` and optional `platty-design` plugins remain explicit,
+independent installations.
 
 ## 4. Restart Your Agent Session
 
