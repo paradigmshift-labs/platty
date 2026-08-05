@@ -1,0 +1,4 @@
+interface:
+  display_name: "Platty Design: Capture"
+  short_description: "Review every page and state in conversation"
+  default_prompt: "Use $platty-design-capture to capture every source-required page and state, show the compact IA and screenshots here, and persist review memos before PRD/Figma authorization."

@@ -31,7 +31,8 @@
 >
 > [상세 지원 및 검증 범위 보기 →](guide/ko/support-matrix.md)
 >
-> [이슈 신고 또는 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
+> [스택 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
+> · [정적 분석 버그 신고](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
 
 ## 플래티를 사용해 보세요
 
@@ -138,7 +139,8 @@ claude plugin marketplace add paradigmshift-labs/platty --scope user
 claude plugin install platty@platty --scope user
 ```
 
-`platty install`은 별도 `platty-mcp` 플러그인을 설치하지 않습니다.
+`platty install`은 별도 `platty-mcp` 또는 선택적 `platty-design` 플러그인을
+설치하지 않습니다. 필요한 워크플로에 따라 각각 별도로 설치하세요.
 
 ### CLI에서 직접 시작하기
 
@@ -166,11 +168,22 @@ remote -> https://<context-backend-domain>/api/mcp
 대신 MCP 전용 `platty-mcp` 플러그인을 설치하세요:
 
 ```bash
-codex plugin add platty-mcp@platty
+codex plugin add platty-mcp@platty --json
 ```
 
-```text
-/plugin install platty-mcp@platty
+```bash
+claude plugin install platty-mcp@platty --scope user
+```
+
+Design System 설정과 감사 가능한 Rapid Prototype이 필요하면 별도
+`platty-design` 플러그인을 선택적으로 설치하세요:
+
+```bash
+codex plugin add platty-design@platty --json
+```
+
+```bash
+claude plugin install platty-design@platty --scope user
 ```
 
 ## 이 저장소

@@ -1,0 +1,19 @@
+{
+  "name": "platty-design",
+  "description": "Platty Design System setup, Rapid Prototype, and conversation-first capture workflows for Codex and Claude Code.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Paradigm Shift Labs"
+  },
+  "homepage": "https://github.com/paradigmshift-labs/platty",
+  "repository": "https://github.com/paradigmshift-labs/platty",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "keywords": [
+    "platty",
+    "design-system",
+    "prototype",
+    "capture",
+    "skills",
+    "workflows"
+  ]
+}
