@@ -34,8 +34,7 @@ never conflict with your existing services.
 >
 > [View the detailed support and validation matrix →](guide/en/support-matrix.md)
 >
-> [Request support for a stack](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)
-> · [Report a static-analysis bug](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)
+> [Report an issue or request support](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
 
 ## Try Platty
 
