@@ -12,16 +12,17 @@ Own session routing and stage transitions. Do not perform a stage's detailed int
 1. Use `scripts/session.py list` to locate or create the live case. Preserve the user's original text in an input file.
 1. Read `status --map` to re-enter: it gives the destination, the decisions already made, what is takeable now, what is blocked, the fog and the out-of-scope list, within a fixed budget whatever the artifact weighs.
 2. Read `status`. If there is a pending question, record the answer first. If the phase is `process_answer` or `action_required`, finish the current stage work before asking again.
-3. Route by `status.stage` only:
+3. If `status.phase=prepare_context`, read `../using-platty-mcp/SKILL.md`, then [BA Platty Retrieval](../platty-mcp-ba-platty-retrieval/SKILL.md), then `../platty-mcp-retrieval/SKILL.md`, and run that route before loading the BA stage. This is a mandatory internal skill route, not a suggestion to inspect the workspace. Do not inspect host directories, run a local Platty CLI, or probe candidate endpoints. When the capability gate reports missing tools or an endpoint, preserve the case as waiting and report that exact configuration gap.
+4. Route by `status.stage` only:
    - `jtbd` → [BA JTBD](../platty-mcp-ba-jtbd/SKILL.md)
    - `prd` → [BA PRD](../platty-mcp-ba-prd/SKILL.md)
    - `user_experience` → [BA User Experience](../platty-mcp-ba-user-experience/SKILL.md)
    - `screen_behavior` → [BA Screen Behavior](../platty-mcp-ba-screen-behavior/SKILL.md)
    - `design_system_wireframe` → [BA Design System Wireframe](../platty-mcp-ba-design-system-wireframe/SKILL.md)
    - `planning_context` → [BA Planning Context](../platty-mcp-ba-planning-context/SKILL.md) (read-only; kept for cases opened before the jtbd stage)
-4. The selected stage owns its artifact updates, qualitative assessment, and its confirmation.
-5. When status is `start_*`, run `session.py start --stage ...` and route to that next stage in the same turn. Do not infer a stage transition from a user saying “continue”.
-   6. When a stage needs Platty facts, use [BA Platty Retrieval](../platty-mcp-ba-platty-retrieval/SKILL.md). Keep raw MCP responses in the retrieval subagent and consume only its Evidence Packet.
+5. The selected stage owns its artifact updates, qualitative assessment, and its confirmation.
+6. When status is `start_*`, run `session.py start --stage ...` and route to that next stage in the same turn. Do not infer a stage transition from a user saying “continue”.
+7. When a stage needs Platty facts, use [BA Platty Retrieval](../platty-mcp-ba-platty-retrieval/SKILL.md). Run its standard skill route and consume only its Evidence Packet.
 
 ## Question gate
 
