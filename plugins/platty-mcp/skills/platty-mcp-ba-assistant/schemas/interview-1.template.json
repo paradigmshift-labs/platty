@@ -1,0 +1,207 @@
+{
+  "schema_version": 2,
+  "case_id": "untitled",
+  "title": "제목 미정",
+  "status": "in_progress",
+  "sources": [],
+  "claims": [],
+  "areas": {
+    "problem": {
+      "status": "missing",
+      "summary": "",
+      "claim_ids": [],
+      "assessment": {
+        "verdict": "pending",
+        "rationale": "",
+        "criteria": [],
+        "example_ids": [],
+        "evidence_ids": [],
+        "issue_ids": [],
+        "content_hash": ""
+      }
+    },
+    "business_goal": {
+      "status": "missing",
+      "summary": "",
+      "claim_ids": [],
+      "assessment": {
+        "verdict": "pending",
+        "rationale": "",
+        "criteria": [],
+        "example_ids": [],
+        "evidence_ids": [],
+        "issue_ids": [],
+        "content_hash": ""
+      }
+    },
+    "users": {
+      "status": "missing",
+      "summary": "",
+      "claim_ids": [],
+      "assessment": {
+        "verdict": "pending",
+        "rationale": "",
+        "criteria": [],
+        "example_ids": [],
+        "evidence_ids": [],
+        "issue_ids": [],
+        "content_hash": ""
+      }
+    },
+    "solution": {
+      "status": "missing",
+      "summary": "",
+      "claim_ids": [],
+      "assessment": {
+        "verdict": "pending",
+        "rationale": "",
+        "criteria": [],
+        "example_ids": [],
+        "evidence_ids": [],
+        "issue_ids": [],
+        "content_hash": ""
+      }
+    },
+    "scope": {
+      "status": "missing",
+      "summary": "",
+      "claim_ids": [],
+      "assessment": {
+        "verdict": "pending",
+        "rationale": "",
+        "criteria": [],
+        "example_ids": [],
+        "evidence_ids": [],
+        "issue_ids": [],
+        "content_hash": ""
+      }
+    },
+    "service_context": {
+      "status": "missing",
+      "summary": "",
+      "claim_ids": [],
+      "assessment": {
+        "verdict": "pending",
+        "rationale": "",
+        "criteria": [],
+        "example_ids": [],
+        "evidence_ids": [],
+        "issue_ids": [],
+        "content_hash": ""
+      }
+    },
+    "rules": {
+      "status": "missing",
+      "summary": "",
+      "claim_ids": [],
+      "assessment": {
+        "verdict": "pending",
+        "rationale": "",
+        "criteria": [],
+        "example_ids": [],
+        "evidence_ids": [],
+        "issue_ids": [],
+        "content_hash": ""
+      }
+    },
+    "success": {
+      "status": "missing",
+      "summary": "",
+      "claim_ids": [],
+      "assessment": {
+        "verdict": "pending",
+        "rationale": "",
+        "criteria": [],
+        "example_ids": [],
+        "evidence_ids": [],
+        "issue_ids": [],
+        "content_hash": ""
+      }
+    }
+  },
+  "review": {
+    "alignment": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "conflicts": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "grounding": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "handoff": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    }
+  },
+  "issues": [],
+  "service_context": {
+    "project_id": "",
+    "status": "missing",
+    "checked_at": "",
+    "baseline_revision": "",
+    "observed_revision": "",
+    "baseline": {
+      "purpose": {
+        "summary": "",
+        "source_ids": []
+      },
+      "actors": {
+        "summary": "",
+        "source_ids": []
+      },
+      "journeys": {
+        "summary": "",
+        "source_ids": []
+      },
+      "concepts": {
+        "summary": "",
+        "source_ids": []
+      },
+      "rules": {
+        "summary": "",
+        "source_ids": []
+      },
+      "integrations": {
+        "summary": "",
+        "source_ids": []
+      },
+      "evidence": {
+        "summary": "",
+        "source_ids": []
+      }
+    },
+    "coverage_limits": []
+  },
+  "confirmation": {
+    "confirmed": false,
+    "turn_id": "",
+    "statement": "",
+    "content_hash": "",
+    "review_hash": ""
+  },
+  "history": []
+}

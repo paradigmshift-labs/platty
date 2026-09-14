@@ -50,7 +50,7 @@ LLM 문서화 단계는 관련 소스 증거가 문서 컨텍스트까지 도달
 보존하지만, 소스로 증명할 수 없는 타깃이나 연결을 지어내지는 않습니다.
 
 필요한 스택이나 저장소 구조가 목록에 없다면 공개 예제 또는 익명화한 최소 재현과
-함께 [통합 피드백 폼](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)을
+함께 [정적 분석 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)을
 등록해 주세요.
 
 ---
@@ -139,10 +139,10 @@ Platty는 폭넓은 서드파티 카탈로그에 대해 전용 어댑터를 제�
 ## 지원 요청 및 버그 신고
 
 - 목록에 없는 언어, 프레임워크, 라이브러리 또는 저장소 구조는
-  [통합 피드백 폼](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)에
+  [정적 분석 지원 요청](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-support.yml)에
   등록해 주세요.
 - 제공되는 분석기에서 라우트, 모델, 관계 또는 저장소 간 연결이 누락되거나 잘못
-  인식되면 [통합 피드백 폼](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)을
+  인식되면 [정적 분석 버그 신고](https://github.com/paradigmshift-labs/platty/issues/new?template=static-analysis-bug.yml)를
   등록해 주세요.
 
 독점 소스 코드, 자격 증명, 비밀 키 또는 개인정보는 포함하지 마세요. 공개 예제
