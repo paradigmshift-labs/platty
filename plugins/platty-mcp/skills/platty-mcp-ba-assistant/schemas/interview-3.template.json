@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "model_profile": "screen_element_behavior_v1",
+  "case_id": "untitled",
+  "title": "제목 미정",
+  "status": "in_progress",
+  "input_binding": {
+    "interview_1": {
+      "path": "",
+      "content_hash": "",
+      "review_hash": "",
+      "confirmation_turn_id": ""
+    },
+    "interview_2": {
+      "path": "",
+      "content_hash": "",
+      "review_hash": "",
+      "confirmation_turn_id": ""
+    }
+  },
+  "evidence_status": {
+    "project_id": "",
+    "status": "missing",
+    "checked_at": "",
+    "baseline_revision": "",
+    "observed_revision": "",
+    "coverage_limits": []
+  },
+  "sources": [],
+  "decisions": [],
+  "inventory_links": [],
+  "screens": [],
+  "elements": [],
+  "state_profiles": [],
+  "state_axes": [],
+  "transitions": [],
+  "constraints": [],
+  "interaction_rules": [],
+  "coverage_checks": [],
+  "scenarios": [],
+  "render_cases": [],
+  "design_handoffs": [],
+  "decision_packets": [],
+  "issues": [],
+  "reviews": [],
+  "review": {
+    "S1": {
+      "id": "overall-S1",
+      "criterion_id": "S1",
+      "target_refs": [
+        "model"
+      ],
+      "verdict": "pending",
+      "rationale": "",
+      "example_ids": [],
+      "source_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "S2": {
+      "id": "overall-S2",
+      "criterion_id": "S2",
+      "target_refs": [
+        "model"
+      ],
+      "verdict": "pending",
+      "rationale": "",
+      "example_ids": [],
+      "source_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "S3": {
+      "id": "overall-S3",
+      "criterion_id": "S3",
+      "target_refs": [
+        "model"
+      ],
+      "verdict": "pending",
+      "rationale": "",
+      "example_ids": [],
+      "source_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "S4": {
+      "id": "overall-S4",
+      "criterion_id": "S4",
+      "target_refs": [
+        "model"
+      ],
+      "verdict": "pending",
+      "rationale": "",
+      "example_ids": [],
+      "source_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "S5": {
+      "id": "overall-S5",
+      "criterion_id": "S5",
+      "target_refs": [
+        "model"
+      ],
+      "verdict": "pending",
+      "rationale": "",
+      "example_ids": [],
+      "source_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "S6": {
+      "id": "overall-S6",
+      "criterion_id": "S6",
+      "target_refs": [
+        "model"
+      ],
+      "verdict": "pending",
+      "rationale": "",
+      "example_ids": [],
+      "source_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "S7": {
+      "id": "overall-S7",
+      "criterion_id": "S7",
+      "target_refs": [
+        "model"
+      ],
+      "verdict": "pending",
+      "rationale": "",
+      "example_ids": [],
+      "source_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "S8": {
+      "id": "overall-S8",
+      "criterion_id": "S8",
+      "target_refs": [
+        "model"
+      ],
+      "verdict": "pending",
+      "rationale": "",
+      "example_ids": [],
+      "source_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    }
+  },
+  "confirmation": {
+    "confirmed": false,
+    "turn_id": "",
+    "statement": "",
+    "content_hash": "",
+    "review_hash": ""
+  },
+  "history": []
+}

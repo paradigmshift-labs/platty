@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "case_id": "untitled",
+  "title": "제목 미정",
+  "status": "in_progress",
+  "job_status": "active",
+  "job": {
+    "subject": "",
+    "situation": "",
+    "motivation": "",
+    "expected_outcome": "",
+    "success_criteria": ""
+  },
+  "related_jobs": [],
+  "cells": {
+    "function_adopt": {
+      "status": "unexamined",
+      "reason": "",
+      "rows": [],
+      "next_checks": []
+    },
+    "function_use": {
+      "status": "unexamined",
+      "reason": "",
+      "rows": [],
+      "next_checks": []
+    },
+    "social_adopt": {
+      "status": "unexamined",
+      "reason": "",
+      "rows": [],
+      "next_checks": []
+    },
+    "social_use": {
+      "status": "unexamined",
+      "reason": "",
+      "rows": [],
+      "next_checks": []
+    },
+    "emotion_adopt": {
+      "status": "unexamined",
+      "reason": "",
+      "rows": [],
+      "next_checks": []
+    },
+    "emotion_use": {
+      "status": "unexamined",
+      "reason": "",
+      "rows": [],
+      "next_checks": []
+    }
+  },
+  "pain_points": [],
+  "sources": [],
+  "issues": [],
+  "service_context": {
+    "project_id": "",
+    "status": "missing",
+    "checked_at": "",
+    "baseline_revision": "",
+    "observed_revision": "",
+    "coverage_limits": []
+  },
+  "review": {
+    "ten_year_test": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "persona_separation": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "evidence_grounding": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "handoff_readiness": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    }
+  },
+  "confirmation": {
+    "confirmed": false,
+    "turn_id": "",
+    "statement": "",
+    "content_hash": "",
+    "review_hash": ""
+  },
+  "history": [],
+  "fog": [],
+  "out_of_scope": []
+}

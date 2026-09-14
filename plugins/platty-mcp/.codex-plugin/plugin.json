@@ -1,7 +1,7 @@
 {
   "name": "platty-mcp",
-  "version": "0.0.30",
-  "description": "Platty MCP retrieval, Figma evidence, and SDD handoff skills.",
+  "version": "0.0.31",
+  "description": "Platty MCP retrieval, Figma evidence, SDD handoffs, and workspace-scoped BA interview skills.",
   "author": {
     "name": "Paradigm Shift Labs"
   },
@@ -19,8 +19,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Platty MCP",
-    "shortDescription": "Platty MCP context and SDD skills",
-    "longDescription": "Use Platty MCP skills for configured context retrieval, Figma evidence, and approval-gated SDD handoffs.",
+    "shortDescription": "Platty MCP context, SDD, and BA interview skills",
+    "longDescription": "Use Platty MCP skills for configured context retrieval, Figma evidence, approval-gated SDD handoffs, and workspace-scoped BA interviews with design-pack review and wireframe tools.",
     "developerName": "Paradigm Shift Labs",
     "category": "Developer Tools",
     "capabilities": [
