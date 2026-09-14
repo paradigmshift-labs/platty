@@ -12,6 +12,9 @@ Use `platty-mcp-retrieval` for every Platty evidence read. It owns MCP tool
 selection, capability checks, project resolution, freshness checks, and the
 map-first/direct-first retrieval route. Do not create a BA-specific subagent,
 declare MCP tool names, or bind this workflow to an MCP server alias.
+Do not probe candidate endpoints, inspect host-local files, or use a local CLI
+fallback. If the capability gate is blocked, return its exact configuration gap
+to the BA stage so it can leave the case waiting.
 
 Pass the retrieval route a narrow brief: current `projectId` when selected,
 BA stage, question, required evidence, and case path. The BA stage owns the
