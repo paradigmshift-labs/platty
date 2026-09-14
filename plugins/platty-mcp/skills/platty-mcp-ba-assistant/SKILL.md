@@ -5,14 +5,31 @@ description: Orchestrate a BA interview through planning context, user experienc
 
 # BA Assistant Orchestrator
 
+**Prerequisite:** Read `using-platty-mcp` before acting unless it has already
+been read in this turn.
+
 Own session routing and stage transitions. Do not perform a stage's detailed interview work here.
+
+## Required Sub-Skills
+
+1. Use `using-platty-mcp` for MCP capability and project context.
+2. Use `platty-mcp-retrieval` for all existing-service evidence gathering.
+   It owns tool selection, project resolution, freshness, and the map-first or
+   direct-first retrieval route. The BA flow consumes only its bounded evidence
+   output; it does not recreate retrieval logic or substitute local evidence.
+3. Use `platty-mcp-impact-analysis` only when a concrete proposed change needs
+   an impact packet to resolve BA scope or a service-boundary decision.
 
 ## Route
 
 1. Use `scripts/session.py list` to locate or create the live case. Preserve the user's original text in an input file.
 1. Read `status --map` to re-enter: it gives the destination, the decisions already made, what is takeable now, what is blocked, the fog and the out-of-scope list, within a fixed budget whatever the artifact weighs.
 2. Read `status`. If there is a pending question, record the answer first. If the phase is `process_answer` or `action_required`, finish the current stage work before asking again.
-3. If `status.phase=prepare_context`, read `../using-platty-mcp/SKILL.md`, then [BA Platty Retrieval](../platty-mcp-ba-platty-retrieval/SKILL.md), then `../platty-mcp-retrieval/SKILL.md`, and run that route before loading the BA stage. This is a mandatory internal skill route, not a suggestion to inspect the workspace. Do not inspect host directories, run a local Platty CLI, or probe candidate endpoints. When the capability gate reports missing tools or an endpoint, preserve the case as waiting and report that exact configuration gap.
+3. If `status.phase=prepare_context`, run the Required Sub-Skills route before
+   loading the BA stage. If its MCP capability gate is blocked, preserve the
+   case as waiting and report the exact configuration gap. Do not recreate the
+   capability gate, inspect host configuration, probe endpoints, or use a local
+   Platty CLI fallback.
 4. Route by `status.stage` only:
    - `jtbd` → [BA JTBD](../platty-mcp-ba-jtbd/SKILL.md)
    - `prd` → [BA PRD](../platty-mcp-ba-prd/SKILL.md)
@@ -22,7 +39,8 @@ Own session routing and stage transitions. Do not perform a stage's detailed int
    - `planning_context` → [BA Planning Context](../platty-mcp-ba-planning-context/SKILL.md) (read-only; kept for cases opened before the jtbd stage)
 5. The selected stage owns its artifact updates, qualitative assessment, and its confirmation.
 6. When status is `start_*`, run `session.py start --stage ...` and route to that next stage in the same turn. Do not infer a stage transition from a user saying “continue”.
-7. When a stage needs Platty facts, use [BA Platty Retrieval](../platty-mcp-ba-platty-retrieval/SKILL.md). Run its standard skill route and consume only its Evidence Packet.
+7. When a stage needs Platty facts, use `platty-mcp-retrieval` through the
+   Required Sub-Skills route and consume only its bounded evidence output.
 
 ## Question gate
 
