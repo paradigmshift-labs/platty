@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "model_profile": "ux_statechart_viewflow_v1",
+  "case_id": "untitled",
+  "title": "제목 미정",
+  "status": "in_progress",
+  "input_binding": {
+    "interview_1_path": "",
+    "content_hash": "",
+    "review_hash": "",
+    "confirmation_turn_id": "",
+    "service_context_project_id": "",
+    "service_context_revision": "",
+    "claim_ids": [],
+    "handoff_issue_ids": []
+  },
+  "evidence_status": {
+    "project_id": "",
+    "status": "missing",
+    "checked_at": "",
+    "baseline_revision": "",
+    "observed_revision": "",
+    "coverage_limits": []
+  },
+  "sources": [],
+  "claims": [],
+  "actors": [],
+  "touchpoints": [],
+  "experience_states": [],
+  "experience_transitions": [],
+  "scenarios": [],
+  "view_requirements": [],
+  "decision_packets": [],
+  "decision_matrices": [],
+  "handoff_flows": [],
+  "coverage_obligations": [],
+  "issues": [],
+  "review": {
+    "goal_alignment": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "state_completeness": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "branch_coverage": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "feedback_recovery": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "grounding": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "handoff_readiness": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    },
+    "decision_quality": {
+      "verdict": "pending",
+      "rationale": "",
+      "criteria": [],
+      "example_ids": [],
+      "evidence_ids": [],
+      "issue_ids": [],
+      "content_hash": ""
+    }
+  },
+  "confirmation": {
+    "confirmed": false,
+    "turn_id": "",
+    "statement": "",
+    "content_hash": "",
+    "review_hash": ""
+  },
+  "history": [],
+  "coverage_checks": [],
+  "path_reviews": [],
+  "policy_checks": []
+}
