@@ -5,9 +5,19 @@ description: Retrieve bounded Heroines evidence from Platty for a BA stage witho
 
 # BA Platty Retrieval
 
-Use a dedicated `platty-retriever` subagent for Platty MCP reads. The orchestrator starts it with `fork_turns: none` and supplies only the retrieval brief: project ID, current stage, question, required evidence, and case path.
+**Prerequisite:** Read `using-platty-mcp` before acting unless it has already
+been read in this turn.
 
-The retriever may use configured read-only Platty tools. It must not ask the user, edit interview artifacts, create decisions, or call `session.py`.
+Use `platty-mcp-retrieval` for every Platty evidence read. It owns MCP tool
+selection, capability checks, project resolution, freshness checks, and the
+map-first/direct-first retrieval route. Do not create a BA-specific subagent,
+declare MCP tool names, or bind this workflow to an MCP server alias.
+
+Pass the retrieval route a narrow brief: current `projectId` when selected,
+BA stage, question, required evidence, and case path. The BA stage owns the
+interview artifact and writes only the bounded Evidence Packet below after the
+retrieval route returns. It must not ask the user, create decisions, or call
+`session.py` while gathering an existing-service fact.
 
 ## Evidence Packet
 
@@ -24,4 +34,7 @@ Return one bounded JSON packet:
 }
 ```
 
-Do not return raw MCP payloads, search result dumps, or chain-of-thought. Limit excerpts to the facts needed by the requested stage. The parent validates the packet, records tool receipts, and updates the artifact.
+Do not include raw MCP payloads, search result dumps, or chain-of-thought in
+the interview artifact. Limit excerpts to the facts needed by the requested
+stage. The parent validates the packet, records tool receipts, and updates the
+artifact.
