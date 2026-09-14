@@ -1,0 +1,4 @@
+interface:
+  display_name: "히로인스 BA 인터뷰"
+  short_description: "기획 맥락 정의·사용자 경험 설계·화면 동작 명세·디자인 시스템 와이어프레임을 연결하는 BA 인터뷰"
+  default_prompt: "$ba-assistant로 히로인스 기획 인터뷰를 시작해줘."

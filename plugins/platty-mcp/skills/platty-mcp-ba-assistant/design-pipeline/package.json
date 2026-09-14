@@ -1,0 +1,14 @@
+{
+  "name": "@ba-assistant/design-pipeline",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "playwright": "^1.56.1"
+  },
+  "scripts": {
+    "build-pack": "python3 scripts/build-pack.py",
+    "test": "node --test tests/*.test.mjs"
+  }
+}

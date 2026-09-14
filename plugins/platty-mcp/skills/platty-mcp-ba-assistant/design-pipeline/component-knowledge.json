@@ -1,0 +1,155 @@
+{
+  "kind": "components the wireframe engine may use; a contract in componentContracts is not enough",
+  "entries": [
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:Surface",
+        "component": "Surface",
+        "kind": "native-adapter",
+        "roles": [
+          "region"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "expansion/type-rules.json",
+        "limitation": "Generic wireframe surface adapter."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:Select",
+        "component": "Select",
+        "kind": "native-adapter",
+        "roles": [
+          "select"
+        ],
+        "supportedStates": [
+          "visible",
+          "selected",
+          "disabled",
+          "readonly",
+          "expanded",
+          "focus",
+          "value",
+          "invalid"
+        ],
+        "sourcePath": "components/state-map.json",
+        "limitation": "Native select adapter for BA runtime assertions."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:Checkbox",
+        "component": "Checkbox",
+        "kind": "hds-interface",
+        "roles": [
+          "checkbox"
+        ],
+        "supportedStates": [
+          "visible",
+          "checked",
+          "disabled",
+          "focus",
+          "value",
+          "invalid"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/base/controls/checkbox/Checkbox.tsx",
+          "interface": "CheckboxProps"
+        },
+        "limitation": "Closed props are validated; callback behavior is not."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:Text Field",
+        "component": "Text Field",
+        "kind": "native-adapter",
+        "roles": [
+          "textbox"
+        ],
+        "supportedStates": [
+          "visible",
+          "disabled",
+          "readonly",
+          "invalid",
+          "focus",
+          "value",
+          "busy"
+        ],
+        "sourcePath": "components/state-map.json",
+        "limitation": "Inline/native input adapter until a closed HDS field interface is available."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:Button",
+        "component": "Button",
+        "kind": "hds-interface",
+        "roles": [
+          "button"
+        ],
+        "supportedStates": [
+          "visible",
+          "disabled",
+          "busy",
+          "focus",
+          "value"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/base/button/Button.types.ts",
+          "interface": "ButtonProps"
+        },
+        "limitation": "Closed ButtonProps are validated; icon ReactNode props require separate adapter review."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:Disclosure",
+        "component": "Disclosure",
+        "kind": "native-adapter",
+        "roles": [
+          "button"
+        ],
+        "supportedStates": [
+          "visible",
+          "expanded",
+          "disabled",
+          "focus",
+          "value"
+        ],
+        "sourcePath": "components/state-map.json",
+        "limitation": "ARIA disclosure adapter for render-case assertions."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:Status Message",
+        "component": "Status Message",
+        "kind": "native-adapter",
+        "roles": [
+          "status"
+        ],
+        "supportedStates": [
+          "visible",
+          "busy",
+          "invalid",
+          "focus",
+          "value"
+        ],
+        "sourcePath": "design/required/usability.json",
+        "limitation": "Status semantics checked by role/status live-region assertions."
+      }
+    }
+  ]
+}
