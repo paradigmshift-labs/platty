@@ -1,7 +1,7 @@
 {
   "name": "platty-mcp",
-  "version": "0.0.29+codex.20260724160614",
-  "description": "Platty MCP retrieval, Figma evidence, impact, memory, and SDD handoff skills for configured context servers.",
+  "version": "0.0.30",
+  "description": "Platty MCP retrieval, Figma evidence, and SDD handoff skills.",
   "author": {
     "name": "Paradigm Shift Labs"
   },
@@ -19,13 +19,14 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Platty MCP",
-    "shortDescription": "Platty MCP retrieval, Figma evidence, and SDD handoffs",
-    "longDescription": "Use Platty MCP skills for read-only retrieval and impact analysis against configured remote Platty context, revisioned Figma evidence reports, memory lifecycle requests, and local SDD handoffs that write prd.md, user_stories.md, and system_design.md before generating approval-gated tasks.md, without running local CLI lifecycle commands.",
+    "shortDescription": "Platty MCP context and SDD skills",
+    "longDescription": "Use Platty MCP skills for configured context retrieval, Figma evidence, and approval-gated SDD handoffs.",
     "developerName": "Paradigm Shift Labs",
     "category": "Developer Tools",
     "capabilities": [
       "Interactive",
-      "Read"
+      "Read",
+      "Write"
     ],
     "defaultPrompt": [
       "Search and answer from my configured Platty MCP context.",
