@@ -7,11 +7,14 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 export const STATE_AXES = ['visible', 'checked', 'selected', 'disabled', 'readonly', 'busy', 'invalid', 'expanded', 'focus', 'value'];
 export const SUPPORTED_ACTIONS = ['fill', 'click', 'check', 'select', 'keyboard', 'async', 'external-state'];
+// The node kinds templateNodeHtml can draw, and therefore the roles a promoted component
+// may carry. A role outside this list is drawn as a plain region.
+export const NODE_ROLES = ['region', 'text', 'icon', 'button', 'checkbox', 'radio', 'switch', 'select', 'textbox', 'disclosure', 'status'];
 const USER_ACTIONS = new Set(['fill', 'click', 'check', 'select', 'keyboard']);
 const FINAL_ARTIFACTS = ['packet.json', 'spec-validation.json', 'runtime.json', 'design-decisions.json', 'selected-references.json', 'visual-aliases.json'];
 const REQUIRED_DECISION_STAGES = ['roles', 'reference_transfer', 'hierarchy', 'layout', 'components', 'tokens'];
 const aiVerdicts = new Set(['accept_ai', 'revise', 'insufficient_evidence', 'invalid']);
-const ENGINE_CONTRACT_VERSION = 'design-pipeline-engine-contract-v2';
+const ENGINE_CONTRACT_VERSION = 'design-pipeline-engine-contract-v3';
 
 const ajv = new Ajv({allErrors: true});
 const packetSchema = {
@@ -71,6 +74,7 @@ function engineContract() {
       version: ENGINE_CONTRACT_VERSION,
       sourceSha256,
       stateAxes: STATE_AXES,
+      nodeRoles: NODE_ROLES,
       supportedActions: SUPPORTED_ACTIONS,
       finalArtifacts: FINAL_ARTIFACTS,
       requiredDecisionStages: REQUIRED_DECISION_STAGES
@@ -185,7 +189,7 @@ function validatePacket(packet) {
 
 function defaultDesignSpec(target) {
   const ref = (...segments) => segments.join('.');
-  const componentFor = (node) => node.semantic_type === 'button' ? 'Button' : node.semantic_type === 'checkbox' ? 'Checkbox' : node.semantic_type === 'input' ? 'Text Field' : node.semantic_type === 'select' ? 'Select' : 'Surface';
+  const componentFor = (node) => node.semantic_type === 'button' ? 'Button' : node.semantic_type === 'checkbox' ? 'Checkbox' : node.semantic_type === 'input' ? 'Text Field' : node.semantic_type === 'select' ? 'Select' : node.semantic_type === 'text' ? 'Text' : node.semantic_type === 'icon' ? 'Icon' : node.semantic_type === 'radio' ? 'Radio' : node.semantic_type === 'switch' ? 'Switch' : 'Surface';
   const nodes = Object.fromEntries(target.nodes.map((node) => [node.element_id, {
     selector: `[data-node-id="${node.element_id}"]`,
     component: componentFor(node),
@@ -232,6 +236,15 @@ function templateNodeHtml(node) {
   if (node.semantic_type === 'checkbox') {
     return `<label class="wireframe-check"><input data-node-id="${id}" type="checkbox"> <span>${name}</span></label>`;
   }
+  // A radio drawn as a checkbox says "any of these", which is the opposite of what a radio
+  // promises; the group name is what makes it one choice among several.
+  if (node.semantic_type === 'radio') {
+    const group = escapeHtml(node.parent_id || node.element_id);
+    return `<label class="wireframe-check"><input data-node-id="${id}" type="radio" name="${group}"> <span>${name}</span></label>`;
+  }
+  if (node.semantic_type === 'switch') {
+    return `<button data-node-id="${id}" type="button" role="switch" aria-checked="false">${name}</button>`;
+  }
   if (node.semantic_type === 'input') {
     return `<label class="wireframe-field"><span>${name}</span><input data-node-id="${id}" aria-label="${name}" placeholder="${purpose}"></label>`;
   }
@@ -244,6 +257,16 @@ function templateNodeHtml(node) {
   if (node.semantic_type === 'status') {
     return `<p data-node-id="${id}" role="status" aria-live="polite">${name}</p>`;
   }
+  // Text and icons carry most of what a screen says. Drawn as regions they read as
+  // containers, and a reviewer cannot tell a heading from a card.
+  if (node.semantic_type === 'text') {
+    return `<p data-node-id="${id}" class="wireframe-text">${name}</p>`;
+  }
+  if (node.semantic_type === 'icon') {
+    // The label is the icon's meaning; the glyph itself is not part of the wireframe.
+    // title only so a reviewer can tell two icon boxes apart — the product may not show it.
+    return `<span data-node-id="${id}" class="wireframe-icon" role="img" aria-label="${name}" title="${name}"></span>`;
+  }
   return `<section data-node-id="${id}" role="${role}" aria-label="${name}">${name}</section>`;
 }
 
@@ -251,7 +274,7 @@ function writeTemplateRenderer(runDir, target) {
   mkdirSync(join(runDir, 'renderer'), {recursive: true});
   const sections = target.nodes.map(templateNodeHtml).join('');
   writeFileSync(join(runDir, 'renderer/index.html'), `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="./style.css"></head><body><main>${sections}</main><script src="./app.js"></script></body></html>`);
-  writeFileSync(join(runDir, 'renderer/style.css'), 'main{margin:16px;display:grid;gap:16px;max-width:560px}section,label,p{min-height:44px}.wireframe-field,.wireframe-check{display:grid;gap:6px}input,select,button{min-height:44px;font:inherit}button{cursor:pointer}\n');
+  writeFileSync(join(runDir, 'renderer/style.css'), 'main{margin:16px;display:grid;gap:16px;max-width:560px}section,label,p{min-height:44px}.wireframe-field,.wireframe-check{display:grid;gap:6px}input,select,button{min-height:44px;font:inherit}button{cursor:pointer}.wireframe-text{min-height:0;margin:0}.wireframe-icon{display:inline-block;width:24px;height:24px;min-height:0;border:1px solid currentColor;border-radius:4px}\n');
   writeFileSync(join(runDir, 'renderer/app.js'), 'for(const el of document.querySelectorAll(\'button[aria-expanded]\'))el.addEventListener(\'click\',()=>el.setAttribute(\'aria-expanded\',el.getAttribute(\'aria-expanded\')===\'true\'?\'false\':\'true\'));window.__wireframeExternalState=(value)=>{window.__lastExternalState=value};\n');
 }
 
@@ -332,6 +355,10 @@ function selectReferencesForTarget(pack, target) {
     });
   }
   for (const handoff of handoffs) {
+    // A handoff that named a specific screen asked for that screen. When the id is unknown,
+    // a lexical substitute is not the thing it asked for — leave the gap visible.
+    const explicit = String(handoff.candidate_design_system_ref ?? '');
+    if (explicit.startsWith('reference:')) continue;
     const roleRule = roleRuleForRef(pack, handoff.candidate_design_system_ref);
     const roleTokens = textTokens(roleRule ?? handoff.candidate_design_system_ref ?? '');
     const semanticTokens = textTokens(handoff.semantic_pattern ?? '');
@@ -339,7 +366,10 @@ function selectReferencesForTarget(pack, target) {
     for (const reference of pack.references ?? []) {
       const referencePath = reference.localPath ?? reference.path;
       if (!referencePath) continue;
-      const referenceTokens = textTokens([reference.role, reference.authority, reference.limitation, reference.id]);
+      // Authority and limitation are boilerplate repeated across rows ("...still reference
+      // evidence, not a product requirement"), so matching on them lets any query share a
+      // word with every reference. Only the role and the id say what a reference is about.
+      const referenceTokens = textTokens([reference.role, reference.id]);
       const evidence = [];
       const roleExact = reference.role === roleType ? 8 : 0;
       const roleEvidenceMatch = overlapScore(roleTokens, referenceTokens) * 3;
@@ -485,7 +515,7 @@ function compareSet(errors, label, actualValues, expectedValues) {
   if (extra.length) errors.push(`${label} extra ${extra.join(', ')}`);
 }
 
-const CONTROL_TYPES = new Set(['command', 'button', 'link', 'checkbox', 'select', 'input', 'disclosure']);
+const CONTROL_TYPES = new Set(['command', 'button', 'link', 'checkbox', 'radio', 'switch', 'select', 'input', 'disclosure']);
 
 // A render case that declares an action blocked must not also show what that action needs.
 // Promoted from an image review: an expired screen kept "남은 시간 1일 4시간" in the accent

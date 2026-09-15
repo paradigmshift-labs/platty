@@ -9,24 +9,26 @@ Own session routing and stage transitions. Do not perform a stage's detailed int
 
 ## Required Sub-Skills
 
-1. Use `platty-mcp-retrieval` for all existing-service evidence gathering.
+1. Use `platty-mcp:ba-retrieval` for all existing-service evidence gathering.
    It owns tool selection, project resolution, freshness, and the map-first or
    direct-first retrieval route. The BA flow consumes only its bounded evidence
    output; it does not recreate retrieval logic or substitute local evidence.
-2. Use `platty-mcp-impact-analysis` only when a concrete proposed change needs
+2. Use `platty-mcp:platty-mcp-impact-analysis` only when a concrete proposed change needs
    an impact packet to resolve BA scope or a service-boundary decision.
 
-## Claude Skill Calls
+## Runtime-neutral skill dispatch
 
-Use Claude's `Skill` tool for the Required Sub-Skills; do not merely read a
-linked file and recreate its workflow.
+Invoke the packaged sub-skill directly. On Codex, load the named `SKILL.md`
+through its native skills facility. On Claude, invoke the same named skill with
+the native `Skill` facility. Do not recreate a child skill's workflow in this
+orchestrator; the invoked skill owns its own prerequisites and routing.
 
-1. Call `Skill(platty-mcp:platty-mcp-retrieval)` with the BA
-   retrieval brief: selected `projectId`, current stage, question, required
-   evidence, and case path.
+1. Invoke `platty-mcp:ba-retrieval` directly with the BA retrieval brief:
+   selected `projectId`, current stage, question, required evidence, and case
+   path.
 2. If retrieval returns a capability gap, record the returned gap in the case
    and stop. Do not create a local fallback.
-3. Call `Skill(platty-mcp:platty-mcp-impact-analysis)` only for the scoped
+3. Invoke `platty-mcp:platty-mcp-impact-analysis` directly only for the scoped
    impact case defined above.
 
 ## Route
@@ -34,22 +36,28 @@ linked file and recreate its workflow.
 1. Use `scripts/session.py list` to locate or create the live case. Preserve the user's original text in an input file.
 1. Read `status --map` to re-enter: it gives the destination, the decisions already made, what is takeable now, what is blocked, the fog and the out-of-scope list, within a fixed budget whatever the artifact weighs.
 2. Read `status`. If there is a pending question, record the answer first. If the phase is `process_answer` or `action_required`, finish the current stage work before asking again.
-3. If `status.phase=prepare_context`, run the Required Sub-Skills route before
-   loading the BA stage. If its MCP capability gate is blocked, preserve the
-   case as waiting and report the exact configuration gap. Do not recreate the
-   capability gate, inspect host configuration, probe endpoints, or use a local
-   Platty CLI fallback.
-4. Route by `status.stage` only:
-   - `jtbd` → `Skill(platty-mcp:platty-mcp-ba-jtbd)`
-   - `prd` → `Skill(platty-mcp:platty-mcp-ba-prd)`
-   - `user_experience` → `Skill(platty-mcp:platty-mcp-ba-user-experience)`
-   - `screen_behavior` → `Skill(platty-mcp:platty-mcp-ba-screen-behavior)`
-   - `design_system_wireframe` → `Skill(platty-mcp:platty-mcp-ba-design-system-wireframe)`
-   - `planning_context` → `Skill(platty-mcp:platty-mcp-ba-planning-context)` (read-only; kept for cases opened before the jtbd stage)
+3. At every BA case entry — a newly created case or a re-entry after handoff —
+   invoke `platty-mcp:ba-retrieval` directly with the selected `projectId`,
+   current stage, case path, and baseline service-evidence need. This is
+   required regardless of `status.phase`; `prepare_context` is a status, not a
+   retrieval gate. If it returns a capability gap, preserve the case as waiting
+   and report the exact configuration gap. Do not recreate the capability gate,
+   inspect host configuration, probe endpoints, or use a local Platty CLI
+   fallback. Do not repeat this baseline lookup for every answer in the same
+   active case; retrieve again only when the stage needs fresh or additional
+   service facts.
+4. Route by `status.stage` only after the entry retrieval succeeds:
+   - `jtbd` → `platty-mcp:jtbd`
+   - `prd` → `platty-mcp:prd`
+   - `user_experience` → `platty-mcp:user-experience`
+   - `screen_behavior` → `platty-mcp:screen-behavior`
+   - `design_system_wireframe` → `platty-mcp:wireframe`
+   - `planning_context` → `platty-mcp:planning-context` (read-only; kept for cases opened before the jtbd stage)
 5. The selected stage owns its artifact updates, qualitative assessment, and its confirmation.
 6. When status is `start_*`, run `session.py start --stage ...` and route to that next stage in the same turn. Do not infer a stage transition from a user saying “continue”.
-7. When a stage needs Platty facts, use `platty-mcp-retrieval` through the
-   Required Sub-Skills route and consume only its bounded evidence output.
+7. When a stage needs Platty facts beyond the entry baseline, invoke
+   `platty-mcp:ba-retrieval` directly and consume only its bounded evidence
+   output.
 
 ## Question gate
 

@@ -25,6 +25,7 @@ SOURCE_FILES = {
     "inventory/figma-frames.jsonl": "Figma frame inventory",
     "inventory/expanded-frames.json": "Expanded high-confidence frame inventory",
     "expansion/additional-figma-evidence.json": "Additional Figma evidence",
+    "inventory/runtime-captures.json": "Runtime captures of the analyzed application",
 }
 
 
@@ -133,6 +134,37 @@ class PackBuilder:
                         "limitation": "Expanded frame is copied as design reference evidence only.",
                         **copied,
                     })
+        refs.extend(self.build_runtime_references())
+        return refs
+
+    def build_runtime_references(self):
+        """Screens observed in the running app.
+
+        A capture shows what the code produced, so it is evidence of the current build,
+        never a design approval. Rows the capture run could not render stay in the source
+        file with their reason: the pack carries the ones that rendered, and the gap stays
+        readable upstream instead of vanishing here.
+        """
+        document = self.read_json("inventory/runtime-captures.json")
+        revision = document.get("source_revision", "")
+        limitation = document.get("limitation", "")
+        refs = []
+        for row in document.get("rows", []):
+            if not row.get("included") or not row.get("screenshot") or not row.get("role"):
+                continue
+            copied = self.copy_reference(row["screenshot"], f"runtime/{row['id'].split(':', 1)[-1]}")
+            if not copied:
+                continue
+            refs.append({
+                "id": row["id"],
+                "role": row["role"],
+                "authority": "runtime-capture",
+                "revision": revision,
+                "limitation": limitation,
+                "route": row.get("route", ""),
+                "state": row.get("state", "default"),
+                **copied,
+            })
         return refs
 
     def build(self):
@@ -157,7 +189,7 @@ class PackBuilder:
             "packVersion": self.version,
             "sourceIdentity": source_identity,
             "createdFor": "BA design-system wireframe PoC Task 3",
-            "selectionPolicy": "Normalize all tokens, component contracts/state map, all 23 role rules, all recipe rules, required principles/usability, and high-confidence referenced images. Archives, experiments, galleries, raw low-confidence references, and historical runs are excluded.",
+            "selectionPolicy": "Normalize all tokens, component contracts/state map, all 23 role rules, all recipe rules, required principles/usability, high-confidence referenced images, and runtime captures of screens that rendered. Archives, experiments, galleries, raw low-confidence references, captures that did not render, and historical runs are excluded.",
             "sources": [
                 {
                     "path": path,
@@ -200,6 +232,7 @@ class PackBuilder:
                     ("principles", "design/required/principles.json"),
                     ("usability", "design/required/usability.json"),
                     ("references", "inventory/figma-frames.jsonl"),
+                    ("references", "inventory/runtime-captures.json"),
                 ]
             ],
         }
