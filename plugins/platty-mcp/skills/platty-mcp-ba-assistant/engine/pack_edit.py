@@ -34,7 +34,8 @@ STATE_AXES = ('visible', 'checked', 'selected', 'disabled', 'readonly',
               'busy', 'invalid', 'expanded', 'focus', 'value')
 
 # engine.mjs templateNodeHtml / roleForNode — the roles a drawn node can actually carry.
-ENGINE_ROLES = ('region', 'button', 'checkbox', 'select', 'textbox', 'disclosure', 'status')
+ENGINE_ROLES = ('region', 'text', 'icon', 'button', 'checkbox', 'radio', 'switch',
+                'select', 'textbox', 'disclosure', 'status')
 
 SIBLING_REPOS = ('heroines-design-system', 'heroines-webview')
 
@@ -328,7 +329,7 @@ def build(args, source_root, pack_dir):
     dest = PACK_ROOT / Path(version)
     if dest.exists() and not args.overwrite:
         return {'ok': False, 'errors': [
-            f'{dest.relative_to(ROOT)} 는 이미 있다. 팩은 판본이라 제자리에서 바뀌지 않는다 — '
+            f'{dest.relative_to(WORKSPACE_ROOT)} 는 이미 있다. 팩은 판본이라 제자리에서 바뀌지 않는다 — '
             '새 날짜를 준다. 같은 버전을 덮어쓰면 이 팩을 쓰던 모든 케이스가 '
             'hash mismatch 로 깨지고 승인이 stale 이 된다.']}
 
@@ -377,8 +378,35 @@ def build(args, source_root, pack_dir):
         return {'ok': False, 'steps': steps,
                 'errors': ['빌드된 팩을 엔진이 로드하지 못했다 — provenance 검증 실패']}
 
+    review = run(['python3', str(PLUGIN_ROOT / 'scripts/pack_review.py'), version], WORKSPACE_ROOT)
+    steps.append(review)
+    if review['exit_code'] != 0:
+        clean_up()
+        return {'ok': False, 'steps': steps,
+                'errors': ['검토 화면 생성이 실패했다 — 팩은 만들었지만 사람이 볼 수 없다']}
+
+    # A pack whose review page renders a control as nothing still passes every hash check.
+    # Rendering it here is the only place that catch happens before a designer sees it.
+    audit = run(['node', str(PLUGIN_ROOT / 'design-pipeline/src/review-audit.mjs'),
+                 '--page', str(dest / 'pack-review.html')], PLUGIN_ROOT / 'design-pipeline')
+    steps.append(audit)
+    findings = []
+    skipped = ''
+    try:
+        parsed = json.loads(audit['stdout'] or '{}')
+        findings = parsed.get('findings') or []
+        skipped = parsed.get('skipped', '')
+    except ValueError:
+        findings = [{'area': 'audit', 'problems': ['감사 출력을 읽지 못했다']}]
+    if findings and not args.allow_render_findings:
+        clean_up()
+        return {'ok': False, 'steps': steps, 'renderFindings': findings,
+                'errors': ['검토 화면 렌더에 문제가 있다 — 고치거나 '
+                           '--allow-render-findings 로 의도한 것임을 밝힌다']}
+
     return {'ok': True, 'version': version, 'dest': str(dest.relative_to(WORKSPACE_ROOT)),
             'engine_load': verify['stdout'], 'steps': steps,
+            'renderAudit': skipped or ('문제 없음' if not findings else f'발견 {len(findings)}건'),
             'next': ['사람 승인: python3 scripts/pack_approval.py (팩 버전마다 한 번)',
                      '검토 화면: python3 scripts/pack_review.py ' + version,
                      '이전 팩을 쓰던 케이스는 자동으로 옮겨가지 않는다 — '

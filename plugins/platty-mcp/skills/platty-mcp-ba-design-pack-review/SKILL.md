@@ -57,8 +57,17 @@ python3 scripts/pack_review.py -o /tmp/review.html    # 다른 위치로
 - 대비비는 알파를 **흰 배경에 합성한 뒤** 계산했다. 다른 배경 위에서는 다르다.
 - 막대 길이는 그 그룹 안에서의 비율이다. 절대 크기가 아니라 옆의 px 값이 정본이다.
 
+## 화면 구조를 바꾸려면
+
+이 화면은 파트마다 같은 네 블록을 가진다 — 무엇인가 · 판단할 것 · 어떻게 고치나 · 내용.
+수정 경로는 `pack_edit.ROUTES`에서, 미판정 수는 `pack_approval.items()`에서 읽는다.
+구조를 바꾸거나 파트를 추가할 때는 [구조 계약](references/page-structure.md)을 먼저 읽는다.
+`PARTS` 상수에 항목을 빠뜨리면 그 파트는 머리 블록 없이 나오고, 디자이너는 그것을 어떻게
+고치는지 알 수 없다.
+
 ## References
 
+- [화면 구조 계약](references/page-structure.md) — 파트 골격과 유지 규칙
 - [팩 승인](../../../scripts/pack_approval.py) — 팩 버전마다 한 번, 팩 해시에 묶인다
 - [팩 수정](../platty-mcp-ba-design-pack-edit/SKILL.md)
 - [4단계 와이어프레임](../platty-mcp-ba-design-system-wireframe/SKILL.md) — 이 팩을 실제로 쓰는 곳

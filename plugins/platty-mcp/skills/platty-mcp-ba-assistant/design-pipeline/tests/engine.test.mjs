@@ -5,7 +5,7 @@ import {join, resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
-import test from 'node:test';
+import nodeTest from 'node:test';
 import {chromium} from 'playwright';
 
 import {
@@ -18,8 +18,16 @@ import {
   retryRun
 } from '../src/engine.mjs';
 
+const packageRoot = resolve(import.meta.dirname, '..');
 const repoRoot = resolve(import.meta.dirname, '../../..');
-const packRoot = resolve(repoRoot, 'design-knowledge');
+// The pack these tests read is private and not in the repository. BA_TEST_PACK_ROOT lets a
+// machine point at one; tests/fixtures/build-fixture-pack.mjs writes a synthetic one.
+const packRoot = resolve(process.env.BA_TEST_PACK_ROOT ?? join(repoRoot, 'design-knowledge'));
+const fixtureMissing = existsSync(join(packRoot, 'heroines/2026-09-09/pack.json'))
+  ? null
+  : `fixture pack missing at ${packRoot}/heroines/2026-09-09 — run: node tests/fixtures/build-fixture-pack.mjs`;
+// Skipping with the reason beats 40 identical ENOENT failures that hide what is wrong.
+const test = (name, fn) => nodeTest(name, fixtureMissing ? {skip: fixtureMissing} : {}, fn);
 
 function packet() {
   return {
@@ -360,6 +368,53 @@ test('knowledge pack is comprehensive and provenance-bound', () => {
   assert.ok(pack.componentKnowledge.every((row) => row.sourcePath && /^[a-f0-9]{64}$/.test(row.revision) && /^[a-f0-9]{64}$/.test(row.hash) && row.authority && row.limitation && row.origin));
   assert.ok(pack.componentKnowledge.some((row) => row.origin === 'ba-authored-adapter'));
   assert.ok(pack.componentKnowledge.some((row) => row.origin === 'upstream-derived-contract'));
+});
+
+test('prepare draws text and icon nodes as their own elements', () => {
+  // Screens are mostly text and icons; without their own node kinds the wireframe
+  // either loses them or dresses them up as regions, and a reviewer cannot tell
+  // a heading apart from a container.
+  const input = packet();
+  const target = input.targets[0];
+  target.nodes.push(
+    {element_id: 'headline', parent_id: 'root', name: '계좌를 등록해주세요', semantic_type: 'text', purpose: '화면 제목', information_refs: [], action_refs: [], repetition: 'none', source_ids: ['U1'], decision_ids: []},
+    {element_id: 'back-icon', parent_id: 'root', name: '뒤로가기', semantic_type: 'icon', purpose: '이전 화면으로', information_refs: [], action_refs: [], repetition: 'none', source_ids: ['U1'], decision_ids: []}
+  );
+  target.design_handoffs[0].element_ids.push('headline', 'back-icon');
+
+  const prepared = prepareRun(input, {packRoot, outputRoot: mkdtempSync(join(tmpdir(), 'ba-node-roles-'))});
+  const html = readFileSync(join(prepared.runDir, 'renderer/index.html'), 'utf8');
+
+  assert.match(html, /<p data-node-id="headline" class="wireframe-text">계좌를 등록해주세요<\/p>/);
+  assert.match(html, /<span data-node-id="back-icon" class="wireframe-icon" role="img" aria-label="뒤로가기" title="뒤로가기"><\/span>/);
+
+  const spec = JSON.parse(readFileSync(join(prepared.runDir, 'design-spec.template.json'), 'utf8'));
+  assert.equal(spec.nodes.headline.role, 'text');
+  assert.equal(spec.nodes.headline.component, 'Text');
+  assert.equal(spec.nodes['back-icon'].role, 'icon');
+  assert.equal(spec.nodes['back-icon'].component, 'Icon');
+});
+
+test('prepare draws radio and switch nodes as themselves', () => {
+  // Drawn as a checkbox, a radio tells the reviewer the wrong thing about the choice:
+  // one of many versus one on its own. The design system has both, so the engine needs both.
+  const input = packet();
+  const target = input.targets[0];
+  target.nodes.push(
+    {element_id: 'pay-card', parent_id: 'root', name: '신용카드', semantic_type: 'radio', purpose: '결제 수단 선택', information_refs: [], action_refs: [], repetition: 'none', source_ids: ['U1'], decision_ids: []},
+    {element_id: 'notify', parent_id: 'root', name: '알림 받기', semantic_type: 'switch', purpose: '알림 설정', information_refs: [], action_refs: [], repetition: 'none', source_ids: ['U1'], decision_ids: []}
+  );
+  target.design_handoffs[0].element_ids.push('pay-card', 'notify');
+
+  const prepared = prepareRun(input, {packRoot, outputRoot: mkdtempSync(join(tmpdir(), 'ba-control-roles-'))});
+  const html = readFileSync(join(prepared.runDir, 'renderer/index.html'), 'utf8');
+
+  assert.match(html, /<input data-node-id="pay-card" type="radio" name="root"/);
+  assert.match(html, /<button data-node-id="notify" type="button" role="switch" aria-checked="false">알림 받기<\/button>/);
+
+  const spec = JSON.parse(readFileSync(join(prepared.runDir, 'design-spec.template.json'), 'utf8'));
+  assert.equal(spec.nodes['pay-card'].role, 'radio');
+  assert.equal(spec.nodes.notify.role, 'switch');
 });
 
 test('prepare accepts only adapter packet targets and rejects empty undercovered input', () => {
@@ -1341,16 +1396,16 @@ test('CLI runs staged packet flow and gate supports revise verdicts', () => {
   const inputFile = join(outputRoot, 'packet.json');
   writeFileSync(inputFile, JSON.stringify(packet()));
 
-  const prepared = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'prepare', '--input', inputFile, '--output-root', outputRoot, '--pack-root', packRoot], {cwd: resolve(repoRoot, 'tools/design-pipeline')}).toString());
+  const prepared = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'prepare', '--input', inputFile, '--output-root', outputRoot, '--pack-root', packRoot], {cwd: packageRoot}).toString());
   writeRenderer(prepared.runDir);
 
   for (const command of ['spec', 'runtime']) {
-    execFileSync(process.execPath, ['src/cli.mjs', command, '--run-dir', prepared.runDir], {cwd: resolve(repoRoot, 'tools/design-pipeline')});
+    execFileSync(process.execPath, ['src/cli.mjs', command, '--run-dir', prepared.runDir], {cwd: packageRoot});
   }
   writeDesignDecisions(prepared.runDir);
-  execFileSync(process.execPath, ['src/cli.mjs', 'freeze', '--run-dir', prepared.runDir], {cwd: resolve(repoRoot, 'tools/design-pipeline')});
+  execFileSync(process.execPath, ['src/cli.mjs', 'freeze', '--run-dir', prepared.runDir], {cwd: packageRoot});
   writeAIReview(prepared.runDir, {verdict: 'revise', findings: [{axis: 'state distinction', impact: 'medium', evidence: 'busy state needs stronger treatment in captures/after-mobile.png', recommendation: 'Strengthen busy-state treatment.', retryStage: 'tokens'}]});
-  const gate = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'gate', '--run-dir', prepared.runDir], {cwd: resolve(repoRoot, 'tools/design-pipeline')}).toString());
+  const gate = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'gate', '--run-dir', prepared.runDir], {cwd: packageRoot}).toString());
 
   assert.equal(gate.verdict, 'revise');
   assert.equal(gate.retryStage, 'tokens');
@@ -1361,19 +1416,19 @@ test('CLI emits compact summaries by default and full artifacts only when reques
   const inputFile = join(outputRoot, 'packet.json');
   writeFileSync(inputFile, JSON.stringify(packet()));
 
-  const prepared = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'prepare', '--input', inputFile, '--output-root', outputRoot, '--pack-root', packRoot], {cwd: resolve(repoRoot, 'tools/design-pipeline')}).toString());
+  const prepared = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'prepare', '--input', inputFile, '--output-root', outputRoot, '--pack-root', packRoot], {cwd: packageRoot}).toString());
   assert.equal(prepared.command, 'prepare');
   assert.ok(prepared.runId);
   assert.ok(prepared.runDir);
   assert.equal(prepared.packet, undefined);
 
   writeRenderer(prepared.runDir);
-  const specSummary = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'spec', '--run-dir', prepared.runDir], {cwd: resolve(repoRoot, 'tools/design-pipeline')}).toString());
+  const specSummary = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'spec', '--run-dir', prepared.runDir], {cwd: packageRoot}).toString());
   assert.equal(specSummary.command, 'spec');
   assert.equal(specSummary.valid, true);
   assert.equal(specSummary.designSpec, undefined);
 
-  const specFull = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'spec', '--run-dir', prepared.runDir, '--json', 'full'], {cwd: resolve(repoRoot, 'tools/design-pipeline')}).toString());
+  const specFull = JSON.parse(execFileSync(process.execPath, ['src/cli.mjs', 'spec', '--run-dir', prepared.runDir, '--json', 'full'], {cwd: packageRoot}).toString());
   assert.equal(specFull.valid, true);
   assert.ok(specFull.designSpec);
 });

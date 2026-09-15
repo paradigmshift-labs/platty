@@ -21,6 +21,7 @@ SOURCE_FILES = [
     'inventory/figma-frames.jsonl',
     'inventory/expanded-frames.json',
     'expansion/additional-figma-evidence.json',
+    'inventory/runtime-captures.json',
 ]
 
 
@@ -58,7 +59,35 @@ def write_logical_source(root: Path):
         'match_confidence': 'high',
         'source_revision': 'expanded-rev'
     }])
-    for screenshot in [root / 'references/figma/fixture-file/1-2/screenshot.png', root / 'references/figma/expanded-list/screenshot.png']:
+    write_json(root / 'inventory/runtime-captures.json', {
+        'schema': 'runtime-captures.v1',
+        'source_revision': 'runtime-rev',
+        'authority': 'Observation of the running application at this commit.',
+        'limitation': 'Captured under mock conditions; not a designer-approved design.',
+        'rows': [
+            {
+                'id': 'runtime:page-fixture-list',
+                'route': '/page/fixture/list',
+                'role': 'list',
+                'state': 'default',
+                'verdict': 'rendered',
+                'included': True,
+                'screenshot': 'references/runtime/page-fixture-list/screenshot.png',
+            },
+            {
+                'id': 'runtime:page-fixture-cart',
+                'route': '/page/fixture/cart',
+                'role': 'list',
+                'verdict': 'blank',
+                'included': False,
+                'screenshot': None,
+                'excludedReason': '화면이 렌더되지 않았다',
+            },
+        ],
+    })
+    for screenshot in [root / 'references/figma/fixture-file/1-2/screenshot.png',
+                       root / 'references/figma/expanded-list/screenshot.png',
+                       root / 'references/runtime/page-fixture-list/screenshot.png']:
         screenshot.parent.mkdir(parents=True, exist_ok=True)
         screenshot.write_bytes(b'fixture-png-bytes')
 
@@ -89,6 +118,32 @@ class BuildPackTest(unittest.TestCase):
             pack = json.loads((Path(dest) / 'pack.json').read_text(encoding='utf-8'))
             self.assertEqual(pack['recipeRules'][0]['type'], 'blocked')
             self.assertEqual(pack['recipeRules'][0]['appliesTo'], ['list'])
+
+
+    def test_runtime_capture_becomes_a_reference_with_its_role(self):
+        """A rendered capture is reference evidence; a screen that did not render is not."""
+        with tempfile.TemporaryDirectory(prefix='ba-pack-fixture-') as fixture, tempfile.TemporaryDirectory(prefix='ba-pack-dest-') as dest:
+            source = Path(fixture)
+            write_logical_source(source)
+
+            subprocess.run([
+                'python3', str(PACKAGE_ROOT / 'scripts' / 'build-pack.py'),
+                '--source-root', source,
+                '--dest', dest,
+                '--version', 'heroines/runtime-reference',
+            ], cwd=REPO_ROOT, check=True, capture_output=True, text=True)
+
+            pack = json.loads((Path(dest) / 'pack.json').read_text(encoding='utf-8'))
+            runtime = [row for row in pack['references'] if row['id'].startswith('runtime:')]
+            self.assertEqual([row['id'] for row in runtime], ['runtime:page-fixture-list'])
+            self.assertEqual(runtime[0]['role'], 'list')
+            self.assertEqual(runtime[0]['authority'], 'runtime-capture')
+            self.assertEqual(runtime[0]['revision'], 'runtime-rev')
+            self.assertIn('mock', runtime[0]['limitation'])
+            self.assertTrue((Path(dest) / runtime[0]['localPath']).exists())
+
+            manifest = json.loads((Path(dest) / 'upstream-manifest.json').read_text(encoding='utf-8'))
+            self.assertIn('inventory/runtime-captures.json', [row['path'] for row in manifest['sources']])
 
     def test_manifest_and_pack_are_logical_for_different_source_roots(self):
         with tempfile.TemporaryDirectory(prefix='ba-pack-fixture-') as fixture, tempfile.TemporaryDirectory(prefix='ba-pack-src-a-') as src_a, tempfile.TemporaryDirectory(prefix='ba-pack-src-b-') as src_b, tempfile.TemporaryDirectory(prefix='ba-pack-dest-a-') as dest_a, tempfile.TemporaryDirectory(prefix='ba-pack-dest-b-') as dest_b:
@@ -122,7 +177,7 @@ class BuildPackTest(unittest.TestCase):
             self.assertIn('sourceIdentity', manifest_a)
             self.assertNotIn('sourceRoot', manifest_a)
             self.assertTrue(all(not Path(row['path']).is_absolute() for row in manifest_a['sources']))
-            self.assertEqual(len(pack_a['references']), 2)
+            self.assertEqual(len(pack_a['references']), 3)
 
 
 if __name__ == '__main__':

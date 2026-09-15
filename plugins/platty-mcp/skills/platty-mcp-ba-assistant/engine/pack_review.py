@@ -12,6 +12,7 @@ would be a lie about what stage 4 actually produces.
 """
 import argparse
 import json
+import re
 from pathlib import Path
 import sys
 
@@ -83,7 +84,7 @@ def contrast(literal, against=(255, 255, 255)):
 
 # engine.mjs roleForNode maps the input semantic type to the textbox role; reverse it
 # so the gallery draws what the engine would draw for this knowledge row.
-ROLE_TO_SEMANTIC = {'textbox': 'input', 'region': 'section'}
+ROLE_TO_SEMANTIC = {'textbox': 'input', 'region': 'section'}  # text/icon draw under their own names
 
 # Which axes can be shown as a still picture. `value`/`visible` are not variants of the
 # control, and `focus` cannot be forced without scripting, so they are listed as text.
@@ -117,6 +118,19 @@ def element_html(semantic_type, name, state=''):
         return f'<button type="button" aria-expanded="{expanded}"{disabled}>{label}</button>'
     if semantic_type == 'status':
         return f'<p role="status" aria-live="polite"{busy}{invalid}>{label}</p>'
+    if semantic_type == 'radio':
+        # The group name must be derived, not hashed: Python randomises str hashes per
+        # process, so a hashed name would make this page differ on every regeneration.
+        group = re.sub(r'[^a-z0-9]+', '-', str(name).lower()).strip('-') or 'radio'
+        return (f'<label class="wf-check"><input type="radio" name="preview-{esc(group)}"'
+                f'{checked}{disabled}{invalid}> <span>{label}</span></label>')
+    if semantic_type == 'switch':
+        aria = 'true' if state == 'checked' else 'false'
+        return f'<button type="button" role="switch" aria-checked="{aria}"{disabled}>{label}</button>'
+    if semantic_type == 'text':
+        return f'<p class="wf-text">{label}</p>'
+    if semantic_type == 'icon':
+        return f'<span class="wf-icon" role="img" aria-label="{label}" title="{label}"></span>'
     return f'<section role="region" aria-label="{label}">{label}</section>'
 
 
@@ -233,6 +247,30 @@ ul.plain li{margin-block:3px}
   padding:6px 10px;border:1px solid var(--line);border-radius:7px;
   background:var(--ground);color:var(--ink);max-width:100%}
 .demo .wf-check{display:flex;align-items:center;gap:8px}
+.part{margin:0 0 22px;padding:14px 16px;background:var(--surface);border-radius:10px;
+  border-left:3px solid var(--primary)}
+.part p{margin:0 0 6px}
+.part-what{color:var(--ink-2);font-size:14px}
+.part-decide{font-size:14px}
+.part-decide b{font-weight:600}
+.howto{margin-top:10px;font-size:13.5px}
+.howto summary{cursor:pointer;color:var(--primary);font-weight:600}
+.howto .table{margin-top:10px}
+.howto code{display:inline-block;margin:1px 4px 1px 0}
+.muted{color:var(--ink-3);font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0 4px}
+.tile{display:grid;gap:3px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;
+  text-decoration:none;background:var(--ground)}
+.tile b{color:var(--ink);font-size:14px;font-weight:600}
+.tile span{font:12px/1.4 var(--mono);color:var(--ink-3)}
+.tile.open{border-color:var(--warn);background:var(--warn-soft)}
+.tile.open span{color:var(--warn)}
+.impl{margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--ground)}
+.impl-head{padding:7px 12px;background:var(--surface);border-bottom:1px solid var(--line);
+  font-size:12px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.impl-frame{display:block;width:100%;height:120px;border:0;background:#fff}
+.demo .wf-text{margin:0;min-height:0}
+.demo .wf-icon{display:inline-block;width:24px;height:24px;border:1px solid currentColor;border-radius:4px}
 .demo .wf-check input{min-height:auto;width:18px;height:18px}
 .demo button{cursor:pointer;font-weight:600}
 .demo :disabled{opacity:.45;cursor:not-allowed}
@@ -404,10 +442,225 @@ def bars(rows):
     return '<div class="bars">' + ''.join(out) + '</div>'
 
 
-def render_components(pack):
+# A frame below the fold never fires load on its own, so it would keep the fallback height
+# and clip the variants. Fit on load, when it scrolls into view, and on resize.
+IMPLEMENTATION_FRAME_SCRIPT = """<script>
+const fitFrame = (frame) => {
+  try {
+    const body = frame.contentDocument && frame.contentDocument.body;
+    if (body && body.scrollHeight) frame.style.height = (body.scrollHeight + 4) + 'px';
+  } catch (error) { /* keep the fallback height */ }
+};
+const implFrames = Array.from(document.querySelectorAll('iframe.impl-frame'));
+const implWatcher = 'IntersectionObserver' in window
+  ? new IntersectionObserver((entries) => entries.forEach((entry) => entry.isIntersecting && fitFrame(entry.target)), {rootMargin: '400px'})
+  : null;
+for (const frame of implFrames) {
+  frame.addEventListener('load', () => fitFrame(frame));
+  fitFrame(frame);
+  if (implWatcher) implWatcher.observe(frame);
+}
+window.addEventListener('resize', () => implFrames.forEach(fitFrame));
+</script>"""
+
+
+# --- part contract (platty-mcp-ba-design-pack-review/references/page-structure.md) ----
+# Every part answers the same four questions in the same order: what it is, what the
+# designer decides, how it is changed, then the rows. A part without this block leaves a
+# reviewer with no next action, which is how this page became read-only in practice.
+PARTS = {
+    'tokens': {
+        'what': '화면에 쓸 수 있는 색·타이포·간격의 전부다. 여기 없는 값은 와이어프레임에서 쓸 수 없다.',
+        'decide': '값이 제품과 맞는지, 없는 값이 필요한지 판단한다.',
+        'routes': ['token'],
+        'kinds': [],
+    },
+    'components': {
+        'what': '4단계 와이어프레임이 그릴 수 있는 컴포넌트다. 팩에 계약이 있어도 여기 없으면 못 쓴다.',
+        'decide': '목록이 맞는지, 지원 상태 축이 실제로 표현 가능한지 판단한다.',
+        'routes': ['component-promote', 'component-contract'],
+        'kinds': [],
+    },
+    'roles': {
+        'what': '화면 유형 23개의 when·구성·상태·조판 계약이다. 3단계가 화면 목록을 여기서 뽑는다.',
+        'decide': '네 문장이 맞는지 판단한다. 전부 AI 합성이고 아직 사람이 확인하지 않았다.',
+        'routes': ['role'],
+        'kinds': ['role'],
+    },
+    'recipes': {
+        'what': '역할별 must / must_not / optional 규칙이다.',
+        'decide': '규칙이 맞는지, 빠진 금지가 있는지 판단한다.',
+        'routes': ['recipe'],
+        'kinds': ['recipe'],
+    },
+    'guides': {
+        'what': '모든 화면에 적용되는 설계 원칙과 사용성 검사다.',
+        'decide': '유지할지, 문장을 고칠지 판단한다.',
+        'routes': ['principle', 'usability'],
+        'kinds': ['usability'],
+    },
+    'references': {
+        'what': '전이 근거로 삼는 실제 화면이다. Figma 프레임과 실행 캡처가 섞여 있다.',
+        'decide': '근거로 삼을지, 역할 지정이 맞는지 판단한다.',
+        'routes': ['reference'],
+        'kinds': ['reference'],
+    },
+}
+
+
+def edit_routes_html(route_keys):
+    """The seed, the regeneration command and the rule — read from pack_edit, not retyped."""
+    try:
+        import pack_edit
+    except ImportError:
+        return ''
+    rows = []
+    for key in route_keys:
+        route = pack_edit.ROUTES.get(key)
+        if not route:
+            continue
+        commands = ''.join(f'<code>{esc(command)}</code>' for command in route.get('regenerate', []))
+        blocked = ' <span class="tag warn">형제 저장소 필요</span>' if route.get('needs_siblings') else ''
+        rows.append(
+            f'<tr><td>{esc(route["label"])}{blocked}</td>'
+            f'<td class="mono">{esc(route["seed"])}</td>'
+            f'<td>{commands or "<span class=\'muted\'>재생성 없음 — 정본 파일</span>"}</td></tr>')
+    if not rows:
+        return ''
+    return ('<details class="howto"><summary>어떻게 고치나</summary>'
+            '<div class="table"><table><thead><tr><th>대상</th><th>씨앗</th><th>재생성</th></tr></thead>'
+            f'<tbody>{"".join(rows)}</tbody></table></div>'
+            '<p class="muted">씨앗을 고친 뒤 <code>/ba-design-pack-edit</code>의 build로 새 버전을 만든다. '
+            '팩은 판본이라 제자리에서 바뀌지 않는다.</p></details>')
+
+
+def part_header(key, pending):
+    part = PARTS.get(key)
+    if not part:
+        return ''
+    count = pending.get(key)
+    if count is None:
+        badge = ''
+    elif count:
+        badge = f'<span class="tag warn">미판정 {count}</span>'
+    else:
+        badge = '<span class="tag">판정 완료</span>'
+    return (f'<div class="part"><p class="part-what">{esc(part["what"])}</p>'
+            f'<p class="part-decide"><b>판단할 것</b> — {esc(part["decide"])} {badge}</p>'
+            f'{edit_routes_html(part["routes"])}</div>')
+
+
+def pending_by_part(pack, decisions):
+    """How many rows in each part still have no ruling."""
+    try:
+        import pack_approval
+    except ImportError:
+        return {}
+    counts = {}
+    for key, part in PARTS.items():
+        if not part['kinds']:
+            continue
+        counts[key] = 0
+    for row in pack_approval.items(pack):
+        for key, part in PARTS.items():
+            if row['kind'] in part['kinds'] and not decisions.get(row['id']):
+                counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def render_dashboard(pack, sections, pending, version):
+    """Where to start, and what is left. A quiet page when nothing is pending."""
+    cells = []
+    for key, label, _ in sections:
+        count = pending.get(key)
+        if count is None:
+            cells.append(f'<a class="tile done" href="#{key}"><b>{esc(label)}</b><span>판단 대상 아님</span></a>')
+        elif count:
+            cells.append(f'<a class="tile open" href="#{key}"><b>{esc(label)}</b><span>미판정 {count}</span></a>')
+        else:
+            cells.append(f'<a class="tile done" href="#{key}"><b>{esc(label)}</b><span>판정 완료</span></a>')
+    total = sum(value for value in pending.values() if value)
+    lead = ('아래에서 미판정이 남은 파트부터 본다. 각 파트 머리에 무엇을 판단하는지와 '
+            '어떻게 고치는지가 적혀 있다.') if total else '남은 판정이 없다.'
+    return (f'<section id="start"><h2>요약</h2>'
+            f'<p class="lede">{lead}</p><div class="tiles">{"".join(cells)}</div></section>')
+
+
+def render_decisions(pack_path, version, state):
+    """How a ruling is recorded, with this pack already filled in."""
+    path = esc(str(pack_path))
+    return (
+        '<p class="lede">판단은 이 화면이 아니라 승인 기록에 남는다. 승인은 팩 해시에 묶이므로 '
+        '새 팩 버전에서는 다시 판단해야 한다.</p>'
+        '<div class="table"><table><thead><tr><th>할 일</th><th>명령</th></tr></thead><tbody>'
+        f'<tr><td>판정 시트 보기</td><td><code>python3 scripts/pack_approval.py sheet {path}</code></td></tr>'
+        f'<tr><td>판정 화면 만들기</td><td><code>python3 scripts/pack_approval.py page {path}</code></td></tr>'
+        f'<tr><td>판정 기록</td><td><code>python3 scripts/pack_approval.py record {path} --approver &lt;이름&gt;</code></td></tr>'
+        f'<tr><td>현재 상태</td><td><code>python3 scripts/pack_approval.py status {path}</code></td></tr>'
+        '</tbody></table></div>'
+        f'<p class="muted">지금 {esc(str(state.get("approved", 0)))} / {esc(str(state.get("total", 0)))} 승인, '
+        f'미판정 {esc(str(state.get("pending", 0)))}건.</p>')
+
+
+def load_implementation_preview(pack_dir):
+    """Rendered cases from the real implementation, when the survey put them next to the pack.
+
+    This is the one thing on the page that does not come from the pack, so it carries its
+    own commit and file hashes and is labelled as product implementation — a designer must
+    never mistake it for what the engine draws.
+    """
+    if not pack_dir:
+        return None
+    path = Path(pack_dir) / 'component-preview.json'
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, UnicodeError, ValueError):
+        return None
+
+
+def implementation_block(preview, name):
+    entry = (preview or {}).get('components', {}).get(name)
+    if not entry or not entry.get('cases'):
+        return ''
+    # The app's Tailwind would repaint this page, so each strip renders inside its own
+    # document. Isolation is the point: the review page must keep its own styling.
+    cards = ''.join(
+        f'<figure{" class=full" if case.get("fullWidth") else ""}>'
+        f'<figcaption>{esc(case["label"])}</figcaption>'
+        f'<div class="stage{" stage-full" if case.get("fullWidth") else ""}">{case["html"] or ""}</div></figure>'
+        for case in entry['cases'] if not case.get('error'))
+    if not cards:
+        return ''
+    document = (
+        '<!doctype html><meta charset="utf-8"><style>' + preview.get('css', '') +
+        'body{margin:0;font-family:"Pretendard","IBM Plex Sans KR",-apple-system,sans-serif}'
+        '.strip{display:flex;flex-wrap:wrap;gap:10px;padding:12px}'
+        'figure{margin:0;display:grid;gap:6px;justify-items:center}'
+        'figcaption{font:11px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;color:#8C8993}'
+        '.stage{display:flex;align-items:center;justify-content:center;min-height:44px;'
+        'padding:8px 10px;border:1px dashed #E7E5EE;border-radius:8px;background:#fff}'
+        '.strip figure.full{flex:1 0 100%}'
+        '.stage-full>*{width:390px;flex:0 0 390px}'
+        '</style><div class="strip">' + cards + '</div>')
+    return (f'<div class="impl"><div class="impl-head">제품 구현 '
+            f'<span class="mono">{esc(entry.get("sourceFile", ""))}</span> '
+            f'<span class="mono">sha256:{esc((entry.get("sourceSha256") or "")[:12])}</span></div>'
+            f'<iframe class="impl-frame" srcdoc="{esc(document)}"></iframe></div>')
+
+
+def render_components(pack, preview=None):
     knowledge = pack.get('componentKnowledge', [])
     out = ['<p class="lede">와이어프레임이 실제로 쓸 수 있는 컴포넌트는 이 목록이 전부다. '
            '아래 그림은 4단계 엔진이 내보내는 것과 같은 마크업으로 그렸다.</p>']
+    if preview:
+        out.append(
+            f'<div class="note"><b>제품 구현 미리보기가 함께 있다.</b> 각 컴포넌트 아래 띠는 '
+            f'heroines-webview <span class="mono">{esc((preview.get("commit") or "")[:12])}</span>의 '
+            f'실제 구현을 렌더한 것이고, 그 위의 그림은 엔진이 그리는 와이어프레임이다. '
+            f'둘은 일부러 다르다 — 엔진은 계층과 토큰 없이 뼈대만 그린다. '
+            f'{esc(preview.get("limitation", ""))}</div>')
     for row in knowledge:
         role = (row.get('roles') or ['section'])[0]
         semantic = ROLE_TO_SEMANTIC.get(role, role)
@@ -431,6 +684,7 @@ def render_components(pack):
             f'<span class="tag">{esc(row.get("kind", ""))}</span>'
             f'<span class="tag">role: {esc(role)}</span>'
             f'<div class="states">{"".join(cells)}</div>'
+            f'{implementation_block(preview, name)}'
             f'<dl><dt>지원 상태</dt><dd class="mono">{esc(", ".join(states))}</dd>'
             f'<dt>인터페이스</dt><dd class="mono">{esc(iface_text)}</dd>'
             f'<dt>출처</dt><dd>{esc(row.get("authority", ""))}</dd></dl>'
@@ -546,10 +800,17 @@ def render_references(pack, decisions, pack_dir, out_dir):
         href = relative_href(source, out_dir)
         ruling = decisions.get('reference:' + row.get('id', ''))
         tag = f' · 판정 {esc(ruling.get("status", ""))}' if ruling else ''
+        # A capture is one screen in one state; naming the route and state is what lets a
+        # designer tell two captures of the same role apart.
+        route = row.get('route', '')
+        state_label = row.get('state', '')
+        where = (f'<span class="mono">{esc(route)}</span>'
+                 + (f' · {esc(state_label)} 상태' if state_label else '') + '<br>') if route else ''
         figures.append(
             f'<figure><a href="{esc(href)}" target="_blank" rel="noopener">'
-            f'<img src="{esc(href)}" alt="{esc(row.get("role", ""))} 참조 화면" loading="lazy"></a>'
+            f'<img src="{esc(href)}" alt="{esc(route or row.get("role", ""))} 참조 화면" loading="lazy"></a>'
             f'<figcaption><b>{esc(row.get("role", ""))}</b>{tag}<br>'
+            f'{where}'
             f'<span class="mono">{esc(row.get("id", ""))}</span><br>'
             f'{esc(row.get("limitation", ""))}<br>'
             f'<a href="{esc(href)}" target="_blank" rel="noopener">전체 화면 열기</a>'
@@ -590,13 +851,17 @@ def render(pack, pack_path, out_path, approval):
 
     sections = [
         ('tokens', '토큰', render_tokens(table, flat)),
-        ('components', '컴포넌트', render_components(pack)),
+        ('components', '컴포넌트', render_components(pack, load_implementation_preview(pack_dir))),
         ('roles', '화면 역할', render_roles(pack, decisions)),
         ('recipes', '레시피 규칙', render_recipes(pack, decisions)),
         ('guides', '원칙과 검사', render_guides(pack, decisions)),
         ('references', '참조 화면', render_references(pack, decisions, pack_dir, out_dir)),
     ]
-    toc = ''.join(f'<a href="#{key}">{esc(label)}</a>' for key, label, _ in sections)
+    pending = pending_by_part(pack, decisions)
+    dashboard = render_dashboard(pack, sections, pending, version)
+    sections = [(key, label, part_header(key, pending) + html) for key, label, html in sections]
+    sections.append(('decisions', '판정 기록', render_decisions(pack_path, version, state)))
+    toc = '<a href="#start">요약</a>' + ''.join(f'<a href="#{key}">{esc(label)}</a>' for key, label, _ in sections)
     body = ''.join(f'<section id="{key}"><h2>{esc(label)}</h2>{html}</section>'
                    for key, label, html in sections)
 
@@ -620,11 +885,12 @@ def render(pack, pack_path, out_path, approval):
         f'와이어프레임에서 쓸 수 없고, 여기 있는 값은 상류 HDS에서 온 것이다. '
         f'고치려면 <code>/ba-design-pack-edit</code>을 쓴다 — 팩은 판본이라 제자리에서 수정되지 않는다.</div>'
         f'<nav class="toc">{toc}</nav>'
+        f'{dashboard}'
         f'{body}'
         f'<section id="provenance"><h2>출처</h2>'
         f'<div class="table"><table><thead><tr><th>컬렉션</th><th>상류 경로</th><th>권위</th></tr></thead>'
         f'<tbody>{sources}</tbody></table></div></section>'
-        f'</div></html>\n')
+        f'</div>{IMPLEMENTATION_FRAME_SCRIPT}</html>\n')
 
 
 def resolve_pack_path(value):
@@ -646,10 +912,63 @@ def latest_pack():
     return found[-1].resolve()
 
 
+MEDIA_TYPES = {'.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif'}
+
+
+def embed_images(page, base_dir):
+    """Inline referenced images so the page survives being copied or sent.
+
+    A review page whose images live beside it breaks the moment someone moves the
+    file — and a reviewer who sees broken screenshots reviews nothing.
+    """
+    import base64
+    cache = {}
+
+    def data_uri(path):
+        if path not in cache:
+            source = (base_dir / path).resolve()
+            media = MEDIA_TYPES.get(source.suffix.lower())
+            if not media or not source.is_file():
+                cache[path] = None
+            else:
+                cache[path] = f'data:{media};base64,' + base64.b64encode(source.read_bytes()).decode('ascii')
+        return cache[path]
+
+    def replace(match):
+        attribute, path = match.group(1), match.group(2)
+        if path.startswith(('data:', 'http:', 'https:')):
+            return match.group(0)
+        uri = data_uri(path)
+        if not uri:
+            return match.group(0)
+        # The same screenshot is linked two or three times per figure. Inlining it once
+        # and letting the links borrow it keeps the page a third of the size.
+        if attribute == 'href':
+            return 'href="#" data-open-image="1"'
+        return f'src="{uri}"'
+
+    page = re.sub(r'\b(src|href)="([^"]+\.(?:png|webp|jpe?g|gif))"', replace, page)
+    if 'data-open-image' in page:
+        page += ('\n<script>\n'
+                 'for (const link of document.querySelectorAll(\'a[data-open-image]\')) {\n'
+                 '  const figure = link.closest("figure");\n'
+                 '  const image = figure && figure.querySelector("img");\n'
+                 '  if (!image) continue;\n'
+                 '  link.addEventListener("click", (event) => {\n'
+                 '    event.preventDefault();\n'
+                 '    const tab = window.open();\n'
+                 '    if (tab) tab.document.write(\'<img src="\' + image.src + \'" style="max-width:100%">\');\n'
+                 '  });\n'
+                 '}\n</script>\n')
+    return page
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('pack', nargs='?', help='pack.json path, "<id>/<version>", or a version')
     parser.add_argument('-o', '--output', type=Path, help='default: <pack dir>/pack-review.html')
+    parser.add_argument('--self-contained', action='store_true',
+                        help='embed reference images in the page so it can be moved or sent on its own')
     args = parser.parse_args()
     try:
         pack_path = resolve_pack_path(args.pack) if args.pack else latest_pack()
@@ -666,7 +985,10 @@ def main():
         except (OSError, UnicodeError, ValueError, KeyError, ImportError):
             pass
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(render(pack, pack_path, out_path, approval), encoding='utf-8')
+        page = render(pack, pack_path, out_path, approval)
+        if args.self_contained:
+            page = embed_images(page, out_path.parent)
+        out_path.write_text(page, encoding='utf-8')
     except (OSError, UnicodeError, ValueError, KeyError, json.JSONDecodeError) as exc:
         print(json.dumps({'error': str(exc)}, ensure_ascii=False, indent=2))
         return 1

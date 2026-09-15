@@ -150,6 +150,338 @@
         "sourcePath": "design/required/usability.json",
         "limitation": "Status semantics checked by role/status live-region assertions."
       }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:BoxButton",
+        "component": "BoxButton",
+        "kind": "hds-interface",
+        "roles": [
+          "button"
+        ],
+        "supportedStates": [
+          "visible",
+          "disabled",
+          "busy",
+          "focus",
+          "value"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/box-button/BoxButton.tsx",
+          "interface": "BoxButtonProps"
+        },
+        "limitation": "Closed size/variant/color/status/fullWidth are validated; leftNode, rightNode and children are ReactNode and are not."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:CapsuleButton",
+        "component": "CapsuleButton",
+        "kind": "hds-interface",
+        "roles": [
+          "button"
+        ],
+        "supportedStates": [
+          "visible",
+          "disabled",
+          "busy",
+          "focus",
+          "value"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/capsule-button/CapsuleButton.tsx",
+          "interface": "CapsuleButtonProps"
+        },
+        "limitation": "Closed size/variant/color/status/fullWidth are validated; leftNode, rightNode and children are ReactNode and are not."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:TextButton",
+        "component": "TextButton",
+        "kind": "hds-interface",
+        "roles": [
+          "button"
+        ],
+        "supportedStates": [
+          "visible",
+          "disabled",
+          "busy",
+          "focus",
+          "value"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/text-button/TextButton.tsx",
+          "interface": "TextButtonProps"
+        },
+        "limitation": "Closed size/color/status/fullWidth are validated; leftNode, rightNode and children are ReactNode and are not."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:WebviewTopNavigation",
+        "component": "WebviewTopNavigation",
+        "kind": "hds-interface",
+        "roles": [
+          "region"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/top-navigation/WebviewTopNavigation.tsx",
+          "interface": "TopNavigationProps"
+        },
+        "limitation": "Only presence is asserted; title, subTitle, lefts, rights and head are ReactNode, and the back affordance depends on the host app navigation."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:BottomSheet",
+        "component": "BottomSheet",
+        "kind": "widget-adapter",
+        "roles": [
+          "region"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "expansion/ui-source-index.json",
+        "limitation": "Store-driven presence only: content comes from bottomSheetStore, stacking and the closing animation are not asserted, and the widget declares no props."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:Modal",
+        "component": "Modal",
+        "kind": "widget-adapter",
+        "roles": [
+          "region"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "expansion/ui-source-index.json",
+        "limitation": "Store-driven presence only: content comes from modalStore, and backdrop-click dismissal is not asserted."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:Toast",
+        "component": "Toast",
+        "kind": "widget-adapter",
+        "roles": [
+          "status"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "expansion/ui-source-index.json",
+        "limitation": "Store-driven presence only: content comes from toastStore and auto-dismisses on a timer; the code sets no ARIA live region, so assistive announcement is not promised."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:ErrorComponent",
+        "component": "ErrorComponent",
+        "kind": "widget-adapter",
+        "roles": [
+          "status"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "expansion/ui-source-index.json",
+        "limitation": "Fixed error block with fixed copy and illustration; it takes no props and carries no retry control."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:BaseLayout",
+        "component": "BaseLayout",
+        "kind": "widget-adapter",
+        "roles": [
+          "region"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "expansion/ui-source-index.json",
+        "limitation": "Page shell that also mounts the Toast, BottomSheet, Modal and InterstitialPopup hosts; it has no visual states of its own."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:Radio",
+        "component": "Radio",
+        "kind": "hds-interface",
+        "roles": [
+          "radio"
+        ],
+        "supportedStates": [
+          "visible",
+          "checked",
+          "disabled",
+          "focus",
+          "value",
+          "invalid"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/base/controls/radio/Radio.tsx",
+          "interface": "RadioProps"
+        },
+        "limitation": "Closed size/alignItems and the inherited input attributes are validated; label is a ReactNode and is not. Grouping is expressed by the parent node, not by this row."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:Switch",
+        "component": "Switch",
+        "kind": "hds-interface",
+        "roles": [
+          "switch"
+        ],
+        "supportedStates": [
+          "visible",
+          "checked",
+          "disabled",
+          "focus"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/base/controls/switch/Switch.tsx",
+          "interface": "SwitchProps"
+        },
+        "limitation": "Closed size/alignItems and the inherited input attributes are validated; label is a ReactNode and is not. The engine draws the on/off affordance, not the sliding animation."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:TopNavigation",
+        "component": "TopNavigation",
+        "kind": "hds-interface",
+        "roles": [
+          "region"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/top-navigation/TopNavigation.tsx",
+          "interface": "TopNavigationProps"
+        },
+        "limitation": "In-app navigation bar. Only presence is asserted; title, subTitle, lefts, rights and head are ReactNode. Use WebviewTopNavigation for screens opened in the app webview."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:Avatar",
+        "component": "Avatar",
+        "kind": "hds-interface",
+        "roles": [
+          "region"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/base/Profile/Avatar/Avatar.types.ts",
+          "interface": "AvatarProps"
+        },
+        "limitation": "Closed size is validated; badge, noti and defaultAvatar are ReactNode. The engine draws a labelled region, not the image or the badge."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:UserAvatar",
+        "component": "UserAvatar",
+        "kind": "hds-interface",
+        "roles": [
+          "region"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/base/Profile/Avatar/Avatar.types.ts",
+          "interface": "UserAvatarProps"
+        },
+        "limitation": "Avatar with isNewUser and hasNotification flags; those are content flags, not engine state axes. The engine draws a labelled region, not the image or the ring."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:BackButton",
+        "component": "BackButton",
+        "kind": "widget-adapter",
+        "roles": [
+          "button"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "expansion/ui-source-index.json",
+        "limitation": "Icon-only back control with a fixed 뒤로가기 label and a color prop; it declares no disabled state and its Props type is local, so no packed interface validates it."
+      }
+    },
+    {
+      "origin": "upstream-derived-contract",
+      "row": {
+        "ref": "component:Text",
+        "component": "Text",
+        "kind": "hds-interface",
+        "roles": [
+          "text"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "components/props.json",
+        "interface": {
+          "file": "src/libs/hds/base/Text/Text.tsx",
+          "interface": "TextProps"
+        },
+        "limitation": "Closed variant/weight/color props are validated; children are a ReactNode, so the engine draws the node name rather than the real content, and line breaks or inline emphasis are not expressed."
+      }
+    },
+    {
+      "origin": "ba-authored-adapter",
+      "row": {
+        "ref": "component:Icon",
+        "component": "Icon",
+        "kind": "widget-adapter",
+        "roles": [
+          "icon"
+        ],
+        "supportedStates": [
+          "visible"
+        ],
+        "sourcePath": "expansion/ui-source-index.json",
+        "limitation": "One adapter for the WebView icon set (src/libs/hds/base/icons, 115 components); the specific glyph is not validated and is not drawn. The canonical reusable subset is packages/icons/registry.json. Size and color props are per icon component and are not asserted."
+      }
     }
   ]
 }
