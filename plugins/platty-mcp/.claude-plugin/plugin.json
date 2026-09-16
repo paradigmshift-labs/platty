@@ -1,7 +1,7 @@
 {
   "name": "platty-mcp",
   "description": "Platty MCP retrieval, Figma evidence, SDD handoffs, and workspace-scoped BA interview skills for configured context servers.",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "author": {
     "name": "Paradigm Shift Labs"
   },

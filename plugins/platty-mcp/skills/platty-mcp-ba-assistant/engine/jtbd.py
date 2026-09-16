@@ -27,8 +27,13 @@ JOB_LABELS = {'subject': '주체', 'situation': '상황', 'motivation': '동기'
 # 각 슬롯의 verdict가 pending이 아닌지만 본다. 서른 건 주행에서 따로 측정된 네 가지가
 # 전부 이것으로 설명됐다 — 빈 격자가 오류 0건, 대표 발언 위의 job, 자기 숫자가 서로 맞지 않는
 # 문서, 네 job을 하나로 합친 것. 넷 다 `valid: true`였다.
+# 슬롯이 넷이고 기준이 여섯이라 J5(사건성)·J6(해결 분리)에 집이 없었다. `unjudged_criteria`가
+# 그 사실을 알려 주기만 하고 요구하지는 못했고, 그 사이로 **PRD를 먼저 쓰고 역산한 문서**가
+# 그대로 통과했다. 역산은 정확히 그 둘을 깬다 — PRD에는 사건이 없고(J5), PRD §4는 해결책이므로
+# 거기서 뽑은 경험은 곧 해결책이다(J6). 여섯 기준에 여섯 슬롯을 준다.
 REVIEW_LABELS = {'ten_year_test': '10년 전 테스트', 'persona_separation': '페르소나 혼입',
-                 'evidence_grounding': '근거 적절성', 'handoff_readiness': '인계 가능성'}
+                 'evidence_grounding': '근거 적절성', 'handoff_readiness': '인계 가능성',
+                 'event_grounding': '사건성', 'solution_separation': '해결 분리'}
 CRITERIA = ('J1', 'J2', 'J3', 'J4', 'J5', 'J6')
 # What each id actually asks. Reviewers cited these in every assessment and no table said
 # what they meant, so the definitions live beside the list they are checked against.
@@ -153,6 +158,18 @@ LOOSE_SOLUTION = SOLUTION_WORDS + ('목록', '정렬', '상세 페이지', '카�
                                    '푸시', '문자', '이메일', '메일', '카톡', '링크', '위젯')
 # linkage-check.md persona check: a situation that opens on an attribute is a persona, not a job.
 PERSONA_OPENERS = ('연령', '나이', '세대', '직업', '성별', '남성', '여성', '주부', '학생', '직장인')
+
+# 화면 위치. 컴포넌트 목록(SOLUTION_WORDS)은 「홈 왼쪽 상단의 누적 지원금을 본다」를 잡지
+# 못했다 — 「상단」·「왼쪽」은 부품이 아니라 자리이기 때문이다. 성공 판정이나 필요 경험에서
+# 화면의 자리를 가리키면 job이 이뤄졌는지가 아니라 **어디를 봤는지**를 재게 된다.
+# 차단 목록은 실주행으로 다듬어진 것이라 늘리지 않는다. 이 목록은 **보고 전용**이므로 틀려도
+# 비용이 없다 — 이 파일이 LOOSE_* 목록들에 이미 적어 둔 기준 그대로다.
+SCREEN_LOCATIONS = ('상단', '하단', '좌측', '우측', '왼쪽', '오른쪽', '가운데', '중앙',
+                    '첫 번째 줄', '맨 위', '맨 아래', '헤더', '푸터')
+
+# 무지·불능 종결. 회피 동기(「~싶지 않다」)와 결과 서술(「~남지 않는다」)은 제외한다.
+INABILITY = re.compile(r'(모른다|모릅니다|모르겠다|모르겠습니다|못한다|못합니다|못 한다|'
+                       r'못 합니다|어렵다|어렵습니다)\s*[.。]?\s*$')
 
 ASSESSMENT = {'verdict': ('pending', 'suitable', 'needs_work', 'insufficient_evidence'),
               'rationale': str, 'criteria': [str], 'example_ids': [str], 'evidence_ids': [str],
@@ -343,14 +360,23 @@ def planner_language_findings(data):
 
 
 def coverage(data):
-    """linkage-check.md coverage block. Evidence shortage is reported, never blocked."""
+    """linkage-check.md coverage block. Evidence shortage is reported, never blocked.
+
+    `source_pending` 은 「출처를 받기로 하고 아직 못 받았다」는 정직한 표시였는데, 만료가 없어
+    영구히 관찰로 세어졌다. 출처 없는 관찰은 **근거 부족이 아니라 틀린 주장**이다 — 모른다고
+    적은 것이 아니라 안다고 적은 것이므로, 세는 자리에서 가설로 내린다. 행의 등급은 기획자가
+    쓴 그대로 두고 집계만 진실을 말한다. 막지 않되 거짓말이 소용없게 만드는 쪽이다.
+    """
     cells = data['cells']
     states = {name: sum(1 for cell in cells.values() if cell['status'] == name)
               for name in ('filled', 'hypothesis', 'not_applicable', 'unexamined')}
     rows = [row for cell in cells.values() for row in cell['rows']]
     grades = {name: sum(1 for row in rows if row['grade'] == name) for name in GRADES}
-    return {'cells': states, 'grades': grades,
-            'source_pending': sum(1 for row in rows if row['grade'] == 'observed' and row['source_pending']),
+    demoted = sum(1 for row in rows if row['grade'] == 'observed' and row['source_pending'])
+    grades['observed'] -= demoted
+    grades['hypothesis'] += demoted
+    return {'cells': states, 'grades': grades, 'demoted': demoted,
+            'source_pending': demoted,
             'rows': len(rows)}
 
 
@@ -379,7 +405,7 @@ def linkage_findings(data):
 
 
 def validate(data):
-    errors, readiness = [], []
+    errors, readiness, contradictions = [], [], []
     # 모르는 칸 하나가 내용 검사를 통째로 끄던 자리다 — 덜어낸 사본으로 끝까지 검사하고
     # 그 칸은 오류로 남는다.
     errors, pruned = shape_errors(data, SHAPE)
@@ -466,6 +492,27 @@ def validate(data):
     leak = found_words(data['job']['motivation'], SOLUTION_WORDS)
     require(not leak, '$.job.motivation', 'solution leaked into motivation: ' + ', '.join(leak),
             readiness)
+    # 동기가 「무엇을 눌러야 하는지 모른다」로 끝나면 job이 아니라 pain을 적은 것이다. job은
+    # 사람이 **하려는 일**이고 pain은 그것이 막힌 상태다. 둘을 바꿔 적으면 job 전체가 제품
+    # 안쪽으로 끌려 들어가 10년 전 테스트도 같이 깨진다.
+    # 「~하고 싶지 않다」·「미안함이 남지 않는다」는 정당한 회피 동기이므로 부정 일반이 아니라
+    # **무지·불능 종결만** 본다.
+    require(not INABILITY.search(data['job']['motivation'].strip()), '$.job.motivation',
+            'motivation states an inability, not a wanted progress — '
+            'pain을 동기 칸에 적었다. 「무엇을 하고 싶은가」로 다시 적는다', readiness)
+    # 성공 판정에 화면 위치가 들어가면 job 달성이 아니라 UI 확인 동작을 재게 된다.
+    # motivation 쪽에만 있던 검사를 여기에도 둔다 — 「홈 왼쪽 상단의 누적 지원금을 본다」가
+    # 판정으로 적힌 실제 문서가 있었다.
+    if 'success_criteria' not in undecided:
+        spoiled = found_words(data['job']['success_criteria'], SOLUTION_WORDS)
+        require(not spoiled, '$.job.success_criteria',
+                'solution leaked into success criteria: ' + ', '.join(spoiled) +
+                ' — job이 이뤄졌는지가 아니라 화면을 봤는지를 재고 있다', readiness)
+        placed = found_words(data['job']['success_criteria'], SCREEN_LOCATIONS)
+        if placed:
+            contradictions.append(
+                '$.job.success_criteria: 화면의 자리를 판정 기준으로 삼았다 — '
+                + ', '.join(placed) + '. job이 이뤄졌는지로 다시 적는다')
     for number, related in enumerate(data['related_jobs']):
         for key in ('name', 'why_deferred'):
             nonblank(related[key], f'$.related_jobs[{number}].{key}')
@@ -497,6 +544,10 @@ def validate(data):
             words = found_words(row['required_experience'], SOLUTION_WORDS)
             require(not words, here + '.required_experience',
                     'solution leaked into required experience: ' + ', '.join(words), readiness)
+            placed = found_words(row['required_experience'], SCREEN_LOCATIONS)
+            if placed:
+                contradictions.append(f'{here}.required_experience: 화면의 자리가 경험으로 '
+                                      f'적혔다 — {", ".join(placed)}')
             for field in ('situation', 'workaround', 'blocker'):
                 general = found_words(row[field], GENERALIZATION)
                 require(not general, f'{here}.{field}',
@@ -517,6 +568,18 @@ def validate(data):
                         'observed evidence requires an identified source')
             require(not row['source_pending'] or row['grade'] == 'observed',
                     here + '.source_pending', 'only observed evidence can await its source')
+            # 약속한 출처는 확정 전에 도착하거나, 등급이 내려가야 한다. 만료가 없으면
+            # `source_pending` 이 출처 없는 관찰의 영구 통로가 된다.
+            require(not row['source_pending'], here + '.source_pending',
+                    '관찰이라 적고 출처를 받지 못했다 — 출처를 적거나 등급을 가설로 내린다',
+                    readiness)
+            # 확인했다면서 확인 방법을 적어 둔 행. 한 번 본 것과 규모를 아는 것은 다르므로
+            # 오류는 아니지만, 「실제로 확인된 어려움」이 곧 「검증이 더 필요한 가정」이기도 한
+            # 문서가 실제로 있었다. 판정하는 사람이 보게 남긴다.
+            if row['grade'] == 'observed' and row['verification_method'].strip():
+                contradictions.append(
+                    f'{here}: 관찰이라 적고 확인 방법도 적었다 — 무엇이 이미 확인됐고 무엇이 '
+                    f'남았는지 나누거나, 등급을 내린다')
             # 예전 주석: 「이 칸은 스킬이 조회로 채운다, 기획자는 주장하지 않는다」.
             # 그런데 기획자가 **직접 앱을 열어 보고** 말하는 일이 실제로 일어난다 —
             # 6·7차에서 여러 번 나왔고, 7차 기획자는 「제가 지금 눌러 볼게요… 아무 일도
@@ -678,8 +741,20 @@ def validate(data):
             'unjudged_criteria': unjudged_criteria(data),
             'linkage_reports': reported,
             'planner_language': planner_language_findings(data),
+            'self_contradictions': contradictions,
             'next_actions': [{'id': issue['id'], 'areas': issue['areas'], 'action': issue['action']}
                              for issue in data['issues'] if not closed(issue)]}
+
+
+def subject_particle(word):
+    """주체 뒤에 붙일 는/은. 받침이 있으면 은, 없으면 는."""
+    text = word.strip()
+    if not text:
+        return '는'
+    last = text[-1]
+    if '가' <= last <= '힣':
+        return '은' if (ord(last) - 0xAC00) % 28 else '는'
+    return '는'
 
 
 def render(data, report=None):
@@ -694,7 +769,14 @@ def render(data, report=None):
     mark = {'planner_stated': '', 'assistant_drafted': ' _(실행기 작성 · 기획자 승인)_'}
     lines += [f'| {JOB_LABELS[key]} | {markdown(job[key])}{mark.get(origin.get(key), "")} |'
               for key in JOB_ELEMENTS]
-    lines += ['', f"> **한 문장**: {markdown(job['subject'])}가 {markdown(job['situation'])}, "
+    # 상황이 먼저다. 이 파일과 스킬이 「주체를 먼저 물으면 페르소나 서술이 나온다」고 적어
+    # 놓고, 정작 찍는 문장은 주체로 열고 있었다 — 묻는 순서와 읽는 순서가 반대였다.
+    # 도구가 주체를 앞에 박아 두면 규칙을 배운 사람이 출력을 손으로 고치거나 규칙을 버린다.
+    # 내용은 한 글자도 바뀌지 않고 읽는 눈이 닿는 자리만 바뀐다. 부수 효과가 하나 더 있다 —
+    # **상황 칸이 부실하면 문장이 곧바로 어색해져 티가 난다.** 주체가 앞에 있으면 상황이
+    # 빈약해도 문장이 그럴듯하게 굴러갔다.
+    lines += ['', f"> **한 문장**: {markdown(job['situation'])}, "
+              f"{markdown(job['subject'])}{subject_particle(job['subject'])} "
               f"{markdown(job['motivation'])}. 그래서 {markdown(job['expected_outcome'])}.", '',
               '### 관련 job', '', '| 이름 | 왜 이번에 다루지 않나 |', '| --- | --- |']
     lines += [f"| {markdown(row['name'])} | {markdown(row['why_deferred'])} |"
