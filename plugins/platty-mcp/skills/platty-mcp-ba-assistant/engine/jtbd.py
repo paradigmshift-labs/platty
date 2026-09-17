@@ -77,6 +77,13 @@ CRITERION_DEFINITIONS = {
 EXAMPLES = tuple(f'JB{number:02}' for number in range(1, 7))
 GRADES = ('observed', 'inferred', 'hypothesis')
 GRADE_LABELS = {'observed': '관찰', 'inferred': '추론', 'hypothesis': '가설'}
+# 칸의 `reason` 은 「상태가 왜 그 상태인가」를 적는 자리인데 라벨이 네 상태 모두에
+# 「기각 사유」로 찍히고 있었다. 기각은 `not_applicable` 한 경우뿐이다 — 실제 문서에서
+# **근거가 확실해 `filled` 이 된 칸에 「기각 사유: 게시판 질문이 실재하며 건수를
+# 확인했다」**가 붙었다. 읽는 사람은 채워진 칸을 기각된 칸으로 읽고 넘어간다.
+# 데이터는 그대로 두고 표시만 상태에 맞춘다.
+REASON_LABELS = {'filled': '근거', 'hypothesis': '가설로 둔 이유',
+                 'not_applicable': '기각 사유', 'unexamined': '미조사 사유'}
 # grilling-rules.md rule 2: detected as strings, so applied mechanically.
 # Two lists, because the two channels can afford different mistakes. These words block, so
 # they must not fire on a legitimate sentence: 「누가 자주 교류하는 사람인지」 is a noun
@@ -786,7 +793,7 @@ def render(data, report=None):
         cell = data['cells'][key]
         lines += [f"### 2-{number}. {CELL_LABELS[key]} — 상태: {cell['status']}", '']
         if cell['reason'].strip():
-            lines += [f"기각 사유: {markdown(cell['reason'])}", '']
+            lines += [f"{REASON_LABELS[cell['status']]}: {markdown(cell['reason'])}", '']
         if cell['rows']:
             lines += ['| 상황 | 지금 뭘로 때우나 | 뭐가 안 되나 | 필요 경험 | 지금 제품에서 | 근거 |',
                       '| --- | --- | --- | --- | --- | --- |']
