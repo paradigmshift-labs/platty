@@ -4,6 +4,7 @@ import {createHash, randomUUID} from 'node:crypto';
 import {existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
+import {captureLayout} from './layout-snapshot.mjs';
 
 export const STATE_AXES = ['visible', 'checked', 'selected', 'disabled', 'readonly', 'busy', 'invalid', 'expanded', 'focus', 'value'];
 export const SUPPORTED_ACTIONS = ['fill', 'click', 'check', 'select', 'keyboard', 'async', 'external-state'];
@@ -849,6 +850,7 @@ export async function runRuntime(runDir) {
   if (runtimeCacheUsable(runDir, runtimeInput.fingerprint)) return {...readJson(join(runDir, 'runtime.json')), reused: true};
   const capturesDir = join(runDir, 'captures');
   mkdirSync(capturesDir, {recursive: true});
+  mkdirSync(join(runDir, 'layout'), {recursive: true});
   const actions = Object.fromEntries(SUPPORTED_ACTIONS.map((action) => [action, 0]));
   const assertionFailures = [];
   const preservationFailures = [];
@@ -930,7 +932,10 @@ export async function runRuntime(runDir) {
         if (!capturedRenderCase) {
           const path = `captures/${renderCaseId}-${viewport.name}.png`;
           await page.screenshot({path: join(runDir, path), fullPage: true});
-          captures.push({renderCaseId, viewport: viewport.name, path, imageHash: fileHash(join(runDir, path)), sourceHash: fileHash(assertContained(runDir, spec.renderer.entry, 'renderer entry'))});
+          // The same moment as the capture, so the boxes describe exactly these pixels.
+          const layoutPath = `layout/${renderCaseId}-${viewport.name}.json`;
+          writeJson(join(runDir, layoutPath), await captureLayout(page));
+          captures.push({renderCaseId, viewport: viewport.name, path, imageHash: fileHash(join(runDir, path)), layoutPath, layoutHash: fileHash(join(runDir, layoutPath)), sourceHash: fileHash(assertContained(runDir, spec.renderer.entry, 'renderer entry'))});
           capturedRenderCase = true;
         }
         await page.close();
@@ -1005,6 +1010,7 @@ function runtimeInputFingerprint(runDir, validation) {
   const input = {
     version: 1,
     engine: engineContract().contractHash,
+    layoutSnapshot: fileHash(fileURLToPath(new URL('./layout-snapshot.mjs', import.meta.url))),
     knowledge: validation.knowledge.hash,
     packet: fileHash(join(runDir, 'packet.json')),
     spec: fileHash(join(runDir, specArtifact)),
@@ -1100,6 +1106,10 @@ function runtimeCacheUsable(runDir, fingerprint) {
   for (const capture of runtime.captures ?? []) {
     const path = join(runDir, capture.path);
     if (!existsSync(path) || fileHash(path) !== capture.imageHash) return false;
+    // A capture without its layout cannot be exported; rerun rather than reuse it.
+    if (!capture.layoutPath) return false;
+    const layoutPath = join(runDir, capture.layoutPath);
+    if (!existsSync(layoutPath) || fileHash(layoutPath) !== capture.layoutHash) return false;
   }
   return validateVisualAliases(runDir, runtime).valid;
 }
@@ -1270,7 +1280,10 @@ function expectedFrozenArtifactPaths(runDir, runtime) {
   const expected = new Set(FINAL_ARTIFACTS);
   expected.add(currentSpecArtifact(runDir));
   expected.add(existsSync(join(runDir, 'traceability.json')) ? 'traceability.json' : 'traceability.template.json');
-  for (const capture of runtime?.captures ?? []) expected.add(capture.path);
+  for (const capture of runtime?.captures ?? []) {
+    expected.add(capture.path);
+    if (capture.layoutPath) expected.add(capture.layoutPath);
+  }
   return expected;
 }
 
@@ -1329,7 +1342,10 @@ export function freezeRun(runDir) {
   artifacts[existsSync(join(runDir, 'traceability.json')) ? 'traceability.json' : 'traceability.template.json'] = {
     sha256: fileHash(join(runDir, existsSync(join(runDir, 'traceability.json')) ? 'traceability.json' : 'traceability.template.json'))
   };
-  for (const capture of runtime.captures ?? []) artifacts[capture.path] = {sha256: fileHash(join(runDir, capture.path))};
+  for (const capture of runtime.captures ?? []) {
+    artifacts[capture.path] = {sha256: fileHash(join(runDir, capture.path))};
+    if (capture.layoutPath) artifacts[capture.layoutPath] = {sha256: fileHash(join(runDir, capture.layoutPath))};
+  }
   const freeze = {frozenAt: new Date().toISOString(), knowledge: meta.knowledge, artifacts};
   writeJson(join(runDir, 'freeze.json'), freeze);
   writeJson(join(runDir, 'status.json'), statusFor(meta, 'frozen'));
@@ -1385,7 +1401,7 @@ export function gateRun(runDir) {
   }
   const gate = {verdict, complete: false, baFinalComplete: false, errors, runtimeFailures, retryStage, reviewId: review ? 'ai-review' : '', viewedImages: review?.viewedImages ?? [], limitations: runtime?.limitations ?? []};
   writeJson(join(runDir, 'gate.json'), gate);
-  writeJson(join(runDir, 'status.json'), statusFor(meta, verdict === 'accept_ai' ? 'awaiting_ba_confirmation' : verdict === 'insufficient_evidence' ? 'needs_ai_review' : verdict, {verdict}));
+  writeJson(join(runDir, 'status.json'), statusFor(meta, verdict === 'accept_ai' ? 'accepted' : verdict === 'insufficient_evidence' ? 'needs_ai_review' : verdict, {verdict}));
   return gate;
 }
 

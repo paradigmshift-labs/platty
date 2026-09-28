@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate and render JTBD records. Does not perform LLM or MCP calls."""
+from case_layout import CaseLayout
 import argparse
 from datetime import datetime
 import hashlib
@@ -903,7 +904,7 @@ def main():
     try:
         if args.command == 'init':
             data = load_json(TEMPLATE)
-            data['case_id'] = re.sub(r'[^a-z0-9]+', '-', args.path.parent.name.lower()).strip('-') or 'untitled'
+            data['case_id'] = re.sub(r'[^a-z0-9]+', '-', CaseLayout.root_of(args.path).name.lower()).strip('-') or 'untitled'
             args.path.parent.mkdir(parents=True, exist_ok=True)
             with args.path.open('x', encoding='utf-8') as out:
                 json.dump(data, out, ensure_ascii=False, indent=2)

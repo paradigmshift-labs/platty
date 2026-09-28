@@ -1,4 +1,5 @@
 """Append-only observation records for BA sessions; never changes interview judgments."""
+from case_layout import CaseLayout
 import hashlib
 import json
 import os
@@ -141,7 +142,13 @@ def recover_trace_tail(folder):
     return None
 
 
-def validate_decision(value, data):
+# A decision that moves the case (rebind, reopen, recover) is judged by these, not by the
+# stage's content criteria; demanding a W1-W7 criterion for reopening a stage made it unrecordable.
+FLOW_DECISION_STAGES = ('baseline', 'recovery')
+
+
+def validate_decision(value, data, extra_issue_ids=()):
+    """`extra_issue_ids`: issues the controller reports (e.g. `input-binding`) beside the artifact's own."""
     errors = []
     shape = dict(DECISION_SHAPE)
     if data.get('model_profile') in ('screen_element_behavior_v1', 'design_system_wireframe_v1') and 'target_refs' in value:
@@ -154,9 +161,10 @@ def validate_decision(value, data):
             errors.append(f'$.decision.{key}: concise nonempty explanation required (max 2000 characters)')
     if not value['criteria']:
         errors.append('$.decision.criteria: at least one criterion required')
+    flow_only = value['stage'] in FLOW_DECISION_STAGES and set(value['criteria']) <= set(FLOW_CRITERIA)
     screen_behavior = data.get('model_profile') == 'screen_element_behavior_v1'
     user_experience = data.get('model_profile') == 'ux_statechart_viewflow_v1'
-    if user_experience and not set(value['criteria']).intersection(EXPERIENCE_CRITERIA):
+    if user_experience and not flow_only and not set(value['criteria']).intersection(EXPERIENCE_CRITERIA):
         errors.append('$.decision.criteria: user experience requires at least one X1-X11 criterion')
     stage_criteria = EXPERIENCE_CRITERIA if user_experience else CONTEXT_CRITERIA
     stage_examples = EXPERIENCE_EXAMPLES if user_experience else CONTEXT_EXAMPLES
@@ -165,12 +173,12 @@ def validate_decision(value, data):
     if 'cells' in data and 'job' in data:
         import jtbd
         stage_criteria, stage_examples = jtbd.CRITERIA, jtbd.EXAMPLES
-        if not set(value['criteria']).intersection(jtbd.CRITERIA):
+        if not flow_only and not set(value['criteria']).intersection(jtbd.CRITERIA):
             errors.append('$.decision.criteria: jtbd requires at least one J1-J6 criterion')
     elif 'carried' in data and 'discovery' in data:
         import prd
         stage_criteria, stage_examples = prd.CRITERIA, prd.EXAMPLES
-        if not set(value['criteria']).intersection(prd.CRITERIA):
+        if not flow_only and not set(value['criteria']).intersection(prd.CRITERIA):
             errors.append('$.decision.criteria: prd requires at least one P1-P6 criterion')
     if screen_behavior:
         from screen_behavior import CRITERIA, EXAMPLES
@@ -181,7 +189,7 @@ def validate_decision(value, data):
         given = value.get('target_refs', [])
         if len(given) != len(set(given)) or any(target not in targets for target in given):
             errors.append('$.decision.target_refs: duplicate or unknown target')
-        if not set(value['criteria']).intersection(CRITERIA):
+        if not flow_only and not set(value['criteria']).intersection(CRITERIA):
             errors.append('$.decision.criteria: screen behavior requires at least one S1-S8 criterion')
     if data.get('model_profile') == 'design_system_wireframe_v1':
         stage_criteria, stage_examples = WIREFRAME_CRITERIA, ()
@@ -191,7 +199,7 @@ def validate_decision(value, data):
         given = value.get('target_refs', [])
         if len(given) != len(set(given)) or any(target not in targets for target in given):
             errors.append('$.decision.target_refs: duplicate or unknown target')
-        if not set(value['criteria']).intersection(WIREFRAME_CRITERIA):
+        if not flow_only and not set(value['criteria']).intersection(WIREFRAME_CRITERIA):
             errors.append('$.decision.criteria: design-system wireframe requires at least one W1-W7 criterion')
     if data.get('model_profile') == 'design_system_wireframe_v1':
         known_evidence = {row['id'] for target in data.get('targets', [])
@@ -202,7 +210,7 @@ def validate_decision(value, data):
         known_evidence = {s['id'] for s in data['sources']}
     for key, known in [('criteria', set(stage_criteria) | set(FLOW_CRITERIA)), ('example_ids', set(stage_examples)),
                        ('evidence_ids', known_evidence),
-                       ('issue_ids', {s['id'] for s in data['issues']})]:
+                       ('issue_ids', {s['id'] for s in data['issues']} | set(extra_issue_ids))]:
         ids = value[key]
         if len(ids) != len(set(ids)) or any(item not in known for item in ids):
             errors.append(f'$.decision.{key}: duplicate or unknown references')
@@ -304,7 +312,8 @@ def record_operation(folder, args, before, after, result, error, started_at, dur
             assessments = {'areas': {key: area['assessment'] for key, area in data['areas'].items()},
                            'review': data['review']}
         details = {
-            'snapshot': f"evidence/snapshots/{len(session['entries']):05}.json",
+            'snapshot': CaseLayout(folder, session.get('layout', 1)).relative(
+                CaseLayout(folder, session.get('layout', 1)).snapshot(session['stage'], len(session['entries']))),
             'changed_paths': changed_paths(before['data'], data),
             'assessments': assessments,
         }

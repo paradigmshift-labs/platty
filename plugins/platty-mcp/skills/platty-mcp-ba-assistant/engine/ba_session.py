@@ -26,6 +26,8 @@ from legacy.routing import normalize_args, is_legacy_case, invoke as invoke_lega
 from ba_audit import (append_journal, read_journal, record_operation, redact,
                       trace_markdown, trace_view, validate_decision, recover_trace_tail)
 from paths import PLUGIN_ROOT, WORKSPACE_ROOT
+from case_layout import CaseLayout, CURRENT_LAYOUT
+from case_index import write_index
 
 ROOT = PLUGIN_ROOT
 _ACTIVE_OPERATION = False
@@ -37,7 +39,6 @@ WIREFRAME_EMPTY_CONFIRMATION = {**EMPTY_CONFIRMATION, 'input_hash': '', 'knowled
 ARTIFACT_NAMES = {'jtbd': 'jtbd.json', 'prd': 'prd.json',
                   'planning_context': 'planning-context.json', 'user_experience': 'user-experience.json',
                   'screen_behavior': 'screen-behavior.json', 'design_system_wireframe': 'design-system-wireframe.json'}
-PROGRESS_NAMES = {'jtbd': 'jtbd-progress.md', 'screen_behavior': 'screen-behavior-progress.md'}
 STAGE_TEMPLATES = {'jtbd': jtbd.TEMPLATE, 'planning_context': CONTEXT_TEMPLATE}
 # The chain the contract fixes; see docs/design/stage-contracts.md.
 STAGE_ORDER = ('jtbd', 'prd', 'user_experience', 'screen_behavior', 'design_system_wireframe')
@@ -48,7 +49,8 @@ DERIVED_STAGES = ('user_experience', 'screen_behavior', 'design_system_wireframe
 # Closed to new work. A case already here still finishes; only the entrance is shut.
 RETIRED_STAGES = ('planning_context',)
 NEW_STAGES = tuple(stage for stage in STAGE_TEMPLATES if stage not in RETIRED_STAGES)
-REOPEN_STAGES = ('jtbd', 'prd', 'planning_context', 'user_experience', 'screen_behavior')
+REOPEN_STAGES = ('jtbd', 'prd', 'planning_context', 'user_experience', 'screen_behavior',
+                 'design_system_wireframe')
 
 
 def interview_allowed(stage):
@@ -72,7 +74,7 @@ def next_stage(stage):
 
 # Asking no interview question and waiting for an approval are separate things. The
 # wireframe derives without questions, but its captures are the last thing a person sees.
-PLANNER_CONFIRMS = ('jtbd', 'prd', 'planning_context', 'design_system_wireframe')
+PLANNER_CONFIRMS = ('jtbd', 'prd', 'planning_context')
 
 
 def awaits_planner(stage):
@@ -177,8 +179,11 @@ def open_backflows_to(folder, stage):
 
 
 def bind_screen_knowledge(data, spec=None):
-    """Pin the pack revision a screen-behavior case derives from."""
-    pack = latest_knowledge_pack(spec)
+    """Pin the pack revision a screen-behavior case derives from.
+
+    A restarted screen behavior keeps the pack it already cites, at that pack's latest version.
+    """
+    pack = latest_knowledge_pack(spec, inherit=data.get('knowledge_binding'))
     data['knowledge_binding'] = {key: pack[key] for key in ('pack_id', 'version', 'content_hash')}
     return data['knowledge_binding']
 
@@ -359,8 +364,13 @@ def stage_module(stage):
             'user_experience': user_experience}[stage]
 
 
+def layout_of(folder, session=None):
+    """The case's layout; the session in hand wins over the one on disk (a new case has none yet)."""
+    return CaseLayout(folder, session.get('layout', 1)) if session is not None else CaseLayout.of(folder)
+
+
 def artifact_path(folder, stage):
-    return folder / ARTIFACT_NAMES[stage]
+    return CaseLayout.of(folder).artifact(stage)
 
 
 def validate_artifact(stage, data, path=None):
@@ -377,8 +387,33 @@ def artifact_fingerprints(stage, data):
     return stage_module(stage).fingerprints(data)
 
 
-def render_artifact(stage, data, report):
-    return stage_module(stage).render(data, report)
+def render_artifact(stage, data, report, context=None):
+    import case_docs
+    return case_docs.render_body(stage, data, report, context)
+
+
+def render_review_artifact(stage, data, report, context=None):
+    import case_docs
+    return case_docs.render_review(stage, data, report, context)
+
+
+def write_stage_docs(folder, session, stage, data, report):
+    """The reading document and its review file, then the other completed stages' documents.
+
+    A later stage's completion gives the earlier documents something new to link to (a screen,
+    a capture), so they are written again with it.
+    """
+    import case_docs
+    heading = ('> 모의 실행 (simulation). 실제 서비스 조회 결과가 아닙니다.\n\n'
+               if session['mode'] == 'simulation' else '')
+    layout = layout_of(folder, session)
+    context = case_docs.DocContext.load(folder, {stage: data})
+    context.layout = layout
+    layout.render(stage).write_text(heading + render_artifact(stage, data, report, context), encoding='utf-8')
+    review = render_review_artifact(stage, data, report, context)
+    if review is not None:
+        layout.review(stage).write_text(heading + review, encoding='utf-8')
+    case_docs.refresh(folder, skip=(stage,), current={stage: data})
 
 
 def checked_at(stage, data):
@@ -402,17 +437,38 @@ def file_hash(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def latest_knowledge_pack(spec=None):
+def latest_knowledge_pack(spec=None, inherit=None, exact=False):
+    """The pack a stage binds: the one asked for, else the one the case already cites, else the
+    only pack there is.
+
+    It used to take the alphabetically last pack in design-knowledge/. A leftover test pack sorted
+    after the product's pack, and a real run bound it silently. With several packs and nothing
+    to go on it now stops and names them. `exact` keeps the cited version too — the wireframe
+    must draw with the pack its screen behavior was derived against.
+    """
     import design_system_wireframe
+    root = WORKSPACE_ROOT / 'design-knowledge'
+    cited = inherit if isinstance(inherit, dict) and inherit.get('pack_id') else None
     if spec:
         raw = Path(spec)
-        pack_path = raw if raw.suffix == '.json' else WORKSPACE_ROOT / 'design-knowledge' / raw / 'pack.json'
+        pack_path = raw if raw.suffix == '.json' else root / raw / 'pack.json'
         if not pack_path.is_absolute():
             pack_path = (WORKSPACE_ROOT / pack_path).resolve()
+    elif cited and exact:
+        pack_path = root / cited['pack_id'] / str(cited.get('version', '')) / 'pack.json'
+        if not pack_path.is_file():
+            raise ValueError(f"the cited design knowledge pack {cited['pack_id']}/{cited.get('version', '')} "
+                             'is not in design-knowledge; pass --knowledge-pack <pack-id>/<version>')
     else:
-        candidates = sorted((WORKSPACE_ROOT / 'design-knowledge').glob('*/*/pack.json'))
+        pattern = f"{cited['pack_id']}/*/pack.json" if cited else '*/*/pack.json'
+        candidates = sorted(root.glob(pattern))
         if not candidates:
-            raise ValueError('no design knowledge pack found')
+            raise ValueError(f"design knowledge pack {cited['pack_id']} not found" if cited
+                             else 'no design knowledge pack found')
+        pack_ids = sorted({path.parent.parent.name for path in candidates})
+        if len(pack_ids) > 1:
+            raise ValueError('several design knowledge packs exist (' + ', '.join(pack_ids) + '); '
+                             'pass --knowledge-pack <pack-id>/<version>')
         pack_path = candidates[-1]
     pack = load_json(pack_path)
     try:
@@ -431,7 +487,7 @@ def latest_knowledge_pack(spec=None):
 
 def next_wireframe_run_id(folder, target_id):
     base = 'run-' + re.sub(r'[^a-z0-9]+', '-', target_id.lower()).strip('-')
-    runs = folder / 'evidence/design-runs'
+    runs = CaseLayout.of(folder).runs_root()
     for index in range(1, 10000):
         run_id = f'{base}-{index:04}'
         if not (runs / run_id).exists():
@@ -809,18 +865,26 @@ def question_progress(folder, session, data, packet_id='', full=False, context=N
     previous_entry = next((e for e in reversed(session['entries']) if e.get('progress_snapshot')), None)
     previous = load_json(folder / previous_entry['progress_snapshot']) if previous_entry else None
     context = context or {}
+    layout = layout_of(folder, session)
     if full and session['stage'] == 'screen_behavior':
-        details = folder / 'screen-behavior-details.md'
+        details = layout.details('screen_behavior')
+        details.parent.mkdir(parents=True, exist_ok=True)
         details.write_text(stage_module(session['stage']).render(data), encoding='utf-8')
+        # The details view links its review file; the audit it used to carry now lives there.
+        review = stage_module(session['stage']).render_review(data)
+        if review is not None:
+            layout.review('screen_behavior').write_text(review, encoding='utf-8')
         body = stage_module(session['stage']).render_confirmation(data, str(details.resolve()))
     elif full:
         body = render_full_model(data)
     else:
         body = render_progress(data, packet_id, previous,
             situation=context.get('diagram_situation', ''), question=context.get('diagram_question', ''))
-    reference = f"evidence/progress/{len(session['entries']) + 1:05}.json"
+    reference = layout.relative(layout.progress_snapshot(session['stage'], len(session['entries']) + 1))
     atomic_json(folder / reference, data)
-    (folder / PROGRESS_NAMES.get(session['stage'], 'user-experience-progress.md')).write_text(body, encoding='utf-8')
+    progress = layout.progress(session['stage'])
+    progress.parent.mkdir(parents=True, exist_ok=True)
+    progress.write_text(body, encoding='utf-8')
     return body, reference
 
 
@@ -840,12 +904,13 @@ def load_case(folder):
 
 def save_metadata(folder, session):
     atomic_json(folder / 'session.json', session)
+    write_index(folder, session)
 
 
 def persist_artifact(folder, session, data):
-    snapshot = folder / 'evidence/snapshots' / f"{len(session['entries']):05}.json"
-    atomic_json(snapshot, data)
-    atomic_json(artifact_path(folder, session['stage']), data)
+    layout = layout_of(folder, session)
+    atomic_json(layout.snapshot(session['stage'], len(session['entries'])), data)
+    atomic_json(layout.artifact(session['stage']), data)
     save_metadata(folder, session)
 
 
@@ -991,7 +1056,7 @@ def input_binding_current(folder, data):
         key = next(name for name in binding if name.endswith('_path'))
         path = Path(binding[key])
         stage = ARTIFACT_STAGES.get(path.name)
-        if stage is None or path != (folder / path.name).resolve():
+        if stage is None or path.resolve() != artifact_path(folder, stage).resolve():
             return False
         source = load_json(path)
         module = stage_module(stage)
@@ -1122,10 +1187,10 @@ def view(folder, session, data):
     if session['stage'] == 'design_system_wireframe' and not report['ready_for_confirmation']:
         required_actions.append({
             'issue_id': 'wireframe-engine',
-            'areas': ['targets', 'wireframes', 'evidence/design-runs'],
+            'areas': ['targets', 'wireframe screens', 'wireframe runs'],
             'kind': 'handoff',
             'prompt': '현재 brief/packet/traceability를 기준으로 HTML/CSS/JS를 생성하고 브라우저 검사, 캡처, 이미지 검토를 실행한 뒤 design-system-wireframe.json을 갱신한다.',
-            'reason': 'renderer, runtime checks, captures, component/token mappings, qualitative review, or planner confirmation are not complete.',
+            'reason': 'renderer, runtime checks, captures, component/token mappings, or qualitative review are not complete; sync completes the stage once every target is accept_ai.',
         })
     closed_now = session.get('closed_since_handoff') or []
     handoff_reason = ('닫은 티켓 ' + ', '.join(closed_now) if closed_now else
@@ -1175,6 +1240,17 @@ def view(folder, session, data):
         phase = 'action_required'
     else:
         phase = 'interviewing'
+    export_owed = figma_export_due(folder, session, data) if phase == 'complete' else None
+    if export_owed:
+        phase = 'export_figma'
+        required_actions.append({
+            'issue_id': 'figma-export', 'areas': ['figma export'], 'kind': 'figma_export',
+            'prompt': '같은 턴에서 wireframe.py export-bundle로 번들을 만들고, 스킬의 Figma 익스포트 절대로 '
+                      '새 Figma 파일에 그린 뒤 wireframe.py export-receipt로 영수증을 기록한다. '
+                      'Figma 도구를 쓸 수 없으면 status: gap 영수증에 이유를 적는다.',
+            'reason': ('확정된 와이어프레임이 아직 Figma로 익스포트되지 않았다.' if export_owed['state'] == 'pending'
+                       else '마지막 익스포트 뒤에 와이어프레임 내용이 바뀌었다.'),
+        })
     if phase == 'start_prd':
         required_actions.append({'issue_id': 'stage-transition', 'areas': ['solution'],
                                  'kind': 'start', 'stage': 'prd',
@@ -1202,6 +1278,7 @@ def view(folder, session, data):
         'waiting': 'blocked by an external capability or fact with a recorded resume condition',
         'paused': 'paused at the user request',
         'handoff_due': 'a handoff note is required before this session can end; run handoff',
+        'export_figma': 'the completed wireframe must be exported to Figma, or the gap recorded, before this session ends',
         'complete': session['stage'].replace('_', ' ') + ' is validated and confirmed',
     }.get(phase, 'the workflow still has work it can perform before yielding')
     if session.get('handed_off') and phase not in ('awaiting_answer', 'awaiting_confirmation',
@@ -1214,7 +1291,9 @@ def view(folder, session, data):
                      'planning_context': '기획 맥락 정의',
                      'user_experience': '사용자 경험 설계',
                      'screen_behavior': '화면 동작 명세',
-                     'design_system_wireframe': '디자인 시스템 와이어프레임'}[session['stage']] + ' 검증과 사용자 확인이 완료되었습니다.'
+                     'design_system_wireframe': '디자인 시스템 와이어프레임'}[session['stage']] + (
+        ' 검증과 사용자 확인이 완료되었습니다.' if awaits_planner(session['stage'])
+        else ' 검증이 끝나 자동 확정되었습니다. 기획자 확인은 받지 않았습니다.')
     user_status = {
         'migration_required': '기존 화면 명세는 읽기 전용입니다. schema 3 마이그레이션이 필요합니다.',
         'prepare_context': preparing,
@@ -1227,6 +1306,7 @@ def view(folder, session, data):
         'waiting': '외부 확인 또는 접근 조건이 충족될 때까지 보류 중입니다.',
         'paused': '사용자 요청으로 인터뷰가 중단되었습니다.',
         'handoff_due': '이 세션은 여기서 끝내야 합니다. handoff 로 인계장을 남기세요.',
+        'export_figma': '와이어프레임이 확정되어 Figma 익스포트를 바로 진행해야 합니다.',
         'complete': complete_text,
         'start_prd': 'JTBD 확인이 완료되어 PRD 정의를 바로 시작해야 합니다.',
         'start_user_experience': '기획 맥락 정의 확인이 완료되어 사용자 경험 설계를 바로 시작해야 합니다.',
@@ -1250,6 +1330,7 @@ def view(folder, session, data):
             'next_stage': {'start_prd': 'prd_ready', 'start_user_experience': 'user_experience_ready', 'start_screen_behavior': 'screen_behavior_ready',
                            'start_design_system_wireframe': 'design_system_wireframe_ready',
                            'action_required': 'wireframe_engine_work',
+                           'export_figma': 'figma_export',
                            'complete': 'complete'}.get(phase)}
 
 
@@ -1265,7 +1346,7 @@ def destination(folder, data):
     sought = (('planning_context', ('areas', 'business_goal', 'summary')),
               ('jtbd', ('job', 'expected_outcome')))
     for stage, keys in sought:
-        path = folder / ARTIFACT_NAMES[stage]
+        path = artifact_path(folder, stage)
         if not path.exists():
             continue
         try:
@@ -1283,7 +1364,7 @@ def settled(folder, session, data):
     """One line per decision already made: confirmed stages, then closed tickets."""
     lines = []
     for stage, name in STAGE_LABELS.items():
-        path = folder / ARTIFACT_NAMES[stage]
+        path = artifact_path(folder, stage)
         if stage == session['stage'] or not path.exists():
             continue
         try:
@@ -1291,7 +1372,7 @@ def settled(folder, session, data):
         except (OSError, ValueError):
             continue
         if confirmation.get('confirmed'):
-            lines.append(f"- [{name}](→ {ARTIFACT_NAMES[stage]}): 확인 완료")
+            lines.append(f"- [{name}](→ {CaseLayout.of(folder).relative(artifact_path(folder, stage))}): 확인 완료")
     for issue in data.get('issues', []) or []:
         resolution = issue.get('resolution')
         if resolution:
@@ -1543,27 +1624,108 @@ def commit_candidate(folder, session, data, candidate, command, emitted=0):
                  'Validated candidate saved; no review or approval was created.')
     # A derived stage has nobody to wait for: the judgment it rests on was settled upstream.
     if should_auto_complete(session, report, candidate['confirmation']['confirmed']):
-        entry = append_entry(session, 'system', 'derived-complete',
-                             f"{session['stage']} derived from the confirmed upstream; "
-                             'completed without a planner confirmation.')
-        content_hash, review_hash = artifact_fingerprints(session['stage'], candidate)
-        candidate['confirmation'] = {
-            **empty_confirmation(session['stage']),
-            **derived_confirmation(entry['id'], content_hash, review_hash)}
-        if session['stage'] == 'design_system_wireframe':
-            candidate['confirmation'].update(input_hash=report['input_hash'],
-                                             knowledge_hash=report['knowledge_hash'])
-        candidate['status'] = 'complete'
-        final = validate_case_artifact(folder, session['stage'], candidate)
-        if not final['complete']:
-            raise ValueError(json.dumps(final, ensure_ascii=False))
-        heading = ('> 모의 실행 (simulation). 실제 서비스 조회 결과가 아닙니다.\n\n'
-                   if session['mode'] == 'simulation' else '')
-        output_name = artifact_path(folder, session['stage']).with_suffix('.md').name
-        (folder / output_name).write_text(
-            heading + render_artifact(session['stage'], candidate, final), encoding='utf-8')
+        complete_derived(folder, session, candidate, report)
     persist_artifact(folder, session, candidate)
     return view(folder, session, candidate)
+
+
+def figma_export_due(folder, session, data):
+    """A completed wireframe owes a Figma export before the session may end.
+
+    The export writes Figma through the agent's tools, so the controller cannot run it; it can
+    refuse to call the case finished until a receipt — an export or a recorded gap — covers the
+    current content.
+    """
+    # A simulation is not a real case; it should not create files in someone's Figma.
+    if session['stage'] != 'design_system_wireframe' or session['mode'] == 'simulation':
+        return None
+    import figma_export
+    status = figma_export.export_status(folder, data)
+    return status if status['state'] in ('pending', 'stale') else None
+
+
+def complete_derived(folder, session, candidate, report):
+    """Stamp the derived confirmation, re-validate as complete, and render the stage output."""
+    entry = append_entry(session, 'system', 'derived-complete',
+                         f"{session['stage']} derived from the confirmed upstream; "
+                         'completed without a planner confirmation.')
+    content_hash, review_hash = artifact_fingerprints(session['stage'], candidate)
+    candidate['confirmation'] = {
+        **empty_confirmation(session['stage']),
+        **derived_confirmation(entry['id'], content_hash, review_hash)}
+    if session['stage'] == 'design_system_wireframe':
+        candidate['confirmation'].update(input_hash=report['input_hash'],
+                                         knowledge_hash=report['knowledge_hash'])
+    candidate['status'] = 'complete'
+    final = validate_case_artifact(folder, session['stage'], candidate)
+    if not final['complete']:
+        raise ValueError(json.dumps(final, ensure_ascii=False))
+    write_stage_docs(folder, session, session['stage'], candidate, final)
+
+
+def render_docs(folder, session):
+    """Write the reading documents of every completed stage again, from the artifacts as they are.
+
+    Nothing in an artifact changes; a case written before the documents were restructured gets
+    the current ones.
+    """
+    import case_docs
+    written = []
+    for stage in case_docs.DOC_STAGES:
+        path = artifact_path(folder, stage)
+        if not path.exists():
+            continue
+        data = load_json(path)
+        if data.get('status') != 'complete':
+            continue
+        write_stage_docs(folder, session, stage, data, validate_case_artifact(folder, stage, data))
+        written.append(stage)
+    write_index(folder, session)
+    return {'case_path': str(folder), 'rendered': written}
+
+
+def complete_derived_stage(folder, expected_stage=None):
+    """Finish a derived stage whose artifact a stage tool wrote in place.
+
+    `wireframe.py sync` writes design-system-wireframe.json itself, so it never passes through
+    `commit_candidate`, where derived stages complete. Without this the stage stopped at
+    `awaiting_confirmation` with nobody left to confirm it. The same checks gate the same
+    completion; only the caller differs.
+    """
+    folder = Path(folder)
+    session, data = load_case(folder)
+    stage = session['stage']
+    if expected_stage and stage != expected_stage:
+        return {'completed': False, 'reason': f'the session is at {stage}, not {expected_stage}'}
+    if awaits_planner(stage) or stage not in DERIVED_STAGES:
+        return {'completed': False, 'reason': f'{stage} is confirmed by the planner'}
+    if data['status'] == 'complete' or data['confirmation']['confirmed']:
+        return {'completed': False, 'reason': f'{stage} is already complete'}
+    if (folder / 'evidence/pending-operation.json').exists():
+        return {'completed': False, 'reason': 'audit recovery is pending; run recover-log first'}
+    # A case that asked the planner before this stage became derived still holds that question.
+    # Nobody is meant to answer it any more; waiting for it would stop the workflow for good.
+    if session['pending'] and session['pending'].get('kind') == 'confirmation':
+        append_entry(session, 'system', 'confirmation-withdrawn',
+                     f'{stage} completes itself now; the earlier confirmation question is withdrawn.')
+        session['pending'] = None
+        save_metadata(folder, session)
+    if session['paused'] or session['refresh_required'] or session['pending'] or \
+            session.get('needs_processing', False):
+        return {'completed': False,
+                'reason': 'the session is paused, refreshing, holding a question, or has an answer to process'}
+    report = validate_case_artifact(folder, stage, data)
+    if stage in ('screen_behavior', 'design_system_wireframe') and not (
+            report.get('input_ready', False) and report.get('knowledge_ready', False)):
+        return {'completed': False, 'reason': 'upstream input or knowledge binding is stale'}
+    gaps = planner_selection_gaps(folder, session, data) + receipt_reference_gaps(folder, session, data)
+    if gaps:
+        return {'completed': False, 'reason': '; '.join(gaps)}
+    if not should_auto_complete(session, report, False):
+        return {'completed': False, 'reason': f'{stage} is not ready for completion'}
+    complete_derived(folder, session, data, report)
+    persist_artifact(folder, session, data)
+    return {'completed': True, 'turn_id': data['confirmation']['turn_id']}
 
 
 def run(args):
@@ -1619,12 +1781,17 @@ def run(args):
         if not slug:
             raise ValueError('case directory needs a lowercase alphanumeric identifier')
         data['case_id'] = slug
-        session = {'version': 1, 'stage': stage, 'mode': args.mode, 'model': args.model or 'unrecorded', 'created_at': now(),
+        session = {'version': 1, 'layout': CURRENT_LAYOUT, 'stage': stage, 'mode': args.mode, 'model': args.model or 'unrecorded', 'created_at': now(),
                    'updated_at': now(), 'paused': False, 'refresh_required': False,
                    'refresh_after': '', 'needs_processing': initial is not None, 'pending': None, 'answered_question': None, 'entries': []}
         if initial is not None:
             append_entry(session, 'user', 'initial', initial)
         folder.mkdir(parents=True, exist_ok=False)
+        # The planner's original words, kept as a file in the case (layout 2 only).
+        if initial is not None and layout_of(folder, session).version > 1:
+            original = layout_of(folder, session).input_dir() / Path(args.input_file).name
+            original.parent.mkdir(parents=True, exist_ok=True)
+            original.write_text(initial, encoding='utf-8')
         persist_artifact(folder, session, data)
         return view(folder, session, data)
     if args.command == 'start-prd':
@@ -1633,7 +1800,7 @@ def run(args):
             raise ValueError('start-prd requires the jtbd stage')
         if not jtbd.validate(data)['complete']:
             raise ValueError('the job must be complete and confirmed before the prd stage')
-        path = folder / ARTIFACT_NAMES['prd']
+        path = artifact_path(folder, 'prd')
         draft = load_json(path) if path.exists() else load_json(prd.TEMPLATE)
         draft['case_id'] = data['case_id']
         draft['title'] = data['title']
@@ -1643,7 +1810,7 @@ def run(args):
         draft['carried'] = prd.carry_from_jtbd(data)
         content_hash, review_hash = jtbd.fingerprints(data)
         draft['input_binding'] = {
-            'jtbd_path': str((folder / ARTIFACT_NAMES['jtbd']).resolve()),
+            'jtbd_path': str(artifact_path(folder, 'jtbd').resolve()),
             'content_hash': content_hash, 'review_hash': review_hash,
             'confirmation_turn_id': data['confirmation']['turn_id'],
             'project_id': data['service_context']['project_id'],
@@ -1676,8 +1843,9 @@ def run(args):
         upstream = session['stage']
         if not validate_artifact(upstream, data)['complete']:
             raise ValueError(f'{upstream} must be complete and confirmed before user experience')
-        upstream_path = folder / ARTIFACT_NAMES[upstream]
-        experience_path = folder / 'user-experience.json'
+        upstream_path = artifact_path(folder, upstream)
+        experience_path = artifact_path(folder, 'user_experience')
+        experience_path.parent.mkdir(parents=True, exist_ok=True)
         if experience_path.exists():
             experience = load_json(experience_path)
             source = (user_experience.bind_prd(experience, upstream_path) if upstream == 'prd'
@@ -1706,7 +1874,7 @@ def run(args):
         session['answered_question'] = None
         append_entry(session, 'system', 'start-user-experience',
                      f'User experience started from the confirmed {upstream} result.')
-        data = load_json(folder / 'user-experience.json')
+        data = load_json(artifact_path(folder, 'user_experience'))
         save_metadata(folder, session)
         return view(folder, session, data)
     if args.command == 'start-screen-behavior':
@@ -1719,17 +1887,18 @@ def run(args):
         if not user_experience.validate(data)['complete'] or not input_binding_current(folder, data):
             raise ValueError('user experience and its input must be complete, confirmed and current')
         module = stage_module('screen_behavior')
-        path = folder / 'screen-behavior.json'
+        path = artifact_path(folder, 'screen_behavior')
+        path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():
             draft = load_json(path)
-            module.bind_inputs(draft, folder / 'user-experience.json')
+            module.bind_inputs(draft, artifact_path(folder, 'user_experience'))
             draft['status'] = 'in_progress'
             draft['confirmation'] = dict(EMPTY_CONFIRMATION)
             draft['evidence_status']['status'] = 'stale'
             draft['history'].append({'change': '사용자 경험 설계 입력 재연결',
                                      'reason': '기존 화면 모델을 보존하고 변경 영향을 재검토한다.'})
         else:
-            draft = module.init_from_user_experience(path, folder / 'user-experience.json')
+            draft = module.init_from_user_experience(path, artifact_path(folder, 'user_experience'))
         bind_screen_knowledge(draft, getattr(args, 'knowledge_pack', None))
         session.update(stage='screen_behavior', paused=False, refresh_required=False,
                        refresh_after='', needs_processing=False, pending=None, answered_question=None)
@@ -1748,18 +1917,20 @@ def run(args):
         if not report['complete']:
             raise ValueError('screen behavior must be complete, confirmed and current')
         module = stage_module('design_system_wireframe')
-        path = folder / 'design-system-wireframe.json'
-        knowledge_binding = latest_knowledge_pack(getattr(args, 'knowledge_pack', None))
+        path = artifact_path(folder, 'design_system_wireframe')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        knowledge_binding = latest_knowledge_pack(getattr(args, 'knowledge_pack', None),
+                                                  inherit=data.get('knowledge_binding'), exact=True)
         if path.exists():
             draft = load_json(path)
             draft['status'] = 'in_progress'
             draft['confirmation'] = empty_confirmation('design_system_wireframe')
         else:
-            draft = module.init_from_screen_behavior(path, folder / 'screen-behavior.json')
+            draft = module.init_from_screen_behavior(path, artifact_path(folder, 'screen_behavior'))
         content_hash, review_hash = artifact_fingerprints('screen_behavior', data)
         draft['title'] = data['title'] + ' Design System Wireframes'
         draft['input_binding']['screen_behavior'] = {
-            'path': str((folder / 'screen-behavior.json').resolve()),
+            'path': str(artifact_path(folder, 'screen_behavior').resolve()),
             'content_hash': content_hash,
             'review_hash': review_hash,
             'confirmation_turn_id': data['confirmation']['turn_id'],
@@ -1768,7 +1939,7 @@ def run(args):
         }
         draft['knowledge_binding'] = knowledge_binding
         targets, coverage, navigation_links = write_wireframe_stage_inputs(
-            folder, folder / 'screen-behavior.json', data, knowledge_binding, draft.get('targets', []))
+            folder, artifact_path(folder, 'screen_behavior'), data, knowledge_binding, draft.get('targets', []))
         draft.update(targets=targets, coverage=coverage, navigation_links=navigation_links,
                      status='in_progress')
         draft['review'] = {'verdict': 'pending', 'rationale': '', 'criteria': [],
@@ -1785,12 +1956,14 @@ def run(args):
         save_metadata(folder, session)
         return view(folder, session, draft)
     if args.command in ('reopen-jtbd', 'reopen-prd', 'reopen-planning-context',
-                        'reopen-user-experience', 'reopen-screen-behavior'):
+                        'reopen-user-experience', 'reopen-screen-behavior',
+                        'reopen-design-system-wireframe'):
         session, data = load_case(folder)
         target = {'reopen-jtbd': 'jtbd', 'reopen-prd': 'prd',
                   'reopen-planning-context': 'planning_context',
                   'reopen-user-experience': 'user_experience',
-                  'reopen-screen-behavior': 'screen_behavior'}[args.command]
+                  'reopen-screen-behavior': 'screen_behavior',
+                  'reopen-design-system-wireframe': 'design_system_wireframe'}[args.command]
         # `jtbd` and `prd` were in REOPEN_STAGES and in --help and had no branch at all: the
         # command fell through, answered `outcome: success`, and changed not one byte. Backflow
         # tells you to go back to the job and confirm it again, and there was no command that
@@ -1831,6 +2004,9 @@ def run(args):
         save_metadata(folder, session)
         return view(folder, session, load_json(artifact_path(folder, target)))
     session, data = load_case(folder)
+    if args.command == 'ask' and args.kind == 'confirmation' and not awaits_planner(session['stage']):
+        raise ValueError(f'{session["stage"]} completes itself when its validation is ready; '
+                         'it asks no confirmation question — reopen it to revoke a completion')
     if args.command == 'ask' and args.kind == 'interview' and not interview_allowed(session['stage']):
         raise ValueError(f'{session["stage"]} is a derived stage and asks no interview question; '
                          'derive from the confirmed upstream or record a backflow')
@@ -1872,7 +2048,10 @@ def run(args):
         return result
     if args.command == 'record-decision':
         decision = load_json(args.decision)
-        validate_decision(decision, data)
+        # Status names what to act on; a decision about it must be able to say so.
+        reported = {row['issue_id'] for row in view(folder, session, data).get('required_actions', [])
+                    if isinstance(row, dict) and row.get('issue_id')}
+        validate_decision(decision, data, reported)
         entry = append_entry(session, 'system', 'decision', redact(decision['reason']))
         # 답을 읽고 「고칠 것이 없다」고 판정한 것도 답을 처리한 것이다. 그 판정에 id가 붙으면
         # 저장 없이도 다음으로 갈 수 있다 — 없으면 「아무것도 안 고쳤다」를 말하려고 무언가를
@@ -1895,6 +2074,8 @@ def run(args):
         return result
     if args.command == 'show':
         return show(folder, session, data, args)
+    if args.command == 'render-docs':
+        return render_docs(folder, session)
     if args.command == 'revise-decision-question':
         if session['paused'] or session['refresh_required']:
             raise ValueError('resume and refresh context before revising a question')
@@ -2034,7 +2215,8 @@ def run(args):
         if args.kind == 'decision':
             question = (visual + '\n' if session['stage'] == 'screen_behavior' else '') + render_decision_question(decision_context, question)
         if args.kind=='inventory_confirmation':
-            snapshot=f"evidence/progress/{len(session['entries'])+1:05}.json"
+            snapshot=layout_of(folder, session).relative(
+                layout_of(folder, session).progress_snapshot(session['stage'], len(session['entries'])+1))
             atomic_json(folder/snapshot,data)
             question=stage_module('screen_behavior').render_decision_inventory(data)+'\n분류 목록 검토이며 미결정 추천의 선택 승인이 아닙니다. 수정이 필요하면 답변에 적어 주세요.\n\n'+question
         elif session['stage'] in ('user_experience', 'screen_behavior'):
@@ -2156,9 +2338,7 @@ def run(args):
         final = validate_case_artifact(folder, session['stage'], data)
         if not final['complete']:
             raise ValueError(json.dumps(final, ensure_ascii=False))
-        heading = '> 모의 실행 (simulation). 실제 서비스 조회 결과가 아닙니다.\n\n' if session['mode'] == 'simulation' else ''
-        output_name = artifact_path(folder, session['stage']).with_suffix('.md').name
-        (folder / output_name).write_text(heading + render_artifact(session['stage'], data, final), encoding='utf-8')
+        write_stage_docs(folder, session, session['stage'], data, final)
         session['answered_question'] = None
         session['needs_processing'] = False
         append_entry(session, 'system', 'complete', f"Current content confirmed; {session['stage']} completed.")
@@ -2198,7 +2378,9 @@ def run(args):
         session.update(handed_off=True, work_bytes=0, closed_since_handoff=[],
                        closed_blocking_since_handoff=[])
         # Render against the settled session so the note names the work left, not the boundary.
-        (folder / 'handoff.md').write_text(
+        handoff_path = layout_of(folder, session).handoff()
+        handoff_path.parent.mkdir(parents=True, exist_ok=True)
+        handoff_path.write_text(
             render_handoff(folder, finished, data, view(folder, session, data), note),
             encoding='utf-8')
         append_entry(session, 'system', 'handoff',
@@ -2238,7 +2420,7 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
-    for command in ('new', 'start', 'reopen', 'backflow', 'list', 'status', 'show', 'save', 'patch', 'ask', 'revise-decision-question', 'answer', 'acknowledge-inventory', 'confirm', 'handoff', 'pause', 'resume', 'record-tool', 'record-decision', 'trace', 'assert-yield', 'recover-log'):
+    for command in ('new', 'start', 'reopen', 'backflow', 'list', 'status', 'show', 'save', 'patch', 'ask', 'revise-decision-question', 'answer', 'acknowledge-inventory', 'confirm', 'handoff', 'pause', 'resume', 'record-tool', 'record-decision', 'trace', 'assert-yield', 'recover-log', 'render-docs'):
         sub = commands.add_parser(command)
         sub.add_argument('path', type=Path, nargs='?' if command == 'list' else None,
                          default=WORKSPACE_ROOT / 'artifacts/interviews' if command == 'list' else None)
@@ -2335,7 +2517,7 @@ def main():
         args.command += '-' + args.stage.replace('_', '-')
     global _ACTIVE_OPERATION
     if args.command not in ('status','show','list','trace'):
-        screen_path=args.path.resolve()/'screen-behavior.json'
+        screen_path=CaseLayout.of(args.path.resolve()).artifact('screen_behavior')
         if screen_path.exists():
             try:
                 old_screen=load_json(screen_path)

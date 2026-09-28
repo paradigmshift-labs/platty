@@ -5,6 +5,7 @@ by definition not a place a human edits — so the copy is re-run and every down
 and confirmation is recomputed from it. Nothing here supplies an approval that was not already
 given; the statements and turn ids are the planner's own and are left alone.
 """
+from case_layout import CaseLayout
 import json
 import sys
 from pathlib import Path
@@ -51,8 +52,9 @@ def restamp(data, module):
 
 def main(case):
     case = Path(case)
-    job = read(case / 'jtbd.json')
-    one = read(case / 'prd.json')
+    layout = CaseLayout.of(case)
+    job = read(layout.artifact('jtbd'))
+    one = read(layout.artifact('prd'))
     fresh = prd.carry_from_jtbd(job)
     if one['carried'] == fresh:
         print(f'{case.name}: carried already current')
@@ -60,9 +62,9 @@ def main(case):
     one['carried'] = {**fresh, 'hypotheses': one['carried']['hypotheses']}
     report = restamp(one, prd)
     print(f'{case.name}  prd complete={report["complete"]} {report["errors"][:1]}')
-    write(case / 'prd.json', one, prd)
+    write(layout.artifact('prd'), one, prd)
 
-    two_path = case / 'user-experience.json'
+    two_path = layout.artifact('user_experience')
     if not two_path.exists():
         return
     two = read(two_path)
@@ -72,7 +74,7 @@ def main(case):
     print(f'{case.name}  ux  complete={report["complete"]} {report["errors"][:1]}')
     write(two_path, two, user_experience)
 
-    three_path = case / 'screen-behavior.json'
+    three_path = layout.artifact('screen_behavior')
     if not three_path.exists():
         return
     three = read(three_path)

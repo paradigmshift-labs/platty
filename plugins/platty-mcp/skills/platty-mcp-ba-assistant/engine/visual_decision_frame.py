@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Prepare immutable low-fidelity frames for UI-affecting BA decisions."""
+from case_layout import CaseLayout
 import hashlib
 import json
 from pathlib import Path
@@ -71,7 +72,7 @@ def prepare(case_dir, packet, frame):
     }
     content_hash = _digest(content)
     frame_id = _safe_frame_id(packet["id"], content_hash)
-    root = case / "evidence" / "decision-frames" / frame_id
+    root = CaseLayout.of(case).decision_frames("screen_behavior") / frame_id
     root.mkdir(parents=True, exist_ok=False)
     rendered = _render(packet, frame)
     artifact = root / "frame.md"

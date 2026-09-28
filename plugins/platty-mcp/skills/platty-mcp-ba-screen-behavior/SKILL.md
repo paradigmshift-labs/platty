@@ -44,7 +44,21 @@ artifact is confirmed.
      디자이너가 받는 쪽에서 「이 컴포넌트를 고쳐라」와 「새로 그려라」가 갈린다.
    - 상위가 재사용을 확정한 화면(`R-*`·`D-*`)이라 진입만 더하는 일이면, 그 사실을
      `origin: changed`와 진입 명세로 적는다.
-3. 매칭되는 역할이 없으면 `visual_exception`이 아니라 **역류(backflow)**다. 기존 서비스에 없는 경험을
+3. **기존 화면(`origin: current`·`changed`)은 현재 코드부터 읽는다.** 역할 규칙으로 새로 짜지
+   않는다. 실제 주행에서 고칠 이벤트 화면을 한 번도 읽지 않고 명세했고, 4단계가 팩 역할로 새
+   화면을 조립해 앱과 전혀 다른 결과가 나왔다. 화면마다
+   [BA Platty Retrieval](../platty-mcp-ba-platty-retrieval/SKILL.md)로:
+   - 라우트나 진입점에서 그 화면의 페이지·위젯 파일을 찾고, 빌드 트리를 **위에서 아래 순서로** 읽는다.
+   - `screens[].current_baseline`에 적는다 — `status: observed`, `source_ids`(provider `platty`
+     출처), `code_refs`, `regions[]`(`order` · 영역 이름 · **지금 보이는 글자 그대로** · 쓰는
+     컴포넌트 · `code_ref` 파일:줄). 값이 데이터에서 오면 샘플 숫자를 지어내지 말고 필드 이름을 적는다.
+   - `changed` 화면은 `changes[]`에 영역마다 `keep`·`modify`·`add`·`remove`와 무엇이 바뀌는지,
+     그 근거(`D-*`·`R-*`·해결 방향) 출처를 적는다. 바뀌지 않는 영역도 기준선에 남는다.
+   - 코드를 읽을 수 없으면(Platty capability gap 등) `status: unavailable`과 이유를 적고
+     `evidence_status.coverage_limits`에 남긴다. **멈추지 않는다** — 다만 지어낸 기준선은 쓰지 않는다.
+
+   검증기가 기존 화면의 기준선 부재를 완료 조건으로 잡는다. `new` 화면은 기준선이 없다.
+4. 매칭되는 역할이 없으면 `visual_exception`이 아니라 **역류(backflow)**다. 기존 서비스에 없는 경험을
    상위가 요구한다는 뜻이고 그건 기획 판단이다.
 
    ```

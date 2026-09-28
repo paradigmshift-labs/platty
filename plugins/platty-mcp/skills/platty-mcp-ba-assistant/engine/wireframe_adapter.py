@@ -298,6 +298,12 @@ def adapt_screen_behavior(data, source_path=None, knowledge_binding=None):
                 linked_transitions.add(transition['id'])
 
         keep_one_user_action_per_observed_event(flows)
+        screen_rules = [
+            rule_brief(row) for row in sorted(data['interaction_rules'], key=lambda row: row['id'])
+            if set(row['input_scope_ids'] + row['output_scope_ids']) & scope_ids
+        ]
+        local_interaction_ids = ({row['transition_id'] for row in flows}
+                                 | {row['rule_id'] for row in screen_rules})
 
         related_rows = [screen] + screen_elements + screen_cases + screen_handoffs
         related_rows.extend(row for row in data['state_axes'] if row['scope_id'] in scope_ids)
@@ -312,6 +318,10 @@ def adapt_screen_behavior(data, source_path=None, knowledge_binding=None):
             'screen_id': screen_id,
             'task': 'Wireframe ' + screen['name'],
             'purpose': screen['purpose'],
+            # An existing screen is drawn from what its code draws today, then changed — not
+            # recomposed from pack roles. The renderer author reads this first.
+            'origin': screen.get('origin', ''),
+            'current_baseline': copy.deepcopy(screen.get('current_baseline')),
             'audience': list(screen['actor_ids']),
             'nodes': [{
                 'element_id': row['id'],
@@ -343,10 +353,7 @@ def adapt_screen_behavior(data, source_path=None, knowledge_binding=None):
                 constraint_brief(row) for row in sorted(data['constraints'], key=lambda row: row['id'])
                 if set(row['scope_ids']) & scope_ids
             ],
-            'interaction_rules': [
-                rule_brief(row) for row in sorted(data['interaction_rules'], key=lambda row: row['id'])
-                if set(row['input_scope_ids'] + row['output_scope_ids']) & scope_ids
-            ],
+            'interaction_rules': screen_rules,
             'inventory_links': [
                 inventory_brief(row) for row in sorted(data['inventory_links'], key=lambda row: row['input_ref'])
                 if set(row['screen_ids']) & {screen_id} or set(row['element_ids']) & scope_ids
@@ -357,7 +364,9 @@ def adapt_screen_behavior(data, source_path=None, knowledge_binding=None):
                 'semantic_pattern': row['semantic_pattern'],
                 'required_state_refs': row['required_state_refs'],
                 'render_case_ids': row['render_case_ids'],
-                'interaction_refs': row['interaction_refs'],
+                'interaction_refs': split_interaction_refs(row['interaction_refs'], local_interaction_ids)[0],
+                'cross_screen_interaction_refs':
+                    split_interaction_refs(row['interaction_refs'], local_interaction_ids)[1],
                 'accessibility_expectations': row['accessibility_expectations'],
                 'candidate_design_system_ref': row['candidate_design_system_ref'],
                 'mapping_status': row['mapping_status'],
@@ -399,6 +408,19 @@ def _source_trace(data, report, source_path, knowledge_binding):
         'source_ids': sorted(row['id'] for row in data['sources']),
         'decision_ids': sorted(row['id'] for row in data['decisions']),
     }
+
+
+def split_interaction_refs(refs, local_ids):
+    """This screen's own interaction refs, and the ones that belong to another screen's packet.
+
+    Stage 3 lets a handoff name any transition in the artifact — a CTA whose transition lands
+    on another screen is a real, confirmed fact. Each packet carries one screen's flows, so the
+    engine cannot resolve the other screen's transition and `prepare` died on a confirmed
+    artifact. The ref is kept beside the local ones rather than dropped: the link from the
+    control to where it leads is evidence the export still shows.
+    """
+    local = [ref for ref in refs if ref in local_ids]
+    return local, [ref for ref in refs if ref not in local_ids]
 
 
 def _coverage_manifest(data, linked_transitions, cross_screen_links):
