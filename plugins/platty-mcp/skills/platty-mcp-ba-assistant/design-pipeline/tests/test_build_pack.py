@@ -145,6 +145,72 @@ class BuildPackTest(unittest.TestCase):
             manifest = json.loads((Path(dest) / 'upstream-manifest.json').read_text(encoding='utf-8'))
             self.assertIn('inventory/runtime-captures.json', [row['path'] for row in manifest['sources']])
 
+    def build(self, source, dest, version='heroines/figma-map', check=True):
+        return subprocess.run([
+            'python3', str(PACKAGE_ROOT / 'scripts' / 'build-pack.py'),
+            '--source-root', source, '--dest', dest, '--version', version,
+        ], cwd=REPO_ROOT, check=check, capture_output=True, text=True)
+
+    def test_figma_component_map_is_carried_with_provenance(self):
+        """The design system owns which Figma component draws a code component; the pack carries it."""
+        with tempfile.TemporaryDirectory(prefix='ba-pack-fixture-') as fixture, tempfile.TemporaryDirectory(prefix='ba-pack-dest-') as dest:
+            source = Path(fixture)
+            write_logical_source(source)
+            write_json(source / 'figma/component-map.json', {
+                'schema_version': 1,
+                'library': {'file_key': 'LIB', 'name': 'HDS'},
+                'components': {
+                    'Radio': {'status': 'mapped', 'component_set_key': 'set-radio',
+                              'state_props': {'checked': {'property': 'Selected', 'value': 'True'}}},
+                    'Surface': {'status': 'primitive', 'reason': 'generic container'},
+                },
+                'tokens': {'color.semantic.primaryStrong': {'variable_key': 'var-primary'}},
+            })
+            self.build(source, dest)
+
+            pack = json.loads((Path(dest) / 'pack.json').read_text(encoding='utf-8'))
+            manifest = json.loads((Path(dest) / 'upstream-manifest.json').read_text(encoding='utf-8'))
+            self.assertEqual(pack['figma']['components']['Radio']['component_set_key'], 'set-radio')
+            self.assertEqual(pack['figma']['library']['file_key'], 'LIB')
+            self.assertEqual(pack['figma']['tokens']['color.semantic.primaryStrong']['variable_key'], 'var-primary')
+            source_row = next(row for row in manifest['sources'] if row['path'] == 'figma/component-map.json')
+            provenance = next(row for row in pack['rowProvenance'] if row['collection'] == 'figma')
+            self.assertEqual(provenance['revision'], source_row['sha256'])
+
+    def test_pack_without_a_figma_map_simply_has_none(self):
+        with tempfile.TemporaryDirectory(prefix='ba-pack-fixture-') as fixture, tempfile.TemporaryDirectory(prefix='ba-pack-dest-') as dest:
+            write_logical_source(Path(fixture))
+            self.build(fixture, dest)
+            pack = json.loads((Path(dest) / 'pack.json').read_text(encoding='utf-8'))
+            manifest = json.loads((Path(dest) / 'upstream-manifest.json').read_text(encoding='utf-8'))
+            self.assertNotIn('figma', pack)
+            self.assertNotIn('figma/component-map.json', [row['path'] for row in manifest['sources']])
+
+    def test_wrongly_typed_figma_map_fails_the_build(self):
+        with tempfile.TemporaryDirectory(prefix='ba-pack-fixture-') as fixture, tempfile.TemporaryDirectory(prefix='ba-pack-dest-') as dest:
+            source = Path(fixture)
+            write_logical_source(source)
+            write_json(source / 'figma/component-map.json', {
+                'schema_version': 1, 'library': {'file_key': 'LIB'},
+                'components': {'Radio': {'status': 'mapped', 'component_set_key': 'k', 'variant_props': ['size']}},
+                'tokens': ['x']})
+            result = self.build(source, dest, check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('variant_props', result.stderr)
+            self.assertIn('tokens', result.stderr)
+
+    def test_malformed_figma_map_fails_the_build(self):
+        with tempfile.TemporaryDirectory(prefix='ba-pack-fixture-') as fixture, tempfile.TemporaryDirectory(prefix='ba-pack-dest-') as dest:
+            source = Path(fixture)
+            write_logical_source(source)
+            write_json(source / 'figma/component-map.json', {
+                'schema_version': 1, 'library': {'file_key': 'LIB'},
+                'components': {'Radio': {'status': 'mapped'}}})
+            result = self.build(source, dest, check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Radio', result.stderr)
+            self.assertFalse((Path(dest) / 'pack.json').exists())
+
     def test_manifest_and_pack_are_logical_for_different_source_roots(self):
         with tempfile.TemporaryDirectory(prefix='ba-pack-fixture-') as fixture, tempfile.TemporaryDirectory(prefix='ba-pack-src-a-') as src_a, tempfile.TemporaryDirectory(prefix='ba-pack-src-b-') as src_b, tempfile.TemporaryDirectory(prefix='ba-pack-dest-a-') as dest_a, tempfile.TemporaryDirectory(prefix='ba-pack-dest-b-') as dest_b:
             write_logical_source(Path(fixture))

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Bridge BA wireframe records to the project-local Node design pipeline."""
+from case_layout import CaseLayout
 import argparse
 from collections import Counter
 from datetime import datetime, timezone
@@ -16,6 +17,7 @@ import uuid
 
 import design_system_wireframe
 import design_tokens
+import figma_export
 import screen_behavior
 import wireframe_adapter
 from paths import PLUGIN_ROOT, WORKSPACE_ROOT
@@ -293,7 +295,7 @@ def initial_target(case_root, brief, source, knowledge_binding, prepared, parent
     run_dir = Path(prepared["runDir"])
     atomic_json(run_dir / "brief.json", brief)
     trace_template = run_dir / "traceability.template.json"
-    wire_dir = Path(case_root) / "wireframes" / brief["screen_id"]
+    wire_dir = CaseLayout.of(case_root).screen_dir(brief["screen_id"])
     atomic_json(wire_dir / "traceability.json", load_json(trace_template))
     required = required_coverage(brief, source)
     input_refs = sorted({item for values in required.values() for item in values})
@@ -318,7 +320,7 @@ def initial_target(case_root, brief, source, knowledge_binding, prepared, parent
             "renderer": design_system_wireframe.file_hash(run_dir / "renderer/index.html"),
         },
         "detail_mode": "inline",
-        "detail_artifact": {"path": rel(case_root, Path(case_root) / "evidence/canonical-details" / (run_dir.name + ".json")), "hash": "0" * 64},
+        "detail_artifact": {"path": rel(case_root, CaseLayout.of(case_root).canonical_details() / (run_dir.name + ".json")), "hash": "0" * 64},
         "design_decisions": empty_decisions(),
         "state_mappings": [],
         "transition_assertions": [],
@@ -351,7 +353,7 @@ def prepare_stage_inputs(case_root, source_path, source, knowledge_binding, prev
     previous_by_screen = {target["screen_id"]: target for target in previous_targets or []}
     targets = []
     coverage = []
-    output_root = Path(case_root) / "evidence/design-runs"
+    output_root = CaseLayout.of(case_root).runs_root()
     for brief in adapted["targets"]:
         packet = dict(adapted)
         packet["targets"] = [brief]
@@ -395,12 +397,12 @@ def assert_run_dir(case_root, record, target):
     run_id = target.get("run_id", "")
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{7,80}", run_id):
         raise ValueError("opaque run id required")
-    root = (Path(case_root) / "evidence/design-runs").resolve()
+    root = CaseLayout.of(case_root).runs_root().resolve()
     run_dir = (root / run_id).resolve()
     try:
         run_dir.relative_to(root)
     except ValueError as exc:
-        raise ValueError("run directory must remain inside case evidence/design-runs") from exc
+        raise ValueError("run directory must remain inside the case wireframe runs folder") from exc
     meta = load_json(run_dir / "run.json")
     status_path = run_dir / "status.json"
     status = load_json(status_path) if status_path.exists() else {}
@@ -433,12 +435,12 @@ def accepted_parent_run_dir_for_unfinished_retry(case_root, record, target, run_
         return None
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{7,80}", parent_id):
         raise ValueError("opaque parent run id required")
-    root = (Path(case_root) / "evidence/design-runs").resolve()
+    root = CaseLayout.of(case_root).runs_root().resolve()
     parent_dir = (root / parent_id).resolve()
     try:
         parent_dir.relative_to(root)
     except ValueError as exc:
-        raise ValueError("run directory must remain inside case evidence/design-runs") from exc
+        raise ValueError("run directory must remain inside the case wireframe runs folder") from exc
     if not parent_dir.exists() or not (parent_dir / "gate.json").exists():
         return None
     parent_gate = load_json(parent_dir / "gate.json")
@@ -455,7 +457,7 @@ def accepted_parent_run_dir_for_unfinished_retry(case_root, record, target, run_
 
 
 def command_record_path(case_root):
-    return Path(case_root) / "design-system-wireframe.json"
+    return CaseLayout.of(case_root).artifact("design_system_wireframe")
 
 
 def semantic_record_hash(record):
@@ -813,7 +815,7 @@ def renderer_run_refs(case_root, target):
     run_id = target.get("run_id", "")
     if not run_id:
         return set(), False
-    renderer_dir = Path(case_root) / "evidence/design-runs" / run_id / "renderer"
+    renderer_dir = CaseLayout.of(case_root).runs_root() / run_id / "renderer"
     if not renderer_dir.exists():
         return set(), False
     refs = set()
@@ -973,7 +975,7 @@ def sync_target(case_root, record, target):
         "component_mappings": component_rows,
         "token_mappings": target["token_mappings"],
     }
-    detail_path = Path(case_root) / "evidence/canonical-details" / (run_dir.name + ".json")
+    detail_path = CaseLayout.of(case_root).canonical_details() / (run_dir.name + ".json")
     atomic_json_if_changed(detail_path, details)
     target["detail_mode"] = "artifact"
     target["detail_artifact"] = {"path": rel(case_root, detail_path), "hash": design_system_wireframe.file_hash(detail_path)}
@@ -1012,29 +1014,37 @@ def sync_target(case_root, record, target):
     return {"target_id": target["id"], "verdict": verdict, "issues": issues}
 
 
+def passing_triggers(target, case_root=None):
+    """Transitions this target's run exercised, with the upstream transitions they refine."""
+    passing = {
+        row.get("transition_id")
+        for row in (target or {}).get("transition_assertions", [])
+        if row.get("runtime_check_id")
+    }
+    triggers = set(passing)
+    if case_root and target and target.get("brief_path"):
+        brief = load_json(Path(case_root) / target["brief_path"])
+        for flow in brief.get("flows", []):
+            if flow.get("transition_id") in passing:
+                triggers.update(flow.get("parent_transition_refs", []))
+    return triggers
+
+
 def sync_navigation_links(record, case_root=None):
     targets = {target["id"]: target for target in record.get("targets", [])}
     current_run_ids = {target.get("run_id", "") for target in record.get("targets", []) if target.get("run_id")}
     for link in record.get("navigation_links", []):
         source = targets.get(link.get("from_target_id"))
         destination = targets.get(link.get("to_target_id"))
-        passing_transitions = {
-            row.get("transition_id")
-            for row in (source or {}).get("transition_assertions", [])
-            if row.get("runtime_check_id")
-        }
-        passing_triggers = set(passing_transitions)
-        if case_root and source and source.get("brief_path"):
-            brief = load_json(Path(case_root) / source["brief_path"])
-            for flow in brief.get("flows", []):
-                if flow.get("transition_id") in passing_transitions:
-                    passing_triggers.update(flow.get("parent_transition_refs", []))
+        # The adapter files a transition under the screen it lands on, so the run that proves
+        # "tap here, arrive there" is usually the destination's. Either end may carry it.
+        crossing = passing_triggers(source, case_root) | passing_triggers(destination, case_root)
         targets_accepted = (
             source and destination
             and source.get("status") == "accept_ai"
             and destination.get("status") == "accept_ai"
         )
-        trigger_verified = link.get("trigger_ref") in passing_triggers
+        trigger_verified = link.get("trigger_ref") in crossing
         renderer_verified = True
         if case_root and source and destination and source.get("id") != destination.get("id"):
             refs, renderer_exists = renderer_run_refs(case_root, source)
@@ -1078,13 +1088,43 @@ def sync(case_root, target_id=None):
     started_at = now()
     started = time.perf_counter()
     try:
-        return _sync(case_root, target_id, started_at, started)
+        result = _sync(case_root, target_id, started_at, started)
+        result["stage_completion"] = complete_stage(case_root)
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         record_common_engine_event(
             case_root, "sync", target_id, "", None, started_at,
             (time.perf_counter() - started) * 1000, str(exc),
         )
         raise
+    return result
+
+
+def complete_stage(case_root):
+    """This stage is derived: once sync makes it ready, the controller confirms it, not a person."""
+    if not (Path(case_root) / "session.json").exists():
+        return {"completed": False, "reason": "no BA session in this case folder"}
+    import ba_session
+    return ba_session.complete_derived_stage(case_root, expected_stage="design_system_wireframe")
+
+
+def settle_completion(record, accepted):
+    """Keep a completion that still covers the record; withdraw one that no longer does.
+
+    Sync runs again after a stage completes — to fix a capture, or just to re-check. Writing
+    `awaiting_confirmation` over a confirmed record left `status` and `confirmation` disagreeing,
+    and nothing could finish it: completion saw it as already confirmed, and a derived stage asks
+    no confirmation question. A completion whose hashes still match is kept; any other is
+    withdrawn so the controller can stamp the current content again.
+    """
+    confirmation = record["confirmation"]
+    if accepted and confirmation.get("confirmed") and \
+            (confirmation.get("content_hash"), confirmation.get("review_hash")) == \
+            design_system_wireframe.fingerprints(record):
+        record["status"] = "complete"
+        return
+    if confirmation.get("confirmed"):
+        record["confirmation"] = {key: False if key == "confirmed" else "" for key in confirmation}
+    record["status"] = "awaiting_confirmation" if accepted else "in_progress"
 
 
 def _sync(case_root, target_id, started_at, started):
@@ -1103,7 +1143,7 @@ def _sync(case_root, target_id, started_at, started):
             "state_mappings": target.get("state_mappings", []),
         }
         evidence_by_target[target["id"]] = precise_coverage_evidence(target, details)
-        review_path = Path(case_root) / "evidence/design-runs" / target["run_id"] / "ai-review.json"
+        review_path = CaseLayout.of(case_root).runs_root() / target["run_id"] / "ai-review.json"
         if review_path.exists():
             review = load_json(review_path)
             for item in review.get("criteria", []):
@@ -1131,9 +1171,7 @@ def _sync(case_root, target_id, started_at, started):
     if accepted:
         content_hash, _ = design_system_wireframe.fingerprints(record)
         record["review"]["content_hash"] = content_hash
-        record["status"] = "awaiting_confirmation"
-    else:
-        record["status"] = "in_progress"
+    settle_completion(record, accepted)
     after_semantic_hash = semantic_record_hash(record)
     reused = before_semantic_hash == after_semantic_hash
     if not reused:
@@ -1162,12 +1200,25 @@ def _sync(case_root, target_id, started_at, started):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("status", "spec", "runtime", "freeze", "gate", "sync"))
+    parser.add_argument("command", choices=("status", "spec", "runtime", "freeze", "gate", "sync",
+                                            "export-bundle", "export-receipt", "export-status"))
     parser.add_argument("case", type=Path)
     parser.add_argument("--target-id")
+    parser.add_argument("--receipt", type=Path, help="export-receipt: the JSON entry the Figma export produced")
     args = parser.parse_args()
     try:
-        if args.command == "sync":
+        if args.command == "export-bundle":
+            bundle = figma_export.build_bundle(args.case.resolve())
+            result, code = {"bundle_path": str(figma_export.bundle_path(args.case.resolve())),
+                            "bundle_hash": bundle["bundle_hash"], "stats": bundle["stats"]}, 0
+        elif args.command == "export-receipt":
+            if args.receipt is None:
+                raise ValueError("export-receipt requires --receipt")
+            result, code = figma_export.record_receipt(args.case.resolve(), load_json(args.receipt)), 0
+        elif args.command == "export-status":
+            record = load_json(command_record_path(args.case.resolve()))
+            result, code = figma_export.export_status(args.case.resolve(), record), 0
+        elif args.command == "sync":
             result, code = sync(args.case.resolve(), args.target_id), 0
         elif args.command == "status":
             record = load_json(command_record_path(args.case.resolve()))

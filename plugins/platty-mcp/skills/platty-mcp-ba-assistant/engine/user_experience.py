@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Validate and render User experience user-experience records."""
+from case_layout import CaseLayout
 import argparse
 from legacy import interview2 as _legacy
 from datetime import datetime
 import hashlib
-import html
 import json
 from pathlib import Path
 import re
@@ -13,7 +13,6 @@ import sys
 from planning_context import MAP_FIELDS, Optional, TICKET_FIELDS, check_shape, closed, finding_note, map_gaps, fingerprints as planning_context_fingerprints, load_json, recorded_finding, shape_errors, validate as validate_planning_context
 from experience_verification import CHECK_SHAPE, PATH_REVIEW_SHAPE, POLICY_CHECK_SHAPE, seed_checks, verification_gaps, policy_gaps, example_citation_gaps
 from experience_graph import graph_gaps
-from experience_progress import render_full_model
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -523,43 +522,20 @@ def validate(data):
             'inherited_limits': inherited}
 
 
-def esc(value):
-    return html.escape(str(value)).replace('-', '\\-')
-
-
-def render(data, report=None):
+def render(data, report=None, context=None):
+    """The reading document; the review file carries what only a reviewer needs."""
     if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] == 1:
         return _legacy.render(data, report)
-    report = report or validate(data)
-    lines = [f"# {esc(data['title'])}", '', f"상태: {data['status']}", '', render_full_model(data), '',
-             '## 사용자와 목표', '']
-    for actor in data['actors']:
-        lines += [f"- **{esc(actor['name'])}**: {esc(actor['goal'])}"]
-    lines += ['', '## 사용자 관찰 상태', '']
-    for state in data['experience_states']:
-        lines += [f"### {esc(state['id'])} · {esc(state['name'])}", '', esc(state['user_meaning']), '']
-    lines += ['## 상태 전이', '']
-    for transition in data['experience_transitions']:
-        lines += [f"- **{esc(transition['id'])}**: {esc(transition['from_state'])} → {esc(transition['to_state'])} — {esc(transition['feedback'])}"]
-    lines += ['', '## 시나리오', '']
-    for scenario in data['scenarios']:
-        lines += [f"### {esc(scenario['title'])}", '', f"종류: {scenario['kind']}", '']
-        for step in scenario['steps']:
-            lines += [f"- {esc(step['actor_action'])} ({esc(step['transition_id'])})"]
-        lines.append('')
-    lines += ['## 화면·접점 요구', '']
-    for view in data['view_requirements']:
-        lines += [f"- **{esc(view['id'])}**: {esc(view['purpose'])}"]
-    lines += ['', '## 결정 기록', '']
-    for packet in data['decision_packets']:
-        lines += [f"- **{esc(packet['topic'])}**: {packet['status']} · {esc(packet['selection']['option_id'] or packet['selection']['custom_text'])}"]
-    lines += ['', '## 커버리지', '']
-    for item in data['coverage_obligations']:
-        lines += [f"- **{esc(item['id'])}**: {item['status']} — {esc(item['condition'])}"]
-    lines += ['', '## 검증', '', f"구조 유효: {'예' if report['valid'] else '아니오'}  ",
-              f"최종 확인 준비: {'예' if report['ready_for_confirmation'] else '아니오'}  ",
-              f"완료: {'예' if report['complete'] else '아니오'}", '']
-    return '\n'.join(lines)
+    import case_docs, doc_user_experience
+    return doc_user_experience.render_body(data, context or case_docs.DocContext.standalone('user_experience', data))
+
+
+def render_review(data, report=None, context=None):
+    if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] == 1:
+        return None
+    import case_docs, doc_user_experience
+    return doc_user_experience.render_review(data, report or validate(data),
+                                             context or case_docs.DocContext.standalone('user_experience', data))
 
 
 def planning_context_path(data):
@@ -754,7 +730,7 @@ def bind_prd(data, input_path):
 
 def init_from_prd(output, input_path):
     data = load_json(TEMPLATE)
-    data['case_id'] = re.sub(r'[^a-z0-9]+', '-', output.parent.name.lower()).strip('-') or 'untitled'
+    data['case_id'] = re.sub(r'[^a-z0-9]+', '-', CaseLayout.root_of(output).name.lower()).strip('-') or 'untitled'
     source = bind_prd(data, input_path)
     data['title'] = source['title'] + ' 사용자 경험'
     data['evidence_status']['project_id'] = source['input_binding']['project_id']
@@ -768,7 +744,7 @@ def init_from_prd(output, input_path):
 
 def init_from_planning_context(output, input_path=None):
     data = load_json(TEMPLATE)
-    data['case_id'] = re.sub(r'[^a-z0-9]+', '-', output.parent.name.lower()).strip('-') or 'untitled'
+    data['case_id'] = re.sub(r'[^a-z0-9]+', '-', CaseLayout.root_of(output).name.lower()).strip('-') or 'untitled'
     data['title'] = data['title'] or '제목 미정'
     if input_path is not None:
         source = bind_planning_context(data, input_path)

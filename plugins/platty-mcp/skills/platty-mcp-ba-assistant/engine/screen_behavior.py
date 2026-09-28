@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Validate and render grounded Screen behavior screen and element behavior records."""
+from case_layout import CaseLayout
 import argparse
 from legacy import interview3 as _legacy
 from legacy import screen_behavior_v2 as _v2
@@ -96,6 +97,14 @@ PRESERVED_CONTENT = {'scope_id':str, 'item_ref':NULL_REF, 'content':str,
                      'filled_by':('participant','third_party','system')}
 PRESERVED = OneOf(ASSIGNMENT, PRESERVED_CONTENT)
 SOURCE = copy.deepcopy(user_experience.SOURCE)
+# What an existing screen draws today, read from its code. A real run specified the event detail
+# it was meant to change without reading it once; stage 4 then assembled a new screen from pack
+# roles and the result looked nothing like the app. `unavailable` keeps the workflow moving when
+# the code cannot be read — it says why instead of pretending.
+BASELINE_REGION = {'id': str, 'name': str, 'order': int, 'texts': [str], 'components': [str], 'code_ref': str}
+BASELINE_CHANGE = {'region_id': str, 'change': ('keep', 'modify', 'add', 'remove'), 'what': str, 'source_ids': [str]}
+BASELINE = {'status': ('observed', 'unavailable'), 'source_ids': [str], 'code_refs': [str],
+            'regions': [BASELINE_REGION], 'changes': [BASELINE_CHANGE], 'reason': str}
 IMPORTED_PROVIDERS = user_experience.IMPORTED_PROVIDERS + ('user_experience',)
 # The pack is an authority the planner never asserts, so it is its own provider.
 SOURCE['provider'] += ('user_experience', 'design_knowledge')
@@ -132,6 +141,7 @@ SHAPE = {
     # `origin`은 2단계 접점의 `status`에서 온다 — 화면이 스스로 고르는 값이 아니다.
     'screens':[{'id':str,'name':str,'actor_ids':[str],'touchpoint_refs':[str],
                 'origin':Optional(('current','changed','new','unverified')),
+                'current_baseline':Optional(BASELINE),
         'view_requirement_refs':[str],'purpose':str,'entry_refs':[str],'exit_refs':[str],'source_ids':[str]}],
     'elements':[{'id':str,'screen_id':str,'parent_id':NULL_REF,'name':str,'semantic_type':str,
         'purpose':str,'information_refs':[str],'action_refs':[str],
@@ -247,8 +257,8 @@ def _inputs(input_path):
     stage = 'prd' if 'prd_path' in binding else 'planning_context'
     module = _upstream_module(stage)
     path1 = Path(user_experience.planning_context_path(two)).resolve()
-    if path1.parent != path2.parent:
-        raise ValueError(f'{stage} must be adjacent to its bound user experience')
+    if path1 != CaseLayout.of_path(path2).artifact(stage).resolve():
+        raise ValueError(f'{stage} must be the {stage} of the same case as its bound user experience')
     one = load_json(path1)
     if not module.validate(one)['complete']:
         raise ValueError(f'{stage} and user experience must be complete and currently confirmed')
@@ -987,6 +997,39 @@ def render_decision_inventory(data):
     return '\n'.join(lines)+'\n'
 
 
+def baseline_gaps(screen, sources):
+    """What an existing screen still owes about its current code before it can be specified."""
+    if screen.get('origin') not in ('current', 'changed'):
+        return []
+    here = f"screens.{screen['id']}.current_baseline"
+    baseline = screen.get('current_baseline')
+    if not baseline:
+        return [f'{here}: {screen["origin"]} screen — read its current code through Platty and record the '
+                'regions it draws today, or record status unavailable with the reason']
+    if baseline['status'] == 'unavailable':
+        return [] if str(baseline.get('reason', '')).strip() else [f'{here}.reason: say why the code could not be read']
+    found = []
+    code = [name for name in baseline['source_ids']
+            if (sources.get(name) or {}).get('provider') == 'platty']
+    if not code:
+        found.append(f'{here}.source_ids: an observed baseline cites a platty code source')
+    if not baseline['regions']:
+        found.append(f'{here}.regions: list what the screen draws today, in order')
+    for region in baseline['regions']:
+        if not str(region['name']).strip() or not str(region['code_ref']).strip():
+            found.append(f"{here}.regions.{region['id']}: name and code_ref are required")
+    if screen['origin'] == 'changed':
+        if not baseline['changes']:
+            found.append(f'{here}.changes: a changed screen says which regions change and how')
+        regions = {region['id'] for region in baseline['regions']}
+        for change in baseline['changes']:
+            if change['change'] != 'add' and change['region_id'] not in regions:
+                found.append(f"{here}.changes: {change['region_id']} is not a region of the current screen")
+            if not str(change['what']).strip():
+                found.append(f"{here}.changes.{change['region_id']}: say what changes")
+    return found
+
+
 def validate(data):
     if isinstance(data,dict) and type(data.get("schema_version")) is int and data["schema_version"]==2:
         return _v2.validate(data)
@@ -1162,6 +1205,7 @@ def validate(data):
                 refs(row[key],{x['id'] for x in two[field]},path+'.'+key)
             refs(row['entry_refs'],upstream_ids,path+'.entry_refs'); refs(row['exit_refs'],upstream_ids,path+'.exit_refs')
         require(any(row['id'] in l['screen_ids'] for l in links),path,'screen has no inventory purpose link',gaps)
+        gaps.extend(baseline_gaps(row, sources))
         # 기존 화면을 고치는 것과 새로 만드는 것은 인계받는 사람에게 완전히 다른 일이다.
         # 화면이 스스로 고르지 않는다 — 상위 접점이 이미 말했다.
         if two and row.get('origin'):
@@ -1564,144 +1608,22 @@ def validate(data):
     return report
 
 
-def render(data, report=None):
+def render(data, report=None, context=None):
+    """The reading document; the review file carries what only a reviewer needs."""
     if isinstance(data,dict) and type(data.get("schema_version")) is int and data["schema_version"]==2:
         return _v2.render(data,report)
     if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] == 1:
         return _legacy.render(data, report)
-    """Human review view with traceable IDs, independent state axes and local flows."""
-    report = report or validate(data)
-    def esc(value):
-        return html.escape(str(value)).replace('|', '&#124;').replace('\n', ' ')
-    def words(values, empty='없음'):
-        return '; '.join(esc(value) for value in values) or empty
-    scopes = {row['id']: row for row in data['screens'] + data['elements']}
-    axes = {row['id']: row for row in data['state_axes']}
-    transitions = {row['id']: row for row in data['transitions']}
-    def scope_name(sid):
-        return scopes.get(sid, {}).get('name', sid) + ' (' + sid + ')'
-    def value_name(axis_id, value_id):
-        value = next((v for v in axes.get(axis_id, {}).get('values', []) if v['id'] == value_id), {})
-        return value.get('label', value_id) + (' · ' + value['meaning'] if value.get('meaning') else '')
-    def assignment_text(rows):
-        parts = []
-        for row in rows:
-            item = ' · 항목 ' + row['item_ref'] if row['item_ref'] is not None else ''
-            if 'content' in row:
-                parts.append(scope_name(row['scope_id']) + item + ' / 내용: ' + row['content']
-                             + f" (채운 쪽: {row['filled_by']})")
-                continue
-            parts.append(scope_name(row['scope_id']) + item + ' / ' + row['axis_id'] + ': ' + value_name(row['axis_id'], row['value_id']))
-        return words(parts, '변경 없음 또는 해당 없음')
-    def mermaid_label(value):
-        return esc(value).replace('"', '&quot;').replace('`', '&#96;')
-    lines = [f"# {esc(data['title'])}", '', f"상태: {data['status']}", '',
-             '## 화면 인덱스', '']
-    lines += [f"- {esc(scope_name(s['id']))}" for s in data['screens']]
-    for screen in data['screens']:
-        sid = screen['id']
-        elements = [e for e in data['elements'] if e['screen_id'] == sid]
-        scope_ids = {sid} | {e['id'] for e in elements}
-        lines += ['', f"## {esc(scope_name(sid))}", '', esc(screen['purpose']), '', '### 구성과 역할', '']
-        nodes = {scope: 'scope' + str(n) for n, scope in enumerate([sid] + [e['id'] for e in elements])}
-        lines += ['```mermaid', 'flowchart LR']
-        for scope, node in nodes.items():
-            lines.append(f'  {node}["{mermaid_label(scope_name(scope))}"]')
-        for element in elements:
-            parent = element['parent_id'] or sid
-            if parent in nodes:
-                lines.append(f"  {nodes[parent]} --> {nodes[element['id']]}")
-        lines += ['```', '', '| 요소 | 의미·목적 | 반복 대상 |', '|---|---|---|']
-        for element in elements:
-            repeat = element['repetition']
-            repetition = ('없음' if repeat == 'none'
-                          else '모름 — ' + repeat['unknown'] if 'unknown' in repeat
-                          else repeat['item_scope'] + ' · 집합 규칙 ' + repeat['membership_rule_id'])
-            lines.append(f"| {esc(scope_name(element['id']))} | {esc(element['semantic_type'])}: {esc(element['purpose'])} | {esc(repetition)} |")
-        lines += ['', '### 상태 축', '', '| 대상 | 축 | 차원 | 값과 의미 | 초기 조건 |', '|---|---|---|---|---|']
-        for axis in data['state_axes']:
-            if axis['scope_id'] not in scope_ids:
-                continue
-            initial = [r['condition'] + ' → ' + value_name(axis['id'], r['value_id']) + ' (' + r['rationale'] + ')' for r in axis['initial_conditions']]
-            labels = [v['id'] + ' · ' + v['label'] + ': ' + v['meaning'] for v in axis['values']]
-            lines.append(f"| {esc(scope_name(axis['scope_id']))} | {esc(axis['id'])} | {esc(axis['dimension'])} | {words(labels)} | {words(initial)} |")
-        lines += ['', '### 조작·연동 흐름', '']
-        for n, t in enumerate(data['transitions']):
-            if not set(t['target_scope_ids']) & scope_ids:
-                continue
-            lines += [f"#### {esc(t['event'])} ({esc(t['id'])})", '', '```mermaid', 'flowchart LR',
-                f'  before{n}["{mermaid_label(t["event"])}"] --> result{n}["{mermaid_label(t["observable_result"])}"]', '```', '',
-                f"조건: {words(t['preconditions'])}", f"변경 전: {assignment_text(t['before'])}",
-                f"변경 후: {assignment_text(t['after'])}", f"유지되는 값: {assignment_text(t['preserved_values'])}",
-                f"다음 행동: {words(t['allowed_actions'])}", f"피드백: {esc(t['feedback'])}",
-                f"포커스: {esc(t['focus_result'])}", '']
-        for rule in data['interaction_rules']:
-            if not set(rule['input_scope_ids'] + rule['output_scope_ids']) & scope_ids:
-                continue
-            lines += [f"#### 연동 규칙 {esc(rule['id'])} ({rule['kind']})", '',
-                      '| 조건 | 결과 | 연결 시나리오 |', '|---|---|---|']
-            for row in rule['condition_rows']:
-                lines.append(f"| {assignment_text(row['when'])} | {assignment_text(row['effects'])} | {words(row['scenario_ids'])} |")
-            lines.append('')
-        for constraint in data['constraints']:
-            if set(constraint['scope_ids']) & scope_ids:
-                lines += [f"- 제약 {esc(constraint['id'])}: {esc(constraint['condition'])} → {esc(constraint['required_outcome'])}. {esc(constraint['rationale'])}"]
-                for combination in constraint['forbidden_combinations']:
-                    lines.append(f"  금지 조합: {assignment_text(combination)}")
-        lines += ['', '### 재현 사례 · 정상·예외·복구', '']
-        screen_cases = [c for c in data['render_cases'] if c['screen_id'] == sid]
-        for case in screen_cases:
-            lines += [f"#### {esc(case['title'])} ({esc(case['id'])})", '']
-            for item in case['sample_items']:
-                lines.append(f"- 항목 {esc(item['id'])}: {esc(scope_name(item['template_scope_id']))} · {words(item['traits'])}")
-            for group in case['sample_groups']:
-                lines.append(f"- 집합 {esc(group['id'])}: {words(group['item_ids'])} · 소속 규칙 {esc(group['membership_rule_id'])}")
-            lines += ['', '| 대상 | 항목 | 독립 축 | 값과 의미 |', '|---|---|---|---|']
-            for row in case['state_assignments']:
-                lines.append(f"| {esc(scope_name(row['scope_id']))} | {esc(row['item_ref'] or '공통')} | {esc(row['axis_id'])} | {esc(value_name(row['axis_id'], row['value_id']))} |")
-            lines += ['', f"보이는 정보: {words(case['visible_information'])}",
-                f"가능 행동: {words(case['available_actions'])}",
-                f"차단 행동과 이유: {words(case['blocked_actions_with_reasons'])}",
-                f"포커스: {esc(case['focus_expectation'])}",
-                f"연결 시나리오: {words(case['scenario_ids'])}",
-                f"동등 사례로 묶은 이유: {esc(case['equivalence_rationale'])}", '']
-        case_ids = {c['id'] for c in screen_cases}
-        for scenario in data['scenarios']:
-            if not case_ids & {scenario['initial_case_id'], scenario['expected_case_id']}:
-                continue
-            lines += [f"#### 시나리오 {esc(scenario['id'])} ({scenario['kind']})", '',
-                      f"시작: {esc(scenario['initial_case_id'])}", '']
-            for number, step in enumerate(scenario['steps'], 1):
-                t = transitions.get(step['transition_id'], {})
-                bindings = [b['symbol'] + ' → ' + ', '.join(b['item_refs']) for b in step['item_bindings']]
-                lines += [f"{number}. {esc(t.get('event', step['transition_id']))} ({esc(step['transition_id'])})", '',
-                    f"   대상: {words(bindings, '공통 요소')}",
-                    f"   조건: {words(t.get('preconditions', []))}",
-                    f"   관찰 결과: {words(step['expected_observations'])}",
-                    f"   피드백: {esc(t.get('feedback', ''))} · 포커스: {esc(t.get('focus_result', ''))}", '']
-            lines += [f"종료: {esc(scenario['expected_case_id'])}", '']
-        lines += ['### 디자인 시스템 인계', '']
-        for h in data['design_handoffs']:
-            if h['screen_id'] == sid:
-                lines += [f"- {esc(h['id'])}: {esc(h['semantic_pattern'])} · {h['mapping_status']}",
-                    f"  재현 사례: {words(h['render_case_ids'])} · 접근성: {words(h['accessibility_expectations'])}",
-                    f"  지원 공백: {esc(h['gap'])} · 담당: {esc(h['owner'])}"]
-    lines += ['', '## 적용성·검토', '', '| 지표 | 검토 / 분모 | 상태 | 누락 |', '|---|---|---|---|']
-    for m in report['metrics']:
-        lines.append(f"| {m['id']} | {m['numerator']} / {m['denominator']} | {m['status']} | {words(m['missing_ids'])} |")
-    for row in data['coverage_checks']:
-        lines.append(f"- {esc(scope_name(row['scope_id']))} / {row['dimension']}: {row['status']} · {esc(row['rationale'])}")
-    for row in data['reviews'] + list(data['review'].values()):
-        lines.append(f"- {row['criterion_id']} {words(row['target_refs'])}: {row['verdict']} — {esc(row['rationale'])} ({words(row['example_ids'])})")
-    lines += ['', '## 결정·미해결 사항', '']
-    for row in data['decisions']:
-        lines.append(f"- {esc(row['id'])}: {esc(row['statement'])} · {row['origin']} · {row['status']} · {esc(row['rationale'])}")
-    for row in data['issues']:
-        lines.append(f"- {esc(row['id'])}: {esc(row['question'])} → {esc(row['action']['prompt'])}")
-    lines += ['', '## 검증', '',
-        f"구조 유효: {report['valid']} · 최종 확인 준비: {report['ready_for_confirmation']} · 완료: {report['complete']}", '',
-        '수치는 선언된 인벤토리·상태·시나리오의 연결 검사입니다. 자연어 의미와 근거의 타당성은 위 정성 검토에서 판단합니다.', '']
-    return '\n'.join(lines)
+    import case_docs, doc_screen_behavior
+    return doc_screen_behavior.render_body(data, context or case_docs.DocContext.standalone('screen_behavior', data))
+
+
+def render_review(data, report=None, context=None):
+    if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] in (1, 2):
+        return None
+    import case_docs, doc_screen_behavior
+    return doc_screen_behavior.render_review(data, report or validate(data),
+                                             context or case_docs.DocContext.standalone('screen_behavior', data))
 
 
 def render_confirmation(data, details_path='screen-behavior-details.md'):
@@ -1776,7 +1698,7 @@ def render_confirmation(data, details_path='screen-behavior-details.md'):
 
 def init_from_user_experience(output, input_path=None):
     output=Path(output); data=load_json(TEMPLATE)
-    data['case_id']=re.sub(r'[^a-z0-9]+','-',output.parent.name.lower()).strip('-') or 'untitled'
+    data['case_id']=re.sub(r'[^a-z0-9]+','-',CaseLayout.root_of(output).name.lower()).strip('-') or 'untitled'
     if input_path is not None:
         source=bind_inputs(data,Path(input_path)); data['title']=source['title']+' 화면 동작'
         data['evidence_status']['project_id']=source['evidence_status']['project_id']

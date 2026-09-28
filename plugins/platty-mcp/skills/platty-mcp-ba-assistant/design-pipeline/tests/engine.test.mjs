@@ -767,6 +767,12 @@ test('runtime uses Playwright, captures required states and viewports, and check
   assert.deepEqual(runtime.browserless, false);
   assert.equal(runtime.captures.length, 2);
   assert.ok(runtime.captures.every((capture) => existsSync(join(runDir, capture.path))));
+  for (const capture of runtime.captures) {
+    assert.equal(capture.layoutPath, `layout/${capture.renderCaseId}-${capture.viewport}.json`);
+    const layout = JSON.parse(readFileSync(join(runDir, capture.layoutPath), 'utf8'));
+    assert.equal(layout.schemaVersion, 1);
+    assert.ok(layout.nodes.length > 0 && layout.nodes.every((node) => node.nodeId && node.box));
+  }
   assert.ok(runtime.checkedAxes.includes('readonly'));
   assert.ok(runtime.checkedAxes.includes('expanded'));
   assert.equal(runtime.actions['external-state'], 1);
@@ -1159,7 +1165,10 @@ test('gate rejects freeze artifacts outside the exact current run artifact set',
     }, /freeze artifacts extra benign\.json/],
     ['missing capture', (_runDir, freeze) => {
       delete freeze.artifacts['captures/after-mobile.png'];
-    }, /freeze artifacts missing captures\/after-mobile\.png/]
+    }, /freeze artifacts missing captures\/after-mobile\.png/],
+    ['missing layout snapshot', (_runDir, freeze) => {
+      delete freeze.artifacts['layout/after-mobile.json'];
+    }, /freeze artifacts missing layout\/after-mobile\.json/]
   ];
 
   for (const [name, mutate, pattern] of cases) {

@@ -27,6 +27,11 @@ SOURCE_FILES = {
     "expansion/additional-figma-evidence.json": "Additional Figma evidence",
     "inventory/runtime-captures.json": "Runtime captures of the analyzed application",
 }
+# Built into the pack only when the design system provides them.
+OPTIONAL_SOURCE_FILES = {
+    "figma/component-map.json": "Design-system component to Figma library component map",
+}
+FIGMA_MAP_STATUSES = ("mapped", "primitive", "unmapped")
 
 
 def sha256(path):
@@ -168,8 +173,11 @@ class PackBuilder:
         return refs
 
     def build(self):
+        sources = {**SOURCE_FILES, **{path: authority for path, authority in OPTIONAL_SOURCE_FILES.items()
+                                      if (self.source / path).exists()}}
+        self.source_hashes = {path: sha256(self.source / path) for path in sources}
+        figma = self.read_figma_map() if "figma/component-map.json" in sources else None
         self.dest.mkdir(parents=True, exist_ok=True)
-        self.source_hashes = {path: sha256(self.source / path) for path in SOURCE_FILES}
         source_identity = object_hash({"sources": self.source_hashes})
         tokens = self.read_json("tokens/tokens.json")
         component_contracts = self.read_json("expansion/component-contracts.json")
@@ -198,7 +206,7 @@ class PackBuilder:
                     "authority": authority,
                     "limitation": "Normalized for BA wireframe engine use; upstream path is not a runtime dependency.",
                 }
-                for path, authority in SOURCE_FILES.items()
+                for path, authority in sources.items()
             ],
             "excluded": ["inputs/", "experiments/", "handoff/", "runtime galleries", "coverage captures", "historical design runs", "low-confidence Figma frames"],
         }
@@ -236,6 +244,15 @@ class PackBuilder:
                 ]
             ],
         }
+        if figma is not None:
+            pack["figma"] = figma
+            pack["rowProvenance"].append({
+                "collection": "figma",
+                "sourcePath": "figma/component-map.json",
+                "revision": self.source_hashes["figma/component-map.json"],
+                "authority": OPTIONAL_SOURCE_FILES["figma/component-map.json"],
+                "limitation": "Which Figma component draws a code component, as the design system states it.",
+            })
         orphans = recipe_role_gaps(pack)
         if orphans:
             # A rule whose role does not exist can never fire; shipping it hides the gap.
@@ -245,6 +262,49 @@ class PackBuilder:
                 + "recipes/validation-input.json")
         (self.dest / "upstream-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         (self.dest / "pack.json").write_text(json.dumps(pack, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+    def read_figma_map(self):
+        """The design system's own answer to which Figma component draws each code component.
+
+        It belongs upstream: the BA export only reads it. A malformed map fails the build here,
+        where its owner can fix it, instead of surfacing as a wrong instance in someone's file.
+        """
+        mapping = self.read_json("figma/component-map.json")
+        errors = figma_map_errors(mapping)
+        if errors:
+            raise SystemExit("figma/component-map.json is malformed:\n" + "\n".join(errors))
+        return {key: mapping.get(key) or {} for key in ("library", "components", "tokens")}
+
+
+def figma_map_errors(mapping):
+    errors = []
+    if mapping.get("schema_version") != 1:
+        errors.append("schema_version must be 1")
+    components = mapping.get("components")
+    if not isinstance(components, dict):
+        return errors + ["components must be an object keyed by component name"]
+    for name, entry in components.items():
+        status = entry.get("status") if isinstance(entry, dict) else None
+        for field in ("variant_props", "state_props"):
+            if isinstance(entry, dict) and not isinstance(entry.get(field) or {}, dict):
+                errors.append(f"{name}: {field} must be an object")
+        if status not in FIGMA_MAP_STATUSES:
+            errors.append(f"{name}: status must be one of {', '.join(FIGMA_MAP_STATUSES)}")
+        elif status == "mapped" and not (entry.get("component_key") or entry.get("component_set_key")):
+            errors.append(f"{name}: mapped needs component_key or component_set_key")
+        elif status != "mapped" and not str(entry.get("reason", "")).strip():
+            errors.append(f"{name}: say why there is no library component")
+    if any(isinstance(entry, dict) and entry.get("status") == "mapped" for entry in components.values()) \
+            and not str((mapping.get("library") or {}).get("file_key", "")).strip():
+        errors.append("library.file_key: a mapped component needs the library it comes from")
+    tokens = mapping.get("tokens") or {}
+    if not isinstance(tokens, dict):
+        return errors + ["tokens must be an object keyed by token name"]
+    for token, entry in tokens.items():
+        if not isinstance(entry, dict) or not str(entry.get("variable_key", "")).strip():
+            errors.append(f"tokens.{token}: variable_key is required")
+    return errors
 
 
 def recipe_role_gaps(pack):

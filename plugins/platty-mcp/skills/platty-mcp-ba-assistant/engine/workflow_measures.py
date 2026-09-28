@@ -8,6 +8,7 @@ Every measure is read from the artifact or computed by the same function the val
 Nothing is recomputed independently here — a measure that can drift from its gate is worse
 than no measure, because it reads like corroboration.
 """
+from case_layout import CaseLayout
 import argparse
 from collections import Counter
 import json
@@ -17,10 +18,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 
-ARTIFACTS = (('jtbd', 'jtbd.json'), ('prd', 'prd.json'),
-             ('user_experience', 'user-experience.json'),
-             ('screen_behavior', 'screen-behavior.json'),
-             ('design_system_wireframe', 'design-system-wireframe.json'))
+ARTIFACTS = ('jtbd', 'prd', 'user_experience', 'screen_behavior', 'design_system_wireframe')
 
 
 def ratio(numerator, denominator):
@@ -131,8 +129,9 @@ def measure(case):
     """Whatever stages this case reached. A stage that is absent is absent, not zero."""
     case = Path(case)
     result = {'case': case.name, 'stages': {}}
-    for stage, name in ARTIFACTS:
-        path = case / name
+    layout = CaseLayout.of(case)
+    for stage in ARTIFACTS:
+        path = layout.artifact(stage)
         if not path.exists() or stage not in MEASURES:
             continue
         data = json.loads(path.read_text(encoding='utf-8'))

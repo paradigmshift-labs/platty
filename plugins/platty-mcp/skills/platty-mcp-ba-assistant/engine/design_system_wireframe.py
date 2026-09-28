@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Validate and render design-system wireframe records. Does not run sessions or renderers."""
+from case_layout import CaseLayout
 import argparse
 import copy
 from collections import Counter
 import hashlib
-import html
 import json
 from pathlib import Path
 import re
@@ -541,6 +541,12 @@ def _check_gate_review(review, target, input_hash, knowledge_hash, capture_hashe
 
     expected_by_id = {row["id"]: row for row in target["captures"]}
     expected_by_path = {row["path"]: row for row in target["captures"]}
+    # The engine checks the same review with paths relative to the run folder
+    # (`captures/X.png`); a review written for the engine has to pass here too.
+    run_marker = f"/{target.get('run_id', '')}/" if target.get("run_id") else None
+    for row in target["captures"]:
+        if run_marker and run_marker in "/" + row["path"]:
+            expected_by_path.setdefault(("/" + row["path"]).split(run_marker, 1)[1], row)
     expected_captures = {(row["id"], row["path"], row["image_hash"]) for row in target["captures"]}
     viewed_captures = review.get("viewed_captures", [])
     if not isinstance(viewed_captures, list):
@@ -651,7 +657,7 @@ def validate(data, path=None):
     hex_hash(knowledge_hash, "$.knowledge_binding.content_hash", gaps)
     require(bool(knowledge["source_revisions"]), "$.knowledge_binding.source_revisions", "versioned source revisions required", gaps)
     pack = _load_knowledge_pack(knowledge, gaps) if knowledge["pack_id"] and knowledge["version"] else None
-    case_root = Path(path).resolve().parent if path is not None else Path.cwd()
+    case_root = CaseLayout.root_of(path) if path is not None else Path.cwd()
     token_errors = []
     component_refs, interface_index, state_map, semantic_token_map, knowledge_refs, knowledge_ref_kinds = _canonical_pack_index(pack, token_errors)
     for error in token_errors:
@@ -923,7 +929,7 @@ def validate(data, path=None):
     require(all(target["gate"]["verdict"] == "accept_ai" and target["status"] == "accept_ai" for target in data["targets"]), "$.targets", "all targets must accept_ai", completion)
     require(not any(issue["blocking"] and not planning_context.closed(issue) for issue in data["issues"]), "$.issues", "blocking issues remain", completion)
     confirmation = data["confirmation"]
-    require(confirmation["confirmed"], "$.confirmation", "current planner confirmation missing", completion)
+    require(confirmation["confirmed"], "$.confirmation", "current stage confirmation missing", completion)
     if confirmation["confirmed"]:
         text(confirmation["turn_id"], "$.confirmation.turn_id", completion)
         text(confirmation["statement"], "$.confirmation.statement", completion)
@@ -952,7 +958,7 @@ def validate(data, path=None):
 def init_from_screen_behavior(output, input_path=None):
     output = Path(output)
     data = load_json(TEMPLATE)
-    data["case_id"] = re.sub(r"[^a-z0-9]+", "-", output.parent.name.lower()).strip("-") or "untitled"
+    data["case_id"] = re.sub(r"[^a-z0-9]+", "-", CaseLayout.root_of(output).name.lower()).strip("-") or "untitled"
     if input_path is not None:
         source_path = Path(input_path).resolve()
         source = load_json(source_path)
@@ -978,53 +984,16 @@ def init_from_screen_behavior(output, input_path=None):
     return data
 
 
-def esc(value):
-    return html.escape(str(value)).replace("|", "&#124;").replace("\n", " ")
+def render(data, report=None, context=None):
+    """The reading document; the review file carries what only a reviewer needs."""
+    import case_docs, doc_wireframe
+    return doc_wireframe.render_body(data, context or case_docs.DocContext.standalone("design_system_wireframe", data)) + "\n"
 
 
-def render(data, report=None):
-    report = report or validate(data)
-    lines = [
-        f"# Design System Wireframe — {esc(data['title'])}",
-        "",
-        f"사례: {esc(data['case_id'])} · 상태: {esc(data['status'])} · schema: {data['schema_version']}",
-        "",
-        "## 입력과 지식 팩",
-        "",
-        f"- 화면 동작: {esc(data['input_binding']['screen_behavior']['path'])}",
-        f"- 입력 해시: {esc(data['input_binding']['screen_behavior']['content_hash'])}",
-        f"- 지식 팩: {esc(data['knowledge_binding']['pack_id'])} {esc(data['knowledge_binding']['version'])}",
-        "",
-        "## 대상",
-        "",
-    ]
-    for target in data["targets"]:
-        lines += [
-            f"### {esc(target['id'])} · {esc(target['screen_id'])}",
-            "",
-            f"상태: {target['status']} · gate: {target['gate']['verdict']} · run: {esc(target['run_id'])}",
-            "",
-            f"Spec: {esc(target['spec_path'])}",
-            f"Renderer: {esc(target['renderer_path'])}",
-            "",
-            "| 범위 | 개수 |",
-            "|---|---:|",
-        ]
-        for label, field in (("screens", "screen_ids"), ("elements", "element_ids"), ("state axes", "state_axis_ids"), ("transitions", "transition_ids"), ("render cases", "render_case_ids"), ("handoffs", "design_handoff_ids")):
-            lines.append(f"| {label} | {len(target['required_coverage'][field])} |")
-        lines += ["", "디자인 결정: " + ", ".join(f"{stage}={target['design_decisions'][stage]['status']}" for stage in REQUIRED_DECISION_STAGES), ""]
-    lines += ["## 검증", ""]
-    for metric in report["coverage"]:
-        lines.append(f"- {metric['id']}: {metric['numerator']}/{metric['denominator']} · {metric['status']}")
-    lines += [
-        f"- 정성 검토: {data['review']['verdict']}",
-        f"- target gate: {', '.join(f'{key} {value}' for key, value in sorted(report['target_gate_verdicts'].items())) or '없음'}",
-        f"- 구조 유효: {report['valid']} · 확인 준비: {report['ready_for_confirmation']} · 완료: {report['complete']}",
-        "",
-    ]
-    for error in report["errors"] + report["completion_errors"]:
-        lines.append("- " + esc(error))
-    return "\n".join(lines) + "\n"
+def render_review(data, report=None, context=None):
+    import case_docs, doc_wireframe
+    return doc_wireframe.render_review(data, report or validate(data),
+                                       context or case_docs.DocContext.standalone("design_system_wireframe", data)) + "\n"
 
 
 def main():

@@ -10,7 +10,7 @@ confirmed.
 
 **This stage asks the planner nothing.** The planner's intent is already in `jtbd.json` and
 `prd.json`; this stage reads it, not the planner. `session.py ask --kind interview` is refused
-here. The only question you may create is the final `confirmation`.
+here, and so is `ask --kind confirmation` — the stage completes itself.
 
 ## Derivation manifest
 

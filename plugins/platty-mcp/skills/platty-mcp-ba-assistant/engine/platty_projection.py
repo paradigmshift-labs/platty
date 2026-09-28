@@ -5,6 +5,7 @@ The case is the source of truth. Platty receives a copy the downstream SDD skill
 validate with the revision contract in `using-platty-mcp/references/sdd-revision-contract.md`,
 which is the only reason the contract's formula is reproduced here.
 """
+from case_layout import CaseLayout
 import argparse
 import hashlib
 import json
@@ -87,8 +88,9 @@ def project(case, specs_root=None):
     """Write the job and the prd where the SDD pipeline expects to find them."""
     case = Path(case)
     specs_root = Path(specs_root) if specs_root else DEFAULT_ROOT
-    job_meta = json.loads((case / 'jtbd.json').read_text(encoding='utf-8'))
-    prd_meta = json.loads((case / 'prd.json').read_text(encoding='utf-8'))
+    layout = CaseLayout.of(case)
+    job_meta = json.loads(layout.artifact('jtbd').read_text(encoding='utf-8'))
+    prd_meta = json.loads(layout.artifact('prd').read_text(encoding='utf-8'))
     if prd_meta.get('status') != 'complete':
         raise ValueError('only a confirmed prd is projected; this one is ' + prd_meta.get('status', ''))
     slug = job_meta['case_id']
@@ -97,7 +99,7 @@ def project(case, specs_root=None):
     job_front = [('id', f'JTBD-{slug}'), ('type', 'jtbd'),
                  ('status', job_meta.get('job_status', 'active')),
                  ('projectId', project_id), ('outputLanguage', 'ko')]
-    job_body = normalize((case / 'jtbd.md').read_text(encoding='utf-8'))
+    job_body = normalize(layout.render('jtbd').read_text(encoding='utf-8'))
     _, job_body = split_frontmatter(job_body)
     job_text = render_frontmatter(job_front) + job_body
     job_path = specs_root / project_id / 'jtbd' / slug / 'jtbd.md'
@@ -105,7 +107,7 @@ def project(case, specs_root=None):
     prd_front = [('id', f'SPEC-{slug}'), ('type', 'sdd-request'),
                  ('status', 'draft'), ('projectId', project_id), ('outputLanguage', 'ko'),
                  ('jtbdRef', slug), ('jtbdRevision', revision_of(job_text, 'jtbd'))]
-    prd_body = normalize((case / 'prd.md').read_text(encoding='utf-8'))
+    prd_body = normalize(layout.render('prd').read_text(encoding='utf-8'))
     _, prd_body = split_frontmatter(prd_body)
     prd_text = render_frontmatter(prd_front) + prd_body
     prd_path = specs_root / project_id / slug / 'prd.md'

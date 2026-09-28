@@ -11,16 +11,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import jtbd, prd, screen_behavior, user_experience  # noqa: E402
+from case_layout import CaseLayout  # noqa: E402
 
-STAGES = (('jtbd.json', jtbd, '1a'), ('prd.json', prd, '1b'),
-          ('user-experience.json', user_experience, '2'), ('screen-behavior.json', screen_behavior, '3'))
+STAGES = (('jtbd', jtbd, '1a'), ('prd', prd, '1b'),
+          ('user_experience', user_experience, '2'), ('screen_behavior', screen_behavior, '3'))
 
 
 def case_state(folder):
     """(per-stage marks, how far it got, whether the executor left a record)."""
     marks, reached = [], '—'
-    for name, module, label in STAGES:
-        path = folder / name
+    layout = CaseLayout.of(folder)
+    for stage, module, label in STAGES:
+        path = layout.artifact(stage)
         if not path.exists():
             marks.append('—')
             continue
