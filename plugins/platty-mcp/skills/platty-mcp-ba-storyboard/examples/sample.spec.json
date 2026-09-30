@@ -1,0 +1,167 @@
+{
+ "title": "첫 배지 스토리보드 (예시)",
+ "slug": "sample_storyboard",
+ "eyebrow": "예시 서비스 · 독서 기록 앱 · A/B 스토리보드",
+ "lede": "이 파일은 형식을 보여주기 위한 가상의 사례입니다. 광고는 \"10쪽만 읽으면 배지를 드려요\"라고 약속했지만, 앱은 배지를 주기 전에 감상문을 쓰라고 합니다. 실험은 첫 배지에서 감상문 조건 하나만 뺍니다.",
+ "persona": {
+  "image": "img/scene-1.jpg",
+  "alt": "퇴근길 지하철에서 휴대폰으로 광고를 보는 30대 남성",
+  "eyebrow": "이 사람 · 그림용으로 붙인 이름 \"준호 씨\"",
+  "subject": "책을 다시 읽고 싶지만 매번 며칠 만에 그만두는 사람",
+  "job": [
+   ["상황", "퇴근길에 \"10쪽만 읽으면 배지\" 광고를 보고 앱을 설치했다."],
+   ["동기", "오늘 읽은 게 흐지부지되지 않고 기록으로 남게 하려고"],
+   ["기대", "약속한 배지가 바로 내 것이 되는 것"],
+   ["성공", "1차: 배지를 받은 걸 확인한다 → 2차: 다음 배지까지 남은 쪽수를 안다"]
+  ]
+ },
+ "why": {
+  "eyebrow": "왜 이 실험인가",
+  "big": "N%",
+  "text": "가상의 수치 자리입니다. 실제 사례에서는 JTBD·PRD의 근거 문장과 수치를 그대로 씁니다.",
+  "note": "두 군은 진입점이 같고, 10쪽 뒤의 한 걸음만 다릅니다."
+ },
+ "arms": [
+  {"arm": "ctl", "label": "대조군 · 감상문을 써야 받음"},
+  {"arm": "exp", "label": "실험군 · 버튼 한 번으로 받음"}
+ ],
+ "docs": [
+  {"title": "1. JTBD", "desc": "누가, 어떤 상황에서, 왜 이 앱을 쓰는가", "url": "01-jtbd/jtbd.md"},
+  {"title": "2. PRD", "desc": "무엇을 바꾸고 무엇으로 판정하는가", "url": "02-prd/prd.md"},
+  {"title": "3. 유저 스토리", "desc": "사용자가 겪는 여정(상태·전이·시나리오)", "url": "03-user-experience/user-experience.md"}
+ ],
+ "board_title": "하루의 장면 세 개",
+ "curve": {
+  "caption": "가설 · 감정 칸은 검증 전",
+  "aria": "기분 곡선: 대조군은 2단계에서 떨어지고, 실험군은 계속 올라간다",
+  "arms": [
+   {"arm": "ctl", "values": [3, 1.8, 3.2]},
+   {"arm": "exp", "values": [3, 4.2, 4.4]}
+  ],
+  "labels": [
+   {"stage": 1, "text": "대조군: 쓰기 막막", "y": 112},
+   {"stage": 1, "text": "실험군: 바로 받음", "y": 12}
+  ]
+ },
+ "stages": [
+  {
+   "when": "가입 전",
+   "title": "광고를 보고 설치",
+   "sub": "이번 범위 밖",
+   "off": true,
+   "scene": {
+    "image": "img/scene-1.jpg",
+    "alt": "지하철에서 휴대폰 광고를 보는 남성",
+    "thoughts": [
+     {"arm": "both", "label": "속마음", "text": "\"10쪽이면 오늘 바로 되겠네.\""}
+    ],
+    "prompt": "A man in his 30s sitting in a subway car after work, looking at an ad on his phone with mild curiosity. Phone screen blank.",
+    "note": "경험의 대부분은 앱 밖(지하철, 집)에서 일어난다."
+   },
+   "product": {
+    "phones": [
+     {
+      "arm": "both",
+      "tag": "공통 · 온보딩",
+      "blocks": [
+       {"type": "entry", "label": "오늘의 10쪽", "chip": "진입점"},
+       {"type": "bubble", "html": "첫 10쪽을 읽으면 <b>배지</b>를 드려요"},
+       {"type": "steps", "text": "1/3 · 읽을 책 고르기"},
+       {"type": "button", "text": "시작하기", "style": "primary"}
+      ]
+     }
+    ]
+   },
+   "policy": [{"ids": ["R-01"], "text": "진입점은 두 군이 같다"}],
+   "service": ["가입 직후 두 군 중 하나로 배정한다"],
+   "metrics": []
+  },
+  {
+   "when": "D0 10쪽",
+   "title": "진입점을 누른다",
+   "sub": "여기서 두 군이 갈린다",
+   "scene": {
+    "image": "img/scene-2.jpg",
+    "alt": "소파에서 책을 덮고 휴대폰을 누르는 남성",
+    "moment": "진실의 순간",
+    "thoughts": [
+     {"arm": "ctl", "label": "대조군", "text": "\"다 읽었는데 이제 감상문을 쓰라고? 나중에 하지 뭐.\""},
+     {"arm": "exp", "label": "실험군", "text": "\"배지를 받을게요? 이거 누르면 되네.\""}
+    ],
+    "prompt": "He has just closed a book on the sofa at home and taps his phone screen with anticipation. Phone screen blank."
+   },
+   "product": {
+    "phones": [
+     {
+      "arm": "ctl",
+      "tag": "대조군 · 작성 화면",
+      "blocks": [
+       {"type": "title", "text": "감상문"},
+       {"type": "chips", "items": ["소설", "10쪽", "공개"]},
+       {"type": "field", "text": "오늘 읽은 부분을 한 줄로 남겨 주세요 (20자 이상)"},
+       {"type": "button", "text": "제출하기", "disabled": true}
+      ]
+     },
+     {
+      "arm": "exp",
+      "tag": "실험군 · 적립 시트",
+      "blocks": [
+       {"type": "sheet", "em": "첫 배지", "title": "를 받을게요", "note": "감상문을 쓰면 다음 배지가 빨라져요", "buttons": ["받기만 하기", "감상문 쓰고 받기"]}
+      ]
+     }
+    ],
+    "note": "문안 예시: 실험군 시트 문구는 이 예시를 위해 지은 것이다."
+   },
+   "policy": [
+    {"ids": ["R-02"], "text": "대조군은 지금처럼 작성 화면"},
+    {"ids": ["R-03", "D-01"], "text": "실험군은 시트의 [받기만 하기]가 인증"}
+   ],
+   "service": ["실험군: 첫 배지일 때만 시트를 띄운다", "시트를 닫으면 지급하지 않는다"],
+   "metrics": [
+    {"kind": "key", "title": "첫 배지 수령률", "text": "실험군에서 오르는지 본다."},
+    {"kind": "alarm", "title": "감상문 작성률", "text": "기준보다 떨어지면 중단을 검토한다."}
+   ]
+  },
+  {
+   "when": "D1",
+   "title": "다시 열고, 친구에게 말한다",
+   "sub": "재방문과 추천",
+   "scene": {
+    "image": "img/scene-3.jpg",
+    "alt": "다음 날 점심, 동료에게 휴대폰 화면을 보여주는 남성",
+    "thoughts": [
+     {"arm": "exp", "label": "실험군", "text": "\"다음 배지까지 20쪽 남았네.\""}
+    ],
+    "prompt": "The next day at lunch, he shows his phone to a coworker across a cafe table, smiling. Phone screen blank."
+   },
+   "product": {
+    "phones": [
+     {
+      "arm": "exp",
+      "tag": "실험군 · 홈",
+      "blocks": [
+       {"type": "toast", "text": "첫 배지를 받았어요"},
+       {"type": "points", "from": "0개", "to": "1개", "plus": "+1 배지"},
+       {"type": "list", "items": ["다음 배지: 30쪽", "이번 주 목표: 50쪽"]},
+       {"type": "text", "text": "오늘도 10쪽 읽어 볼까요?"},
+       {"type": "note", "text": "배지는 기록 탭에서 다시 볼 수 있어요", "bottom": true}
+      ]
+     }
+    ]
+   },
+   "policy": [{"ids": ["D-02"], "text": "첫 배지는 계정당 한 번"}],
+   "service": ["배지 중복 지급을 막는다"],
+   "metrics": [{"kind": "key", "title": "D1 재방문", "text": "첫 배지 이후 다음 날 다시 여는지"}]
+  }
+ ],
+ "notes": [
+  {"who": "디자인", "title": "그려야 할 것", "items": ["실험군 시트 문안", "홈의 배지 토스트"]},
+  {"who": "개발", "title": "놓치면 안 되는 것", "items": ["배정은 온보딩 첫 화면 전에", "첫 배지 중복 지급 막기"]},
+  {"who": "함께 볼 것", "title": "이 보드가 가정하는 것", "items": ["기분 곡선과 속마음은 가설이다"]}
+ ],
+ "footer": ["원본 문서: JTBD · PRD · 유저 스토리", "구성 방식: 에어비앤비 'Snow White' 스토리보드", "이 예시는 가상의 사례다"],
+ "art": {
+  "style": "Warm editorial flat illustration with subtle gouache texture, muted palette of lavender, sage green, warm peach and soft grey, clean shapes, gentle shading, like a product-team storyboard illustration.",
+  "character": "Same character in every frame: a Korean man in his early 30s, short black hair, rectangular glasses, navy knit sweater over a white t-shirt, beige chinos and white sneakers."
+ }
+}
