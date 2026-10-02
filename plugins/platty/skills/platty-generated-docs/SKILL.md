@@ -1,21 +1,9 @@
 ---
 name: platty-generated-docs
-description: Use when generating, validating, reviewing, resuming, or repairing Platty generated outputs through the public generate-docs workflow.
+description: Use when generating, validating, reviewing, resuming, or repairing Platty generated outputs through the public generate-docs workflow, or when correcting wrong generated Claims and regenerating only the affected EPICs' business docs.
 ---
 
 # Platty Generated Docs
-
-## Analytics Attribution
-
-For direct invocation, set
-`PLATTY_INVOCATION_SOURCE=platty-generated-docs` on every Platty CLI process in
-this workflow. If an outer user-facing workflow routes here, the outer workflow
-label wins and overrides this default. Preserve the active label for retries,
-resumes, and every `nextCommand` or `nextAction.command` execution.
-
-```bash
-PLATTY_INVOCATION_SOURCE=platty-generated-docs platty generate-docs run --project <project> --json
-```
 
 Use this skill for the public generated-output workflow:
 
@@ -54,114 +42,19 @@ platty <command> --json
 Repo-local maintainer execution is documented outside the public plugin skills;
 public/plugin workflows stay on the installed global CLI.
 
-## Agent Provider Gate
+## LLM Policy Gate
 
-platty-generated-docs owns the provider gate. Other Platty skills should route
-here instead of asking duplicate provider questions.
+`generate-docs run` never asks an operator to choose a provider or model. The
+active LLM policy revision selects the route and validates any required runtime
+credentials. If policy admission fails, surface the returned error and direct
+the operator to repair the policy or its runtime configuration; do not append
+provider/model flags to retry commands.
 
-Before starting worker-backed generated-output work, ask which provider to use
-unless the user already chose one in the current conversation or the verified
-`nextCommand` or `nextAction.command` already includes `--provider`.
+## Runtime-Controlled Capacity
 
-Ask in the user's language. For Korean users, ask:
-
-```text
-어떤 실행 방식으로 생성할까요?
-
-1. Codex CLI - 기본값, PATH의 `codex exec` headless JSON 실행
-2. Claude Code CLI - PATH의 `claude` JSON 실행
-3. Claude API - Anthropic API 키 필요
-4. OpenAI API - OpenAI API 키 필요
-```
-
-Map the answer to command flags:
-
-| Choice | Flags |
-| --- | --- |
-| Codex CLI | omit `--provider` or use `--provider codex_cli`; requires installed Codex CLI available on `PATH` |
-| Claude Code CLI | `--provider claude_code`; requires installed Claude Code CLI available on `PATH` |
-| Claude API | `--provider claude_api` |
-| OpenAI API | `--provider openai_api` |
-
-Direct API providers require a nonblank credential: `claude_api` requires
-`ANTHROPIC_API_KEY`, and `openai_api` requires `OPENAI_API_KEY`. The shell environment
-takes precedence; the CLI also loads `~/.platty/.env`. Verify only
-that the required value is nonblank; never display, print, echo, or otherwise
-expose the key value.
-
-```bash
-open ~/.platty/.env
-```
-
-The file must contain an uncommented line:
-
-```env
-ANTHROPIC_API_KEY=<anthropic-api-key>
-OPENAI_API_KEY=<openai-api-key>
-```
-
-If the CLI returns `ANTHROPIC_API_KEY_REQUIRED` or `OPENAI_API_KEY_REQUIRED`,
-follow the response's
-`nextCommand` or `nextAction.command`, let the user add the key, then retry the
-same command.
-
-Keep the selected provider for the whole generated-docs workflow. If
-`generate-docs run` reaches EPIC confirmation, run the returned
-`generate-docs confirm-epics` command automatically unless the user explicitly
-asked to review EPICs before confirmation. Preserve the same provider flags when
-reconstructing a command, and preserve every explicitly selected provider and
-model through continuation, confirmation, and recovery.
-
-## Local CLI Technical-Docs Concurrency
-
-Apply the same technical-document LLM concurrency policy to Codex CLI
-(`codex_cli`) and Claude Code CLI (`claude_code`). Start either local CLI
-provider with:
-
-```bash
-platty generate-docs run --project <project> --provider <provider> --docs-llm-concurrency 10 --json
-```
-
-`--docs-llm-concurrency 10` is the total in-flight LLM-call budget for
-`build_docs` compaction and final technical-document generation. It is not the
-repository count, target count, document-worker count, or business-document
-worker count. Keep EPIC and business-document worker defaults unchanged. This
-local CLI `10 -> 5 -> 2` policy does not apply to direct API providers
-`claude_api` or `openai_api`; direct API commands do not inherit concurrency
-`10`.
-
-Reduce the current budget only when command output or failed-task evidence
-shows concurrent provider pressure: HTTP `429` or an explicit rate limit,
-provider capacity or concurrency-limit errors, or repeated connection,
-transport, or provider timeout failures across concurrently running tasks. Use
-the exact sequence `10 -> 5 -> 2`. Make at most two automatic concurrency
-reductions in one generated-docs workflow.
-
-Every reduction is same-run recovery, not a fresh generation run. Follow the
-primary active-work or `retry_failed_tasks` action for the existing stage and
-run id, then resume worker-backed generation with the lower
-`--docs-llm-concurrency` value. Preserve `--project`, `--stage`, `--run-id`,
-`--provider`, `--model`, every `--fallback-model`, timeout and progress flags,
-and `--json`. Preserve saved and validated tasks; never use `--full`,
-`--new-run`, or `--force-regenerate` for a concurrency reduction. When a
-returned worker-bearing resume command omits the current execution-only
-concurrency value, reconstruct that command with the current value rather than
-silently returning to the default of `2`.
-
-Do not lower or reduce concurrency for malformed JSON or schema output,
-document validation, grounding or evidence gaps, missing EPIC assignment,
-business-rule coverage, one deterministic task failure, or a status/report
-poll failure. Use the existing repair-first, model-fallback, or polling path
-for those failures. If verified provider pressure remains at `2`, stop after
-the second reduction and report the exact stage, run id, failed tasks, provider
-error evidence, current concurrency, and next recovery action.
-
-For a direct API, start with the command's conservative provider default. Only
-verified HTTP `429`, rate-limit, or provider-capacity evidence may justify a
-lower exposed concurrency; preserve and resume the same run with that lower
-value. Direct API JSON, schema, validation, grounding, or quality failures must
-never lower or reduce concurrency. Keep them on the repair-first,
-model-fallback, or polling path.
+Concurrency and fallback behavior are owned by the active policy/runtime. A
+rate-limit or provider-capacity failure is a policy/runtime recovery issue, not
+a reason to reconstruct `generate-docs run` with worker or model flags.
 
 ## Public Workflow
 
@@ -171,18 +64,14 @@ Inspect targets before generation:
 platty targets list --project <project> --json
 ```
 
-Start or resume public generated-output work:
+Start or resume public claim-native generated-output work:
 
 ```bash
-platty generate-docs run --project <project> --provider <local-provider> --docs-llm-concurrency 10 --json
+platty generate-docs run --project <project> --json
 ```
 
-With an explicit provider choice:
-
-```bash
-platty generate-docs run --project <project> --provider claude_api --json
-platty generate-docs run --project <project> --provider openai_api --json
-```
+The active LLM policy chooses provider, model, fallback, and concurrency. Do
+not add provider/model/worker/stage flags to public `generate-docs run`.
 
 `epics_confirmation_required` is a machine handoff, not a human gate. EPIC
 confirmation is auto-confirm by default: when the response reports
@@ -205,33 +94,11 @@ The only times you pause before confirming are:
 A plain `epics_confirmation_required` with a valid `nextCommand` is never a
 reason to ask the user — confirm it and continue to business docs.
 
-If a provider or model was selected earlier, preserve both explicit values:
+### Finalize in the canonical store
 
-```bash
-platty generate-docs confirm-epics --project <project> --run-id <run-id> --provider openai_api --model <model> --json
-```
-
-### Finalize: export the SOT projection
-
-`generate-docs` does not refresh the SOT projection. Auto-export only runs for
-`analyze` (and the analysis pipeline `run`), so after `analyze` the SOT under
-`~/.platty/sot/<projectId>/` still reflects only catalog state — the technical
-docs, EPICs, and business docs you just generated are not in it until you
-export.
-
-When the generation run reaches terminal completion (business docs all saved,
-no failed tasks), export the SOT so retrieval, SDD, and memory read the new
-content:
-
-```bash
-platty sot export --project <project> --json
-```
-
-Confirm the projection advanced: the README `lastExportAt` should move to the
-export time and the `epics`/`docs` counts should be non-zero. Skip the export
-only if the run stopped before terminal completion (for example it is still at
-`epics_confirmation_required`, or a stage has failed tasks awaiting
-`retry-failed`).
+When generation reaches terminal completion, retrieve the persisted documents
+and provenance through MCP/DB. HTML/Markdown SOT export is not part of the
+public completion contract.
 
 Check a known stage run during long-running or resumed work:
 
@@ -305,7 +172,6 @@ On errors, retry — do not abandon the run:
 
 Do not blindly follow `nextCommand` or `nextAction.command` across these gates:
 
-- target review is missing or incomplete;
 - `BUILD_DOCS_FAILED_BLOCKS_EPICS` or failed `build_docs` tasks block EPIC and
   business-doc generation from incomplete technical docs. Follow the primary
   `nextAction`: continue active work for `lease_tasks` / `repair_task`, and use
@@ -402,14 +268,165 @@ Use direct `docs`, `epics`, or `business-docs` roots only when a Platty
 maintainer explicitly asks for an internal command or repo-local debugging
 requires it. Do not present those roots as public workflows.
 
+## Correcting Generated Claims
+
+When a generated technical document states something wrong (an LLM-written
+Claim or its summary), correct it in place with the public `platty claims`
+root instead of regenerating. Corrections are overlays: stored separately,
+applied whenever documents are read (CLI, MCP) and fed to native business
+docs. An overlay expires by itself when the code unit behind its Claim
+changes, so re-analysis never keeps a correction for changed code.
+
+1. Read the effective Claims and their ids:
+
+   ```bash
+   platty claims read --project <project> --document <document-id> --json
+   ```
+
+   Each Claim has `claimId`, `baseClaimId`, `text`, `source`
+   (`generated`, `edited`, `added`, `lineage_renamed`) and `overlayId`. Always
+   pass `baseClaimId` to `--claim` / `--anchor`; an `added` Claim has none and
+   is changed by retiring its overlay.
+2. Write the correction. Agents always add `--producer agent`; the overlay then
+   stays proposed until a human confirms it:
+
+   ```bash
+   platty claims edit --project <project> --document <document-id> --claim <baseClaimId> --text "<corrected text>" --actor <agent-id> --reason "<why>" --producer agent --json
+   ```
+
+   Use `delete` to hide a wrong Claim, `add --anchor <baseClaimId>` for a
+   missing one, and `summary` for the document summary.
+3. Hand the returned `nextAction` to the user. For an agent overlay it is
+   `platty claims confirm --overlay <overlay-id> --expected-revision <n> ...`,
+   which only a human runs. For an active overlay it is:
+
+   ```bash
+   platty generate-docs run --project <project> --business-docs-only --epic <epic-id> --json
+   ```
+
+   which regenerates only those EPICs' business docs. Add
+   `--document-types ucl,br` only when the user asks for specific types.
+4. Verify with `platty claims list --project <project> --document <document-id> --json`:
+   each overlay's resolution is `applied`, `expired`, `orphaned`, `conflict`
+   or `pending`.
+
+Rules:
+
+- A summary correction is shown in retrieval but is not fed to business docs.
+- The last Claim of a document cannot be deleted; edit it, or add a
+  replacement first.
+- One live edit or delete per Claim: to change an edited Claim, retire its
+  overlay (`platty claims retire`), then edit `baseClaimId` again.
+- Routes, request/response shapes, DB access and calls are not Claims. Correct
+  them through `platty-analysis-corrections`: `platty graph edge` for a
+  Service Map edge between existing nodes (no re-analysis), or
+  `platty graph supplement` for an entry, relation, call edge, or symbol the
+  analyzer missed (re-run analysis after a human confirms).
+- Never full-regenerate (`generate-docs run --full`) to apply a Claim
+  correction; use `--business-docs-only --epic` for the affected EPICs.
+
+## Retrying Incomplete Business Docs
+
+When `generate-docs run` finished but some EPIC × document-type units ended as
+issues (no current document), retry only those units instead of hand-building
+`--epic` lists:
+
+```bash
+platty generate-docs run --project <project> --business-docs-only --retry-issues --dry-run --json
+platty generate-docs run --project <project> --business-docs-only --retry-issues --json
+```
+
+- The selection is per type: confirmed, non-deleted, non-ETC EPICs with a live,
+  bindable source link and no `active`, `fresh` document of that type
+  (`grounded_empty` units are never selected). These filters are DB-only and
+  fast. Excluded EPICs are listed in `excludedEpics` with a reason. Show the
+  `--dry-run` counts and EPIC ids to the user before running.
+- By default the slow per-EPIC admission binding pre-check is skipped, so
+  `excludedEpics` has no `binding_invalid`/`not_fresh` entries. If a type fails
+  with `business_docs_admission_rejected`, rerun with `--precheck` (after
+  resuming any started run per `nextCommand`); it excludes the EPICs admission
+  would reject. `--precheck` requires `--retry-issues`.
+- Without `--document-types` it uses only the types the project's Business Docs
+  already have.
+- It starts one EPIC-scoped run per type, so a good document of another type is
+  never regenerated. Narrow with `--document-types design,data_dictionary`.
+- `--retry-issues` requires `--business-docs-only` and cannot be combined with
+  `--epic`. An unfinished Business Docs run refuses it exactly as it refuses
+  `--business-docs-only`.
+- Exit 1 with `BUSINESS_DOCS_RETRY_ISSUES_FAILED` reports per-type status; the
+  other types still ran. Follow `nextCommand`: a run that stopped after it
+  started must be resumed with `--resume-business-docs-run <runId>` first;
+  otherwise rerun the same command. Never use `--full` here.
+
+## Editing Published EPICs (advanced)
+
+To fix EPIC or domain structure after `generate-docs run` published it
+(rename, summary, domain move, split, merge, delete, document moves), edit the
+live head with the advanced `platty epics revise` command instead of regenerating EPICs. No model
+is called; the batch applies in order and the whole batch is rejected if one
+command fails.
+
+1. Advanced: read the head and its `publicationRevision`:
+
+   ```bash
+   platty epics head --project <project> --json
+   ```
+
+2. Write a revision file. New EPICs/domains use a `ref` (`new:<name>`) that
+   later commands can use in place of an id:
+
+   ```json
+   { "envelopeVersion": "epic-revision.v1", "commands": [
+     { "family": "create_epic", "ref": "new:refunds", "domainId": "<domain-id>", "name": "Refunds", "summary": "Order refunds", "reason": "<why>" },
+     { "family": "move_document", "documentId": "<doc-id>", "epicId": "new:refunds", "reason": "<why>" },
+     { "family": "rename_epic", "epicId": "<epic-id>", "summary": "<new summary>", "reason": "<why>" }
+   ] }
+   ```
+
+   Families: `create_domain`, `create_epic`, `rename_domain`, `rename_epic`
+   (name and/or summary), `reparent_epic`, `move_document` (API/event/schedule
+   owners, ETC documents, unlinked screens, DB-logic anchors),
+   `unassign_document` (back to ETC), `merge_epics`, `delete_epic`,
+   `merge_domains`, `delete_domain`.
+3. Advanced: apply it against the head you read:
+
+   ```bash
+   platty epics revise --project <project> --base <publicationRevision> --input <file> --reason "<why>" --json
+   ```
+
+4. Hand the returned `nextAction` (`generate-docs run --business-docs-only
+   --epic <membershipChangedEpicIds>`) to the user. Business docs of removed
+   EPICs are retired automatically; renamed-only EPICs keep their business docs.
+
+Rules:
+
+- Move or unassign documents before `delete_epic`; move EPICs before
+  `delete_domain`. An EPIC or created domain left empty is rejected.
+- Screens with an API link follow their APIs and cannot be moved by hand.
+- EPIC and domain names must stay unique; the ETC bucket is never a target.
+- `base_conflict`: re-read `epics head` and rebuild the batch.
+  `source_conflict`: technical docs changed; run `platty sync run` first.
+  `EPIC_EDIT_BUSY`: wait for the active EPIC, sync, or business-docs run.
+- Edits are not pinned: a full EPIC regeneration re-plans everything, and an
+  incremental sync may reassign documents whose code changed. Say so when a
+  user plans a `--full` rerun or a sync.
+- `epics head` marks screens with `apiLinked: true`; those follow their APIs
+  and cannot be moved or unassigned by hand.
+
 ## Stop Conditions
+
+- `platty claims` returns `CLAIM_OVERLAY_BUSY`: a business-docs run is active.
+  Report it and wait; do not retry in a loop or cancel the run yourself.
+- A Claim correction is requested for a structural fact (route, shape, DB
+  access, call): stop and route to `platty-analysis-corrections` (`platty graph
+  edge` or `platty graph supplement`) instead of `platty claims`.
+- An agent overlay is proposed: stop after reporting the `confirm` nextAction;
+  never confirm your own overlay.
 
 - EPIC confirmation is required but no concrete `confirm-epics` command or run
   id is available: stop and report the missing command or run id.
 - The user explicitly requested manual EPIC review before confirmation: stop
   and ask whether to proceed.
-- `targets list` shows target review is incomplete: stop and route target work
-  through `platty targets ...`.
 - User asks for sync while generated work is active, failed, or incomplete:
   route to `platty-sync` and stop before syncing.
 - Known business-doc run has saved/completed tasks: preserve the run id and do

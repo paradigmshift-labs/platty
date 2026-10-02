@@ -30,6 +30,8 @@ not replace that lookup.
 All reader-facing summaries are Korean. Preserve code identifiers, Figma node
 IDs, paths, status values, and quoted source copy exactly.
 
+Read [typed retrieval receipts](references/typed-retrieval-receipts.md) before selecting tool arguments. It owns the exact family mapping, ID fields, graph namespaces, approved Memory scope, and original-artifact/source evidence boundaries used throughout this workflow.
+
 ## Ownership Boundary
 
 - `platty-mcp-figma-design-sync` owns the revisioned Figma evidence bundle.
@@ -228,21 +230,21 @@ screen, API, policy, or source binding.
 The coordinator ranks EPICs for the complete seed inventory using EPIC
 summaries and DESIGN/UCL maps. Screens with the same selected EPIC and Design
 map share one collection lane. That `EpicScreenSpecPool` reads the union of
-selected exact DESIGN/UCL items, runs `document_spec_resolve`, collects
+selected exact DESIGN/UCL items, runs `design_spec_resolve` / `use_case_spec_resolve`, collects
 the complete explicitly linked `screen_spec` union, runs `spec_get` for every
 candidate, and runs `spec_impact_resolve` for every candidate still plausible for an
 owned screen.
 
 A Platty semantic candidate is an exact selected DESIGN/UCL document or item.
-Before calling `document_search`, `spec_search`, or `code_search`, require that
-selection and its `document_spec_resolve` receipt. Only then may search-assist narrow
+Before calling the selected typed business search, `spec_search`, or `code_search`, require that
+selection and its `design_spec_resolve` / `use_case_spec_resolve` receipt. Only then may search-assist narrow
 missing, stale, or broad links; confirm `spec_search` with `spec_get` and
 `spec_impact_resolve`, and follow source-near specs for `code_search`.
 
 The fast path may skip unrelated EPICs, documents, items, and repositories. It
 must not traverse the full document item map, entire generated-doc corpus, or
 every repository merely because they are available. It must never skip the
-selected Design/UCL map, exact item read, or `document_spec_resolve` receipt. A time
+selected Design/UCL map, exact item read, or `design_spec_resolve` / `use_case_spec_resolve` receipt. A time
 or call budget does not authorize bypassing those gates: persist a `NEEDS_WORK`
 draft with a `coverage_limit` instead.
 
@@ -268,7 +270,7 @@ screen before source closure or classification.
 If a candidate does not explain an essential Figma action, field, or persistence control, mark it `not_matching` with reason and return to the candidate EPIC/Design map; a generic, broad, component-only, or API-only hit never closes this guard.
 Until the receipt exists, you must not assign `REUSE`, `MODIFY`, `NEW`, or `UNKNOWN`; state a current-system `FACT`; or open an `O-*` question about a Figma-visible control's behavior or persistence policy. Keep it `unresolved` with `coverage_limit` and the next exact read. An explicitly requested future-policy question is allowed only when independent of that control and current state.
 
-For `not_found`, require the Design document map, `document_spec_resolve`, exhausted
+For `not_found`, require the Design document map, `design_spec_resolve` / `use_case_spec_resolve`, exhausted
 ranked EPICs, searched repositories, analyzed commit, and next exact read. Empty
 or weak direct results are not absence proof. Otherwise retain `unresolved` /
 `coverage_limit` and keep the pair `NEEDS_WORK`.
@@ -303,7 +305,7 @@ or weak direct results are not absence proof. Otherwise retain `unresolved` /
    candidate chain is still unresolved, continue targeted retrieval until the
    required source boundary is proved or recorded; do not turn the missing
    current-system `FACT` into a user question merely because time or calls grew.
-7. Apply the Screen-spec-first Classification Guard. Figma, `document_spec_resolve`,
+7. Apply the Screen-spec-first Classification Guard. Figma, `design_spec_resolve` / `use_case_spec_resolve`,
    search, component/API, or broad-candidate evidence alone permits only a bounded
    `unresolved` / `coverage_limit` current-surface result.
 8. Classify every proposed mapping as `FACT`, `PRODUCT`, or `DESIGN` using

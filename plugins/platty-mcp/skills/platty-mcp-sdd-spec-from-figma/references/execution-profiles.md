@@ -25,3 +25,5 @@ boundary, persist only a `NEEDS_WORK` draft with every completed receipt, exact
 coverage limits, and next reads. Never report it as approval-ready. A later
 accuracy-first retry resumes the same evidence gates and is not constrained by
 the prior fast-draft counter.
+
+For exact tool names, arguments, namespace-preserving graph continuation and original-artifact/source availability, use [typed retrieval receipts](typed-retrieval-receipts.md).

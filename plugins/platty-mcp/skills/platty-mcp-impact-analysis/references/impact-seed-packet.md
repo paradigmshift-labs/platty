@@ -23,11 +23,11 @@ projectId, rawQuestion, questionBranch, selectedInterpretation, contextStatus,
 surfacesAlreadyRead, normalizedTerms(rawTerms, koreanCandidateTerms,
 englishCandidateTerms, matchedGlossaryTerms, codeTerms, unresolvedTerms),
 selectedEpics, exactDocumentItems, selectedSpecs, apiSpecCandidates,
-screenSpecCandidates, eventSpecCandidates, scheduleSpecCandidates, graphSeeds,
+screenSpecCandidates, eventSpecCandidates, scheduleSpecCandidates, dbLogicSpecCandidates, graphSeeds,
 codeSearchSeeds, unresolvedCandidates, coverageLimits.
 
 Search Query Packet:
-projectId, repoCandidates, exactRoutes, traceIds, specTitles, graphNodeIds,
+projectId, repoCandidates, exactRoutes, traceIds, specTitles, graphSeeds(kind,nodeId),
 relationTargets, symbols, fileHints, rawBusinessTerms,
 normalizedBusinessTerms, koreanAliases, englishAliases, codeTerms,
 modelAndTableTerms, eventAndServiceTerms, crossEpicCounterpartTerms,
@@ -53,7 +53,7 @@ the behavior, file, or impact is absent.
 Follow this order exactly:
 
 ```text
-workspace_repo_list -> select repo -> readonly_workspace_shell search -> exact source read
+code_search_guide_get -> workspace_repo_list -> workspace_search -> select repo -> readonly_workspace_shell exact source read
 ```
 
 Call `workspace_repo_list` unless the selected `repoId` and analyzed commit are
@@ -73,3 +73,13 @@ Never write or redirect files, install dependencies, execute project code, use
 command substitution, read blocked secret or credential paths, or leave or
 escape the selected repo root. An excessive match set is a coverage limit:
 narrow the exact identifier, record the limit, and retain the next exact read.
+
+## Typed contract packet fields
+
+Retain dbLogicSpecCandidates alongside the other four Spec kinds. graphSeeds
+and graph continuation packets keep their code/service_map namespace. Business
+Spec resolvers take one itemId or documentId; spec_business_resolve and
+spec_impact_resolve take specDocumentIds. Replay complete returned next arguments.
+Raw workspace reads may include unindexed files inside the registered authorized
+sourceRoot/worktree jail; exact graph/SOT restrictions remain separate. Preserve
+availability, worktree HEAD, analyzed revision and unavailable timestamps.

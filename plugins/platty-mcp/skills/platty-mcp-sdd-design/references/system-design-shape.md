@@ -517,7 +517,7 @@ SSOT이며, 여기에는 구현 인계에 필요한 최소 경로 지도와 참�
 
 ### A-9. 상세 근거와 조사 한계
 
-- 상세 Impact Evidence Matrix, `document_spec_resolve` 결과와 검색·원문 읽기 기록은 `prd.md` §9를 따른다.
+- 상세 Impact Evidence Matrix, 문서 종류별 typed spec resolver 결과와 검색·원문 읽기 기록은 `prd.md` §9를 따른다.
 - `confirmed-path`만 현재 구현 사실 또는 정확한 변경 위치의 근거다.
 - `partial-path`, 후보, 빈 graph 결과와 미열람 범위는 본문 §11의 미결정 사항 또는 후속 확인으로 연결한다.
 - 자체 검토의 blockers, warnings, coverage와 readiness 이유를 요약한다.
@@ -636,7 +636,7 @@ offset·cursor 어느 쪽이든 모든 row에 결정적인 total order와 unique
   아니라 독립적으로 완료·검증 가능한 사용자 결과다.
 - `tasks.md`는 `PASS / ready`로 승인된 §8~§10을 실행 카드로 펼칠 뿐 새로운 계약·결정·코드
   위치를 만들지 않는다. `partial` 설계나 §11 Evidence-Resolution이 남은 설계는 tasks를 생성하지 않는다.
-- 근거를 숨기거나 버리지 않는다. `document_spec_resolve`, `graph_trace`, source read는 `prd.md` §9와
+- 근거를 숨기거나 버리지 않는다. 문서 종류별 typed spec resolver, `graph_trace`, source read는 `prd.md` §9와
   부록 A에서 추적 가능해야 한다.
 - `확인됨`, `후보`, `가정`, `위험`, `추가 확인 필요`를 구분한다. candidate-only 또는 빈 graph
   결과는 영향 없음의 근거가 아니다.
@@ -655,3 +655,5 @@ offset·cursor 어느 쪽이든 모든 row에 결정적인 total order와 unique
   모든 `CHG-*`·`VER-*` coverage도 검사한다.
 
 기계 검증은 `using-platty-mcp/references/sdd-revision-contract.md`의 공유 계약을 따른다.
+
+For exact tool names, arguments, namespace-preserving graph continuation and original-artifact/source availability, use [typed retrieval receipts](typed-retrieval-receipts.md).

@@ -341,3 +341,5 @@ coverage, unproven commands, checkout mismatch, frontend topology gaps, and
 approval/revision mismatches in `blockingFindings` and `criticalFindings`. Put non-blocking
 clarity or operational improvements in `warnings`. Revise every blocking
 finding and rerun the complete rubric before claiming ready.
+
+For exact tool names, arguments, namespace-preserving graph continuation and original-artifact/source availability, use [typed retrieval receipts](typed-retrieval-receipts.md).

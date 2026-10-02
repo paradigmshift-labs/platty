@@ -5,18 +5,6 @@ description: Use when running, resuming, inspecting, or troubleshooting Platty s
 
 # Platty Static Analysis
 
-## Analytics Attribution
-
-For direct invocation, set
-`PLATTY_INVOCATION_SOURCE=platty-static-analysis` on every Platty CLI process
-in this workflow. If an outer user-facing workflow routes here, the outer
-workflow label wins and overrides this default. Preserve the active label for
-retries, resumes, and every `nextCommand` or `nextAction.command` execution.
-
-```bash
-PLATTY_INVOCATION_SOURCE=platty-static-analysis platty analyze --project <project> --json
-```
-
 Use this after a project has at least one registered repository.
 
 ## Flow
@@ -44,7 +32,7 @@ platty runs cancel --run-id <run-id> --project <project> --reason "<reason>" --j
 
 ## Rule
 
-Keep calling `platty status --project <project> --json` between phases. When status reports `build_docs`, switch to `platty-docs-target-curation` for target curation, then to `platty-generated-docs` after target scope is accepted.
+Keep calling `platty status --project <project> --json` between phases. When status reports `build_docs`, run `platty sync run --project <project> --json` to continue automatically from the fresh analysis into technical, EPIC, and business docs.
 
 ## Public Gate Rule
 
@@ -59,7 +47,7 @@ latest `status --json` nextAction and any run ids inspected. Recommended `Next`
 values:
 
 - `run_static_analysis`: `platty analyze --project <project> --json`
-- `build_docs`: route to `platty-docs-target-curation` for target curation, then to `platty-generated-docs` after target scope is accepted
+- `build_docs`: `platty sync run --project <project> --json`
 
 ## Stop Conditions
 

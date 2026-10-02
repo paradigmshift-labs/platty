@@ -97,27 +97,15 @@ platty --help
 **문서화 단계**(`platty generate-docs`)는 AI 모델을 사용해 문서를 작성하므로,
 실행할 때 프로바이더를 선택합니다:
 
-| 프로바이더 (`--provider`) | 사용하는 것 |
-| --- | --- |
-| `claude_api` | 여러분 자신의 Anthropic API 키. |
-| `claude_code` | 로컬 Claude Code 설치본. |
-| `codex_cli` | 로컬 Codex CLI 설치본. |
-| `openai_api` | 여러분 자신의 OpenAI API 키. |
-
-> 🚧 **프로바이더 목록은 확장 중입니다.** 앞으로 더 많은 AI 프로바이더가 추가될
-> 예정이며, 위 네 가지가 현재 사용 가능한 프로바이더입니다.
+`platty generate-docs`는 활성 프로젝트 LLM 정책을 사용합니다. 정책이 실행 전에
+프로바이더, 모델, fallback, 동시성, credential binding을 결정합니다.
 
 ```bash
-# Generated docs default to codex_cli; pass --provider to choose another
-platty generate-docs run --provider openai_api --model <model>
+platty generate-docs run --project PROJECT --json
 ```
 
-`generate-docs`는 기본값으로 `codex_cli`를 사용합니다. API 프로바이더는 명시적
-옵트인이므로 키가 있어도 이 기본값을 바꾸지 않습니다. `claude_api`는
-`ANTHROPIC_API_KEY`, `openai_api`는 `OPENAI_API_KEY`를 셸 환경이나
-`~/.platty/.env`에서 읽습니다. EPIC 확인을 위해 생성이 일시 중지되면, 후속
-`generate-docs confirm-epics` 명령에서도 **동일한 `--provider`와 명시한
-`--model`을 유지하세요**.
+public `generate-docs run`에는 provider/model/worker/stage 옵션을 넣지 않습니다.
+CLI가 EPIC 확정 또는 Business Docs 복구 명령을 반환하면 그 정확한 명령을 실행합니다.
 
 > 💡 **비용에 관하여:** 문서화 단계는 추출된 지도를 AI 모델로 보내므로,
 > 프로바이더 토큰을 소비하며 여러분의 AI 프로바이더 계정에 비용이 발생할 수
@@ -224,8 +212,8 @@ platty analyze
 # 2) Review what Platty found: the APIs, screens, jobs, and events it will document
 platty targets list --status active
 
-# 3) Generate the documentation (uses your AI provider)
-platty generate-docs run --provider claude_api --model <model>
+# 3) 활성 LLM 정책으로 문서 생성
+platty generate-docs run
 
 # Not sure what to do next? Ask Platty at any point
 platty status
@@ -351,7 +339,7 @@ platty sot export                    # project the SOT to a Markdown tree for gr
 | `platty targets list [--kind api\|screen\|job\|event\|all] [--status active\|deprecated\|all]` | 문서화 대상을 나열합니다. |
 | `platty targets deprecate --ids <id,id>` | 대상을 폐기하고 서비스 맵을 다시 빌드합니다. |
 | `platty targets include --ids <id,id>` | 폐기된 대상을 복원합니다. |
-| `platty generate-docs run [--from <stage>] [--provider <p>] [--model <m>]` | 문서 파이프라인을 실행합니다(기술 문서 → EPIC → 비즈니스 문서). |
+| `platty generate-docs run [--full]` | 활성 LLM 정책으로 claim-native 문서 파이프라인을 실행합니다. |
 | `platty generate-docs confirm-epics --run-id <id>` | EPIC 초안을 확정하고 비즈니스 문서를 실행합니다. |
 | `platty generate-docs status --run-id <id>` | 문서 실행/단계를 확인합니다. |
 | `platty generate-docs retry-failed --run-id <id>` | 복구를 위해 실패한 작업을 리셋합니다. |
@@ -410,9 +398,8 @@ platty sot export                    # project the SOT to a Markdown tree for gr
 
 ## 지원
 
-라이선스, 결제, 또는 기능 관련 문의는 공식 Platty 지원 채널을 이용하세요.
-[이슈를 신고하거나 지원을 요청할 때](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)는
-다음을 포함해 주세요:
+라이선스, 결제, 또는 기능 관련 문의는 공식 Platty 지원 채널을 이용하세요. 문제를
+신고할 때는 다음을 포함해 주세요:
 
 - 사용 중인 런타임(에이전트를 사용 중이라면 에이전트 런타임/버전도),
 - 운영 체제,

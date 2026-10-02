@@ -10,7 +10,7 @@ Use this before choosing a Platty command when the user asks what to run next or
 ## Default Order
 
 ```text
-setup -> analyze -> targets -> generate-docs
+setup -> analyze -> sync run
 ```
 
 When project context is missing, route to `platty-setup` first. The user must
@@ -37,18 +37,27 @@ in `platty-mcp-server-setup`.
 | Initialize global Platty home (`~/.platty` or `PLATTY_HOME`) | `platty init` via `platty-setup` |
 | Create/select a project | `platty project ...` via `platty-setup` |
 | Register repositories | `platty repo ...` via `platty-setup` |
+| Define or import reviewed Git/Gitless customer ZIP or monorepo source boundaries | `platty-repository-scope` |
+| Manage environment-variable URLs and connection bindings (create, get, list, update, delete, import, export) | `platty-connection-bindings` |
+| Register or check an approved remote database source | `platty-database-source-check` |
 | Ask "what next?" | Human: `platty setup`; agent: `platty setup --json` or `platty status --json` via `platty-setup` |
 | Run static analysis | `platty analyze --project <project> --json` via `platty-static-analysis` |
+| Compare expected routes/relations against static-analysis evidence | `platty-evidence-audit` |
+| Capture a static-analysis failure for diagnosis without changing code | `platty-analysis-triage` |
+| Add, replace, suppress, retire, or restore a Service Map edge between existing nodes | `platty graph edge add\|replace\|suppress\|update\|retire\|restore --project <project> --json` via `platty-analysis-corrections` |
+| Add evidence the analyzer missed (entry_add, relation_add, edge_add, node_add) | `platty graph supplement import\|confirm\|retire\|status --project <project> --json` via `platty-analysis-corrections` |
 | Inspect/cancel pipeline runs | `platty runs ... --json` via `platty-static-analysis` |
-| Curate technical targets | `platty targets ... --project <project> --json` via `platty-docs-target-curation` |
-| Generated technical/product/business outputs | `platty generate-docs run --project <project> --json` via `platty-generated-docs` |
-| EPIC confirmation and business-doc continuation | returned `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json` via `platty-generated-docs` |
+| Automatically generate or refresh technical, EPIC, and business outputs | `platty sync run --project <project> --json` via `platty-sync` |
 | Check active generated-docs stage status | `platty generate-docs status --project <project> --stage <stage> --run-id <run-id> --json` via `platty-generated-docs` |
 | Recover failed generated docs | Inspect/recover through `platty-generated-docs`; use `retry-failed` for the failed `build_docs`, `build_epics`, or `build_business_docs` stage |
+| Correct a generated Claim or summary of a technical doc | `platty claims read\|edit\|delete\|add\|summary\|confirm\|retire --project <project> --json` via `platty-generated-docs` |
+| Rename, re-summarize, move, split, merge, or delete published EPICs and domains (advanced) | `platty epics head` then `platty epics revise --project <project> --base <publicationRevision> --input <file> --reason <why> --json` via `platty-generated-docs` |
+| Regenerate business docs of selected EPICs after corrections | `platty generate-docs run --project <project> --business-docs-only --epic <epic-id> --json` via `platty-generated-docs` |
+| Retry only Business Docs units that ended without a current document | `platty generate-docs run --project <project> --business-docs-only --retry-issues [--dry-run] [--precheck] --json` via `platty-generated-docs` |
 | Retry failed generated-docs tasks | `platty generate-docs retry-failed --project <project> --stage <stage> --run-id <run-id> --json` via `platty-generated-docs` |
 | Configure or troubleshoot context-backend MCP server | `platty-mcp-server-setup` via `using-platty` |
 | Continue despite failed docs | Explain repair-first policy via `platty-generated-docs`; do not invent `--force` |
-| Incrementally refresh existing generated outputs after source/repository changes | `platty sync static-map/plan/run/confirm --project <project> --json` via `platty-sync` |
+| Inspect an automatic-sync plan before execution | `platty sync prepare --project <project> --json` via `platty-sync` |
 | Turn a rough idea into prd.md and user_stories.md | `platty-sdd-spec` |
 | Create system_design.md and tasks.md from approved SDD docs | `platty-sdd-design` |
 | Record/update/remove human knowledge on epics or docs | `platty memory ... --json` via `platty-memory` |
@@ -60,12 +69,14 @@ in `platty-mcp-server-setup`.
 1. If CLI output includes `nextCommand` or `nextAction.command` at the top
    level or under `data`, that command is the next step unless a gate says to
    pause. Gate precedence overrides returned commands for malformed or missing
-   EPIC confirmation commands, incomplete target review, failed generated-docs
+   failed generated-docs
    recovery, active generated-output work before sync, or recovery that must
    preserve an existing run.
-2. Preserve returned command arguments verbatim when possible. When
-   reconstructing, carry forward `--project`, `--stage`, `--run-id`, existing
-   `--provider`, and `--json` if the returned command omits them.
+2. Preserve returned command arguments verbatim. Never reconstruct a public
+   `generate-docs run` command by carrying forward stage, run-id, provider,
+   model, worker, or other execution flags; its runtime policy owns those
+   values. Use an exact returned recovery command, or stop and report a
+   missing command instead of guessing.
 3. Static analysis no longer has a public `confirm` step. Compatibility note:
    if a global CLI asks for compatibility recovery command `platty confirm`, treat it as stale and ask for CLI
    reinstall or update of the global @paradigmshift/platty package.
@@ -73,12 +84,10 @@ in `platty-mcp-server-setup`.
    repository path. The CLI config field `projectRoot` names that state root.
 5. `project use` selects the current Platty project context. It is not a
    separate workflow skill; route it through `platty-setup`.
-6. Do not invent confirmation gates. Target review is handled by
-   `platty targets ... --project <project> --json`; generated outputs start
-   with `platty generate-docs run --project <project> --json`; when the CLI
-   returns a concrete `generate-docs confirm-epics` or `sync confirm` command,
-   run that returned command automatically unless the user explicitly requested
-   manual review.
+6. Do not invent confirmation gates. The normal generated-output path is
+   `platty sync run --project <project> --json`, which creates a fresh plan and
+   completes technical, EPIC, and business stages automatically. `sync prepare`
+   is only an optional inspection command.
 ```
 
 ## Routing UX

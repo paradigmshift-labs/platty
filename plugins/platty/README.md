@@ -84,6 +84,12 @@ platty:platty-sync
 platty:platty-sdd-spec
 platty:platty-sdd-design
 platty:platty-memory
+platty:platty-repository-scope
+platty:platty-connection-bindings
+platty:platty-database-source-check
+platty:platty-evidence-audit
+platty:platty-analysis-triage
+platty:platty-analysis-corrections
 ```
 
 Use `platty:platty-mcp-server-setup` when you operate the Platty context backend
@@ -139,6 +145,12 @@ Use the skills for stage-specific behavior:
 - `platty:platty-sdd-spec` for turning a rough idea into grounded `prd.md` and `user_stories.md`.
 - `platty:platty-sdd-design` for turning approved SDD product docs into grounded `system_design.md` and `tasks.md`.
 - `platty:platty-memory` for recording or maintaining human knowledge.
+- `platty:platty-repository-scope` for selecting approved repositories and modules for analysis.
+- `platty:platty-connection-bindings` for mapping source-proven application references to scoped repositories.
+- `platty:platty-database-source-check` for reviewing an approved remote database source before analysis.
+- `platty:platty-evidence-audit` for comparing observed static evidence with reviewed expectations.
+- `platty:platty-analysis-triage` for diagnosing failed or stalled analysis runs without retrying or patching the host.
+- `platty:platty-analysis-corrections` for source-proven Service Map edge overrides and analysis supplements.
 
 ## References
 

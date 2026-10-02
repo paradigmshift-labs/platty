@@ -981,3 +981,5 @@ API나 subscription contract가 없더라도 기존 값을 연결한다고만 �
 - **Observable pass criteria**: `rewardRemainingSeconds` to `remainingMs` has one
   implementable contract and verification path; no product approver is asked to
   invent a technical interface.
+
+For exact tool names, arguments, namespace-preserving graph continuation and original-artifact/source availability, use [typed retrieval receipts](typed-retrieval-receipts.md).

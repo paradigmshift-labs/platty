@@ -63,3 +63,12 @@ Stop at a fixed point or `maxDepth: 2`. Preserve `truncationReasons` and the
 unvisited confirmed `frontierEpicIds` at the depth limit. The structural test
 must assert every kind and role, every mapping row, the membership nuance, and
 every provenance field so drift is visible.
+
+## Typed graph identity
+
+Use graph_trace seeds `{kind:"code",nodeId}` or `{kind:"service_map",nodeId}`,
+one namespace per batch, depth 1 per frontier step. Map upstream to incoming
+and downstream to outgoing at the public tool boundary. Preserve returned
+namespace in visitedGraphSeeds and all continuation packets; a same-spelled
+node ID in the other namespace is a different identity. Hidden nodes do not
+become visible through cycles or retained frontiers.

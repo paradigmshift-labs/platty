@@ -5,29 +5,16 @@ description: Use when refreshing existing Platty generated outputs after source,
 
 # Platty Sync
 
-## Analytics Attribution
-
-For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-sync` on every
-Platty CLI process in this workflow. If an outer user-facing workflow routes
-here, the outer workflow label wins and overrides this default. Preserve the
-active label for retries, resumes, and every `nextCommand` or
-`nextAction.command` execution.
-
-```bash
-PLATTY_INVOCATION_SOURCE=platty-sync platty sync plan --project <project> --json
-```
-
 Use this skill when source or repository state changed after generated outputs
 already exist: new Git commits, newly registered repositories, analysis branch
 changes, source-root changes, or static-analysis refreshes. Sync refreshes
 existing generated technical and business outputs against the latest analyzed
 static-map state.
 
-Sync is not the final step of the first-time happy path. First-time generation
-is:
+The normal automatic journey is:
 
 ```text
-setup -> analyze -> targets -> generate-docs
+setup -> analyze -> sync run
 ```
 
 Use sync for incremental refresh after source/repository changes and fresh
@@ -39,7 +26,9 @@ Resolve these before syncing:
 
 - project selector from `platty project list/create/use --json`;
 - current project state from `platty status --project <project> --json`;
-- fresh static analysis after the source/repository change;
+- fresh static analysis after the source/repository change, except a project
+  made solely of managed Gitless directory sources (the CLI refreshes and
+  analyzes those before sync);
 - no active failed generated-output recovery that must preserve an existing run.
 
 Business-doc sync includes glossary outputs. Treat `glossary`,
@@ -49,47 +38,47 @@ surface.
 Static-analysis freshness is a hard preflight. `sync static-map`,
 `sync create-doc-plan`, `sync plan`, and `sync run` must compare the registered
 source repository HEAD with the analyzed commit and require fresh passed static
-pipeline stages before continuing. If the CLI returns
+pipeline stages before continuing. For a project made solely of managed Gitless
+directory sources, a no-`--plan-id` sync refreshes the customer directory and
+reruns only the stale static pipeline work before continuing. Run
+`platty sync run --project <project> --json` directly for that case; do not
+pre-run `analyze`. Existing Git repositories keep the current behavior. If the CLI returns
 `STATIC_ANALYSIS_REQUIRED_BEFORE_SYNC`, run the returned
 `nextAction.command` (`platty analyze --project <project> --json`) before
 retrying sync. Do not reuse an existing `--plan-id` after source commits changed
 until analysis is fresh again.
 
+An explicit `--plan-id` is an immutable resume: it must not refresh a directory
+source or trigger analysis. Create a new no-`--plan-id` sync after a source
+change instead.
+
 ## Public Workflow
 
-After source or repository changes, refresh the analyzed static-map snapshot
-before creating a document sync plan:
+Run one command after source or repository changes. It refreshes the static-map
+snapshot, prepares the document plan, builds technical docs, synchronizes and
+applies EPICs, then builds and applies business docs. No human target or EPIC
+review step is part of this path:
 
 ```bash
-platty sync static-map --project <project> --json
+platty sync run --project <project> --json
 ```
 
-Then create and inspect a sync plan:
+`sync prepare` and `sync plan` remain optional inspection tools. Use them only
+when an operator explicitly asks to inspect the proposed changes before running
+the normal automatic command:
 
 ```bash
-platty sync plan --project <project> --json
+platty sync prepare --project <project> --json
 ```
 
-Follow the returned `nextAction.command`, usually:
+An inspected plan can still be run explicitly for compatibility:
 
 ```bash
 platty sync run --project <project> --plan-id <plan-id> --json
 ```
 
-If `sync run` returns `epics_sync_confirmation_required`, run the returned
-`sync confirm` command automatically:
-
-```bash
-platty sync confirm --project <project> --plan-id <plan-id> --epics-run-id <run-id> --json
-```
-
-Pause only when the user explicitly asked to review EPIC sync changes before
-confirmation, or when the CLI response lacks `--plan-id`, `--epics-run-id`, or a
-concrete returned command.
-
-Use `sync run --project <project> --json` without `--plan-id` only when the user
-does not need to inspect a plan first; that path runs static-map refresh and
-creates a plan internally before continuing.
+The normal command is the no-`--plan-id` form. It makes a fresh plan itself and
+does not pause for confirmation.
 
 ## Stop Conditions
 
@@ -97,14 +86,8 @@ creates a plan internally before continuing.
   `platty-static-analysis` before sync.
 - `sync plan`, `sync run`, `sync create-doc-plan`, or `sync static-map` returns
   `STATIC_ANALYSIS_REQUIRED_BEFORE_SYNC`: run the returned static-analysis
-  command first, then recreate or rerun the sync plan.
-- Generated docs are missing: route to `platty-generated-docs`; sync refreshes
-  existing outputs.
+  command first, then rerun `sync run --project <project> --json`.
 - Failed `build_docs` recovery is pending: route to `platty-generated-docs` and
   preserve the existing run.
-- EPIC sync confirmation is required but the CLI returned no `sync confirm`
-  command, no plan id, or no EPIC run id: stop and report the missing field.
-- The user explicitly requested manual EPIC sync review before confirmation:
-  stop and ask whether to proceed.
 - Business-doc sync fails or leaves pending candidates: follow the returned
   recovery command; do not apply the plan manually.

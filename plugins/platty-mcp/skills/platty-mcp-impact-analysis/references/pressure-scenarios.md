@@ -10,7 +10,7 @@ Two live SDD evaluations sent a removed candidate-specific limit field to
 `graph_trace`; both failed because retrieval contract v2 exposes only `limit`.
 
 - **Expected GREEN route**: read the live tool schema, omit optional limit fields
-  when the default is enough, or set the shared `limit` to no more than 500.
+  when the default is enough, or set the shared `limit` to no more than 200.
 - **Observable pass criteria**: no out-of-range request is sent. A parameter error
   is corrected once and recorded; it is never treated as empty graph evidence.
 

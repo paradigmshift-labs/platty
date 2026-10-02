@@ -20,6 +20,8 @@ Use `references/system-design-shape.md` for the design and
 All reader-facing output is Korean. Keep code identifiers, API paths, file
 paths, status values, and quoted evidence in their original form.
 
+Read [typed retrieval receipts](references/typed-retrieval-receipts.md) before selecting tool arguments. It owns the exact family mapping, ID fields, graph namespaces, approved Memory scope, and original-artifact/source evidence boundaries used throughout this workflow.
+
 ## Required Sub-Skills
 
 1. Use `using-platty-mcp` for MCP capability and project context.
@@ -81,7 +83,7 @@ filename in the selected SPEC directory is eligible for automatic routing.
 `prd.md` is the product decision record; it is not a substitute for the SOT
 context that led to those decisions. Before inspecting code, decide whether the
 selected PRD §9 has a reusable SOT context: selected business documents,
-their `document_spec_resolve` results, terminology/EPIC mapping, freshness, evidence
+their typed business-to-spec resolver results, terminology/EPIC mapping, freshness, evidence
 boundary, and the scope limits that apply to this design.
 
 When that context is missing, stale, partial in a required product area, or the
@@ -89,7 +91,7 @@ session cannot show that it was read, do not jump from `prd.md` to code search.
 **Invoke `platty-mcp-impact-analysis` before any graph trace, code search, or
 source read.** Its seed route must
 recover the SOT context through `platty-mcp-retrieval`, resolve the selected
-business items with `document_spec_resolve`, and preserve the recovered context
+business items with the matching typed business-to-spec resolver, and preserve the recovered context
 and limits in PRD §9 before graph and bounded source reads begin. This is
 required even when the user starts a new session with only the SDD folder path
 or `prd.md` as the handoff.
@@ -225,7 +227,7 @@ approved exact `PASS / ready` design revision.
    consumers. This is not a user question: do not ask the product approver to
    invent the missing implementation contract.
 7. Derive evidence-backed AS-IS facts and system TO-BE decisions from request,
-   stories, and impact. Use the dossier's `document_spec_resolve` links to
+   stories, and impact. Use the dossier's typed business-to-spec resolver links to
    connect product items to selected Specs, use `spec_impact_resolve` for direct
    technical impact, and use its one-hop `graph_trace` result as a
    fast `screen ↔ API ↔ domain ↔ DB` path map. For every hard implementation
@@ -435,7 +437,7 @@ Show only the compact path map needed for implementation, reference dossier
 evidence ids, and reference PRD §9 for detailed evidence.
 
 Hard implementation claims require the relevant bounded evidence and source
-parity plus `confirmed-path` coverage. `document_spec_resolve` selects connected
+parity plus `confirmed-path` coverage. The matching typed business-to-spec resolver selects connected
 Specs; `spec_impact_resolve` selects direct technical impact; one-hop
 `graph_trace` accelerates selected frontier discovery; `code_search` finds
 exact source candidates; and `readonly_workspace_shell` reads the bounded
@@ -575,7 +577,7 @@ The meeting-facing §1–§11 may use SDD stable ids and the user/system contrac
 being discussed. Keep MCP document/spec/repository ids, tool-call names,
 candidate files/symbols, source-confidence narration, and graph/search detail in
 Appendix A. A meeting agenda or `TQ-*` row points to an appendix evidence gap;
-it does not embed a `spec_get`, `document_spec_resolve`, `graph_trace`, or code-search
+it does not embed a `spec_get`, the matching typed business-to-spec resolver, `graph_trace`, or code-search
 instruction in the body.
 
 The body must let a developer answer, in order: what the product intends; how

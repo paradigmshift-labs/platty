@@ -1,188 +1,120 @@
-# Full-Cycle Retrieval Ladder
+# Full-cycle retrieval ladder
 
-Use this reference for broad, semantic, comparison, inventory, or impact
-questions. Each rung is map first, exact detail second.
+Use the ladder for semantic, comparison, inventory or impact-seed questions.
+`<family>` means the concrete prefix selected from
+`../../using-platty-mcp/references/tool-mapping.md`; follow returned `next`
+arguments rather than inventing tools, IDs or fields. Apply the skill's
+Discovery Packet Override only to the three eligible semantic discovery gets.
 
-## Exact Item Fast Path
+## Direct known-anchor path
 
-When exact business item IDs are known, do not widen with search:
+Known BR document -> `business_rule_get(projectId,documentId)`.
+Known BR item -> `business_rule_item_get(projectId,itemIds)`.
+Known Spec -> `spec_get(projectId,documentId)`, including db_logic_spec.
+Known code candidate -> reuse it; graph-only provenance can follow typed next
+at depth 1 without inventing another code search. Exact execution claims still
+need selected repository and bounded source reads.
+No semantic rediscovery/search is needed for these exact anchors.
+
+## Semantic ladder
 
 ```text
-document_item_get(projectId, itemIds=[...], detail=summary|full)
--> document_spec_resolve(projectId, itemIds=[...])
--> rank linked api_spec/screen_spec/event_spec/schedule_spec IDs
--> spec_get(projectId, id=<selected Spec ID>)
+resolve project ID only if unknown; context_status for freshness
+-> project_get(view:"summary"): metadata/availability and relevant approved Memory
+-> vocabulary inventory/translate when terms are broad, blank or conflicting
+-> domain_list -> domain_get plausible domain(s)
+-> epic_list(domainId when selected) -> epic_get(view:"summary") plausible EPIC(s)
+-> selected positive availability counts -> returned scoped typed lists -> exact document IDs
+-> needed supporting-only links -> returned epic_get(view:"full") -> documentRefs
+-> business_rule_get(view:"summary",itemLimit:20); other family gets unchanged
+-> inspect routing cards, diagnostics/readState and approved Memory
+-> concrete item_get selected IDs (1–5); item_list only for needed pages/inventory
+-> BR/UCL/DESIGN resolver per itemId; DD resolver for requested usage
+-> rank returned five-kind Spec IDs, then spec_get(documentId)
+-> inspect relevant approved Memory, preserve scope from next
+-> reverse business or technical impact only when requested
+-> selected typed graph frontier / exact bounded source only for required claims
+-> typed family search or spec_search only when direct maps leave IDs unknown
 ```
 
-`document_item_get` and `document_spec_resolve` accept 1-5 unique `itemIds`.
-Split a larger set into multiple calls. Results preserve request order and
-group links by the input item.
+DESIGN is required for system design, integration, architecture, flow, capability,
+journey, admin workflow or implementation-facing work; BR supplies policy,
+UCL user actions, DD data-object/column meaning. Vocabulary is routing evidence.
+Do not discard plausible EPICs from a search miss. Complete only required rungs
+for the selected question and target set; keep unrelated implementation choices
+as DESIGN handoff after the requested product fact is established.
 
-This Spec descent applies to BR, UCL, and DESIGN. DD does not use the Spec
-bridge: read its Entity items, follow returned Entity item IDs, and use an
-explicit DB/code graph node only when technical impact is requested.
+## Evidence depth
 
-## Evidence Depth By Question Type
+Summary discovery preserves the returned `projectId`, `epicId`, `documentId`,
+scope and cursor. Only eligible gets receive `view`; only BR discovery receives
+`itemLimit:20`. Explicit full packets, direct known-anchor reads, item/spec/Memory
+reads and list pagination retain their complete returned arguments.
 
-| Question type | Required depth |
+Use project `documentAvailability` and EPIC `documentAvailability` for selected
+direct family lists. EPIC `supportingDocumentAvailability` describes references
+that may be owned by another EPIC and unreachable through direct EPIC lists.
+When those links matter to the selected question, select the returned full EPIC
+packet and open its exact refs; otherwise leave that continuation unselected.
+An empty direct list does not prove supporting absence. Counts select routes,
+not complete inventory or behavior evidence. Complete inventory follows every
+returned list cursor to `hasNextPage:false`, including business-item pages when
+needed; targeted discovery stops after finding the required IDs.
+
+BR summary carries `header`, `coverageSummary`, small item cards and `itemPage`,
+plus diagnostics, approved Memory cards and next packets. Inspect readState and
+diagnostics before selecting evidence. `evidenceCount` and coverage totals are
+routing information; exact item bodies and their directional Spec links remain
+required. Read a returned BR full packet when the selected branch needs omitted
+sections/evidence. Preserve explicit `view:"full"` and every other argument;
+full fallback is never rewritten to summary. `regeneration_required` or malformed
+context stays a coverage limit, not an empty current policy.
+
+| Claim | Required read |
 | --- | --- |
-| Conceptual project overview with no behavior claim | `project_overview_get` -> `epic_list`/`epic_get`; state coverage limits |
-| Product flow, capability, journey, or admin workflow | EPIC map -> DESIGN map -> BR/UCL as needed -> exact items -> selected Specs |
-| Policy, eligibility, status transition, or enforcement | BR plus relevant DESIGN/UCL items -> connected Specs -> source read for exact enforcement |
-| Entity, table, field, or data shape | DD Entity summary/full; add source or graph evidence only for exact usage/impact |
-| API, screen, event, schedule, permission, response shape, write, emit, or integration | exact `spec_get`; add reverse business or technical impact only when asked; bounded source read for exact implementation truth |
+| Conceptual orientation | project/domain/EPIC metadata with limits |
+| Rule, journey, system flow | relevant typed maps then exact business items |
+| Entity/field meaning | exact DD parent/item body, parent approved Memory |
+| Source-near API/screen/event/schedule/DB logic | exact Spec; unsupported fields stay unconfirmed |
+| Exact enforcement, permission, write, emit, external call, code absence | bounded exact source when exposed; otherwise named missing surface and weaker claim |
+| Complete inventory | selected scoped list, every pageInfo.nextCursor until hasNextPage=false |
 
-`code_search` locates source candidates. `readonly_workspace_shell` reads the
-bounded source region. Do not use host-local files or shell when the MCP source
-surface is missing.
+DD column metadata is not an invented standalone dd_field item. Follow returned
+IDs and usage references; data_dictionary_spec_resolve connects stored usage but
+does not prove live execution. Item get returns full bodies without detail or
+itemType filters. Family Spec resolver takes exactly one itemId or documentId,
+not an itemIds batch; split selected items across calls.
 
-## Canonical Ladder
-
-BR, DESIGN, DD, and UCL are the four core business-document families. DD maps
-to `data_dictionary`; UCS is not part of the current route.
-
-```text
-project_list/project_get/context_status
--> project_overview_get
-   inspect project_overview_get.overview.memories summary cards
-   call memory_get for every relevant exact body
--> glossary_list for broad inventory or ambiguity
--> glossary_translate for the raw phrase and Korean/English candidates
-   retain matched terms and alias candidates
--> epic_list
-   inspect memoryCount; select candidates, do not call memory_list blindly
--> epic_get for every plausible EPIC before discarding it
-   inspect epic_get.memories
-   call memory_get for each relevant exact body named by response.next
-   read epic_get.documentRefs
--> document_get directly for the BR, DESIGN, DD, and UCL IDs in documentRefs
-   inspect document_get.memories for direct document Memory and item memoryCount values
-   call memory_get only for relevant exact bodies named by response.next
-   [MUST] DESIGN for system design, integration, architecture, product flow,
-   capability, journey, admin workflow, data flow, or implementation-facing work
--> document_item_list only for pagination, explicit complete inventory, or itemType filtering
--> document_item_get(itemIds) for selected exact items
-   inspect each items[*].memories and call memory_get for relevant exact bodies
--> for BR/UCL/DESIGN: document_spec_resolve(itemIds)
--> rank linked api_spec/screen_spec/event_spec/schedule_spec IDs
--> spec_get for each selected exact Spec
-   inspect spec_get.memories and call memory_get for relevant exact bodies
--> optional spec_document_resolve(specIds) for reverse business context
--> optional spec_impact_resolve(specIds, direction) for one-hop technical impact
--> optional graph_trace(frontier nodeIds) to continue one selected hop
--> code_search and readonly_workspace_shell exact source read when required
--> only after the direct map cannot identify an ID, use document_search or spec_search
-```
-
-Search is deliberately last. `document_search` searches non-Spec business
-documents/items. `spec_search` searches Specs. Selected hits must be opened
-with the corresponding exact-read tool.
-
-The Memory route is likewise card first and exact body last:
+## Spec-first and graph continuation
 
 ```text
-list/map/search card.memoryCount
--> epic_get | document_get | document_item_get | spec_get
--> inspect attached memories summary cards
--> memory_get only for selected relevant memoryId values from response.next
+spec_get(projectId,documentId)
+-> spec_business_resolve(projectId,specDocumentIds=[id]) if business requested
+-> spec_impact_resolve(projectId,specDocumentIds=[id],direction="both") if impact requested
+-> graph_trace(projectId,seeds=[{kind:"service_map",nodeId:<returned node id>}],depth=1,direction="both")
 ```
 
-Use `memory_list` only for an explicit scoped inventory or when an exact
-selected surface lacks attached Memory cards.
+Code seeds use `kind:"code"`, never the service-map namespace. Batch only 1–5
+unique IDs in one namespace; track visited `(kind,nodeId)` pairs. Expand only
+selected confirmed frontiers, inspect both directions for impact, and retain
+unresolved candidates, omissions, truncation and depth-limited frontier. A graph
+edge is relationship evidence, not detailed behavior; no empty-trace no-impact
+claim. Code-first business impact recovers exact Spec then reverse business
+links, without restarting broad EPIC discovery.
 
-## Typed `document_get` Continuations
+## Memory and final audit
 
-- BR: the response is an item map. Read selected rule IDs with
-  `document_item_get`, then resolve their Specs.
-- UCL: the response is a use-case item map. Read selected use cases, then
-  resolve their Specs.
-- DESIGN: the response contains authored topics and authored DESIGN items.
-  Read selected items, then resolve their Specs.
-- DD: the response is an Entity map. Read Entity items with `detail=summary`
-  first and `detail=full` only when required fields are needed.
+Inspect selected exact-read summaries at the response's memories field; relevant
+bodies replay memory_get with scope:"approved" from next. Use scoped approved
+memory_list only for explicit inventory or missing attached cards. Default
+own_requests is for request inspection and cannot replace approved continuation.
+Memory remains an overlay; never invent bodies or approval from a preview.
 
-`document_item_list` is not a compulsory extra call when `document_get` already
-returned the needed cards.
-
-## Spec-First And Code-First Routes
-
-For a known Spec:
-
-```text
-spec_get(id)
--> spec_document_resolve(specIds=[id]) only when business context is needed
--> spec_impact_resolve(specIds=[id], direction) only when technical impact is needed
-```
-
-For complete API, screen, event, or schedule inventory, call
-`spec_list(projectId, epicId, specKind?)` and follow `nextCursor` until
-`hasNextPage` is false. Ranked `spec_search` results never prove completeness.
-
-For code-first impact:
-
-```text
-code_search(one identifier or symbol)
--> workspace_repo_list/select repo
--> readonly_workspace_shell exact source read
--> graph_trace(nodeIds=[selected code node], direction=upstream|downstream|both)
-```
-
-`graph_trace` is one-hop. Its result separates confirmed edges, unresolved
-candidates, and `frontier`. Continue only needed frontier IDs with another
-call, maintain a visited-node set, and do not infer “no impact” from an empty
-edge set.
-
-For code-first business impact, do not restart from the EPIC map merely to find
-the already named implementation target:
-
-```text
-exact file, symbol, route, or source anchor
--> code_search plus bounded source read
--> spec_search/spec_get when an exact connected Spec must be recovered
--> spec_document_resolve(specIds) for reverse business context
--> continue through only the returned business items, documents, and EPICs
-```
-
-If no exact Spec can be recovered, report that reverse business coverage is
-partial. Do not substitute broad document source links for the missing direct
-item-to-Spec connection.
-
-## Runtime Evidence Checklist
-
-- Record the selected evidence depth and whether the route ended conceptually,
-  reached exact Spec/source proof, or stopped at a missing capability.
-- For operational metrics, require an exposed data MCP. Without one, report
-  instrumentation or hypotheses rather than observed conversion causes.
-- Keep memory overlays separate from generated SOT and source evidence.
-- Preserve IDs returned by directional resolvers so exact follow-up reads are
-  reproducible.
-- Run the Final Route Audit and expose only failures that change confidence or
-  scope.
-
-## Final Route Audit
-
-Before a confident broad or mixed answer, verify:
-
-1. The Search Brief preserves the raw user phrase.
-2. Korean and English candidates remain visible when vocabulary may differ.
-3. Glossary output was used for routing, not behavior proof.
-4. Project overview and relevant memory cards were inspected.
-5. Plausible EPICs were read with `epic_get`, not discarded from a search miss.
-6. `epic_get.documentRefs` routed the four core business maps directly.
-7. Exact business items were read before business, design, journey, or data
-   claims.
-8. BR/UCL/DESIGN items used `document_spec_resolve` before Spec search unless
-   the answer explicitly remains conceptual.
-9. DD stayed on the Entity route unless an explicit graph/code impact question
-   required more.
-10. Linked Spec IDs were ranked before fallback `spec_search`.
-11. Exact Specs were read before source-near claims.
-12. Reverse business context used `spec_document_resolve` only when needed.
-13. Technical impact used `spec_impact_resolve` first, then selected one-hop
-    `graph_trace` frontier calls if needed.
-14. Exact source regions were read after `code_search` when the claim requires
-    source truth.
-15. Negative claims have the complete map or source tier they require.
-16. Unread plausible surfaces and missing capabilities remain explicit.
-17. The final answer separates direct evidence, inference, memory overlay,
-    freshness, and coverage limits.
+Before answering, verify raw terms/selected interpretation preserved, relevant
+domains/EPICs and direct maps read, exact items and linked Specs read for their
+claim tier, parent DD Memory inspected, and source claims backed by exact regions.
+Complete inventories account for pagination. Negative claims name complete map/
+source scope and searched terms. Keep unread plausible evidence, unavailable
+providers, stale/regeneration-required facts, and partial frontier as limits.
+Separate direct evidence, inference, Memory, freshness and missing surfaces.
+No host-local fallback; metrics need an actual exposed data tool, not code inference.

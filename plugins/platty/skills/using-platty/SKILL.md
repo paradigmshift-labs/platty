@@ -35,16 +35,6 @@ The check is enabled by default and uses the same quiet, cached preamble pattern
 as gstack. `PLATTY_PLUGIN_UPDATE_CHECK=0` disables it for local development.
 The checker updates agent skills only; it never updates the Platty CLI.
 
-## Analytics Attribution
-
-The active user-facing workflow owns one fixed allowlisted workflow label for
-CLI analytics. Prefix every Platty CLI process with
-`PLATTY_INVOCATION_SOURCE=<workflow-label>`. Preserve that same label across
-routed sub-skills, retries, resumes, and commands returned through
-`nextCommand` or `nextAction.command`; reapply the prefix because returned
-commands contain argv only. Never derive the label from user text, repository
-data, project names, paths, or other runtime content.
-
 ## Tool Mapping
 
 Platty skills are runtime-neutral. Codex and Claude Code are equal, first-class execution runtimes — use whichever runtime the user is already working in, and do not switch runtimes to follow a skill.
@@ -77,10 +67,17 @@ Common routes:
 - Ordinary non-MCP agent plugin installation for Codex/Claude Code: `platty install --json` via `platty-cli-router`
 - Installed first end-to-end project journey through repositories, analysis, one LLM approval, and verified SOT output: `platty-onboarding`
 - Human setup workflow and project management dashboard state: `platty-setup`
+- Git repository or Gitless directory analysis-scope YAML registration or update: `platty-repository-scope` via
+  `platty repo scope import <file> --project <project> --json`
+- Source-proven service/env/host bindings: `platty-connection-bindings`; approved remote DB source checks: `platty-database-source-check`
+- Static evidence completeness comparison: `platty-evidence-audit`; static-run failure capture: `platty-analysis-triage`
+- Correcting a wrong or missing Service Map edge (`platty graph edge ...`) or adding evidence the analyzer missed
+  (`platty graph supplement ...`): `platty-analysis-corrections`
 - Context-backend MCP server setup, host/port exposure, and `/api/mcp` validation: `platty-mcp-server-setup`
 - Static analysis progress: `platty-static-analysis`
-- Technical docs target review: `platty-docs-target-curation`
 - Generated technical/product/business outputs: `platty-generated-docs`
+- Correcting a wrong generated Claim or summary (`platty claims ...`) and regenerating only the affected EPICs'
+  business docs: `platty-generated-docs`. Use `platty-memory` only for advisory notes, not to change a Claim.
 - Generated output synchronization: `platty-sync`
 - SDD product spec and user stories from an idea: `platty-sdd-spec`
 - SDD technical design and tasks from approved spec/stories: `platty-sdd-design`
@@ -131,11 +128,12 @@ Common routes:
 - Follow `nextCommand` or `nextAction.command` from JSON output unless a gate
   says to pause. Check the top level, `data.nextCommand`, and `data.nextAction`.
   Gate precedence overrides blindly following commands for malformed or missing
-  EPIC confirmation commands, incomplete target review, failed generated-docs
+  failed generated-docs
   recovery, active generated-output work before sync, or recovery that must
-  preserve an existing run. Preserve returned command arguments verbatim when possible. When
-  reconstructing a command, carry forward `--project`, `--stage`, `--run-id`,
-  existing `--provider`, and `--json` if the suggested command omits them.
+  preserve an existing run. Preserve returned command arguments verbatim.
+  Never reconstruct a public `generate-docs run` command by carrying forward
+  stage, run-id, provider, model, worker, or execution flags; use an exact
+  returned recovery command or stop and report the missing command.
 - Do not use generation skills for retrieval-only questions.
 
 ## Main-Aligned Public Workflow
@@ -213,21 +211,27 @@ Before any project-scoped command, make the project/repository sequence explicit
    choose one yourself.
 6. After selecting a project, inspect repositories with
    `platty repo list --project <project> --json`.
-7. Only then add repositories with
+7. When the user supplies a repository analysis-scope YAML file, follow
+   `platty-repository-scope` and import it with
+   `platty repo scope import <file> --project <project> --json` after checking
+   each entry's intended branch. For manual registration without a scope YAML,
+   add repositories with
    `platty repo add <path> --project <project> --branch <branch> --json` when
    the intended analysis branch is known.
 
 Branch rule:
 
 - If the user names an analysis branch, including `main`, `master`, `develop`,
-  or a feature branch, pass it through `--branch`. Do not rely on the source
-  checkout being on that branch.
+  or a feature branch, pass it through `--branch` for manual registration or
+  write it as `branch` in each matching scope-YAML entry. Do not rely on the
+  source checkout being on that branch.
 - When the user omits the analysis branch, resolve `origin/HEAD`, then an
   existing `main`, then an existing `master`. Recommend that verified default
   candidate, normally `main` or `master`. If the current branch differs,
   present it second as an explicit alternative instead. Wait for confirmation,
   then pass the confirmed value to `repo add` or `repo update` as
-  `--branch <branch>`; never silently register the feature checkout.
+  `--branch <branch>`, or write it as `branch` in the scope YAML before import;
+  never silently register the feature checkout.
 - `platty analyze` uses the repository registration's stored analysis branch
   and prepares an app-managed worktree from that branch. It does not repair an
   omitted branch from `repo add`.

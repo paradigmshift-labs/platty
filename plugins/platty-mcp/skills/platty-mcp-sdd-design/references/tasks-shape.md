@@ -256,3 +256,5 @@ idempotency, DLQ/실패 격리, PII, exact file action과 test를 체크박스�
     제품·설계 추적 체인을 보존한다.
 
 v3는 역사 artifact 검증을 위해 reader/validator에서만 유지한다. 새 생성과 갱신은 v4를 사용한다.
+
+For exact tool names, arguments, namespace-preserving graph continuation and original-artifact/source availability, use [typed retrieval receipts](typed-retrieval-receipts.md).

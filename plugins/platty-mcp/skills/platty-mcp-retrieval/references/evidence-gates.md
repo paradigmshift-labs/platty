@@ -5,8 +5,10 @@ Use these gates before making factual claims from Platty MCP retrieval.
 | Evidence | What it can prove | What it cannot prove |
 | --- | --- | --- |
 | Vocabulary normalization | Query expansion, aliases, candidate concepts | Business facts or implementation behavior |
-| Project overview | Product-area orientation | Exact policy, response shape, code behavior, or complete scope |
+| Project metadata | Product-area orientation | Exact policy, response shape, code behavior, or complete scope |
 | Epic map | Candidate scope and available document/spec surfaces | Final behavior or proof that adjacent candidates are absent |
+| Project/EPIC summary availability counts | Which selected typed lists or supporting full continuation to read | Exact refs, behavior, inventory completeness, or absence from an empty direct list |
+| BR summary item cards, evidenceCount and coverageSummary | Exact item candidates and coverage limits | Policy bodies, source evidence, or enforced behavior |
 | Search hit | Candidate discovery | A fact by itself |
 | BR/DD/DESIGN/UCL item | Semantic routing and documented intent | Source-confirmed enforcement or implementation |
 | Directional document-to-Spec resolution | Connected Specs and source-near anchors | Behavior without exact reads |
@@ -20,7 +22,7 @@ Use these gates before making factual claims from Platty MCP retrieval.
 - Concept explanation: vocabulary and project/epic context may be enough when no
   implementation claim is made.
 - Broad domain, comparison, inventory, or impact answer: complete the
-  full-cycle map first; project overview, README-like artifact text, glossary,
+  full-cycle map first; project metadata, README-like artifact text, glossary,
   catalog rows, and search hits are only orientation.
 - Business policy: read business-rule item; read connected spec/source before
   claiming enforcement.
@@ -38,9 +40,16 @@ Use these gates before making factual claims from Platty MCP retrieval.
 
 ## Negative Claim Gate
 
+Summary cards and counts keep the same claim gates: exact business items,
+connected Specs, relevant approved Memory bodies and bounded source reads remain
+required for their respective claims. Inspect preserved diagnostics/readState.
+When selected supporting-only links require the returned EPIC full packet,
+execute it with `view:"full"` before a claim about those links. Required summary
+schema unavailable on an older server is a capability gap with no local fallback.
+
 A search miss is not absence evidence. Do not claim that a concept, campaign
 type, permission, API, field, screen, or impact does not exist from empty
-`document_search`, `spec_search`, `code_search`, or glossary output alone.
+`<family>_search`, `spec_search`, `code_search`, or glossary output alone.
 
 Negative claims require one of:
 

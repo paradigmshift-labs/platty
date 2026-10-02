@@ -56,7 +56,7 @@ proved. It must not contain a complete source file or an unbounded snippet.
 
 For every anchor that can produce an implementation claim, add one row. The
 goal is to read the complete *known affected path*, not to claim that the whole
-repository was read. Follow this order: `document_spec_resolve` selects linked
+repository was read. Follow this order: `<family>_spec_resolve` selects linked
 Specs; `spec_impact_resolve` exposes direct technical impact; one-hop
 `graph_trace` maps selected frontier directions and exposes candidates; `code_search`
 finds exact symbols; `readonly_workspace_shell` reads the bounded source.
@@ -216,7 +216,7 @@ Use these headings verbatim:
 ### 9-8. 조사 한계와 다음 확인
 ```
 
-`document_spec_resolve`로 선택한 문서 항목과 연결 스펙을 확인하고
+`<family>_spec_resolve`로 선택한 문서 항목과 연결 스펙을 확인하고
 `spec_impact_resolve`로 직접 기술 영향을 확인한 뒤, one-hop
 `graph_trace`를 필요한 frontier에 반복해
 `화면 ↔ API ↔ 도메인 ↔ DB/외부 연동` 경로를 기록한다.
@@ -275,3 +275,14 @@ an implementation detail safely deferred to technical design.
 with any BLOCKING row cannot report Self Review PASS or request approval. The
 owning SDD spec skill must either complete the next exact read or narrow the
 product promise and regenerate the revision-bound appendix.
+
+## Typed evidence boundary
+
+Retain each graph seed namespace and use incoming/outgoing/both at the MCP
+input boundary, depth 1 for each agent-owned frontier hop. Replay returned
+continuations. Include DB-logic Specs in exact candidate reads. Workspace
+sourceRoot authorization permits unindexed files within the registered jail;
+exact graph/derived SOT evidence stays restricted. History/sync evidence is
+managed_analysis_worktree with networkChecked=false and
+productionDeploymentObserved=false; timestampSource may be unavailable.
+A cached sync SHA is not an analyzed revision or deployment observation.

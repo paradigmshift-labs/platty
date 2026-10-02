@@ -56,7 +56,7 @@ story/scenario, user action, or user-visible state.
 Finish all `ScreenIntentSeed` rows before Platty retrieval. Group them through
 `ScreenToEpicRoutingTable`, then build one `EpicScreenSpecPool` per selected
 EPIC and Design map. The pool owns the union of relevant exact DESIGN/UCL
-document items, their `document_spec_resolve` receipts, the complete union of explicitly
+document items, their `design_spec_resolve` / `use_case_spec_resolve` receipts, the complete union of explicitly
 linked `screen_spec` IDs and `linkOrigins`, `specGetAccounting` for every
 candidate, and `spec_impact_resolve` for every plausible candidate.
 
@@ -94,7 +94,7 @@ the packet and mark each item `complete` or `coverage_limit`:
    relevant` with its reason, or use `memory_list` then selected `memory_get`
    reads. Retain selected memory IDs, revisions, and affected fields once and
    reuse them for screens in the same candidate EPIC.
-4. Pool-level exact document-item and `document_spec_resolve` receipts.
+4. Pool-level exact document-item and `design_spec_resolve` / `use_case_spec_resolve` receipts.
 5. The complete linked screen_spec candidates union and link origins.
 6. `spec_get` accounting for every candidate and `spec_impact_resolve` for every
    plausible candidate.
@@ -111,7 +111,7 @@ capability boundary as `coverage_limit`; do not call it `not relevant`.
 
 An empty direct `screen_spec` list is not `not_found` evidence. Before recording
 `not_found` or “no existing screen”, the checklist must show the Design document
-map and `document_spec_resolve` receipt, then the bounded candidate/repository scope,
+map and `design_spec_resolve` / `use_case_spec_resolve` receipt, then the bounded candidate/repository scope,
 analyzed commit, and next exact read. If the targeted budget ends first, record
 `coverage_limit` and retain the surface as `unresolved`; do not silently convert
 the gap into `not_found`, `UNKNOWN`, or approval-ready completion.
@@ -237,3 +237,5 @@ identity, Figma integrity and coverage, Platty evidence boundary,
 existingSurfaceResolutions, evidenceMappings, openQuestions, designDecisionHandoff,
 questionOwnershipAudit, inputHashes, and delegationTarget. Any missing owner,
 trace, hash, or disposition blocks delegation as approval-ready work.
+
+For exact tool names, arguments, namespace-preserving graph continuation and original-artifact/source availability, use [typed retrieval receipts](typed-retrieval-receipts.md).

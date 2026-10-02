@@ -25,6 +25,8 @@ Figma 근거가 이를 대체하지 않는다.
 사용자가 읽는 모든 요약은 한국어로 작성한다. code identifier, Figma node ID, 경로, 상태값,
 인용된 원문 문구는 그대로 보존한다.
 
+Read [typed retrieval receipts](references/typed-retrieval-receipts.md) before selecting tool arguments. It owns the exact family mapping, ID fields, graph namespaces, approved Memory scope, and original-artifact/source evidence boundaries used throughout this workflow.
+
 ## 소유권 경계
 
 - `platty-mcp-figma-design-sync`: revision이 관리되는 Figma evidence bundle 소유
@@ -180,7 +182,7 @@ field/control/state, 진입·이탈 전환, literal, 직접 근거, 누락된 �
 완성된 seed를 `ScreenToEpicRoutingTable`로 후보 EPIC에 연결한다. 같은 선택 EPIC과
 Design map을 공유하는 화면은 하나의 `EpicScreenSpecPool` collection lane으로 묶는다.
 화면마다 collection worker 또는 서브에이전트를 만들지 않는다. 각 pool은 선택한 정확한
-DESIGN/UCL 문서의 정확한 item을 읽고 `document_spec_resolve`를 실행한 뒤, 명시적으로 연결된 전체
+DESIGN/UCL 문서의 정확한 item을 읽고 `design_spec_resolve` 또는 `use_case_spec_resolve`를 실행한 뒤, 명시적으로 연결된 전체
 `screen_spec` 후보를 수집하고 모두 `spec_get`으로 확인한다. 소유 화면에 여전히 가능한
 후보는 `spec_impact_resolve`한 다음 screen-to-spec matrix와 화면별 `screenSpecReceipt`를 만든다.
 

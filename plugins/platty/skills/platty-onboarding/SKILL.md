@@ -7,22 +7,13 @@ description: Use when Platty CLI and agent skills are already installed and a us
 
 **Prerequisite:** Read `using-platty` before acting unless it has already been read in this turn.
 
-Coordinate the installed first-run journey. This skill does not install the CLI or agent plugin. Route detailed phase behavior and recovery to `platty-setup`, `platty-static-analysis`, `platty-docs-target-curation`, and `platty-generated-docs`.
-
-## Analytics Attribution
-
-For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-onboarding` on
-every Platty CLI process in this workflow. If an outer user-facing workflow
-routes here, the outer workflow label wins and overrides this default. Preserve
-the active label across routed owner skills, retries, resumes, and every
-`nextCommand` or `nextAction.command` execution.
+Coordinate the installed first-run journey. This skill does not install the CLI or agent plugin. Route detailed phase behavior and recovery to `platty-setup`, `platty-static-analysis`, `platty-sync`, and `platty-generated-docs`.
 
 Primary command patterns:
 
 ```bash
-PLATTY_INVOCATION_SOURCE=platty-onboarding platty analyze --project <project> --json
-PLATTY_INVOCATION_SOURCE=platty-onboarding platty generate-docs run --project <project> --provider <resolved-provider> --docs-llm-concurrency 10 --json
-PLATTY_INVOCATION_SOURCE=platty-onboarding platty sot export --project <project> --json
+platty analyze --project <project> --json
+platty generate-docs run --project <project> --json
 ```
 
 ## Conversation Language
@@ -44,12 +35,12 @@ preserving the template structure and machine values.
 ## Invocation Input
 
 Treat a path appended to an explicit skill invocation as the initial repository
-candidate. `.` means the host session's current working directory. Resolve any
-relative or absolute path to its absolute Git root before setup inspection. If
-the path or Git root is unverifiable, stop and ask for a valid repository path.
-The path identifies the initial repository and is never a project selector; the
-normal project resolution, branch gate, and additional-repository questions
-still apply.
+candidate, or as a repository analysis-scope manifest when the user identifies
+it as one or it is a `.yaml`/`.yml` file. `.` means the host session's current working
+directory. Resolve a repository path to its absolute Git root before setup
+inspection; pass a manifest path to `platty-repository-scope` for scope import. If the
+path cannot be verified, stop and ask for a valid path. Neither path is a
+project selector; project resolution and the branch gate still apply.
 
 ## Resume First
 
@@ -85,6 +76,22 @@ feature checkout.
 
 Before choosing registrations, inspect the Git root, root manifest, workspace declaration or metadata, and nested app or package manifests. When one Git root has no usable root manifest or workspace declaration but contains multiple independently analyzable nested app manifests, register the same absolute Git repository path once per app with a distinct `--source-root` and unique display names. Do not register application subdirectories as the repository path. Pass an explicit `--branch` on each registration and keep the `repo list`-before-add invariant.
 
+When the user supplies a repository analysis-scope YAML file, use that file as
+the registration set. After selecting the project and inspecting `repo list`,
+check that Git entries have the intended `branch` (resolve an omitted branch
+through the same branch gate, then record the chosen value in the YAML). A
+Gitless customer directory must use `sourceKind: directory` and cannot use a
+branch. Run
+`platty repo scope import <file> --project <project> --json` through
+`platty-repository-scope`. Inspect returned repository IDs, branches, and
+`analysisScopeHash`, then re-run `repo list` to confirm the inventory. A
+validation error rejects the complete file: fix it and retry the complete
+import. Do not replace scoped entries with individual `repo add` calls; those
+calls do not apply `exclude`. Treat a successful manifest import as completion
+of its listed registrations, without asking after each entry whether another
+repository should be added. Continue to analysis when the intended repository
+set is complete.
+
 Explain that multi-repository analysis can connect source-grounded routes, models, API calls, storage access, and service relations across repositories. After each add, ask whether another repository belongs to the same project. Start analysis only when registration is complete.
 
 ## 2. Static Analysis
@@ -112,45 +119,16 @@ command. The next CLI action remains
 
 After completion, give an intermediate report with the project, analyzed and failed repository counts, completed stages, target counts by useful category when available, the analysis run id, actionable blocking failures, and the state-derived next action. Preserve non-actionable internal unresolved facts in the run evidence, but do not expose them in ordinary onboarding output. Do not paste raw JSON. Stop on the owner skill's failure or stall conditions.
 
-Inspect the terminal result's automatic `sotExport`. Verify and report its `outDir` and `graphView.htmlPath` immediately. If the export or `outDir` is missing, run `platty sot export --project <project> --json`; if GraphView is still missing or `graphView.error` is present, run `platty graph view --project <project> --json`. Apply the private-checkout command translation from **Resume First**. Summarize the fresh static target inventory. Report a catalog path only when the CLI returned that path and the file exists; never invent a pre-LLM API, screen, event, or job catalog from an expected directory layout.
+Summarize the fresh static target inventory from the canonical DB/MCP result. Report a catalog path only when the CLI returned that path and the file exists; never invent a pre-LLM API, screen, event, or job catalog from an expected directory layout.
 
 ## 3. Target Review and LLM Approval
 
-Use `platty-docs-target-curation`. Summarize only active APIs, screens, events, and jobs as curatable target kinds. Let the user describe unused or obsolete targets in natural language, resolve them against a fresh list, and mutate only exact target ids. Ask one focused question on ambiguity. Explicitly include the accepted active ids when nothing is excluded. In this public onboarding path, do not run the lower-level `docs shared-segments` compatibility commands; continue through the public `generate-docs` facade, which rebuilds the required segments.
-
-### Explicit direct API selection
-
-First inspect whether the user already explicitly selected a direct API in the
-current conversation. If so, branch here before any local provider resolution.
-Honor OpenAI API as `openai_api` and route its `OPENAI_API_KEY` credential check
-through `platty-generated-docs`; do not add an extra provider question. When
-neither Codex nor Claude CLI is installed and the required key is ready,
-continue to the cost disclosure and approval below. Do not run `command -v`
-checks and do not apply the local-provider stop to this branch.
-
-A present `OPENAI_API_KEY` is readiness evidence only and never enters this
-branch, selects, or overrides a provider without the user's explicit choice.
-Readiness is not spend approval and never replaces the LLM approval below.
-Before that approval, explain that direct API calls consume provider tokens and
-may incur account cost or provider charges. Preserve every explicit provider
-and model through continuation, confirmation, and recovery.
-
-### Otherwise resolve a local CLI
-
-When no direct API was explicitly selected, resolve the local provider before
-approval. Determine the current runtime from the host session context, not from
-executable ordering, then verify its matching CLI with `command -v codex` or
-`command -v claude`. Map a detected `codex` executable to `codex_cli`, and map a
-detected `claude` executable to `claude_code`;
-`<resolved-provider>` below always means one of those CLI enum values, never the
-executable name. Otherwise select the one available local CLI. If both exist
-and the runtime gives no preference, ask once. Do not select `claude_api` implicitly.
-Do not select `openai_api` implicitly. Stop if neither local provider exists.
+Target scope is selected automatically: conventional operational API endpoints are deprecated by Sync unless a prior explicit `targets include` or `targets deprecate` decision exists. Do not insert a human target-review stop. In this public onboarding path, use `platty generate-docs run --project <project> --json` after approval. The active LLM policy—not an operator choice or CLI flags—selects provider, model, fallback, and concurrency. If policy/runtime admission fails, stop and route the operator to repair that configuration.
 
 Put the static result, target-review outcome, and approval card in the same user-facing response. Do not pause between them; pause only at the explicit approval request. Divide the card into these sections:
 
 - **Generated outputs and why:** explain why technical docs, EPIC grouping, and business docs are generated.
-- **Execution:** show the resolved provider, how availability was verified (the resolved `command -v` path for a local CLI, or the nonblank key source without its value for a direct API), parallel workers, and automatic EPIC continuation.
+- **Execution:** show the active policy revision, policy/runtime admission status, and automatic EPIC continuation. Do not select or expose a provider/model/worker command override.
 - **Cost and resume:** warn about LLM tokens and possible provider cost, and explain that persisted run/task state resumes saved work after interruption.
 - **Approval:** say the user may still name targets to deprecate, then request approval.
 
@@ -170,17 +148,10 @@ field labels into the conversation language; keep machine values verbatim.
 
 **Execution**
 
-- **Provider:** show the resolved CLI provider value.
-- **Availability:** show the verified `command -v` executable path for a local
-  CLI, or the shell / `~/.platty/.env` key source for a direct API without
-  exposing its value.
-- **Parallel work:** state that independent document tasks can run through
-  multiple workers concurrently. State that both Codex CLI and Claude Code CLI
-  start technical-document LLM work with `--docs-llm-concurrency 10`, which is
-  a total technical-document LLM-call budget rather than a document-worker
-  count. Explain that verified provider pressure may reduce it through
-  `10 -> 5 -> 2` while leaving EPIC and business-document worker defaults
-  unchanged.
+- **LLM policy:** state the active policy revision owns provider, model,
+  fallback, and concurrency; do not expose those as `generate-docs run` flags.
+- **Availability:** report a policy/runtime admission failure without exposing
+  secrets, then route the operator to repair the policy/runtime configuration.
 - **Automatic continuation:** state that technical documents continue through
   EPIC drafting, returned-command EPIC confirmation, and business documents
   without another routine approval.
@@ -206,25 +177,12 @@ Wait for explicit approval. Static-analysis completion is not LLM approval.
 Use `platty-generated-docs`. After approval run:
 
 ```bash
-platty generate-docs run --project <project> --provider <resolved-provider> --docs-llm-concurrency 10 --json
+platty generate-docs run --project <project> --json
 ```
 
-That command is for resolved local providers (`codex_cli` and `claude_code`).
-For an explicitly selected direct API, do not inherit local concurrency `10`:
-
-```bash
-platty generate-docs run --project <project> --provider openai_api --json
-```
-
-The explicit flag satisfies the provider gate; do not ask a duplicate provider question. Preserve `--project`, `--stage`, `--run-id`, `--provider`, model flags, and `--json` in every continuation or recovery command.
-
-For both `codex_cli` and `claude_code`, preserve the current
-`--docs-llm-concurrency` value in every worker-bearing continuation or recovery
-command. Use the owner skill's provider-pressure rule to reduce the same run
-only through `10 -> 5 -> 2`, with at most two automatic reductions. Do not ask
-for another approval when lowering concurrency. Never lower it for JSON/schema,
-document-validation, grounding, EPIC-assignment, deterministic task, or poll
-failures; keep those on the existing repair-first or polling path.
+`generate-docs run` resolves its provider, model, fallback, and concurrency from
+the active LLM policy. Do not add provider/model/worker/stage flags to a public
+run command. Preserve the returned command verbatim for recovery.
 
 Continue technical docs -> EPIC draft -> EPIC auto-confirm -> business docs without asking the user to select EPICs. A valid returned `confirm-epics` command is automatic unless the user explicitly requested manual review. If EPIC confirmation is required but the confirmation command or run id is missing, stop instead of guessing.
 
@@ -232,13 +190,7 @@ For long work, poll about every 30–60 seconds. Report only deltas in stage, sa
 
 ## 5. Completion
 
-Completion requires all generated-document stages to be terminal with no failed tasks. At terminal completion run the `platty-generated-docs` export step once:
-
-```bash
-platty sot export --project <project> --json
-```
-
-Verify non-zero `counts.docs` and `counts.epics`. Record `lastExportAt` as freshness evidence, but a changed timestamp alone is not proof. Report the SOT `outDir` and `graphView.htmlPath` from the same result. If `graphView` is missing or has `graphView.error`, use `platty graph view --project <project> --json` as the fallback and verify its HTML path. Keep worker task counts distinct from stored document counts: tasks describe execution, while `counts.docs` describes final stored business documents.
+Completion requires all generated-document stages to be terminal with no failed tasks. The canonical SOT is the database read through MCP; do not require HTML/Markdown export as a completion step. Keep worker task counts distinct from stored document counts: tasks describe execution, while stored documents are the final evidence.
 
 ### Required completion-response shape
 

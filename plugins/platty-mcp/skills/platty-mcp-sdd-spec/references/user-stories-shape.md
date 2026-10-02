@@ -92,3 +92,5 @@ derivedFrom: "prd.md"
   질문으로 복제하지 않는다. 기술 선택이 Given/When/Then 결과를 바꾸면 `DH-*`가 아니라
   제품 `O-*` 또는 feasibility feedback으로 돌린다.
 - 내부 구현 방식, MCP 도구 호출, 근거 매트릭스, Self Review는 본문에 넣지 않는다.
+
+For exact tool names, arguments, namespace-preserving graph continuation and original-artifact/source availability, use [typed retrieval receipts](typed-retrieval-receipts.md).

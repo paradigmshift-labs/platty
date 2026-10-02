@@ -12,7 +12,7 @@ Create a Search Brief when any trigger is present:
 - the question asks for all, every, which screens, each, the whole flow,
   difference, impact, what breaks, or another broad inventory;
 - the question can be read as business meaning or implementation fact;
-- one `document_search`, `spec_search`, `code_search`, or graph
+- one `<family>_search`, `spec_search`, `code_search`, or graph
   hit could look sufficient while missing the target set;
 - raw and normalized vocabulary candidates may point to different concepts.
 
@@ -54,18 +54,18 @@ items never consume this budget.
   search both Korean candidate terms and English candidate terms, and record
   which glossary/search-assist queries were attempted. A blank Korean
   `glossary_translate` result is not a stop condition while plausible English
-  candidates remain; call `glossary_list` for candidate discovery before
+  candidates remain; call `glossary_term_list` for candidate discovery before
   translating additional Korean/English candidates.
-- Use `glossary_list` before asking the user when the request is a vocabulary
+- Use `glossary_term_list` before asking the user when the request is a vocabulary
   inventory, needs every alias, remains ambiguous after translation, or a
   plausible `glossary_translate` query is blank. Traverse all pages only when
   completeness is required; otherwise stop after the candidate set is clear.
 - Except for the bounded initial intent question above, use configured read-only
-  MCP tools to reduce ambiguity before asking the user. For vocabulary, choose `glossary_list` for inventory, every-alias,
+  MCP tools to reduce ambiguity before asking the user. For vocabulary, choose `glossary_term_list` for inventory, every-alias,
   unresolved ambiguity, broad comparison, or blank/conflicting translation; use
   `glossary_translate` for an exact raw phrase or candidate term. Then continue
-  with `project_overview_get`, `epic_list` / `epic_get`, `document_list` /
-  `document_item_list`, `spec_list`, or `spec_get` as the branch requires.
+  with `project_get`, `epic_list` / `epic_get`, `<family>_list` /
+  `<family>_item_list`, `spec_list`, or `spec_get` as the branch requires.
 - At the post-research gate, ask exactly one clarifying question only when MCP evidence leaves two or
   more equally plausible interpretations, choosing one would hide a meaningful
   answer branch, and the choice is a `PRODUCT` decision with materially

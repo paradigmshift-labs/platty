@@ -1,6 +1,6 @@
 ---
 name: using-platty-mcp
-description: Use when a task should use configured Platty MCP tools for remote project context, tool capability checks, Figma-backed product-plan or 기획서 authoring, Figma evidence routing, client setup routing, Platty MCP retrieval, memory or glossary-alias lifecycle routing, or MCP-grounded SDD file creation.
+description: Use when a task should use configured Platty MCP tools for remote project context, tool capability checks, Figma-backed product-plan or 기획서 authoring, Figma evidence routing, client setup routing, Platty MCP retrieval, Memory request or glossary-alias inventory routing, or MCP-grounded SDD file creation.
 ---
 
 # Using Platty MCP
@@ -40,8 +40,13 @@ Run this before MCP capability checks and routing:
    report the failed refresh briefly and continue with the currently loaded
    skill. Do not run direct `git pull`, `reset`, `stash`, or `checkout`.
 6. After a verified update, run
-   `bash <resolved-checker-path> platty-mcp --mark-upgraded <old>`, tell the user
-   to start a new agent session, and stop before the capability gate.
+   `bash <resolved-checker-path> platty-mcp --mark-upgraded <old>`.
+7. The preamble is non-blocking for MCP Q&A. Mention the upgrade outcome once,
+   in one short line (after a verified update: the new skills load in a
+   new agent session), then continue with the already loaded skill text
+   through the capability gate and the user's request. Never stop answering, defer the
+   request, or wait for a restart because an upgrade is available, failed, or
+   just completed.
 
 Checker stdout is the sole update signal and authority. Empty stdout must not
 produce an update or upgrade claim, message, or commentary; continue silently.
@@ -82,11 +87,22 @@ Keep the setup split thin and explicit:
 
 1. If Platty MCP tools are visible, run the capability gate and then route:
    - read-only project questions to `platty-mcp-retrieval`;
+   - non-developer business or operational QA — several questions, a QA list,
+     or one business question that needs both documents and code — to
+     `platty-mcp-hybrid-qa`, which splits each question into parallel docs and
+     code collectors (retrieval and code-qa ladders) and verifies conflicts;
+   - code-only business or operational questions to `platty-mcp-code-qa`:
+     `context_status.documentAvailability` shows `br`, `ucl`, `design`, and
+     `data_dictionary` all 0, or the user explicitly asks for a code-only /
+     source-only answer;
    - impact, blast-radius, affected-surface, cross-EPIC, or design-change
      questions to `platty-mcp-impact-analysis` after it produces or reuses an
-     Impact Seed Packet;
-   - explicit memory or glossary-alias read/write/update/delete requests to
-     `platty-mcp-memory`;
+     Impact Seed Packet; but impact questions inside a business QA list (or
+     asked as business questions: what breaks, regression scope, A-to-Z
+     chain, bug cause, direct data edit) stay in `platty-mcp-hybrid-qa`,
+     which runs its impact sweeps;
+   - explicit Memory reads/requests, glossary alias writes, or unavailable Memory
+     update/delete requests to `platty-mcp-memory`;
    - a Figma URL, page, section, or frame needing reusable evidence to
      `platty-mcp-figma-design-sync` when configured Figma MCP reads are visible;
       - a product plan, planning document, feature brief, PRD, user-story,
@@ -113,20 +129,26 @@ Before relying on MCP evidence:
 
 1. Confirm Platty MCP tools are configured.
 2. Call the runtime's tool listing mechanism.
-3. Classify available tools by tier:
+3. Classify available tools by tier; require only the selected route's tools:
    - minimum retrieval;
    - vocabulary inventory and ambiguity;
    - memory overlay reads;
-   - memory lifecycle;
-   - glossary alias lifecycle;
+   - Memory requests;
+   - glossary alias inventory and administrator alias writes;
    - search assist;
    - source parity;
    - workspace source parity;
    - workspace Git observability;
    - artifact access.
-4. Call `project_list` when no project is already selected.
+4. Default project: when the user did not name a project, omit `projectId`;
+   the server fills in its default (the Platty CLI's current project, or the
+   only project you can read). Do not call `project_list` first. Call
+   `project_list` only when a call returns `INVALID_INPUT` naming `projectId`
+   (no default is set; the operator can set one with `platty project use <id>`),
+   when the user names a project without its opaque ID, or when the user asks
+   which projects exist.
 5. Call `context_status` for the selected project before freshness-sensitive
-   answers.
+   answers; it echoes the `projectId` it used.
 
 ### Deferred Figma Capability Discovery
 
@@ -146,7 +168,7 @@ read-only execution fallbacks. A Figma capability is unavailable only after
 runtime discovery finds no configured read surface, or an actual invocation
 proves authentication/access failure.
 
-`glossary_list` is a conditional vocabulary inventory/ambiguity capability, not
+`glossary_term_list` is a conditional vocabulary inventory/ambiguity capability, not
 an unconditional minimum retrieval tool. Its absence does not block an
 unrelated exact API/spec route whose required tools are present. It is a stop
 condition when the selected route requires complete vocabulary inventory,
@@ -227,7 +249,7 @@ product pair. A `PRODUCT_CONFLICT` returns a revision packet to
 
 Routing is complete only after `platty-mcp-retrieval` has been loaded and its
 Search Clarification Gate has been resolved. Do not answer from project
-overview, glossary, search, spec, graph, or code evidence while still only
+project/domain, glossary, search, spec, graph, or code evidence while still only
 running this transport skill.
 
 For broad, domain-term, business-rule, data-field, design, capability, or
@@ -241,8 +263,10 @@ Keep MCP usage and retrieval judgment separate:
 ```text
 using-platty-mcp       -> transport boundary, capability gate, tool mapping
 platty-mcp-retrieval   -> question route, map-first ladder, evidence gates
+platty-mcp-code-qa     -> code-only business answers when business docs are absent
+platty-mcp-hybrid-qa   -> multi-question / business QA lists (impact questions included, with impact sweeps): parallel docs+code collectors, verify, answer
 platty-mcp-impact-analysis -> Impact Seed Packet reuse, graph/cross-EPIC/workspace convergence
-platty-mcp-memory      -> explicit memory and glossary-alias lifecycle
+platty-mcp-memory      -> explicit Memory reads/requests; administrator-only mutation gaps
 ```
 
 ## Contextual Continuation Routing
@@ -407,25 +431,25 @@ non-conflicting, current alignment packet to the existing design owner.
 
 ## Memory Lifecycle Routing
 
-For explicit memory or glossary-alias read, record, correct, update, or delete
-requests, use `platty-mcp-memory` after the capability gate.
-
-That skill may use memory mutation tools only for explicit user intent. Normal
-retrieval answers remain read-only and keep memory overlays separate from
-generated SOT, specs, and source evidence.
-
-Glossary aliases use the dedicated `glossary_alias_list/add/remove` tools, are
-EPIC-scoped, and remain distinct from generated glossary aliases. Do not route
-them through generic `memory_add/update/delete`.
+Route explicit Memory reads/requests, glossary alias writes, and unavailable
+update/delete requests to `platty-mcp-memory`. Only `memory_request` submits a
+proposal after explicit intent. `memory_list/get` default to `own_requests`;
+attached approved continuations preserve `scope:"approved"` and existing RBAC.
+Alias inventory uses `glossary_alias_list`; explicit alias writes use
+`glossary_alias_add/update/remove`, which the server allows only for ADMIN or
+SUPER_ADMIN. Memory update/delete, approval and rejection remain administrator
+workflows.
+Normal retrieval answers remain read-only and separate overlays from SOT/source.
 
 ## Stop Conditions
 
 - MCP tools are not configured.
-- Minimum retrieval tools are missing.
+- A tool required by the selected route is missing; name that branch gap.
 - A vocabulary inventory, comparison, ambiguity, every-alias, or
-  blank/conflict-fallback route requires `glossary_list` and it is missing.
-- A requested glossary alias read/add/remove route lacks its corresponding
-  `glossary_alias_*` tool.
+  blank/conflict-fallback route requires `glossary_term_list` and it is missing.
+- Glossary alias inventory requires `glossary_alias_list` and it is missing.
+- Memory update/delete and approval/rejection are administrator workflows
+  outside this MCP catalog, even if an older server lists such tools.
 - The task asks for setup, analysis, non-Figma sync, server-side document generation,
   project mutation, local cache changes, local CLI, or memory writes outside
   `platty-mcp-memory`.

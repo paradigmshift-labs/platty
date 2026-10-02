@@ -51,7 +51,7 @@ inventory receipt to the Figma `reportId` and `sourceRevision`.
 
 After the inventory is complete, the coordinator may read project/EPIC lists,
 EPIC summaries, DESIGN/UCL maps, and map-level document/item metadata. It must
-not read exact document items, run `document_spec_resolve`, or resolve specs during
+not read exact document items, run `design_spec_resolve` / `use_case_spec_resolve`, or resolve specs during
 routing.
 
 ```text
@@ -87,7 +87,7 @@ Pool workers may read only:
 
 - selected exact DESIGN/UCL documents/items;
 - one EPIC-lane memory overlay;
-- `document_spec_resolve` for those item selections;
+- `design_spec_resolve` / `use_case_spec_resolve` for those item selections;
 - explicitly linked `screen_spec` and applicable `api_spec` candidates; and
 - a targeted supplement for a recorded link-set or matching gap.
 
@@ -112,7 +112,7 @@ For each lane:
    candidate EPIC. Record `not relevant` with a reason, or run `memory_list`
    followed by `memory_get` only for selected cards. Retain selected memory IDs,
    revisions, and affected fields and reuse the receipt for every owned screen.
-3. Run `document_spec_resolve` for every selected exact document item.
+3. Run `design_spec_resolve` / `use_case_spec_resolve` for every selected exact document item.
 4. Collect and deduplicate the complete union of every explicitly linked
    `screen_spec`, retaining `linkOrigins`.
 5. Run `spec_get` for every collected `screen_spec` and record
@@ -162,9 +162,9 @@ Use `spec_search` only after the explicit link set is absent, incomplete, stale,
 or too broad. Also allow one targeted supplement per affected surface after its
 first matrix returns only `not_matching`. Search results enter the plausible
 pool only after `spec_get` and `spec_impact_resolve`. `code_search` waits for a
-resolved source-near candidate. Before calling `document_search`,
+resolved source-near candidate. Before calling the selected typed business search,
 `spec_search`, or `code_search`, retain the exact selected DESIGN/UCL document
-item and its `document_spec_resolve` receipt. A fast path may scope unrelated
+item and its `design_spec_resolve` / `use_case_spec_resolve` receipt. A fast path may scope unrelated
 corpus branches out; it must never bypass that gate.
 
 ## Per-Screen Matching Matrix
@@ -235,7 +235,7 @@ evaluation may enter source closure. Prove:
 The ban on one worker per screen applies to EPIC-level candidate collection.
 After matching, the coordinator may delegate source closure in parallel by
 unique route/data path or bounded surface group. A source-closure worker receives
-immutable pool receipts and must not repeat `document_spec_resolve`, `spec_get`, or
+immutable pool receipts and must not repeat `design_spec_resolve` / `use_case_spec_resolve`, `spec_get`, or
 `spec_impact_resolve`, nor EPIC/DESIGN/UCL discovery. It returns source evidence only;
 the coordinator retains final classification and canonical-write authority.
 
@@ -266,7 +266,7 @@ reassignment. On drift, invalidate only the affected pool or batch.
 [ ] EpicScreenSpecPool: <EPIC/Design map> — <owned surface IDs>
     [ ] selected exact DESIGN/UCL reads
     [ ] one memory relevance receipt
-    [ ] document_spec_resolve receipts
+    [ ] design_spec_resolve / use_case_spec_resolve receipts
     [ ] complete linked screen_spec union
     [ ] spec_get accounting for every candidate
     [ ] spec_impact_resolve for every plausible candidate
@@ -293,3 +293,5 @@ Do not mark a later gate complete while an earlier required gate is missing.
 The final audit may complete only when every screen has a valid terminal receipt
 and `ExistingSurfaceResolution`. Otherwise keep the pair `NEEDS_WORK` and do not
 report approval-ready completion.
+
+For exact tool names, arguments, namespace-preserving graph continuation and original-artifact/source availability, use [typed retrieval receipts](typed-retrieval-receipts.md).

@@ -14,7 +14,7 @@ MCP로 체험단 참여 제한 정책 변경 prd.md 초안 만들어줘.
 
 Failure to prevent:
 
-- drafting from one `document_search` or glossary hit;
+- drafting from one typed business search or glossary hit;
 - skipping `platty-mcp-retrieval`;
 - treating vocabulary normalization as proof.
 
@@ -179,7 +179,7 @@ Expected route:
 
 ```text
 run Search Route Audit
--> check Search Brief, document_get/memory overlays, exact specs, source snippets, and Final Route Audit
+-> check Search Brief, typed business get / approved Memory context, exact specs, source snippets, and Final Route Audit
 -> complete missing reads when possible
 -> otherwise record the gap and return NEEDS_WORK
 ```
@@ -543,3 +543,5 @@ later explicit approval
 Observable pass criteria: revision computation is delegated to the executable
 helper without `trim` or `trimStart`; a mismatch triggers impact analysis; both
 files remain `draft` until a later user approval sees the refreshed revision.
+
+For exact tool names, arguments, namespace-preserving graph continuation and original-artifact/source availability, use [typed retrieval receipts](typed-retrieval-receipts.md).

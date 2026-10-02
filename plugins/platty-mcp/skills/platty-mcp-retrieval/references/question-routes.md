@@ -15,7 +15,7 @@ Tool names refer to intents in `../../using-platty-mcp/references/tool-mapping.m
 - Data Entity Or Field
 - System Design Or Integration
 - Capability, Journey, User Action
-- Exact API, Screen, Event, Schedule
+- Exact API, Screen, Event, Schedule, DB Logic
 - Impact Or Blast Radius
 - Code Location Or Source Absence
 - Mixed Questions
@@ -29,11 +29,16 @@ Apply the retrieval skill's memory-overlay invariant and the canonical ladder's
 Final Route Audit to every branch below. Branch sections add only their extra
 document families and completion conditions.
 
-Document family names such as BR, DD, DESIGN, and UCL are semantic labels in
-this guide. Open the IDs from `epic_get.documentRefs` directly with
-`document_get`. When an explicit scoped inventory needs `document_list`, use
-the MCP filter values (`br`, `data_dictionary`, `design`, `ucl`). DD maps to
-`data_dictionary`, not `dd`.
+Document family names are labels. Select concrete business_rule, data_dictionary,
+design or use_case tools from the transport table; `<family>` is notation only.
+For semantic summary maps, use selected positive availability counts and returned
+scoped typed lists to recover document IDs. Open returned full documentRefs with
+documentId, exact items with itemIds. A family
+Spec resolver takes one itemId or documentId per call. DD connects stored usage
+through data_dictionary_spec_resolve when requested. All five Spec kinds,
+including db_logic_spec, use spec_get(documentId). Graph directions are
+incoming/outgoing/both with typed code/service_map seeds. Relevant attached
+Memory continuations preserve scope:"approved".
 
 ## Routing Precedence
 
@@ -116,14 +121,17 @@ Completion:
 ## System Design Or Integration
 
 Use the Full-Cycle Retrieval Ladder. Required document family: DESIGN. Open the
-DESIGN ID from `epic_get.documentRefs`; for selected design items, use
-`document_spec_resolve(itemIds)` before search and rank linked
+DESIGN ID from the selected typed list, or replay the returned full EPIC
+continuation when supporting-only DESIGN links are needed and open its refs.
+An empty direct DESIGN list cannot erase a positive supporting count.
+For selected design items, use
+`<family>_spec_resolve(itemId)` before search and rank linked
 API/screen/event/schedule candidates before exact Spec reads.
 
 Completion:
 
 - state the design item or connection read;
-- prefer batched item-level `document_spec_resolve` before search when design
+- prefer exact item-level `<family>_spec_resolve` before search when design
   items have been selected;
 - resolve connected source-near evidence before asserting exact implementation.
 
@@ -133,14 +141,14 @@ Use the Full-Cycle Retrieval Ladder. Required document families: UCL for user
 action/journey; DESIGN is required when the question asks about product flow,
 screen behavior, admin workflow, data flow, integration, architecture, or
 implementation-facing behavior. For selected DESIGN/UCL items, use
-`document_spec_resolve(itemIds)` before source-near search.
+`<family>_spec_resolve(itemId)` before source-near search.
 
 Completion:
 
 - include DESIGN as the product/system map before UCL when the question asks
   about product flow, capability, journey, screen, admin workflow, or
   implementation-facing behavior;
-- use `document_spec_resolve(itemIds)` as the first bridge from selected
+- use `<family>_spec_resolve(itemId)` as the first bridge from selected
   design/UCL items to screen/API Specs; use `spec_search` only when linked context is
   absent, incomplete, stale, too broad, or leaves the exact spec id unknown;
 - identify the user action or capability item;
@@ -153,12 +161,12 @@ Completion:
 - do not answer from the first matching UCL item if adjacent candidate EPICs
   remain unresolved.
 
-## Exact API, Screen, Event, Schedule
+## Exact API, Screen, Event, Schedule, DB Logic
 
 Use the exact source-near branch of the Full-Cycle Retrieval Ladder. Start from
 `spec_get` when the exact spec id is known. When an exact route, title, symbol,
 or trace is known but the spec id is unknown, use `spec_search`, then
-`spec_get` for selected hits. Use `spec_document_resolve` only when reverse
+`spec_get` for selected hits. Use `spec_business_resolve` only when reverse
 business context is requested and `spec_impact_resolve` only when technical
 impact is requested. Use `spec_list` only for a complete EPIC-scoped inventory
 and follow every page.
@@ -171,10 +179,12 @@ Completion:
 
 ## Impact Or Blast Radius
 
-Use the Full-Cycle Retrieval Ladder to map the semantic target first. Then
-resolve connected Specs with `document_spec_resolve`, read selected source-near
-Specs, run `spec_impact_resolve`, and produce an Impact Seed Packet for
-`platty-mcp-impact-analysis`.
+For a broad semantic target without an exact source anchor, use the Full-Cycle
+Retrieval Ladder first, then the concrete family Spec resolver. For a known exact
+Spec or source anchor, preserve the direct-first path: exact Spec/source read,
+then `spec_business_resolve` only for requested business/cross-EPIC context.
+Read selected Specs, run `spec_impact_resolve` for requested technical impact,
+and produce or reuse an Impact Seed Packet for `platty-mcp-impact-analysis`.
 
 Completion:
 

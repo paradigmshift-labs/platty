@@ -5,18 +5,6 @@ description: Use when initializing Platty, creating/selecting/switching projects
 
 # Platty Setup
 
-## Analytics Attribution
-
-For direct invocation, set `PLATTY_INVOCATION_SOURCE=platty-setup` on every
-Platty CLI process in this workflow. If an outer user-facing workflow routes
-here, the outer workflow label wins and overrides this default. Preserve the
-active label for retries, resumes, and every `nextCommand` or
-`nextAction.command` execution.
-
-```bash
-PLATTY_INVOCATION_SOURCE=platty-setup platty setup --json
-```
-
 Use this for Platty setup and setup-state decisions. Platty stores CLI state in
 the user-global Platty home by default (`~/.platty` on macOS/Linux,
 `%APPDATA%\Platty` on Windows). `PLATTY_HOME` overrides that location. The CLI
@@ -50,8 +38,8 @@ machine-readable output or copying exact state for an agent.
 The setup hub should be described as covering:
 
 ```text
-project selection -> repository registration -> analysis -> target review ->
-technical docs -> EPIC auto-confirm -> business documents
+project selection -> repository registration -> analysis -> automatic sync ->
+technical docs -> EPICs -> business documents
 ```
 
 ## Project Dashboard Surface
@@ -63,7 +51,6 @@ Describe the dashboard as showing:
 - The selected project.
 - Registered repositories and their paths.
 - Static-analysis next action.
-- Documentation target review state before technical docs work.
 - Technical docs state.
 - EPIC state and a pending confirmation run id when available.
 - Business-docs state and run id when available.
@@ -162,13 +149,12 @@ Registered repository path is missing or invalid:
 Repositories ready but analysis incomplete:
 
 - Say project and repositories are ready.
-- Explain that static analysis must run before target review and generated docs.
+- Explain that static analysis must run before automatic document generation.
 
-Analysis complete but target review pending:
+Analysis complete and documents not yet generated:
 
-- Say analysis is complete and documentation target candidates are ready.
-- Explain that target review decides which screens, APIs, events, schedules, and
-  data models should be documented.
+- Say analysis is complete and automatic sync will now generate documents from
+  product-facing targets while omitting conventional operational endpoints.
 
 EPIC confirmation pending:
 
@@ -206,6 +192,10 @@ platty repo add <path> --project <project> --json
 platty repo list --project <project> --json
 ```
 
+The `repo add` line is the manual registration route. When the user supplies a
+repository analysis-scope YAML file, use the scope-import route below after
+`repo list` instead.
+
 Use this decision order:
 
 - If `project list` returns zero projects, ask for a project name or create the
@@ -240,6 +230,65 @@ platty repo list --project <project> --json
 platty repo add <path> --project <project> --branch <branch> --json
 platty repo list --project <project> --json
 ```
+
+### Repository analysis-scope YAML
+
+For a reviewed customer ZIP, Gitless directory, or multi-repository scope,
+hand off to `platty-repository-scope`. This section documents the shared CLI
+mechanics only; that skill owns scope boundary and topology decisions.
+
+When a YAML file describes Git repositories or Gitless customer directories and their analysis scopes, inspect
+existing registrations with `repo list`, then import the complete file:
+
+```bash
+platty repo list --project <project> --json
+platty repo scope import <file> --project <project> --json
+platty repo list --project <project> --json
+```
+
+Use only manifest `version: 2`. A Gitless JVM customer directory with an app
+module and its source dependencies has this shape; each `sourceRoot` names a
+module directory, not `src/main/java` or the registration root (`.`):
+
+```yaml
+version: 2
+repositories:
+  - path: ../customer/orders
+    sourceKind: directory
+    sourceRoot: orders-app
+    buildModules:
+      - { name: orders-app, sourceRoot: orders-app, dependsOn: [orders-api] }
+      - { name: orders-api, sourceRoot: orders-api, dependsOn: [shared-core] }
+      - { name: shared-core, sourceRoot: shared-core, dependsOn: [] }
+    exclude: []
+    snapshotExclude: [assets/**/*.png, assets/**/*.jpg]
+```
+
+Resolve `<project>` from project JSON first. A `git` entry may declare an
+intentional `branch`; omitted means the checkout's current branch. A Gitless
+customer folder must declare `sourceKind: directory` and must not declare
+`branch`. The importer resolves each `path` relative to the YAML file and
+upserts by source kind, canonical origin path, and `sourceRoot`. `sourceRoot`,
+`buildModules[].sourceRoot`, `exclude`, and `snapshotExclude` are registration-root-relative
+paths. Literal `exclude` entries match the analysis path and descendants;
+`snapshotExclude` is directory-only and omits matching regular-file bytes from
+the managed Git snapshot. Both use `*` within one path segment and a
+whole-segment `**` matching zero or more segments
+(for example, `Library/**/jquery*.js`). In a glob containing `*`, `?[]{}!()`
+and embedded `**` are rejected; without `*`, those characters remain literal
+path characters for compatibility. For JVM topology,
+each `buildModules` entry has `name`, module-root `sourceRoot`, and
+`dependsOn`; it only scopes reachable source modules and never fabricates
+code relations. An invalid entry rejects the whole import;
+do not retry entries individually through `repo add`, because that would lose
+their scopes. Inspect the JSON `repositories` array for IDs, branches, and
+`analysisScopeHash`, then verify the resulting inventory with `repo list`.
+Changing a stored scope makes static analysis stale; run `platty analyze
+--project <project> --json` before using generated output. If the CLI reports
+inventory-change blockers, follow its `blockers`/`nextAction` before retrying.
+
+Use the manual `repo add` route for registrations without a scope YAML. Its
+behavior is unchanged and it does not enable the scope policy automatically.
 
 Use `--source-root` when only a subdirectory should be analyzed. Use `--branch`
 when analysis should track a specific branch; without it, `repo add` tracks
@@ -302,11 +351,11 @@ state:
 | Select or create project | In `platty setup`, choose `Create or switch project`. | `platty setup --json` |
 | Inspect current project state | In `platty setup`, choose `Manage current project`. | `platty setup --json` |
 | Static analysis | In `Manage current project`, choose `Run static analysis`. | `platty status --project <project> --json` |
-| Target review | In `Manage current project`, review documentation targets before generating technical docs. | `platty targets list --project <project> --json` |
-| Technical docs | In `Manage current project`, choose `Generate technical docs`. | When a run id exists, `platty generate-docs status --project <project> --stage build_docs --run-id <run-id> --json` |
-| EPICs | In `Manage current project`, choose `Generate EPICs` or `Confirm EPICs`. Auto-run returned confirmation commands unless the user requested manual review. | Run the returned `platty generate-docs confirm-epics --project <project> --run-id <run-id> --json` command |
-| Business docs | In `Manage current project`, choose `Generate business docs`. Inspect run state and ask before start. | When a run id exists, `platty generate-docs status --project <project> --stage build_business_docs --run-id <run-id> --json` |
-| Sync | In `Manage current project`, choose sync only after source/repository changes and fresh static analysis. | `platty sync static-map --project <project> --json`, then `sync plan` and returned `sync run` / `sync confirm` commands |
+| Automatic documentation | In `Manage current project`, choose `Sync documents`. | `platty sync run --project <project> --json` |
+| Technical docs | Monitor the automatic sync run. | When a run id exists, `platty generate-docs status --project <project> --stage build_docs --run-id <run-id> --json` |
+| EPICs | Monitor the automatic sync run. | No manual confirmation command is required. |
+| Business docs | Monitor the automatic sync run. | When a run id exists, `platty generate-docs status --project <project> --stage build_business_docs --run-id <run-id> --json` |
+| Sync | Use after source/repository changes and fresh static analysis. | `platty sync run --project <project> --json` |
 
 ## Handoff
 

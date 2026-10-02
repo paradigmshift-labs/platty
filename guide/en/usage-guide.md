@@ -92,30 +92,17 @@ platty --help
 
 Static analysis (`platty analyze`) is fully local and needs no AI provider.
 
-The **documentation step** (`platty generate-docs`) uses an AI model to write the
-docs, so you choose a provider when you run it:
-
-| Provider (`--provider`) | What it uses |
-| --- | --- |
-| `claude_api` | Your own Anthropic API key. |
-| `claude_code` | A local Claude Code installation. |
-| `codex_cli` | A local Codex CLI installation. |
-| `openai_api` | Your own OpenAI API key. |
-
-> 🚧 **The provider list is expanding.** More AI providers will be added over
-> time — the four above are what's available today.
+The **documentation step** (`platty generate-docs`) uses the active project LLM
+policy. The policy selects the provider, model, fallback, concurrency, and
+credential binding before a run starts.
 
 ```bash
-# Generated docs default to codex_cli; pass --provider to choose another
-platty generate-docs run --provider openai_api --model <model>
+platty generate-docs run --project PROJECT --json
 ```
 
-`generate-docs` defaults to `codex_cli`. API providers are explicit opt-in:
-having a key does not override that default. `claude_api` reads
-`ANTHROPIC_API_KEY`, while `openai_api` reads `OPENAI_API_KEY`, from the shell
-environment or `~/.platty/.env`. If generation pauses for EPIC confirmation,
-**keep the same `--provider` and any explicit `--model`** on the follow-up
-`generate-docs confirm-epics` command.
+Do not pass provider/model/worker or stage flags to public `generate-docs run`.
+If the CLI returns an EPIC confirmation or Business Docs recovery command, run
+that exact command.
 
 > 💡 **About cost:** the documentation phase sends your extracted map to an AI
 > model, so it consumes provider tokens and may incur cost on your AI provider
@@ -225,8 +212,8 @@ platty analyze
 # 2) Review what Platty found: the APIs, screens, jobs, and events it will document
 platty targets list --status active
 
-# 3) Generate the documentation (uses your AI provider)
-platty generate-docs run --provider claude_api --model <model>
+# 3) Generate documentation using the active LLM policy
+platty generate-docs run
 
 # Not sure what to do next? Ask Platty at any point
 platty status
@@ -352,7 +339,7 @@ Every command accepts `--json` (machine output) and `--project <selector>`
 | `platty targets list [--kind api\|screen\|job\|event\|all] [--status active\|deprecated\|all]` | List documentation targets. |
 | `platty targets deprecate --ids <id,id>` | Deprecate targets and rebuild the service map. |
 | `platty targets include --ids <id,id>` | Restore deprecated targets. |
-| `platty generate-docs run [--from <stage>] [--provider <p>] [--model <m>]` | Run the doc pipeline (technical docs → EPICs → business docs). |
+| `platty generate-docs run [--full]` | Run the claim-native doc pipeline using the active LLM policy. |
 | `platty generate-docs confirm-epics --run-id <id>` | Confirm the EPIC draft and run business docs. |
 | `platty generate-docs status --run-id <id>` | Inspect a doc run/stage. |
 | `platty generate-docs retry-failed --run-id <id>` | Reset failed tasks for recovery. |
@@ -413,8 +400,7 @@ validation/user error.
 ## Support
 
 For licensing, billing, or feature questions, use the official Platty support
-channel. [Report an issue or request support](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml)
-with:
+channel. When reporting an issue, include:
 
 - your runtime (and the agent runtime/version, if using one),
 - your operating system,

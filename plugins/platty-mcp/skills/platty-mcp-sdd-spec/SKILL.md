@@ -22,6 +22,8 @@ design handoff.
 All reader-facing output is Korean. Keep code identifiers, API paths, file
 paths, status values, and quoted evidence in their original form.
 
+Read [typed retrieval receipts](references/typed-retrieval-receipts.md) before selecting tool arguments. It owns the exact family mapping, ID fields, graph namespaces, approved Memory scope, and original-artifact/source evidence boundaries used throughout this workflow.
+
 ## Required Sub-Skills
 
 1. Use `using-platty-mcp` for MCP capability and project context.
@@ -98,7 +100,7 @@ technical-design handoff; neither consumes the product-question budget.
 6. Stop if minimum retrieval or a selected branch's required evidence surface is
    missing.
 7. Require the retrieval packet to distinguish document-map evidence resolved
-   with `document_spec_resolve` from candidates and include its runtime-only
+   with the matching typed business-to-spec resolver from candidates and include its runtime-only
    `questionOwnershipAudit`.
 8. Classify each unresolved item as `FACT`, `PRODUCT`, or `DESIGN`. Resolve
    `FACT` through retrieval or record its exact evidence boundary. Split mixed
@@ -427,9 +429,9 @@ Apply this review sequence:
    both drafts.
 2. Import the `platty-mcp-retrieval` Final Route Audit into
    `searchRouteAudit`, including Search Brief completeness, selected EPIC and
-   BR/DD/DESIGN/UCL maps, exact items, `document_get` and attached memory
-   overlays when relevant, `document_spec_resolve`, selected `spec_get`, the
-   requested `spec_document_resolve` or `spec_impact_resolve` direction, source
+   BR/DD/DESIGN/UCL maps, exact items, the selected typed business get and attached memory
+   overlays when relevant, the matching typed business-to-spec resolver, selected `spec_get`, the
+   requested `spec_business_resolve` or `spec_impact_resolve` direction, source
    snippets for exact claims, and unread surfaces.
    Import `questionOwnershipAudit` and verify every unresolved item has exactly
    one owner or was deliberately split into product and technical parts.

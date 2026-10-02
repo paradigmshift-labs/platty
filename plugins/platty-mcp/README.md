@@ -99,15 +99,35 @@ Korean companion documents for reviewing the skill contracts:
 - [`platty-mcp-sdd-spec-from-figma/SKILL.ko.md`](skills/platty-mcp-sdd-spec-from-figma/SKILL.ko.md)
 - [`platty-mcp-sdd-design-with-figma/SKILL.ko.md`](skills/platty-mcp-sdd-design-with-figma/SKILL.ko.md)
 
-Stored artifact file content access must go through configured MCP tools such
-as `sot_file_get`. Use the full `platty` plugin for operator workflows outside
-those SDD-file exceptions.
+When a project has no business documents (`br`, `ucl`, `design`,
+`data_dictionary` all 0) or the user asks for a code-only answer,
+`platty-mcp:platty-mcp-code-qa` answers business questions from source code
+through the read-only route, workspace search, and workspace shell tools, in
+plain Korean with collapsed `file:line` evidence.
+
+For one or many non-developer business questions (for example a QA list),
+`platty-mcp:platty-mcp-hybrid-qa` splits each question into a docs job and a
+code job, runs the evidence collectors in parallel, verifies every docs-vs-code
+conflict with targeted MCP reads, and answers with a docs-vs-code evidence
+table. On Claude Code it dispatches the plugin agents below; on Codex with
+multi-agent support it dispatches each collector job with `spawn_agent` on a
+Luna-class model (up to 6 concurrent, `wait_agent` / `close_agent`) and runs
+verification in a SOL-class worker or main session, recording the exact model
+and effort per job; on runtimes without model-selectable subagents (Codex
+without multi-agent) it runs the same jobs sequentially in-session with the
+same evidence schema.
+
+Stored SOT content is read through the typed MCP tools. `sot_render` returns a
+DB-rendered Markdown projection, not the original stored file. Use the full
+`platty` plugin for operator workflows outside those SDD-file exceptions.
 
 ## Included Skills
 
 - `platty-mcp:using-platty-mcp`
 - `platty-mcp:platty-mcp-client-setup`
 - `platty-mcp:platty-mcp-retrieval`
+- `platty-mcp:platty-mcp-code-qa`
+- `platty-mcp:platty-mcp-hybrid-qa`
 - `platty-mcp:platty-mcp-impact-analysis`
 - `platty-mcp:platty-mcp-memory`
 - `platty-mcp:platty-mcp-figma-design-sync`
@@ -116,10 +136,76 @@ those SDD-file exceptions.
 - `platty-mcp:platty-mcp-sdd-spec`
 - `platty-mcp:platty-mcp-sdd-design`
 
-## Standalone FSD and Wireframe Skills
+## Included Agents (Claude Code)
 
-- `platty-mcp:writing-fsd` — write and review a screen and user-experience FSD from approved PRD/JTBD documents, interviewing unresolved product and design decisions.
-- `platty-mcp:heroines-low-fi-wireframes` — create and review local low fidelity Heroines wireframes from an FSD or confirmed screen behavior.
+Claude Code discovers these from `agents/`; Codex ignores the directory. With
+multi-agent support the hybrid QA skill dispatches `spawn_agent` workers
+instead; without it, it falls back to sequential in-session jobs.
 
-These skills keep their original names, references, templates, and invocation prompts.
-Invoke them independently; they are not stages of `ba-interview` and are not dispatched by its controller.
+- `platty-mcp:platty-evidence-collector-docs` — Sonnet, low effort; docs-track
+  collector on the `platty-mcp-retrieval` ladder, returns collector JSON only.
+- `platty-mcp:platty-evidence-collector-code` — Sonnet, low effort; code-track
+  collector on the `platty-mcp-code-qa` ladder, returns collector JSON only.
+- `platty-mcp:platty-qa-synthesizer` — Opus, high effort; verify-and-answer
+  step for sessions whose main model is not a strong model.
+
+The agents deny host shell, file write, file edit, and subagent-spawn tools;
+they reach project evidence only through the configured Platty MCP tools.
+
+Read-only MCP enforcement: the MCP server name differs per deployment (for
+example a custom registration name or a connector ID), and Claude Code agent
+`tools` / `disallowedTools` patterns accept MCP wildcards only as
+`mcp__<server>__*` or `mcp__*` — a server-name wildcard such as
+`mcp__*__memory_request` is not supported, and plugin agents ignore a `hooks`
+frontmatter field. The plugin therefore ships a plugin-level `PreToolUse` hook,
+`hooks/hybrid-qa-agent-guard.sh` (registered in `hooks/hooks.json`). It acts
+only when the calling agent is one of the three agents above and blocks every
+MCP call whose tool name is not a read-only Platty tool (memory and
+glossary-alias writes, and tools of other MCP servers). The main session and
+other agents are not affected, so `platty-mcp-memory` keeps working.
+
+The guard reads the top-level `agent_type` and `tool_name` of the hook input
+with `node`, or `python3` when node is absent, so keys nested inside a tool's
+arguments never activate or bypass it. When neither parser is available, or the
+input is not a JSON object, it falls back to a conservative text scan: any
+guarded `agent_type` (even a nested one) applies the guard, every `tool_name`
+value present must be a read-only Platty tool, and a guarded call with no
+readable tool name is blocked. Input with no guarded `agent_type` is always
+allowed.
+
+Remaining limitations: the guard needs a POSIX `sh` (macOS and Linux); it
+identifies Platty tools by name after the server segment, so a different MCP
+server that exposes a same-named read tool is not distinguished; and it fails
+closed, so a new read-only Platty tool must be added to its list (a repository
+test keeps the list equal to the MCP catalogs minus write tools). Codex does not
+load the hook; in Codex the sequential in-session mode and the `spawn_agent`
+workers follow the skills' read-only rules, which the spawn prompt states
+explicitly.
+
+## Registering a code environment guide
+
+The code QA and hybrid QA skills read an operator-written code environment
+guide through `code_search_guide_get`. It is optional but strongly
+recommended: without it, agents infer repository roles from repository names.
+
+- Location: one Markdown file per project at
+  `<PLATTY_SOT_ROOT>/_guides/<projectId>/code-search-guide.md` on the API host
+  (`<projectId>` is the opaque project ID). On the PoC host this is
+  `/opt/platty/sot-operating/_guides/<projectId>/code-search-guide.md`.
+- Content: a single file with appendices — repository map and ownership,
+  routing rules, layer conventions, search recipes, noise and credential paths
+  to exclude, mirror or duplicate systems, and appendices such as status or
+  message-code dictionaries and menu → screen → API → SQL tables. Keep it
+  generic to the project; never put credentials in it.
+- Size and paging: the tool returns pages of about 60,000 characters with a
+  `nextCursor`; the file may be up to 2 MB. Agents read every page once per
+  session and hand each job only the relevant sections.
+- Updates: the file is read on every request, so no API restart is needed after
+  adding or editing it. Editing it while an agent is paging makes that agent
+  restart from the first page.
+- Permissions: the file and its folders must be readable by the API process
+  user (UID 10001 in the enterprise PoC compose deployment), for example
+  `chown -R 10001:10001 <PLATTY_SOT_ROOT>/_guides/<projectId>` with mode `0644`
+  for the file. A symlink must resolve inside the project's `_guides` folder.
+- Missing guide: `code_search_guide_get` returns `available: false`; the skills
+  continue from repository names and recommend registering a guide.

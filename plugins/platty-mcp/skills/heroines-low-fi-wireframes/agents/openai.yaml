@@ -1,4 +1,0 @@
-interface:
-  display_name: "히로인스 로우 피델리티 와이어프레임"
-  short_description: "FSD를 근거로 히로인스 와이어프레임 제작"
-  default_prompt: "$heroines-low-fi-wireframes를 사용해 이 히로인스 FSD를 검토 가능한 로우 피델리티 와이어프레임으로 만들어줘."

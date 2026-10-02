@@ -59,32 +59,26 @@ visible.
 
 ## Validate
 
-1. Confirm Platty MCP tools are visible in the runtime.
-2. Verify `tools/list` includes the minimum retrieval tier from
-   `references/tool-mapping.md`:
-   `project_list`, `context_status`, `project_overview_get`,
-   `glossary_translate`, `epic_list`, `epic_get`, `document_list`,
-   `document_get`, `document_item_list`, `document_item_get`,
-   `document_spec_resolve`, and `spec_get`.
-3. If `document_search`, `spec_list`, or `spec_search` are also visible, note
-   that the search-assist tier is available. If `spec_document_resolve` and
-   `spec_impact_resolve` are visible, note that reverse business context and
-   directional technical impact are available.
-4. If `graph_trace` or `code_search` is also visible, note that graph/code
-   discovery is available.
-5. If `workspace_repo_list` or `readonly_workspace_shell` are also visible,
-   note the available workspace source-parity tools. They are optional and do
-   not change the minimum retrieval tier; full repository source parity requires
-   both tools.
-6. If `sot_file_get` is also visible, note that the artifact-access tier is
-   available for stored SOT file content requests. Download and bundle metadata
-   tools are not part of this MCP profile.
-7. Call `project_list`.
-8. If one project is available, use that `projectId`.
-9. If multiple projects are plausible, ask which project to use.
-10. Route retrieval and impact questions to `using-platty-mcp`; impact routing
-    requires a produced or reused Impact Seed Packet and may update PRD §9
-    only through `platty-mcp-impact-analysis` in its selected SDD directory.
+1. Confirm runtime tools are visible and read live `tools/list` schemas.
+2. Read `../using-platty-mcp/references/tool-mapping.md`. Check concrete tools
+   for the selected route: typed business maps, five-kind Spec reads, scoped
+   Memory, vocabulary, graph/source, Git, or `sot_render`. An exact known-ID
+   route checks its own requirements; an unrelated missing tier does not block it.
+3. Project: reuse a known opaque ID. When the user did not name a project,
+   omit `projectId` on `context_status`; the server uses its default project
+   (the Platty CLI's current project, or the only project you can read) and
+   echoes the `projectId` it used. Do not call `project_list` first. Call
+   `project_list` only when that call returns `INVALID_INPUT` naming
+   `projectId` (no default is set; the operator can set one with
+   `platty project use <id>`), when the user names a project without its
+   opaque ID, or when the user asks which projects exist. Ask only when
+   multiple projects remain plausible.
+4. Read `context_status` for freshness-sensitive validation. Per-tool observed
+   availability is local authorized readiness, not an adapter-presence, network,
+   remote freshness, or deployment claim.
+5. Route questions through `using-platty-mcp`. Impact needs a produced/reused
+   Impact Seed Packet; PRD §9 remains owned by `platty-mcp-impact-analysis`.
+   Registration/listing alone is not successful execution of all 54 tools.
 
 ## Missing Server
 
@@ -94,5 +88,9 @@ Platty MCP `/api/mcp` URL.
 
 ## Completion
 
-Complete when the runtime exposes Platty MCP tools and `project_list` returns
-projects, or when you can report the exact client/server configuration gap.
+Complete when runtime tools are visible and an opaque project is known: the
+server default project (the `projectId` that `context_status` echoes when
+`projectId` was omitted), one selected from `project_list`, or one reused from
+known context, with the selected route's observed capability/readiness limits
+recorded. Otherwise report the exact client/server
+configuration gap. Listing alone does not prove successful tool execution.

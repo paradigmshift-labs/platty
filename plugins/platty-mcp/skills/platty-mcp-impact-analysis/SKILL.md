@@ -18,6 +18,9 @@ In SDD context, use
 `../using-platty-mcp/references/sdd-revision-contract.md` for product bindings
 and downstream fingerprints.
 
+`<family>` is reference notation for a concrete prefix in the transport tool map;
+replay returned tools and arguments, including approved Memory scope and typed seeds.
+
 ## Operating Flow
 
 1. Confirm project, freshness, and MCP tiers through `using-platty-mcp`.
@@ -25,13 +28,14 @@ and downstream fingerprints.
    packet. Otherwise invoke retrieval with `routeMode: seed-only` and require it
    to return the packet to this caller without escalating back to impact. Read
    `references/impact-seed-packet.md`.
-3. Resolve selected BR/UCL/DESIGN items with `document_spec_resolve`, read the
+3. Resolve selected BR/UCL/DESIGN items with `<family>_spec_resolve`, read the
    selected Specs, then call `spec_impact_resolve` for direct upstream,
-   downstream, or both-direction technical impact. DD remains on its Entity
-   route. Use `graph_trace(nodeIds, direction)` as a one-hop structural map of
+   downstream, or both-direction technical impact. DD uses exact data objects and its usage resolver when requested.
+    Use `graph_trace(seeds=[{kind:"code"|"service_map",nodeId}], depth=1, direction="both")` as a one-hop structural map of
    `screen ↔ API ↔ domain ↔ DB` plus event/job/external paths. Preserve
    confirmed edges, unresolved candidates, omissions, truncation, and frontier.
-   Continue only selected frontier node IDs and maintain a visited set; graph
+   Replay selected returned typed frontier seeds, one namespace per call, and
+   maintain a visited (kind,nodeId) set; graph
    evidence alone never proves detailed behavior.
 4. Traverse confirmed cross-EPIC evidence through
    `references/cross-epic-traversal.md`.
@@ -40,8 +44,15 @@ and downstream fingerprints.
    or API/event entry and cover the reachable domain/orchestration,
    DB/external boundary, event producers/consumers, and adjacent tests,
    configuration, and migrations when they exist. Follow the source ladder
-   exactly: `workspace_repo_list -> select repo -> readonly_workspace_shell
-   search -> exact source read`. Call `workspace_repo_list` before shell
+   exactly: `code_search_guide_get -> workspace_repo_list -> workspace_search ->
+   select repo -> readonly_workspace_shell exact source read`. Use
+   `workspace_search` with the guide's candidate `repoIds` and `globs` to find
+   every repository that references the changed identifier (callers, batch
+   jobs, SQL ids, table names) in one call; treat any non-`complete`
+   repository status or `truncated: true` as partial coverage to narrow and
+   re-search, never as absence. Read the code search
+   guide once per project before source investigation; `available: false`
+   means no guide is registered. Call `workspace_repo_list` before shell
    investigation unless repo id and analyzed commit are already present.
 6. Use `readonly_workspace_shell` only after repository selection, with the
    documented read-only command allowlist and bounded output. Search exact
@@ -107,6 +118,11 @@ design, or task files.
 - Minimum retrieval is unavailable or project context is ambiguous.
 - SDD project id mismatches selected MCP project.
 - The impact artifact cannot be written or verified.
+
+Outside SDD context, when business documents are absent (`br`, `ucl`,
+`design`, `data_dictionary` all 0) and no packet can carry semantic scope, hand
+the question to `platty-mcp-code-qa` (its change-impact and direct-data-edit
+recipes) and label the result code-only.
 
 Missing source parity does not stop the investigation: weaken or omit the hard
 claim, record the exact missing surface and next read, and persist `partial`.
