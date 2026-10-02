@@ -3,6 +3,7 @@
 import argparse
 import copy
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -62,6 +63,13 @@ def interview_allowed(stage):
 UPSTREAM_ARTIFACT = {stage: ARTIFACT_NAMES[STAGE_ORDER[index]]
                      for index, stage in enumerate(STAGE_ORDER[1:])}
 START_STAGES = STAGE_ORDER[1:]
+DELIVERY_STEPS = ('storyboard', 'notion', 'results')
+DELIVERY_PHASES = {
+    'storyboard': 'deliver_storyboard',
+    'notion': 'publish_notion',
+    'results': 'deliver_results',
+}
+DELIVERY_CHECKPOINTS = ('bundle', 'jtbd', 'prd', 'user_experience')
 
 
 def next_stage(stage):
@@ -1077,6 +1085,201 @@ def input_binding_current(folder, data):
         return False
 
 
+def delivery_input_hashes(folder, user_experience_data):
+    """The confirmed BA documents a storyboard and publish receipt covers."""
+    inputs = {}
+    for stage in ('jtbd', 'prd'):
+        path = artifact_path(folder, stage)
+        if not path.exists():
+            raise ValueError(f'{stage} artifact is required before UX delivery')
+        data = load_json(path)
+        if not validate_case_artifact(folder, stage, data).get('complete'):
+            raise ValueError(f'{stage} must be complete and confirmed before UX delivery')
+        if stage == 'prd' and not input_binding_current(folder, data):
+            raise ValueError('prd must be bound to the current confirmed JTBD before UX delivery')
+        content_hash, review_hash = artifact_fingerprints(stage, data)
+        inputs[stage] = {
+            'path': str(path.resolve()),
+            'content_hash': content_hash,
+            'review_hash': review_hash,
+            'confirmation_turn_id': (data.get('confirmation') or {}).get('turn_id', ''),
+        }
+    if not validate_case_artifact(folder, 'user_experience', user_experience_data).get('complete'):
+        raise ValueError('user_experience must be complete and confirmed before UX delivery')
+    content_hash, review_hash = artifact_fingerprints('user_experience', user_experience_data)
+    inputs['user_experience'] = {
+        'path': str(artifact_path(folder, 'user_experience').resolve()),
+        'content_hash': content_hash,
+        'review_hash': review_hash,
+        'confirmation_turn_id': (user_experience_data.get('confirmation') or {}).get('turn_id', ''),
+    }
+    encoded = json.dumps(inputs, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8')
+    return {'input_hash': hashlib.sha256(encoded).hexdigest(), 'inputs': inputs}
+
+
+def delivery_record_current(record, input_hash):
+    return isinstance(record, dict) and record.get('input_hash') == input_hash
+
+
+def delivery_receipt(session, step, input_hash):
+    record = ((session.get('ux_delivery') or {}).get('receipts') or {}).get(step)
+    return record if delivery_record_current(record, input_hash) else None
+
+
+def html_receipt_current(record, verify_hash=False):
+    path = record.get('html_path') if isinstance(record, dict) else ''
+    if not (path and Path(path).is_file()):
+        return False
+    return not verify_hash or not record.get('html_hash') or file_hash(path) == record.get('html_hash')
+
+
+def notion_receipt_complete(record):
+    checkpoints = (record or {}).get('checkpoints') or {}
+    return all(checkpoints.get(name, {}).get('page_id') for name in DELIVERY_CHECKPOINTS)
+
+
+def delivery_snapshot(folder, session, data):
+    hashes = delivery_input_hashes(folder, data)
+    input_hash = hashes['input_hash']
+    receipts = (session.get('ux_delivery') or {}).get('receipts') or {}
+    current = {step: delivery_receipt(session, step, input_hash) for step in DELIVERY_STEPS}
+    stale = sorted(step for step, record in receipts.items()
+                   if isinstance(record, dict) and record.get('input_hash') and record.get('input_hash') != input_hash)
+    if not current['storyboard'] or current['storyboard'].get('status') != 'complete' \
+            or not html_receipt_current(current['storyboard']):
+        step = 'storyboard'
+    elif not current['notion'] or current['notion'].get('status') == 'waiting' \
+            or current['notion'].get('status') not in ('complete', 'gap') \
+            or (current['notion'].get('status') == 'complete' and not notion_receipt_complete(current['notion'])):
+        step = 'notion'
+    elif not current['results'] or current['results'].get('status') != 'complete' \
+            or not html_receipt_current(current['results'], verify_hash=True):
+        step = 'results'
+    else:
+        step = 'complete'
+    return {
+        **hashes,
+        'required': bool(session.get('ux_delivery_required') or session.get('ux_delivery')),
+        'step': step,
+        'phase': DELIVERY_PHASES.get(step, 'complete'),
+        'receipts': current,
+        'stale_receipts': stale,
+    }
+
+
+def delivery_required(folder, session, data, report, input_current):
+    if session['stage'] != 'user_experience' or not input_current:
+        return False
+    if not (report.get('complete') and not session.get('needs_processing') and not session.get('pending')):
+        return False
+    return bool(session.get('ux_delivery_required') or session.get('ux_delivery'))
+
+
+def delivery_inputs_available(folder):
+    return artifact_path(folder, 'jtbd').exists() and artifact_path(folder, 'prd').exists()
+
+
+def delivery_chain_current(folder):
+    if not delivery_inputs_available(folder):
+        return False
+    try:
+        return input_binding_current(folder, load_json(artifact_path(folder, 'prd')))
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+
+
+def delivery_status_summary(folder, session, data, report, input_current):
+    if session['stage'] != 'user_experience' or not (session.get('ux_delivery_required') or session.get('ux_delivery')):
+        return None
+    if not delivery_required(folder, session, data, report, input_current):
+        return {'required': True, 'active': False, 'input_current': input_current,
+                'complete': bool(report.get('complete')),
+                'reason': 'UX delivery waits until user experience is complete, confirmed and current.'}
+    if not delivery_chain_current(folder):
+        return {'required': True, 'active': False, 'input_current': input_current,
+                'complete': bool(report.get('complete')),
+                'reason': 'UX delivery requires current confirmed JTBD and PRD inputs.'}
+    return {'active': True, **delivery_snapshot(folder, session, data)}
+
+
+def delivery_action(delivery):
+    step = delivery['step']
+    prompts = {
+        'storyboard': '같은 턴에서 storyboard HTML을 생성하고 delivery-record --step storyboard 영수증을 기록한다.',
+        'notion': '같은 턴에서 Notion 묶음과 JTBD/PRD/사용자 경험 페이지를 게시하고 페이지별 checkpoint를 기록한다.',
+        'results': '게시 URL을 반영한 최종 storyboard HTML을 사용자에게 전달하고 delivery-record --step results를 기록한다.',
+    }
+    return {'issue_id': 'ux-delivery', 'areas': ['storyboard', 'notion', 'handoff'],
+            'kind': 'delivery', 'step': step, 'prompt': prompts[step],
+            'reason': '사용자 경험 확정 후 화면 동작 명세 전에 storyboard와 Notion 전달 결과가 필요하다.'}
+
+
+def parse_delivery_checkpoints(values):
+    checkpoints = {}
+    for value in values or []:
+        parts = value.split(':', 2)
+        if len(parts) != 3 or parts[0] not in DELIVERY_CHECKPOINTS or not parts[1].strip() or not parts[2].strip():
+            raise ValueError('checkpoint must be one of bundle|jtbd|prd|user_experience:PAGE_ID:URL')
+        checkpoints[parts[0]] = {'checkpoint_id': parts[0], 'page_id': parts[1], 'url': parts[2]}
+    return checkpoints
+
+
+def record_delivery(folder, session, data, args):
+    if session['stage'] != 'user_experience':
+        raise ValueError('delivery-record requires the user experience stage')
+    if args.step not in DELIVERY_STEPS:
+        raise ValueError('delivery step must be storyboard, notion, or results')
+    if args.step == 'storyboard' and args.status == 'gap':
+        raise ValueError('storyboard generation failure is waiting, not gap; record --status waiting with a resume reason')
+    if not validate_case_artifact(folder, 'user_experience', data).get('complete') or not input_binding_current(folder, data):
+        raise ValueError('delivery-record requires complete, confirmed and current user experience')
+    snapshot = delivery_snapshot(folder, session, data)
+    if args.input_hash != snapshot['input_hash']:
+        raise ValueError('delivery receipt input_hash is stale; run delivery-status again')
+    if args.step != snapshot['step'] and not (args.step == 'notion' and snapshot['step'] == 'notion'):
+        raise ValueError(f'delivery-record for {args.step} cannot run while {snapshot["step"]} is required')
+    if args.status in ('waiting', 'gap') and not (args.reason or '').strip():
+        raise ValueError('waiting or gap delivery receipts require --reason')
+    record = {'step': args.step, 'status': args.status, 'input_hash': args.input_hash,
+              'recorded_at': now(), 'reason': args.reason or ''}
+    if args.html is not None:
+        html = args.html.resolve()
+        record['html_path'] = str(html)
+        if html.is_file():
+            record['html_hash'] = file_hash(html)
+    if args.step in ('storyboard', 'results') and args.status == 'complete' and not html_receipt_current(record):
+        raise ValueError('--html must point at the delivered storyboard HTML file')
+    if args.spec is not None:
+        record['spec_path'] = str(args.spec.resolve())
+    if args.url:
+        record['url'] = args.url
+    if args.parent_page_id:
+        record['parent_page_id'] = args.parent_page_id
+    checkpoints = parse_delivery_checkpoints(args.checkpoint)
+    previous = (((session.get('ux_delivery') or {}).get('receipts') or {}).get(args.step) or {})
+    same_input_previous = previous if previous.get('input_hash') == args.input_hash else {}
+    for key in ('checkpoints', 'parent_page_id', 'html_path', 'spec_path', 'url'):
+        if key in same_input_previous and key not in record:
+            record[key] = copy.deepcopy(same_input_previous[key])
+    if checkpoints:
+        record['checkpoints'] = {**(record.get('checkpoints') or {}), **checkpoints}
+    if args.step == 'notion' and args.status == 'complete' and not notion_receipt_complete(record):
+        raise ValueError('notion complete requires bundle, jtbd, prd and user_experience checkpoints')
+    delivery = copy.deepcopy(session.get('ux_delivery') or {'version': 1, 'receipts': {}})
+    delivery.setdefault('version', 1)
+    delivery.setdefault('receipts', {})
+    if same_input_previous == {} and previous.get('input_hash') and previous.get('input_hash') != args.input_hash:
+        delivery.setdefault('stale_receipts', []).append(copy.deepcopy(previous))
+    delivery['input_hash'] = args.input_hash
+    delivery['input_hashes'] = snapshot['inputs']
+    delivery['receipts'][args.step] = record
+    session['ux_delivery'] = delivery
+    session['ux_delivery_required'] = True
+    append_entry(session, 'system', 'delivery-record', f"{args.step}: {args.status}")
+    save_metadata(folder, session)
+    return view(folder, session, data)
+
+
 def inventory_checkpoint_current(folder, session, data):
     if session['stage'] != 'screen_behavior' or data.get('schema_version') != 3:
         return True
@@ -1217,6 +1420,25 @@ def view(folder, session, data):
         phase = 'input_stale'
     elif session['refresh_required']:
         phase = 'prepare_context'
+    elif (session['stage'] == 'user_experience'
+          and (session.get('ux_delivery_required') or session.get('ux_delivery'))
+          and report.get('complete') and input_current
+          and not delivery_chain_current(folder)):
+        phase = 'input_stale'
+        required_actions.insert(0, {
+            'issue_id': 'delivery-input-binding', 'areas': ['jtbd', 'prd', 'user_experience'],
+            'kind': 'handoff',
+            'prompt': 'JTBD·PRD·사용자 경험 확정본의 현재 연결을 복구한 뒤 UX delivery를 재개한다.',
+            'reason': 'UX delivery requires current confirmed JTBD and PRD inputs.',
+        })
+    elif delivery_required(folder, session, data, report, input_current):
+        delivery = delivery_snapshot(folder, session, data)
+        if delivery['step'] != 'complete':
+            receipt = delivery['receipts'].get(delivery['step']) or {}
+            phase = 'waiting' if receipt.get('status') == 'waiting' else delivery['phase']
+            required_actions.insert(0, delivery_action(delivery))
+        else:
+            phase = 'start_screen_behavior'
     elif report['complete'] and not session.get('needs_processing') and not session['pending']:
         phase = {'jtbd': 'start_prd', 'prd': 'start_user_experience',
                  'planning_context': 'start_user_experience',
@@ -1272,6 +1494,10 @@ def view(folder, session, data):
     # A recorded handoff ends the session without pretending the remaining work is gone.
     can_yield = bool(session.get('handed_off')) or phase in (
         'awaiting_answer', 'awaiting_confirmation', 'waiting', 'paused', 'complete')
+    if phase == 'publish_notion':
+        current_delivery = delivery_snapshot(folder, session, data)
+        receipt = current_delivery['receipts'].get('notion') or {}
+        can_yield = receipt.get('status') == 'waiting'
     yield_reason = {
         'awaiting_answer': 'waiting for the user to answer the saved interview question',
         'awaiting_confirmation': 'waiting for the user to confirm the saved final summary',
@@ -1279,6 +1505,9 @@ def view(folder, session, data):
         'paused': 'paused at the user request',
         'handoff_due': 'a handoff note is required before this session can end; run handoff',
         'export_figma': 'the completed wireframe must be exported to Figma, or the gap recorded, before this session ends',
+        'deliver_storyboard': 'the storyboard must be generated and recorded before screen behavior starts',
+        'publish_notion': 'the BA bundle must be published, or a waiting/gap receipt recorded, before results are delivered',
+        'deliver_results': 'the storyboard and publish result must be presented before screen behavior starts',
         'complete': session['stage'].replace('_', ' ') + ' is validated and confirmed',
     }.get(phase, 'the workflow still has work it can perform before yielding')
     if session.get('handed_off') and phase not in ('awaiting_answer', 'awaiting_confirmation',
@@ -1307,6 +1536,9 @@ def view(folder, session, data):
         'paused': '사용자 요청으로 인터뷰가 중단되었습니다.',
         'handoff_due': '이 세션은 여기서 끝내야 합니다. handoff 로 인계장을 남기세요.',
         'export_figma': '와이어프레임이 확정되어 Figma 익스포트를 바로 진행해야 합니다.',
+        'deliver_storyboard': '사용자 경험 설계가 확정되어 스토리보드 HTML을 먼저 생성해야 합니다.',
+        'publish_notion': '스토리보드 다음으로 Notion 묶음과 JTBD·PRD·사용자 경험 페이지를 게시해야 합니다.',
+        'deliver_results': '게시 링크를 반영한 최종 스토리보드를 먼저 사용자에게 전달해야 합니다.',
         'complete': complete_text,
         'start_prd': 'JTBD 확인이 완료되어 PRD 정의를 바로 시작해야 합니다.',
         'start_user_experience': '기획 맥락 정의 확인이 완료되어 사용자 경험 설계를 바로 시작해야 합니다.',
@@ -1315,7 +1547,7 @@ def view(folder, session, data):
         'input_stale': '선행 인터뷰 입력이 변경되어 다시 확인해야 합니다.',
         'logging_failed': '실행 기록 저장을 복구해야 합니다. 이전 동작을 반복 실행하지 않습니다.',
     }[phase]
-    return {'case_path': str(folder.resolve()), 'stage': session['stage'], 'mode': session['mode'],
+    result = {'case_path': str(folder.resolve()), 'stage': session['stage'], 'mode': session['mode'],
             'phase': phase, 'migration_required':migration_required, 'inventory_checkpoint':session.get('inventory_checkpoint'), 'refresh_required': session['refresh_required'],
             'input_current': input_current,
             'pending': session['pending'], 'last_user': last_user(session),
@@ -1328,10 +1560,17 @@ def view(folder, session, data):
             'work_bytes': session.get('work_bytes', 0),
             'validation': report,
             'next_stage': {'start_prd': 'prd_ready', 'start_user_experience': 'user_experience_ready', 'start_screen_behavior': 'screen_behavior_ready',
+                           'deliver_storyboard': 'storyboard_delivery',
+                           'publish_notion': 'notion_publish',
+                           'deliver_results': 'results_delivery',
                            'start_design_system_wireframe': 'design_system_wireframe_ready',
                            'action_required': 'wireframe_engine_work',
                            'export_figma': 'figma_export',
                            'complete': 'complete'}.get(phase)}
+    delivery_status = delivery_status_summary(folder, session, data, report, input_current)
+    if delivery_status is not None:
+        result['delivery'] = delivery_status
+    return result
 
 
 STAGE_LABELS = {'jtbd': 'JTBD 정의', 'prd': 'PRD 정의',
@@ -1657,6 +1896,8 @@ def complete_derived(folder, session, candidate, report):
         candidate['confirmation'].update(input_hash=report['input_hash'],
                                          knowledge_hash=report['knowledge_hash'])
     candidate['status'] = 'complete'
+    if session['stage'] == 'user_experience' and delivery_inputs_available(folder):
+        session['ux_delivery_required'] = True
     final = validate_case_artifact(folder, session['stage'], candidate)
     if not final['complete']:
         raise ValueError(json.dumps(final, ensure_ascii=False))
@@ -1784,6 +2025,8 @@ def run(args):
         session = {'version': 1, 'layout': CURRENT_LAYOUT, 'stage': stage, 'mode': args.mode, 'model': args.model or 'unrecorded', 'created_at': now(),
                    'updated_at': now(), 'paused': False, 'refresh_required': False,
                    'refresh_after': '', 'needs_processing': initial is not None, 'pending': None, 'answered_question': None, 'entries': []}
+        if args.mode == 'live':
+            session['ux_delivery_required'] = True
         if initial is not None:
             append_entry(session, 'user', 'initial', initial)
         folder.mkdir(parents=True, exist_ok=False)
@@ -1872,6 +2115,8 @@ def run(args):
         session['needs_processing'] = False
         session['pending'] = None
         session['answered_question'] = None
+        if session.get('mode') == 'live' and upstream == 'prd':
+            session['ux_delivery_required'] = True
         append_entry(session, 'system', 'start-user-experience',
                      f'User experience started from the confirmed {upstream} result.')
         data = load_json(artifact_path(folder, 'user_experience'))
@@ -1884,8 +2129,14 @@ def run(args):
         if session['paused'] or (session['refresh_required']
                                  and refresh_blocks_exit(session['stage'])):
             raise ValueError('resume and refresh the upstream context before start-screen-behavior')
+        if session.get('pending') or session.get('needs_processing'):
+            raise ValueError('process the pending UX question or answer before start-screen-behavior')
         if not user_experience.validate(data)['complete'] or not input_binding_current(folder, data):
             raise ValueError('user experience and its input must be complete, confirmed and current')
+        if session.get('ux_delivery_required') or session.get('ux_delivery'):
+            delivery = delivery_snapshot(folder, session, data)
+            if delivery['step'] != 'complete':
+                raise ValueError(f'user experience delivery is not complete; run delivery-status and finish {delivery["phase"]}')
         module = stage_module('screen_behavior')
         path = artifact_path(folder, 'screen_behavior')
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -2072,6 +2323,23 @@ def run(args):
                     'phase': result['phase'], 'can_yield': result['can_yield'],
                     'map': render_map(folder, session, data, report)}
         return result
+    if args.command == 'delivery-status':
+        result = view(folder, session, data)
+        return {'case_path': result['case_path'], 'stage': result['stage'],
+                'phase': result['phase'], 'delivery': result.get('delivery')}
+    if args.command == 'delivery-start':
+        if session['stage'] != 'user_experience':
+            raise ValueError('delivery-start requires the user experience stage')
+        report = validate_case_artifact(folder, session['stage'], data)
+        if not report.get('complete') or not input_binding_current(folder, data):
+            raise ValueError('delivery-start requires complete, confirmed and current user experience')
+        session['ux_delivery_required'] = True
+        session.setdefault('ux_delivery', {'version': 1, 'receipts': {}})
+        append_entry(session, 'system', 'delivery-start', 'UX delivery gate enabled for this case.')
+        save_metadata(folder, session)
+        return view(folder, session, data)
+    if args.command == 'delivery-record':
+        return record_delivery(folder, session, data, args)
     if args.command == 'show':
         return show(folder, session, data, args)
     if args.command == 'render-docs':
@@ -2335,6 +2603,8 @@ def run(args):
         if session['stage'] == 'design_system_wireframe':
             data['confirmation'].update(input_hash=report['input_hash'], knowledge_hash=report['knowledge_hash'])
         data['status'] = 'complete'
+        if session['stage'] == 'user_experience' and 'ux_delivery_required' not in session and delivery_inputs_available(folder):
+            session['ux_delivery_required'] = True
         final = validate_case_artifact(folder, session['stage'], data)
         if not final['complete']:
             raise ValueError(json.dumps(final, ensure_ascii=False))
@@ -2420,7 +2690,7 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
-    for command in ('new', 'start', 'reopen', 'backflow', 'list', 'status', 'show', 'save', 'patch', 'ask', 'revise-decision-question', 'answer', 'acknowledge-inventory', 'confirm', 'handoff', 'pause', 'resume', 'record-tool', 'record-decision', 'trace', 'assert-yield', 'recover-log', 'render-docs'):
+    for command in ('new', 'start', 'reopen', 'backflow', 'list', 'status', 'delivery-status', 'delivery-start', 'delivery-record', 'show', 'save', 'patch', 'ask', 'revise-decision-question', 'answer', 'acknowledge-inventory', 'confirm', 'handoff', 'pause', 'resume', 'record-tool', 'record-decision', 'trace', 'assert-yield', 'recover-log', 'render-docs'):
         sub = commands.add_parser(command)
         sub.add_argument('path', type=Path, nargs='?' if command == 'list' else None,
                          default=WORKSPACE_ROOT / 'artifacts/interviews' if command == 'list' else None)
@@ -2450,6 +2720,17 @@ def main():
         elif command == 'status':
             sub.add_argument('--map', action='store_true',
                              help='the whole case at low resolution, within a fixed budget')
+        elif command == 'delivery-record':
+            sub.add_argument('--step', choices=DELIVERY_STEPS, required=True)
+            sub.add_argument('--status', choices=('complete', 'waiting', 'gap'), required=True)
+            sub.add_argument('--input-hash', required=True)
+            sub.add_argument('--spec', type=Path)
+            sub.add_argument('--html', type=Path)
+            sub.add_argument('--reason', default='')
+            sub.add_argument('--checkpoint', action='append', default=[],
+                             help='bundle|jtbd|prd|user_experience:PAGE_ID:URL; repeatable')
+            sub.add_argument('--url')
+            sub.add_argument('--parent-page-id')
         elif command == 'show':
             sub.add_argument('--pointer', help='$.field, $.field.nested or $.collection[id=VALUE]')
             sub.add_argument('--issue', help='one issue by id')
@@ -2502,7 +2783,7 @@ def main():
             sub.add_argument('--decision', type=Path, required=True)
         elif command == 'trace':
             sub.add_argument('--format', choices=('json', 'markdown'), default='json')
-        if command in ('ask', 'revise-decision-question', 'save', 'patch', 'record-tool', 'acknowledge-inventory', 'confirm', 'handoff', 'pause', 'resume'):
+        if command in ('ask', 'revise-decision-question', 'save', 'patch', 'record-tool', 'acknowledge-inventory', 'confirm', 'handoff', 'pause', 'resume', 'delivery-record', 'delivery-start'):
             sub.add_argument('--decision-id', help='Recorded decision that selected this operation')
     args = parser.parse_args(normalize_args(sys.argv[1:]))
     if args.command != 'list' and is_legacy_case(args.path):
@@ -2516,7 +2797,7 @@ def main():
     if args.command in ('start', 'reopen'):
         args.command += '-' + args.stage.replace('_', '-')
     global _ACTIVE_OPERATION
-    if args.command not in ('status','show','list','trace'):
+    if args.command not in ('status','delivery-status','show','list','trace'):
         screen_path=CaseLayout.of(args.path.resolve()).artifact('screen_behavior')
         if screen_path.exists():
             try:
@@ -2528,7 +2809,7 @@ def main():
             if blocked:
                 print(json.dumps({'error':'migration_required: schema 2 screen behavior is read-only; explicit schema 3 migration required','migration_required':True},ensure_ascii=False))
                 return 1
-    observed = args.command not in ('status', 'show', 'list', 'trace', 'recover-log')
+    observed = args.command not in ('status', 'delivery-status', 'show', 'list', 'trace', 'recover-log')
     pending_path = args.path.resolve() / 'evidence/pending-operation.json'
     if pending_path.exists() and observed:
         print(json.dumps({'error': 'audit recovery required; use recover-log before further operations'}, ensure_ascii=False))
@@ -2536,7 +2817,8 @@ def main():
     before = capture(args.path.resolve()) if observed else None
     started_at, started = now(), time.perf_counter()
     error = None
-    durable = observed and (args.command in ('start-screen-behavior', 'start-design-system-wireframe') or
+    durable = observed and (args.command in ('start-screen-behavior', 'start-design-system-wireframe',
+                                             'delivery-start', 'delivery-record') or
                             ((before or {}).get('session') or {}).get('stage') in ('screen_behavior', 'design_system_wireframe'))
     pending_record = None
     try:

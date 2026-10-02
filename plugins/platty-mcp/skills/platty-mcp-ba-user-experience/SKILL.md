@@ -60,7 +60,7 @@ change the user journey itself. Write `필요 경험`을 채널 중립으로 —
 
 Update and assess the experience artifact after each derivation pass, not after an answer.
 **확인 질문을 만들지 않는다.** 검증이 `ready_for_confirmation`에 닿으면 컨트롤러가 스스로
-확정하고 `start_screen_behavior`를 낸다. 기획자는 여기서 멈추지 않는다 — 그 판단은 이미
+확정하고 `deliver_storyboard`를 낸다. 오케스트레이터가 스토리보드 생성 → Notion 게시 → HTML·문서 링크 전달을 마친 뒤 화면 동작 단계로 이어간다. 기획자는 여기서 멈추지 않는다 — 그 판단은 이미
 JTBD와 PRD에서 끝났다.
 
 ## References

@@ -1,6 +1,6 @@
 ---
 name: ba-interview
-description: Orchestrate a BA interview through planning context, user experience, screen behavior, and verified wireframes. Use to start or resume an interview; it routes to exactly one current stage.
+description: Orchestrate a BA interview through JTBD, PRD, user experience, storyboard and Notion delivery, screen behavior, and verified wireframes. Use to start or resume an interview; it routes to exactly one current stage.
 ---
 
 # BA Assistant Orchestrator
@@ -54,10 +54,64 @@ orchestrator; the invoked skill owns its own prerequisites and routing.
    - `design_system_wireframe` → `platty-mcp:wireframe` (also owns the Figma export that `phase: export_figma` requires)
    - `planning_context` → `platty-mcp:planning-context` (read-only; kept for cases opened before the jtbd stage)
 5. The selected stage owns its artifact updates, qualitative assessment, and its confirmation.
-6. When status is `start_*`, run `session.py start --stage ...` and route to that next stage in the same turn. Do not infer a stage transition from a user saying “continue”.
+6. Handle the user-experience delivery phases below before stage transitions. When status is `start_*`, run `session.py start --stage ...` and route to that next stage in the same turn. Do not infer a stage transition from a user saying “continue”.
 7. When a stage needs Platty facts beyond the entry baseline, invoke
    `platty-mcp:ba-retrieval` directly and consume only its bounded evidence
    output.
+
+## User-experience delivery
+
+The flow is JTBD → PRD → confirmed user experience → storyboard → Notion publication
+→ deliver the HTML and document links → screen behavior → wireframe → Figma.
+These are delivery tasks, not new BA interview stages. Reuse the existing skills unchanged:
+the orchestrator owns dispatch, input context, delivery receipts, and the screen-start gate.
+The child skills own their existing generation and publication workflows; do not add
+controller-specific prerequisites, receipt commands, or retry behavior to those skills.
+For storyboard eligibility, the confirmed UX case is at the boundary that previously emitted
+`start_screen_behavior`; `deliver_storyboard` is that same boundary with delivery still owed.
+Pass the planner's requested publication scope and selected parent to notion-publish as its
+invocation context. Keep its existing destination search and selection procedure.
+
+- `deliver_storyboard`: invoke `platty-mcp:storyboard` with the case and confirmed inputs.
+  Record the spec and generated HTML through the controller, including missing-image limits.
+- `publish_notion`: invoke `platty-mcp:notion-publish` for the case. This workflow explicitly
+  includes publishing the three confirmed documents; a second request to publish is unnecessary.
+  Use an explicitly supplied parent. If no parent is selected, show at most three candidates,
+  record a delivery waiting state, and ask for the destination. This is an operational choice,
+  not an interview question and does not consume PRD discovery budget.
+- `deliver_results`: rebuild the storyboard with the published document URLs, show the final
+  standalone HTML and bundle/child links in commentary, and record that delivery through the
+  controller. If publication has a recorded capability gap, show the local HTML and exact gap.
+  Only then start screen behavior. Presentation is not another planner confirmation.
+
+Read `delivery-status` on resume. Use `delivery-record` to save each receipt immediately;
+record completed page IDs one by one. See `session.py delivery-record --help` for the command
+contract. The orchestrator saves receipts from the existing skills' actual outputs. It also
+checkpoints each returned Notion page ID before proceeding to the next creation. On resume,
+pass saved bundle/child IDs and remaining work to notion-publish; do not rerun a completed
+publication sequence. Keep the client retry policy unchanged.
+An **uncertain** creation result remains `waiting` until a returned page link or a verified
+check of the selected parent resolves it. A destination selection alone does not resolve
+uncertainty. Record capability failures as gaps in the caller; the child skill still stops
+according to its own instructions.
+Reuse current receipts, resolve uncertain creates before another invocation, and regenerate
+stale outputs from current confirmed inputs. Never write the delivery record by hand.
+Receipt commands (use the current `input_hash` returned by `delivery-status`):
+
+```text
+session.py delivery-status <case>
+session.py delivery-record <case> --step storyboard --status complete --input-hash <hash> --spec <spec.json> --html <standalone.html>
+session.py delivery-record <case> --step notion --status waiting --input-hash <hash> --parent-page-id <parent> --checkpoint bundle:<page-id>:<url> --reason "partial publication; children remain"
+session.py delivery-record <case> --step notion --status complete --input-hash <hash>
+session.py delivery-record <case> --step results --status complete --input-hash <hash> --html <standalone.html> --url <bundle-url>
+```
+
+Record each child with `--checkpoint jtbd:...`, `prd:...`, or `user_experience:...` before
+marking Notion complete. Use `--status gap --reason ...` only for a publication capability gap;
+storyboard generation failures remain `waiting`. Missing images use placeholders in usable HTML.
+A recorded handoff does not fulfill delivery; the next session resumes the pending step.
+Existing cases without delivery tracking are not published merely by opening them; explicit
+`delivery-start` opts a previously confirmed UX case into this flow.
 
 ## Question gate
 

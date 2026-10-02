@@ -115,3 +115,11 @@ those SDD-file exceptions.
 - `platty-mcp:platty-mcp-sdd-design-with-figma`
 - `platty-mcp:platty-mcp-sdd-spec`
 - `platty-mcp:platty-mcp-sdd-design`
+
+## Standalone FSD and Wireframe Skills
+
+- `platty-mcp:writing-fsd` — write and review a screen and user-experience FSD from approved PRD/JTBD documents, interviewing unresolved product and design decisions.
+- `platty-mcp:heroines-low-fi-wireframes` — create and review local low fidelity Heroines wireframes from an FSD or confirmed screen behavior.
+
+These skills keep their original names, references, templates, and invocation prompts.
+Invoke them independently; they are not stages of `ba-interview` and are not dispatched by its controller.
