@@ -1,0 +1,4 @@
+interface:
+  display_name: "FSD 문서 작성"
+  short_description: "화면·사용자 경험 FSD를 문답으로 설계하고 작성"
+  default_prompt: "Use $writing-fsd to interview me and write an implementation-ready, human-readable FSD from the approved PRD and JTBD."
