@@ -111,6 +111,34 @@ Prefer the narrowest confirmed anchor:
 - Retrieval should use `sot glossary search --project <project> --query "<raw term>" --json`;
   alias memories are included in that CLI result and are not projected as glossary Markdown.
 
+## Bulk Import (many rows)
+
+For more than a handful of memories or aliases, do not loop `memory add` /
+`memory alias add`. Use the bulk commands; read their help first, it is the row
+contract:
+
+```bash
+platty memory import --help
+platty memory alias import --help
+platty memory import --project <project> --input memories.jsonl --dry-run --json
+platty memory import --project <project> --input memories.jsonl --actor <agent-name> --json
+platty memory alias import --project <project> --input aliases.jsonl --reason "<user's reason>" --json
+```
+
+- Rows anchor by id only (`epicId` | `documentId` | `itemId`; aliases by `termId`
+  or `epicId`+`canonicalTerm`). Copy ids from retrieval output; never invent them.
+- Imported rows are written as an administrator: active and **confirmed** at once.
+  Import only knowledge the user stated or confirmed. Your own inferences stay
+  `memory add --source agent` (proposed), one at a time.
+- Always `--dry-run` first and show the user `counts` and `failures`.
+- Exit 1 means some rows failed and the valid rows were written: fix only the
+  rows in `data.failures`, then rerun the same file (written rows are skipped).
+- `PROJECT_BUSY` (exit 2, nothing written) means generate-docs, sync or another
+  import is writing the project: tell the user and rerun after it finishes.
+- Unlike `memory alias add`, `alias import` enforces glossary rules: the canonical
+  term must be an active generated term of the EPIC.
+- Re-project the SOT afterwards (`sot export`), as for any memory write.
+
 ## Re-anchor Stranded Memory
 
 Sync regeneration drifts anchors: an epic is split/merged, a document is orphaned, or a use-case `stableKey` changes so the anchored item disappears. The memory row is never deleted — it becomes **stranded** (`needs_reanchor`). A stranded memory is still real human knowledge; your job is to move its anchor onto the regenerated target, not to recreate or drop it.

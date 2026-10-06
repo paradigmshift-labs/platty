@@ -1,0 +1,6 @@
+interface:
+  display_name: "Platty MCP SDD Design"
+  short_description: "Explicit-only MCP-grounded system_design.md and approval-gated tasks.md"
+  default_prompt: "Use $platty-mcp-sdd-design only by name to create system_design.md from approved prd.md and user_stories.md; tasks.md only after exact design approval."
+policy:
+  allow_implicit_invocation: false

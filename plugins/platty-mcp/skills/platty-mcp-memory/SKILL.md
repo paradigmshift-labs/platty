@@ -5,10 +5,12 @@ description: Use when a user explicitly asks to inspect their Platty Memory requ
 
 # Platty MCP Memory
 
-**Prerequisite:** Read `using-platty-mcp` before acting unless it has already
-been read in this turn. Use its `references/tool-mapping.md` for exact
-schemas. This skill owns explicit Memory requests and reads;
-`platty-mcp-retrieval` owns read-only evidence.
+**Tool facts:** tool names and exact schemas come from the host `tools/list`
+(a server prefix such as `platty_memory_request` is real); `context_status`
+lists only tools that are `missing` / `unavailable`. This skill owns explicit
+Memory requests and reads; read-only project evidence (documents, specs,
+routes, source) is `platty-mcp-search` territory — use it to find the exact
+anchor IDs when they are not already known.
 
 ## Write intent and boundary
 
@@ -47,6 +49,20 @@ the caller's role.
 report it, name an administrator as the next owner, and stop. `CONFLICT` means
 the alias already exists in that EPIC or the revision moved: re-read
 `glossary_alias_list` and report the current state instead of retrying blindly.
+`PROJECT_BUSY` on any write (alias or `memory_request`) means generate-docs,
+sync or a memory import is writing the project and nothing was written: report
+it and stop; do not retry in a loop or re-send through another tool.
+
+## Many rows at once
+
+MCP writes one row per call. For dozens to thousands of aliases or memories, do
+not loop the write tools: the operator runs the CLI bulk import on the server
+(`platty memory alias import` / `platty memory import`; each `--help` documents
+the row JSON). You may prepare that file from read evidence: one JSON object per
+line, `{"termId","alias"}` from `glossary_term_list/search` (or
+`{"epicId","canonicalTerm","alias"}`), and `{"epicId"|"documentId"|"itemId",
+"content","kind"}` for memories, with IDs copied from returned evidence. Imported
+rows become active immediately, so include only what the user confirmed.
 
 ## Operating flow
 

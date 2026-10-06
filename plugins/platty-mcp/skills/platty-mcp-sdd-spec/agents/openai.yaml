@@ -1,0 +1,6 @@
+interface:
+  display_name: "Platty MCP SDD Spec"
+  short_description: "Explicit-only MCP-grounded prd.md and user_stories.md drafts"
+  default_prompt: "Use $platty-mcp-sdd-spec only by name to save prd.md and user_stories.md from a product idea or requirements discussion."
+policy:
+  allow_implicit_invocation: false

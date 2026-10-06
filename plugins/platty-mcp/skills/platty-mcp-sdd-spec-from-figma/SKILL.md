@@ -1,6 +1,7 @@
 ---
 name: platty-mcp-sdd-spec-from-figma
-description: Use when a Figma URL accompanies a request to organize, draft, create, or improve a product plan, planning document, feature brief, requirements, PRD, user stories, 기획서, 요구사항, or 기능 기획, with or without existing product documents.
+description: "Explicit invocation by exact name only (never auto-selected from a Figma URL or a 기획서 request): with a Figma URL, organizes, drafts, creates, or improves a product plan, planning document, feature brief, requirements, PRD, user stories, 기획서, 요구사항, or 기능 기획, with or without existing product documents, when the user names this skill."
+disable-model-invocation: true
 ---
 
 # Platty MCP SDD Spec From Figma

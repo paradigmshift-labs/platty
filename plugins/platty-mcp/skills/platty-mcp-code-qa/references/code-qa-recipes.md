@@ -49,13 +49,41 @@ patterns. Recover them with the SKILL's Missing-Link Ladder:
 - L3→L4 missing: `route_text_links(projectId, direction: 'outgoing', from: {entryPointId} | {repoId, filePath})`;
   read the cited lines of each candidate; resolve `ambiguity` > 1 with the
   guide's routing / ownership rules; report "코드 대조로 찾은 연결".
-- L6→L8 missing: `route_code(projectId, entryPointId, limit?, cursor?)`; read
-  the nodes with `hasRelations: false`, data-access methods first, then follow
-  the query id / SQL / model mapping (L7, or the ORM variant).
+- L6→L8 missing: `route_code(projectId, entryPointId, includeAllNodes?, maxDepth?, includeNodeIds?, includeViaPath?, limit?, cursor?)`.
+  The default page lists every named node to `maxDepth` 2; callbacks and
+  locals that certainly belong to a listed caller are folded into it
+  (`folded` counts), and deeper nodes are counted in `summary.hidden` as
+  `beyond_max_depth` / `other_pages`. The unlinked deeper helpers you are
+  looking for are in the hidden part, so when `summary.hidden` or
+  `summary.folded` is non-empty, replay the returned `next` re-reads first:
+  `route_code(..., maxDepth: <bundle depth>)` or
+  `route_code(..., includeAllNodes: true)`. Then read the nodes with
+  `relationCount: 0`, data-access methods (`dataAccessCandidate`) first, and
+  follow the query id / SQL / model mapping (L7, or the ORM variant).
+  `nodeId` is omitted by default: take it from the `next`
+  `route_code(..., includeNodeIds: true)` re-read of the same page before
+  seeding `graph_trace` or `code_routes {nodeId}`; shell reads and
+  `code_routes` work with `repoId` + `filePath` + `lineStart` without it.
 - L9 reverse: `code_routes(projectId, target: {nodeId} | {repoId, filePath, line?}, kinds?, includeDeprecated?, limit?, cursor?)`
   on the SQL statement or model location, plus the text search for other
   writers.
-- Callers of an API: `route_text_links(projectId, direction: 'incoming', from: {entryPointId})`.
+- Callers of an API: `route_text_links(projectId, direction: 'incoming', from: {entryPointId}, targetRepoIds: [<one repo>])`
+  (without `targetRepoIds` the scan truncates at `file_cap`).
+- Registration check (is this batch / listener / route actually registered?):
+  before saying a job, cron, listener, webhook, or route runs, read its
+  registration line with context — `readonly_workspace_shell(rg -n -B 3 -A 3
+  -e '<decorator or registration>' <file>)` — and confirm it is executable
+  code, not a commented-out or JSDoc line. No entry point from
+  `route_resolve` with `kinds: ['job', 'event']` for a cron or route the question
+  names → suspect "not registered" (commented-out or absent registration)
+  before "graph gap", and search the registration site before reading the
+  handler body. A commented-out registration is "코드에 있으나 비활성";
+  a handler body without its registration read is 근거상 보임 ("등록 미확인").
+- Collector caps (`platty-mcp-search` code jobs, see its collector contract):
+  `route_code` family ≤ 4 calls, ≤ 4 unlinked nodes read per route,
+  `route_text_links` ≤ 2, discovery searches ≤ 4, 2 calls reserved for the
+  text fallback + one confirming read; a link still missing ends with the
+  contract's fixed `link gap <route>: …` line.
 - Unlisted tool: same step with `workspace_search`, `readonly_workspace_shell`,
   and `graph_trace`. A link defeated by a dynamic pattern observed in source
   (call site `file:line` read) is 코드로 확인 불가 (동적 호출); otherwise
@@ -90,7 +118,7 @@ Every relevant caller branch continues until it reaches a screen or route, or
 dead-ends (no further caller found in the searched scope). The 3–4 hops limit
 bounds the depth of a single branch only, one symbol per call; it never
 bounds how many branches are followed. Stopping a branch early (hop limit hit
-or no new candidate) requires listing that branch under 추가 확인 필요 as
+or no new candidate) requires listing that branch under 확인할 수 없는 부분 as
 partial coverage, with the hops tried. Reaching one screen never completes a
 caller or impact list: keep following the other branches. Keep one row per
 hop in the trail. `route_text_links` incoming on a repository file returns files, not
@@ -161,7 +189,7 @@ naming candidate causes.
 
 Reply-letter variant (현업 회신문): rebuild the T4 result as "현업에서 확인할 것"
 (screen message, record state, input values) plus "시스템이 막는 경우" list; keep
-code evidence collapsed.
+code evidence in 근거.
 
 ### T5 Number generation — "how is the number assigned? can a used number come back?"
 
@@ -189,7 +217,7 @@ Sweeps (S1–S7) below; each ends done with its coverage or partial.
 
 When the impact list is large (dozens or hundreds of routes), do not list each
 one in the answer: present feature groups with counts and representative routes
-(a handler or screen per group), and keep the full list in the evidence details
+(a handler or screen per group), and keep the full list in the session ledger `notes`
 (paged to exhaustion, per Pagination). For a method-level question,
 count only routes whose `target.nodeId` is the method itself, not routes that
 reach only its enclosing class.
@@ -220,7 +248,7 @@ those lines only). A `complete` search with no later writer is never proof of
 it looks like a snapshot within the searched scope, and list the
 unchecked writers and what was not searchable (large files,
 triggers/procedures, other repos or systems, partial search status) under
-추가 확인 필요. For "who owns this master", list every
+확인할 수 없는 부분. For "who owns this master", list every
 writer: screen service, interface receiver ([외부] origin), batch.
 
 ### T9 Test scenarios — "what cases should we check?"
@@ -247,7 +275,7 @@ impact-shaped T4 bug-cause questions, and for A-to-Z chain questions. Audits
 of answers without these sweeps found five to eight real consumers missing per
 chain. Each sweep ends either done, with its coverage (name forms and
 patterns, tools, repo set, per-repo status), or partial, with what is still
-open; the answer's 점검 sweep 현황 lists all seven. In `platty-mcp-hybrid-qa` a
+open; the session ledger `notes` lists all seven (open items go under 확인할 수 없는 부분). In `platty-mcp-search` a
 link-focused collector job may own a single sweep and report it in the
 contract's `sweeps` field.
 
@@ -278,7 +306,10 @@ contract's `sweeps` field.
   (the default is 20 results, so one page is not the inventory); if you stop
   early, report S3 as partial and name the remaining cursor. List each job,
   batch endpoint, emitter, and listener, then check each against the change: does it read,
-  write, or branch on the changed thing?
+  write, or branch on the changed thing? A job or listener found by the
+  decorator search but missing from `route_resolve` is listed only after its
+  registration line is read (Registration check): a registration that is
+  commented out is "코드에 있으나 비활성", not an affected job.
 - **S4 Client surface.** For every stakeholder (end-user app, webviews, admin
   web, seller or partner web, other repos), search the backend first for the
   stakeholder-specific APIs that touch the entity (the guide's admin, seller,
@@ -343,6 +374,13 @@ contract's `sweeps` field.
   `complete`. For a guide-named large file (menu tree, screen registry,
   code-value export), run one `rg -n '<identifier>' <that file>` before any
   "not found" stop.
+- Comment and string hits: an `rg` / `workspace_search` match tells you the
+  text exists, not that it executes. Before citing a decorator, registration,
+  call, or condition from a hit, look at the matched line and its `-B/-A`
+  context: a line beginning with `//`, `*`, `/*`, `#`, `<!--`, or inside a
+  string literal is a comment / doc / text hit. Count such hits separately in
+  the trail ("hits 3, of which 2 in comments") and never let a comment-only
+  hit support 확인됨 or `확인됨 (검색 원문)`.
 
 ## Stop Conditions
 
@@ -366,7 +404,7 @@ climbing when:
 6. Three consecutive different searches for the same open item add nothing
    new that is question-relevant (a new candidate, verified link, or
    eliminated hypothesis; incidental new files do not count) → conclude that item with
-   what is known; list the next check as 추가 확인 필요. The guard never skips
+   what is known; list the next check under 확인할 수 없는 부분. The guard never skips
    pending mandatory ladder steps, mandatory fallbacks, or known unchecked
    candidates. Never repeat an identical search (the key includes `cursor` and
    filters such as `includeDeprecated`, `kinds`, `direction`, `repoIds`, so

@@ -1,6 +1,7 @@
 ---
 name: platty-mcp-sdd-design-with-figma
-description: 승인된 제품 문서와 Figma URL, 현재 세션의 Figma 근거 또는 제품 문서 옆에서 발견한 검증된 figma_handoff.json을 바탕으로 사용자가 별도로 기술 설계나 시스템 설계를 요청할 때 사용한다.
+description: "정확한 이름으로 명시 호출할 때만 동작한다(설계 요청만으로 자동 선택되지 않음). 사용자가 이 스킬을 지명하고, 승인된 제품 문서와 Figma URL, 현재 세션의 Figma 근거 또는 제품 문서 옆에서 발견한 검증된 figma_handoff.json을 바탕으로 별도로 기술 설계나 시스템 설계를 요청할 때 사용한다."
+disable-model-invocation: true
 ---
 
 # Platty MCP Figma 기반 SDD 설계

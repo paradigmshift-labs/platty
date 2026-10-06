@@ -1,0 +1,6 @@
+interface:
+  display_name: "Platty MCP Router"
+  short_description: "Explicit-only router for the Platty MCP SDD and Figma skills"
+  default_prompt: "Use $using-platty-mcp only by name when a Platty MCP SDD or Figma skill needs its routing or tool capability checks; project questions use $platty-mcp-search."
+policy:
+  allow_implicit_invocation: false

@@ -1,6 +1,7 @@
 ---
 name: platty-mcp-figma-design-sync
-description: Use when a Figma URL, Figma page, Figma section, or Figma frame must become reusable, revisioned design evidence before Platty MCP product specification or technical design.
+description: "Explicit invocation by exact name only (never auto-selected from a Figma URL): turns one Figma URL, Figma page, Figma section, or Figma frame into reusable, revisioned design evidence before Platty MCP product specification or technical design, when the user or an SDD skill names this skill."
+disable-model-invocation: true
 ---
 
 # Platty MCP Figma Design Sync

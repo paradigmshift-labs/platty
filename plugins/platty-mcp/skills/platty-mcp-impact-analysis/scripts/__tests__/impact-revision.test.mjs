@@ -109,6 +109,35 @@ test('set-like input order does not change impactRevision', () => {
   assert.equal(computeImpactRevision(reordered), computeImpactRevision(baseInput));
 });
 
+test('edges keep originalKind and derivedKind as separate scalars exactly as given', () => {
+  const withEdge = structuredClone(baseInput);
+  withEdge.crossEpicTraversal.confirmedEdges = [
+    {
+      sourceEpicId: 'EPIC-42',
+      targetEpicId: 'EPIC-7',
+      direction: 'downstream',
+      originLayer: 'design',
+      sourceDocumentId: 'DESIGN-1',
+      sourceDocumentIds: ['DESIGN-1', 'API-9'],
+      documentId: 'API-9',
+      documentType: 'api_spec',
+      originalKind: 'calls_api',
+      derivedKind: 'external_call',
+      role: 'impact',
+      reason: 'design_document_map link',
+      confidence: 'high',
+      relationIds: [],
+    },
+  ];
+  const [edge] = buildImpactSnapshot(withEdge).crossEpicTraversal.confirmedEdges;
+  assert.equal(edge.originalKind, 'calls_api');
+  assert.equal(edge.derivedKind, 'external_call');
+
+  const collapsed = structuredClone(withEdge);
+  collapsed.crossEpicTraversal.confirmedEdges[0].originalKind = 'operational_dependency';
+  assert.notEqual(computeImpactRevision(collapsed), computeImpactRevision(withEdge));
+});
+
 test('evidence changes create a new impactRevision', () => {
   const changed = structuredClone(baseInput);
   changed.impactEvidenceMatrix[0].observedBehavior = 'Applies and audits a campaign.';

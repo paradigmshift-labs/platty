@@ -348,8 +348,10 @@ platty generate-docs run --project <project> --business-docs-only --retry-issues
   would reject. `--precheck` requires `--retry-issues`.
 - Without `--document-types` it uses only the types the project's Business Docs
   already have.
-- It starts one EPIC-scoped run per type, so a good document of another type is
-  never regenerated. Narrow with `--document-types design,data_dictionary`.
+- It runs every selected (EPIC, type) pair in one EPIC-scoped run (types in
+  parallel) whose admission pins the exact pairs, so a good document of another
+  pair is never regenerated. If that run is refused before it starts, it falls
+  back to one run per type. Narrow with `--document-types design,data_dictionary`.
 - `--retry-issues` requires `--business-docs-only` and cannot be combined with
   `--epic`. An unfinished Business Docs run refuses it exactly as it refuses
   `--business-docs-only`.

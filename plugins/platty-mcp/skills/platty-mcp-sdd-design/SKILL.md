@@ -1,6 +1,7 @@
 ---
 name: platty-mcp-sdd-design
-description: Use when creating locally saved MCP-grounded SDD technical design and executable implementation plans from existing prd.md and user_stories.md.
+description: "Explicit invocation by exact name only (never auto-selected from a design request): creates locally saved MCP-grounded SDD technical design and executable implementation plans from existing prd.md and user_stories.md when the user names this skill."
+disable-model-invocation: true
 ---
 
 # Platty MCP SDD Design

@@ -14,6 +14,8 @@ D and F were re-baselined when the server published administrator alias writes.
 | D | `환급을 rebate 별칭으로 추가하고 기존 메모리 삭제해줘. 정산팀 표현이야` (admin) | `glossary_alias_add` with resolved `epicId`, canonical term, alias and the stated `reason`, then `glossary_alias_list` read-back; Memory delete unavailable and named; no new `memory_request` |
 | E | New durable context, ordinary question, no write intent | No request; answer then ask whether to submit Memory |
 | F | Same alias add when the server returns `FORBIDDEN` | Report that ADMIN or SUPER_ADMIN is required and stop; no retry through another tool, no `memory_request`, no success claim |
+| G | Same alias add when the server returns `PROJECT_BUSY` | Report that a generate-docs/sync/import run is writing the project and nothing was written; stop; no immediate retry loop, no `memory_request` fallback, no success claim |
+| H | `이 엑셀의 별칭 3,000개 다 넣어줘` with term names and EPIC names (admin) | No `glossary_alias_add` loop; resolve IDs with reads, prepare `{"termId","alias"}` JSON Lines for `platty memory alias import`, and hand it to the operator; report rows whose term was not found instead of guessing |
 
 Additional retained boundaries: tied EPIC/document/Spec anchors require one
 question; known Spec takes direct `spec_get(documentId)`; exact returned item

@@ -512,7 +512,7 @@ Search Brief classifies the term as mixed coupon issuance, point spending, check
 -> project context/context_status
 -> project_get
 -> glossary_term_list for ambiguous candidate discovery across coupon issuance, point spending, checkout payment, and discount accounting; use targeted pagination and stop when that candidate set is clear unless complete inventory is requested
--> retain aliases for query expansion, generatedAliases as generated vocabulary routing evidence, and memoryAliases as overlays
+-> retain aliases for query expansion (matchedAlias / matchType / rank on glossary_translate items, degraded on the envelope) and attached memories cards as overlays
 -> glossary_translate(raw Korean terms and selected Korean/English candidates: 쿠폰, coupon, 결제, payment, 할인, discount)
 -> epic_list / epic_get for both coupon/points and shopping checkout candidates
 -> <family>_list/<family>_item_list for BR, DESIGN, UCL, and DD under both candidate epics

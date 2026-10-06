@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/hybrid-qa-agent-guard.sh\""
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/collector-guard.sh\""
           }
         ]
       }

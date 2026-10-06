@@ -5,11 +5,9 @@ description: Use when registering, validating, or troubleshooting a Platty MCP e
 
 # Platty MCP Client Setup
 
-**Prerequisite:** Read `using-platty-mcp` before acting unless it has already
-been read in this turn.
-
 Use this skill for consumer-side setup when a Platty MCP server already exposes
-direct HTTP JSON-RPC at `/api/mcp`.
+direct HTTP JSON-RPC at `/api/mcp`. Tool names and schemas come from the host
+`tools/list`; `context_status` lists only `missing` / `unavailable` tools.
 
 ## Boundary
 
@@ -60,10 +58,19 @@ visible.
 ## Validate
 
 1. Confirm runtime tools are visible and read live `tools/list` schemas.
-2. Read `../using-platty-mcp/references/tool-mapping.md`. Check concrete tools
-   for the selected route: typed business maps, five-kind Spec reads, scoped
-   Memory, vocabulary, graph/source, Git, or `sot_render`. An exact known-ID
-   route checks its own requirements; an unrelated missing tier does not block it.
+2. Check the concrete tools the selected skill needs, not an unrelated tier:
+   `platty-mcp-search` — `context_status`, `domain_list/get`, `epic_list/get`,
+   the typed family tools (`business_rule_* / use_case_* / design_* /
+   data_dictionary_*` list, get, item_get, search, and each family's
+   `*_spec_resolve`), `spec_list /
+   spec_get / spec_search / spec_business_resolve / spec_impact_resolve`,
+   `glossary_term_search / glossary_translate`, `code_search_guide_get`,
+   `workspace_repo_list`, `route_resolve / route_relations / route_code /
+   code_routes / route_text_links / route_impact_candidates`,
+   `readonly_workspace_shell`,
+   `workspace_search`, `code_search`, `graph_trace`; `platty-mcp-memory` —
+   `memory_list / memory_get / memory_request`, `glossary_alias_*`. A missing
+   tool is a named capability gap for that skill only.
 3. Project: reuse a known opaque ID. When the user did not name a project,
    omit `projectId` on `context_status`; the server uses its default project
    (the Platty CLI's current project, or the only project you can read) and
@@ -76,9 +83,12 @@ visible.
 4. Read `context_status` for freshness-sensitive validation. Per-tool observed
    availability is local authorized readiness, not an adapter-presence, network,
    remote freshness, or deployment claim.
-5. Route questions through `using-platty-mcp`. Impact needs a produced/reused
-   Impact Seed Packet; PRD §9 remains owned by `platty-mcp-impact-analysis`.
-   Registration/listing alone is not successful execution of all 54 tools.
+5. Route project questions (impact questions included) through
+   `platty-mcp-search`; memory and alias requests through `platty-mcp-memory`.
+   Registration / listing alone is not successful execution of every tool.
+6. Plugin update check (setup task, never part of answering): run
+   `bin/platty-update-check platty-mcp` from the host once per session unless
+   `PLATTY_PLUGIN_UPDATE_CHECK=0`; on `UPGRADE_AVAILABLE` say so in one line.
 
 ## Missing Server
 

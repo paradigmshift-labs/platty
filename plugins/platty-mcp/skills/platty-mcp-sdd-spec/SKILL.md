@@ -1,6 +1,7 @@
 ---
 name: platty-mcp-sdd-spec
-description: Use when creating locally saved MCP-grounded SDD PRD and user-story drafts from a product idea, feature request, PRD need, policy change, or requirements discussion.
+description: "Explicit invocation by exact name only (never auto-selected from a product idea, feature request, PRD need, policy change, or requirements discussion): creates locally saved MCP-grounded SDD PRD and user-story drafts (prd.md, user_stories.md) when the user names this skill."
+disable-model-invocation: true
 ---
 
 # Platty MCP SDD Spec

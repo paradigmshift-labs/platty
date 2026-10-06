@@ -1,6 +1,7 @@
 ---
 name: using-platty-mcp
-description: Use when a task should use configured Platty MCP tools for remote project context, tool capability checks, Figma-backed product-plan or 기획서 authoring, Figma evidence routing, client setup routing, Platty MCP retrieval, Memory request or glossary-alias inventory routing, or MCP-grounded SDD file creation.
+description: "Internal router for the explicit-only Platty MCP SDD and Figma skills; never auto-selected for a question (project questions go to platty-mcp-search). Invoke by exact name only when a platty-mcp-sdd-* or platty-mcp-figma-design-sync skill needs its routing, tool capability checks, Figma evidence routing, client setup routing, Memory request or glossary-alias inventory routing, or MCP-grounded SDD file creation rules."
+disable-model-invocation: true
 ---
 
 # Using Platty MCP
@@ -86,21 +87,28 @@ Do not silently switch to local files or local CLI.
 Keep the setup split thin and explicit:
 
 1. If Platty MCP tools are visible, run the capability gate and then route:
-   - read-only project questions to `platty-mcp-retrieval`;
-   - non-developer business or operational QA — several questions, a QA list,
-     or one business question that needs both documents and code — to
-     `platty-mcp-hybrid-qa`, which splits each question into parallel docs and
-     code collectors (retrieval and code-qa ladders) and verifies conflicts;
-   - code-only business or operational questions to `platty-mcp-code-qa`:
-     `context_status.documentAvailability` shows `br`, `ucl`, `design`, and
-     `data_dictionary` all 0, or the user explicitly asks for a code-only /
-     source-only answer;
-   - impact, blast-radius, affected-surface, cross-EPIC, or design-change
-     questions to `platty-mcp-impact-analysis` after it produces or reuses an
-     Impact Seed Packet; but impact questions inside a business QA list (or
-     asked as business questions: what breaks, regression scope, A-to-Z
-     chain, bug cause, direct data edit) stay in `platty-mcp-hybrid-qa`,
-     which runs its impact sweeps;
+   - any project question to `platty-mcp-search`, the main entry skill — a
+     business rule, screen, feature, "what happens when…", limit, state,
+     term, where something is, impact asked as a business question; one
+     question or a QA list; from business staff or developers. It answers a
+     simple lookup in-session on the retrieval ladder (light path) and fans
+     out parallel docs and code collectors (retrieval and code-qa ladders)
+     with a docs-vs-code cross-check when the question needs it or several
+     questions arrive; `platty-mcp-retrieval` and `platty-mcp-code-qa` are
+     its sub-skills, not user-facing entry points;
+   - code-only business or operational questions stay in `platty-mcp-search`
+     too (it runs the `platty-mcp-code-qa` ladder): `context_status.documentAvailability`
+     shows `br`, `ucl`, `design`, and `data_dictionary` all 0, or the user
+     explicitly asks for a code-only / source-only answer;
+   - a standalone engineering Impact Dossier request — an Impact Seed
+     Packet, a reproducible `impactRevision`, cross-EPIC traversal, the SDD
+     PRD §9 appendix, or a design-change packet for technical design — to
+     `platty-mcp-impact-analysis` after it produces or reuses an Impact Seed
+     Packet; every other impact question — asked as a business or QA
+     question (what breaks, affected screens or features, regression scope,
+     A-to-Z chain, bug cause, direct data edit) or inside a QA list — stays
+     in `platty-mcp-search`, which runs its impact sweeps and answers
+     결론 first;
    - explicit Memory reads/requests, glossary alias writes, or unavailable Memory
      update/delete requests to `platty-mcp-memory`;
    - a Figma URL, page, section, or frame needing reusable evidence to
@@ -204,21 +212,26 @@ and backward-compatible no-sidecar behavior, read
 
 For user questions about Platty project context, domain terms, epics, business
 documents, specs, exact code locations, or source confirmation, use
-`platty-mcp-retrieval` after the capability gate.
+`platty-mcp-search` after the capability gate; it runs the
+`platty-mcp-retrieval` ladder (light path for a simple lookup, docs collectors
+otherwise) and owns the answer shape.
 
 Questions about recent analyzed commits, managed-worktree Git history, the last
 successfully analyzed commit, or cached analysis-branch freshness also route to
-`platty-mcp-retrieval` when `workspace_git_history` or
+`platty-mcp-search` (light path on the `platty-mcp-retrieval` ladder) when `workspace_git_history` or
 `workspace_sync_status` is exposed. These tools do not fetch and do not observe
 application deployment.
 
-For observable impact questions such as what changes, what breaks, blast radius,
-affected surface, cross-EPIC effects, or design-change impact, use
-`platty-mcp-impact-analysis`. It must produce or reuse an Impact Seed Packet
-through `platty-mcp-retrieval`; an existing packet is reused rather than rebuilt.
-The impact skill owns graph/cross-EPIC/workspace source convergence and is the
+Use `platty-mcp-impact-analysis` only for a standalone engineering Impact
+Dossier request: an Impact Seed Packet, a reproducible `impactRevision`,
+cross-EPIC traversal, the SDD PRD §9 appendix, or a design-change packet for
+technical design. It must produce or reuse an Impact Seed Packet through
+`platty-mcp-retrieval`; an existing packet is reused rather than rebuilt. The
+impact skill owns graph/cross-EPIC/workspace source convergence and is the
 only MCP route with the selected SDD-directory local exception to write or
-refresh `prd.md §9`.
+refresh `prd.md §9`. Impact asked as a business or QA question (what changes,
+what breaks, affected screens or APIs, regression scope) is a project question
+and routes to `platty-mcp-search`, which runs its impact sweeps.
 
 Explicit SDD file authoring intent takes precedence over generic impact or
 design-change wording: request/story creation routes to `platty-mcp-sdd-spec`,
@@ -262,10 +275,10 @@ Keep MCP usage and retrieval judgment separate:
 
 ```text
 using-platty-mcp       -> transport boundary, capability gate, tool mapping
-platty-mcp-retrieval   -> question route, map-first ladder, evidence gates
-platty-mcp-code-qa     -> code-only business answers when business docs are absent
-platty-mcp-hybrid-qa   -> multi-question / business QA lists (impact questions included, with impact sweeps): parallel docs+code collectors, verify, answer
-platty-mcp-impact-analysis -> Impact Seed Packet reuse, graph/cross-EPIC/workspace convergence
+platty-mcp-search      -> main entry for project questions: light path (retrieval ladder in-session) or parallel docs+code collectors, verify, answer (결론 first); QA lists and business impact questions with impact sweeps; code-only mode
+platty-mcp-retrieval   -> sub-skill: question route, map-first ladder, evidence gates, Impact Seed Packet
+platty-mcp-code-qa     -> sub-skill: code-track ladder for code-only mode and code collectors
+platty-mcp-impact-analysis -> standalone engineering Impact Dossier only (Impact Seed Packet reuse, impactRevision, cross-EPIC traversal, SDD §9); business/QA impact questions stay in platty-mcp-search
 platty-mcp-memory      -> explicit Memory reads/requests; administrator-only mutation gaps
 ```
 

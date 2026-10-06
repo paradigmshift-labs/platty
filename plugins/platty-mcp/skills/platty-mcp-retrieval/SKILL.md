@@ -1,9 +1,15 @@
 ---
 name: platty-mcp-retrieval
-description: Use when answering Platty project questions through configured read-only MCP tools, including domain terms, epics, business documents, specs, exact code locations, or source confirmation, or when another Platty MCP skill needs an Impact Seed Packet.
+description: "Internal retrieval ladder, explicit invocation by exact name only (never auto-selected for a question): map-first semantic and direct-first source-near routes over domain terms, epics, business documents, specs, and code locations, and the producer of the Impact Seed Packet used by platty-mcp-impact-analysis and the SDD skills. To answer a user's project question use platty-mcp-search."
+disable-model-invocation: true
 ---
 
 # Platty MCP Retrieval
+
+Sub-skill: user-facing answers to project questions go through
+`platty-mcp-search`, which runs this ladder (light path or docs collectors)
+and owns the answer shape (결론 first). Read this skill for the ladder,
+routes, gates, and the Impact Seed Packet contract.
 
 **Prerequisite:** Read `using-platty-mcp` before acting unless it has already
 been read in this turn.
@@ -152,10 +158,12 @@ remain explicit gaps; never guess parents. Memory remains an overlay.
 
 ## When To Use
 
-Use this skill for ordinary retrieval answers about domain terms, epics, business
-docs, specs, exact API or exact source-near questions, code locations, or source
+Use this skill as the retrieval ladder under `platty-mcp-search` (its light
+path and docs-track collectors) for domain terms, epics, business docs, specs,
+exact API or exact source-near questions, code locations, or source
 confirmation. Use it also when `platty-mcp-impact-analysis` or an owning SDD
-skill needs an Impact Seed Packet.
+skill needs an Impact Seed Packet. A user's project question that arrives
+without a caller routes to `platty-mcp-search` first.
 
 ## When Not To Use
 
@@ -171,9 +179,17 @@ or impact packet requests (`routeMode: seed-only`): keep producing the Impact
 Seed Packet for the caller and record the empty business-document maps as a
 documented gap in the packet, per the packet return contract below.
 
-`platty-mcp-hybrid-qa` also uses this skill as the docs-track collector ladder:
-its docs collector climbs this ladder for one question and returns the
-collector JSON instead of a final answer.
+Earlier `platty-mcp-search` versions used this skill as the docs-track
+collector ladder; the current docs collector follows `platty-mcp-doc-search`
+and the Job Card budget in `platty-mcp-search/references/job-cards.md`, not
+this skill. When this skill is invoked by name in collector style it returns
+the collector JSON instead of a final answer, and the semantic ladder below
+is logged as the rungs D0–D7 (every rung logged; `<family>_item_get`
+→ `<family>_spec_resolve` → `spec_get(claimLimit: 5)` for every adopted
+item), inside that contract's call budget and search rules (≤ 2 document
+searches, each only after the rungs left no ID and logged with
+`ladder_exhausted:D<n>`); a missing document family is recorded as
+`coverage` with the contract's fallback, never as a stop.
 
 ## Impact Escalation Gate
 
@@ -200,11 +216,11 @@ SDD file authoring intent -> platty-mcp-sdd-spec or platty-mcp-sdd-design
 ```
 
 Exemption: when this skill runs as the docs-collector ladder for
-`platty-mcp-hybrid-qa`, or for a business-QA list handled by it, do not
+`platty-mcp-search`, or for a business-QA list handled by it, do not
 escalate to `platty-mcp-impact-analysis` even if a question says "what breaks"
-or "what is affected". Collect the evidence and return it to the hybrid
+or "what is affected". Collect the evidence and return it to the search
 orchestrator, which runs the impact sweeps (S1-S7) itself. A standalone Impact
-Dossier request, outside a hybrid or business-QA list, still routes to
+Dossier request, outside a search or business-QA list, still routes to
 `platty-mcp-impact-analysis` through the Impact Seed Packet.
 
 `routeMode: seed-only` makes this skill the packet producer only. It must not
@@ -317,18 +333,27 @@ source reads for implementation behavior.
 
 - Use `glossary_translate(projectId, text)` for an exact raw phrase or candidate
   term. Keep the raw phrase and any Korean/English candidates visible.
-- Use `glossary_term_list(projectId, limit, cursor)` for broad vocabulary inventory,
-  comparisons, ambiguous concepts, all-alias requests, or candidate discovery
-  after translation is blank or conflicting.
+- Use `glossary_term_search(projectId, query)` for candidate discovery when a
+  concept is named or ambiguous; use `glossary_term_list(projectId, limit, cursor)`
+  (20 terms per page by default) only for a deliberate broad vocabulary inventory,
+  comparisons, or all-alias requests.
 - If `glossary_translate` on an exact/raw phrase is blank or conflicting while
   plausible Korean/English candidates remain, call `glossary_term_list` next for
   candidate discovery before translating additional candidates.
 - For complete inventory, follow `pageInfo.nextCursor` until
   `pageInfo.hasNextPage` is false. For targeted discovery, stop after the needed
   candidates are found.
-- Use `aliases` for query expansion. Keep `generatedAliases` and
-  `memoryAliases` separate; memory aliases are overlays and glossary output is
-  routing evidence, not behavior or source proof.
+- Use `aliases` for query expansion: `glossary_translate` items and
+  `glossary_term_list` rows carry `aliases[{id, alias, revision}]` (omitted
+  when empty); `glossary_term_get` returns the term as a document item whose
+  `body.aliases` is a string array; `glossary_term_search` rows carry alias
+  strings. `glossary_translate` items
+  add `rank`, `matchType`, and `matchedAlias` (the alias that matched, or
+  null), and its envelope carries `searchMode` and `degraded`; a
+  `degraded: true` result is weaker routing evidence, not a stop. Memory
+  overlays arrive as `memories` cards on the owning read (`glossary_term_get`,
+  document gets), never as alias fields; keep them separate from glossary
+  aliases. Glossary output is routing evidence, not behavior or source proof.
 
 ## Search Clarification Gate
 
@@ -410,7 +435,9 @@ It answers with the spec summary by default: identity, relations, outlines and
 one page of claims nearest the handler, plus `claimFiles` indexing every claim
 location. Page with the returned `claimCursor` continuation, or read one file's
 claims with `claimPath`; send `view:"full"` only when the answer needs every claim
-at once. An unread claim page is not absence.
+at once. A `platty-mcp-search` collector sends `claimLimit: 5` and never
+`view:"full"`; a result too large to read is recorded as unread, not replaced
+by a search. An unread claim page is not absence.
 Only requested business context uses `spec_business_resolve({projectId,
 specDocumentIds:[id]})`; requested technical impact uses `spec_impact_resolve`
 with the same batch field and `direction:"incoming"|"outgoing"|"both"`.
@@ -508,7 +535,9 @@ For an SDD caller, include a runtime-only `questionOwnershipAudit` containing:
 
 ## Stakeholder Answer Shape
 
-For product or implementation questions, put answer first, evidence second, and
+A user-facing answer uses the `platty-mcp-search` answer template (결론 →
+쉽게 말하면 → 근거 → 확인할 수 없는 부분). The shape below is the packet-level
+order this ladder returns to its caller: answer first, evidence second,
 uncertainty last. Full template: `references/answer-shape.md`.
 
 ```text

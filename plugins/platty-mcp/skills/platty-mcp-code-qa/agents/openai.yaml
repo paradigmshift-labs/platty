@@ -1,0 +1,6 @@
+interface:
+  display_name: "Platty MCP Code QA"
+  short_description: "Explicit-only legacy code-only ladder kept for the SDD skills"
+  default_prompt: "Use $platty-mcp-code-qa only by name; project questions, code-only included, use $platty-mcp-search."
+policy:
+  allow_implicit_invocation: false

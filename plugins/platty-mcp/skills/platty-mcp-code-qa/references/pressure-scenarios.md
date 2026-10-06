@@ -21,12 +21,14 @@ Platty MCP로 답해줘. <메뉴명> 화면에서 저장을 누르면 시스템 
 - **RED**: retrieval's hard gate drives project → EPIC → BR/UCL maps that are
   empty, then either stops with "maps cannot be built" or answers from one
   search hit; no plain-Korean template; no file:line trail.
-- **Expected GREEN route**: `using-platty-mcp -> platty-mcp-code-qa`; session
+- **Expected GREEN route**: `using-platty-mcp -> platty-mcp-search` (code-only
+  mode, in-session on the `platty-mcp-code-qa` ladder); session
   setup (`context_status`, full `code_search_guide_get`, `workspace_repo_list`)
   then L1–L8 via `route_resolve`/`route_relations`, `workspace_search`, and
   shell reads.
-- **Observable pass criteria**: answer follows the template (한 줄 결론 → 쉬운
-  설명 → 주의/예외 → 추가 확인 필요 → collapsed 개발 근거); every 확인됨 row
+- **Observable pass criteria**: answer follows the `platty-mcp-search`
+  answer template (결론 → 쉽게 말하면 → 근거 → 확인할 수 없는 부분; the
+  code-qa evidence rows feed 근거); every 확인됨 row
   has a shell-read `file:line`; trail lists tools, searches with status; the
   Completion Criteria hold (every claim classified, required steps done,
   fallbacks run).

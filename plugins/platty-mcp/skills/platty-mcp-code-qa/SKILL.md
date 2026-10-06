@@ -1,9 +1,15 @@
 ---
 name: platty-mcp-code-qa
-description: Use when answering a non-developer business or operational question about a Platty project from source code only through Enterprise MCP tools, because context_status shows no business documents (br, ucl, design, data_dictionary all 0) or the user explicitly asks for a code-only answer; produces plain Korean answers with collapsed file:line evidence (default non-developer audience; developer-oriented questions get a developer-style answer).
+description: "Internal code-track ladder, explicit invocation by exact name only (never auto-selected for a question): session map, Evidence Ladder, Missing-Link Ladder, impact sweeps, and honesty levels for answering a business or operational question from source code only (code-only mode) through Enterprise MCP tools, kept for the SDD skills. To answer a user's project question use platty-mcp-search."
+disable-model-invocation: true
 ---
 
 # Platty MCP Code QA
+
+Sub-skill: user-facing answers to project questions go through
+`platty-mcp-search`, which runs this ladder (in-session for one code-only
+question, as code collectors otherwise) and owns the answer shape (결론
+first). Read this skill for the code ladder, recipes, and honesty rules.
 
 **Prerequisite:** Read `using-platty-mcp` before acting unless it has already
 been read in this turn.
@@ -22,17 +28,28 @@ you found honestly and simply.
   ...) do not matter for this trigger.
 - The user explicitly asks for a code-only / source-only answer ("코드로만",
   "문서 없이 소스 기준으로"), even when business documents exist.
-- `platty-mcp-retrieval` or `platty-mcp-impact-analysis` handed off because the
-  business-document maps are empty.
+- `platty-mcp-search`, `platty-mcp-retrieval`, or `platty-mcp-impact-analysis`
+  handed off because the business-document maps are empty.
 
-This skill is also the code-track collector ladder of `platty-mcp-hybrid-qa`:
-its code collector climbs this ladder for one question and returns the
-collector JSON instead of a final answer.
+This skill was the code-track collector ladder of earlier `platty-mcp-search`
+versions; the current code collector follows `platty-mcp-code-search` and
+the Job Card budget in `platty-mcp-search/references/job-cards.md`, not this
+skill. When this skill is invoked by name in collector style it returns the
+collector JSON instead of a final answer and runs inside a per-job budget
+(22 calls; discovery searches ≤ 4, `route_resolve` ≤ 3 identifiers,
+`route_code` family ≤ 4, `graph_trace` ≤ 2, `route_text_links` ≤ 2 with
+`targetRepoIds`, ≤ 4 unlinked nodes read per route, 2 calls reserved for the
+source text fallback and one confirming read) and logs the climb as rungs
+C0–C4 / B1–B5. The in-session code-only answer (no collectors) keeps the
+budget-free Completion Criteria below.
 
 ## When Not To Use
 
-- Business documents exist and the user did not ask for code-only: use
-  `platty-mcp-retrieval` (its map-first hard gate stays authoritative there).
+- Business documents exist and the user did not ask for code-only:
+  `platty-mcp-search` runs the docs track on `platty-mcp-retrieval` (its
+  map-first hard gate stays authoritative there). Exception: when dispatched
+  as the code-track collector of `platty-mcp-search`, run this ladder even
+  though documents exist; the docs track runs separately.
 - SDD or impact packet requests (`routeMode: seed-only`): retrieval keeps
   returning the Impact Seed Packet with the empty business-document maps as a
   documented gap.
@@ -79,11 +96,13 @@ never call unprefixed names blindly. This skill writes bare names.
    its opaque ID, or when the user asks which projects exist. `context_status`
    echoes the `projectId` it used; pass that ID explicitly to every later call.
 1. `context_status(projectId)` — record `documentAvailability`. All four
-   business families at 0 confirms code-only mode. Note per-tool availability.
+   business families at 0 confirms code-only mode. Note the tools it reports
+   as `missing` or `unavailable`: it reports only those, so every other tool
+   in the discovered `tools/list` is usable.
    Decide the disclosure (the per-family counts) here, at setup, before the
    first question. When business documents exist and the user
    explicitly asked for code-only, stay on this code ladder and add one line
-   under 추가 확인 필요 in every answer: the business documents exist
+   under 확인할 수 없는 부분 in every answer: the business documents exist
    (per-family counts from `context_status`, e.g. `br <n> / ucl <n>`) and
    were not consulted, so a cross-check against them is possible.
 2. `code_search_guide_get(projectId)` — read it fully: replay
@@ -157,18 +176,27 @@ recipes). Each step names its tool.
    name taken from a screen script or the guide into entry-point candidates:
    `{entryPointId, repoId, kind, httpMethod, path, fullPath,
    handler{nodeId, filePath, name, lineStart, lineEnd}, deprecated}`.
-   Then `route_relations(projectId, entryPointId, kinds?, limit?, cursor?)`
-   returns the route's outgoing facts: `{kind (db_access, api_call, ...),
-   operation, target, details (tableName, queryId, ...),
-   evidence[{filePath, lineStart}], confidence, unresolvedReason}`.
+   Then `route_relations(projectId, entryPointId, kinds?, includeViaPath?, limit?, cursor?)`
+   returns the route's outgoing facts grouped by source node, not as a flat
+   list: `sources[{sourceNodeId, name, depth, parent/edge | via, relations[{kind
+   (db_access, api_call, ...), operation, target, details (tableName, queryId,
+   ...), evidence[{filePath, lineStart, lineEnd}], confidence?,
+   unresolvedReason?, connection?}]}]` plus `relationCount` and
+   `specDocumentIds`. `confidence` is omitted when high, `unresolvedReason` and
+   `connection` when null, `repoId` when it is the route's, and a detail
+   constant over the page (`orm`, `adapter`) sits once in
+   `relationDefaults.details` instead of on each relation.
    Use them to jump straight to the handler lines and the query id / table
    candidates. They are static-analysis candidates: read the handler and SQL
    lines before calling anything 확인됨. An `unresolvedReason` is a lead to
-   search, not an absence. Read relations by `depth`: a relation at depth > 1
-   comes from deeper bundle code (a service, use case, or helper the handler
-   reaches through calls), so read the handler → caller chain down to its
-   `sourceNodeId` / evidence lines before attributing it to this route or
-   calling it noise. A `tableVerified: false` target may be a
+   search, not an absence. Read sources by `depth` (it is stated once on the
+   source, not on each relation): a source at depth > 1 is deeper bundle code (a service,
+   use case, or helper the handler reaches through calls), so rebuild its
+   chain with `parent` (the index in `sources` of the caller source, walked
+   back to the handler) or `via{path, complete}` when the caller is not on the
+   page, and read the handler → caller chain down to its `sourceNodeId` /
+   evidence lines before attributing a relation to this route or calling it
+   noise. A `tableVerified: false` target may be a
    repository, DAO, or wrapper class name rather than a table; confirm the real
    table with the mapping annotation/directive or the SQL before listing it as
    a table.
@@ -178,7 +206,7 @@ recipes). Each step names its tool.
    code), so the active results are the routes the operator cares about. Only
    when nothing relevant is found, retry once with `includeDeprecated: true`.
    When the answer relies on a `deprecated` route (`deprecation{reason, note}`
-   explains why), say so in plain Korean under 주의, for example
+   explains why), say so in plain Korean in 근거, for example
    "분석 범위 밖으로 표시된 기능", and repeat it in the evidence table row.
    **Operator-curated relations.** A relation with
    `details.adapter: "user_supplement"` (confidence medium) was connected
@@ -261,14 +289,48 @@ the fallback in the trail.
    statuses.
 2. **api→db link missing** (the route has no or too few `db_access`
    relations):
-   `route_relations` → `route_code(projectId, entryPointId, limit?, cursor?)`,
-   which returns the code the route reaches as nodes with `filePath`, `line`,
-   `depth`, `via`, and `hasRelations` (replay `cursor` until done). Read the
-   nodes without relations (`hasRelations: false`), data-access methods first
-   (DAO / repository / mapper calls, then services), with
-   `readonly_workspace_shell`. From each data-access call, follow the query id
-   to its SQL, the SQL statement itself, or the model mapping to its table, per
-   `references/code-qa-recipes.md` (L6–L8 or the ORM variant).
+   `route_relations` → `route_code(projectId, entryPointId, includeAllNodes?, maxDepth?, includeNodeIds?, includeViaPath?, limit?, cursor?)`,
+   which returns the code the route reaches as nodes with `filePath`,
+   `lineStart`/`lineEnd`, `depth`, `parent`/`edge` (the caller's index in
+   `nodes`; walk it to the handler for the call chain, or pass
+   `includeViaPath:true` for `via`), `relationCount`, and
+   `dataAccessCandidate` (only when true: unlinked code that makes the same
+   call as an extracted data access). Replay `cursor` until done.
+   **The default page is bounded by depth**: every named node to `maxDepth`
+   2 is listed. Anonymous callbacks and local variables that certainly
+   belong to a listed caller are folded into it as `folded{callbacks, locals}`
+   counts (the view never hides a named node), and deeper nodes are counted in
+   `summary.hidden` by reason: `beyond_max_depth`, and on a paged read
+   `other_pages` (plus Core's node-type counts). A missing api→db
+   link lives exactly there — the deeper DAO / repository / mapper helpers
+   with `relationCount: 0` are hidden as `beyond_max_depth` — so when
+   `summary.hidden` lists `beyond_max_depth` (or `summary.folded` is
+   non-zero), replay the returned `next` re-reads before
+   reading any node: `route_code(..., maxDepth: <bundle depth>)` for the
+   deeper nodes, or `route_code(..., includeAllNodes: true)` for every
+   authorized node of the page. Never conclude from the default page alone
+   that no unlinked node exists. `nodeId` is omitted by default and cannot be
+   derived from the path and name: when a node must seed `graph_trace` or
+   `code_routes {nodeId}`, replay the `next` `route_code(..., includeNodeIds: true)`
+   re-read of the same page (same shaping and cursor) first — then
+   `graph_trace(seeds=[{kind:"code", nodeId}])`. `readonly_workspace_shell`
+   and `code_routes` need no `nodeId`: they take `repoId` + `filePath` +
+   line (`repoId` is `entryPoint.repoId` when a node omits it). Then read the
+   nodes without relations (`relationCount: 0`), data-access methods first
+   (`dataAccessCandidate`, DAO / repository / mapper calls, then services),
+   with `readonly_workspace_shell`. From each data-access call, follow the
+   query id to its SQL, the SQL statement itself, or the model mapping to its
+   table, per `references/code-qa-recipes.md` (L6–L8 or the ORM variant).
+   As a `platty-mcp-search` collector: `route_code` default page once plus
+   one hidden/folded re-read (`route_code` family ≤ 4 calls per job), read
+   at most 4 unlinked nodes per route (data-access candidates → the guide's
+   data-access naming → depth ascending), then bounded source reads and
+   `workspace_search` with the guide's repo set and globs inside the
+   discovery-search cap; `includeAllNodes: true` exposes the authorized
+   bundle of that page, not the whole repository. Close a link that stays
+   missing with the contract's fixed line in `gaps`: `link gap <route>:
+   route_relations <n> / route_code <nodes> nodes, unlinked <m>, read <k>
+   (<names>) / search <s> <status> / route_text_links <dir> <n> (<reason>)`.
 3. **screen→api link missing** (a screen's server calls are not linked):
    `route_text_links(projectId, direction: 'outgoing', from: {entryPointId} | {repoId, filePath}, limit?, cursor?)`
    returns candidate API routes matched by text, each with `matchLevel`
@@ -287,12 +349,17 @@ the fallback in the trail.
    reaches (depth 1–4, see `sourceFilePath`), yet can return zero candidates
    when calls sit deeper. Do not read zero candidates as "no calls": retry with
    `from: {repoId, filePath}` on each of the component or screen files that
-   `route_code` nodes or `route_relations` `via` chains name (client, service,
-   or repository files first), then verify as above.
+   `route_code` nodes or `route_relations` sources and their call chains
+   (`parent`/`via`) name (client, service, or repository files first), then
+   verify as above.
 4. **Who calls this API (which screens)?**
-   `route_text_links(projectId, direction: 'incoming', from: {entryPointId}, limit?, cursor?)`
+   `route_text_links(projectId, direction: 'incoming', from: {entryPointId}, targetRepoIds: [<one repo>], limit?, cursor?)`
    lists files whose code text matches the route, with the screens or clients
-   among them; verify each as in step 3. A matching file in a layered client
+   among them; verify each as in step 3. Always pass `targetRepoIds` with one
+   repository for incoming: without it the scan truncates at `file_cap`
+   (`coverage.truncated: true`) and proves nothing. As a `platty-mcp-search`
+   collector, `route_text_links` is ≤ 2 calls per job (outgoing once, plus
+   either the thin-wrapper retry or one incoming). A matching file in a layered client
    (repository, service) declares no route itself, so it names a file, not a
    screen: map it to screens with step 5 or the client caller ladder.
 5. **Impact / reverse lookup** (table, column, SQL, or model → affected
@@ -314,7 +381,7 @@ the fallback in the trail.
 6. **Dynamic patterns that defeat all of the above** (URL or query id built at
    runtime, reflection, config- or data-driven dispatch): mark the link
    코드로 확인 불가 (동적 호출) and list what was tried (tools, identifiers,
-   repos, status) in the trail and under 추가 확인 필요, but only when dynamic
+   repos, status) in the trail and under 확인할 수 없는 부분, but only when dynamic
    dispatch was observed in source, for example a URL or query id built from
    variables at the call site, with its `file:line`. When no such site was
    read, do not infer it from the missing link; report the actual gap as
@@ -334,8 +401,13 @@ what was not covered, using `coverage.truncatedReasons` (for example
 
 ## Completion Criteria
 
-There is no per-question call or time budget: quality decides when an answer
-is done. Keep investigating until all of these hold:
+In-session (no collectors) there is no per-question call or time budget:
+quality decides when an answer is done. As a `platty-mcp-search` collector,
+the collector contract's per-job budget applies instead: at the cap, stop,
+return the evidence read, and list the unexecuted rungs in `unread`; a budget
+stop never skips a mandatory rung that still has calls left (the reserved
+source fallback and confirming read exist for that) and never turns into an
+absence. Keep investigating until all of these hold:
 
 - every claim in the answer is 확인됨, or is explicitly classified as
   근거상 보임 or 코드로 확인 불가 with its reason (reason tag, searched scope,
@@ -361,7 +433,7 @@ Loop guard (quality, not budget):
   that do not bear on the open item do not count.
 - If three consecutive different searches for the same open item add nothing
   new in that sense, conclude that item with what is known, classify it
-  honestly, and name the next check under 추가 확인 필요.
+  honestly, and name the next check under 확인할 수 없는 부분.
 - The loop guard never skips pending mandatory ladder steps, mandatory
   fallbacks, or known unchecked candidates; it only stops open-ended
   exploration beyond them.
@@ -370,7 +442,7 @@ Loop guard (quality, not budget):
 
 ## Trail Recording
 
-Every answer carries its own trail inside the collapsed developer section:
+Every answer keeps its trail in the session ledger `notes` (never in the answer; 근거 cites its rows):
 
 - each evidence row: step, repo, `file:line`, what the line shows, and its
   honesty level;
@@ -431,12 +503,38 @@ Rules:
 
 ## Plain Korean Rules
 
-Business terms first; code names appear only in the developer section (or once
-as "(개발용 이름: X)" when unavoidable). One conclusion sentence first, then
-numbered steps, one action per step. Translate technical words: UPDATE → "바꿉니다",
-INSERT → "새로 저장합니다", WHERE 조건 → "~인 경우에만", transaction →
-"하나의 저장 묶음(실패하면 전부 취소)", cache → "미리 복사해 둔 목록".
-Full template, wording table, and a worked example: `references/answer-template.md`.
+Business terms first; code names appear only in 근거. Conclusion first (the
+결론 of the `platty-mcp-search` template), then 쉽게 말하면, one action per line. Translate technical
+words: UPDATE → "바꿉니다", INSERT → "새로 저장합니다", WHERE 조건 → "~인
+경우에만", transaction → "하나의 저장 묶음(실패하면 전부 취소)", cache →
+"미리 복사해 둔 목록". Wording table, evidence/trail format, and a worked
+evidence example: `references/answer-template.md`.
+
+Business terms are the **words users see on screen**. Legacy code often names
+tables, columns, and variables with abbreviations (a code `<약어>` that the
+screens show as `<화면 용어>`); business readers cannot follow an answer
+written in them.
+
+- Search a screen word in its code forms too, using the guide's abbreviation
+  or vocabulary sections and any `terms` the orchestrator passed.
+- For every abbreviation or code identifier the answer needs, take the screen
+  word from, in priority order: the label on the screen that shows that field
+  (a grid column header or form label bound to that column, a message
+  resource, a menu name) > DB column comment > code comment > guide. Use
+  labels from reads you already made, plus at most one targeted
+  `workspace_search` for the identifier in screen files per unlabeled
+  abbreviation.
+- This skill stays code-only: it does not read glossary or data dictionary
+  documents for vocabulary (the search orchestrator and docs track do), so the
+  code-only disclosure that business documents were not consulted stays true.
+- Never expand an abbreviation from its letters. Still unknown → keep the
+  code form with "(업무 용어 미확인)" and list it under 확인할 수 없는 부분.
+- Non-developer body: screen words only. Developer answers keep identifiers
+  exact and add the screen word once at the first mention,
+  `` `<약어>`(<화면 용어>) ``.
+- A screen word ↔ code form pairing goes in the matching 근거 item (no
+  separate term table). A mapping is vocabulary, not behaviour evidence: one backed only by the guide
+  or naming is marked 근거상 보임.
 
 ## Audience
 
@@ -445,8 +543,8 @@ Card. The evidence work (ladders, honesty levels, loop guard) is identical;
 only the answer's presentation changes.
 
 - **Default: non-developer.** Plain Korean business wording, uncertain points
-  presented as candidates or hypotheses with what would confirm them, developer
-  evidence collapsed at the end.
+  presented as candidates or hypotheses with what would confirm them, code
+  evidence in 근거.
 - **Developer** when the question is developer-oriented. Signals:
   - code identifiers: file, class, or method names, API paths, table or column
     names, query ids, stack terms;
@@ -460,30 +558,34 @@ only the answer's presentation changes.
     non-developer; "승인 코드 어디서 만드는지 코드 어디 봐야 해?" is developer.
 - An explicit user instruction ("비개발자용" / "개발자용") overrides detection.
 - Decide per question; a QA list can mix both. With no signal, keep the default.
-- State the chosen audience in one short line at the top of each answer
-  (`> 대상: 비개발자용` or `> 대상: 개발자용 (<판정 근거 한 줄>)`).
+- The audience is not printed: every answer has the same four parts
+  (`../platty-mcp-search/references/answer-template.md`).
 
-Developer style: code locations first with inline `repo:file:line`, exact
-identifiers, change points, side effects, and test points as checklists, and
-the same honesty levels and evidence table. Template:
-`references/answer-template.md` "Developer Template".
+Developer style: the same four parts; a developer question may repeat the
+code form it named in 결론, and 근거 carries the `repo:file:line` locations
+with 요지 (≤ 3 코드 lines) — there is no separate developer template.
 
 ## Answer Shape
 
-Non-developer shape (default); developer questions use the Developer Template
-of `references/answer-template.md` (see Audience). Either way the audience line
-comes first.
+The final answer shape is owned by `platty-mcp-search`
+(`../platty-mcp-search/references/answer-template.md`), not by this skill:
+결론 → 쉽게 말하면 → 근거 → 확인할 수 없는 부분, the same four parts for
+every audience. A single code-only question answered in the main session
+(in-session on this ladder, no collectors) uses that same template, so it also
+opens with 결론; as a collector, return the collector JSON and no answer at all.
 
-```text
-### Q<n>. <question>
-> 대상: 비개발자용
-**한 줄 결론** <확인됨|근거상 보임|코드로 확인 불가> — <one sentence>
-**쉬운 설명** 1. … (≤7 steps; impact questions: no cap)
-[impact questions only] **영향 체인 지도** + **점검 sweep 현황** (S1–S7)
-**주의 / 예외** - … (≤4; impact questions: no cap)
-**추가 확인 필요** - [DB] … - [외부] … - [런타임] … (≤4)
-<details><summary>개발 근거 (파일:라인)</summary> evidence table + trail </details>
-```
+This skill contributes only what the code track adds to that template:
+
+- the audience decision (see Audience) and the three honesty levels as the
+  status values;
+- the code-only lines under 확인할 수 없는 부분 (business documents exist but
+  were not consulted; 코드로 확인 불가 with its reason tag and what was tried);
+- the evidence rows and the trail (Tools / Searches / Route / Missing links /
+  Graph) in the session ledger `notes`, feeding 근거, and the evidence-row notes
+  (deprecated route, 수동 연결(운영자), 코드 대조로 찾은 연결, 동적 호출);
+- the plain Korean wording table and the screen-word rules.
+
+All of these are in `references/answer-template.md`.
 
 ## Red Flags
 
@@ -493,7 +595,7 @@ comes first.
 | "This deep relation looks like noise for the route." | Read the handler → caller chain to its `sourceNodeId` first. |
 | "`route_relations` lists the tables." | `tableVerified: false` may be a repository/wrapper name; confirm with the mapping or SQL. |
 | "This `user_supplement` relation is manual noise." | It is operator-asserted: cite "수동 연결(운영자)", read the source before 확인됨, never drop it. |
-| "Only a deprecated route matches, so I'll answer without saying so." | Say "분석 범위 밖으로 표시된 기능" under 주의 and in the evidence row. |
+| "Only a deprecated route matches, so I'll answer without saying so." | Say "분석 범위 밖으로 표시된 기능" in 근거 and in the evidence row. |
 | "Status '21' obviously means manual completion." | Quote `'21'`; meaning is [DB] unless the code labels it. |
 | "No matches, so nothing else is affected." | Report searched scope and status; not proof of no impact. |
 | "The changed value skips this batch, so the batch is unaffected." | Impact Sweep S5: read the fall-through branch; "no target" is not "no effect". |
@@ -504,16 +606,20 @@ comes first.
 | "The guide's routing config is under `env/`, so I can't read it." | Bounded `rg -n` / `sed -n` on that named file only; mask credential-looking values. |
 | "`complete` status, zero hits, so the menu entry does not exist." | Files over 16MB are skipped; `rg -n` the guide-named large file first. |
 | "The graph has no edge to the SQL, so the query is unused." | Run the mandatory `workspace_search` fallback on the query id / table. |
-| "I've used a lot of calls, so I'll stop and answer partially." | There is no budget; continue until the Completion Criteria hold. |
+| "I've used a lot of calls, so I'll stop and answer partially." | In-session: there is no budget; continue until the Completion Criteria hold. As a collector: stop only at the contract cap, and then return `unread` with the rungs not run — never a padded or guessed claim. |
+| "`SERVER_BUSY` came back, so that path has no evidence." | Retry after about 2 s, then 5 s; still busy → the read is `unavailable`, the claim keeps its level, never an absence. |
+| "`route_text_links` incoming without `targetRepoIds` scanned 500 files, so these are all the callers." | Without `targetRepoIds` the scan truncates at `file_cap`; narrow to one repo and re-run. |
 | "Same search again, maybe it returns more this time." | Never repeat an identical search; after three different searches add nothing new, conclude that item. |
 | "No route matches, so the feature does not exist." | The route inventory is complete; re-query with other identifiers first. |
-| "The route has no `db_access` relation, so it touches no table." | Run `route_code` and read the nodes without relations, data-access first. |
+| "The route has no `db_access` relation, so it touches no table." | Run `route_code`, replay its hidden-node re-reads, and read the nodes without relations, data-access first. |
+| "`route_code` listed no node without relations, so nothing unlinked exists." | The default page is bounded by `maxDepth`; `summary.hidden` (`beyond_max_depth`) holds the deeper helpers. Replay the `maxDepth` / `includeAllNodes: true` `next` re-reads first. |
+| "I'll build the `graph_trace` seed from the node's file and name." | A `nodeId` is a scoped symbol, not derivable; replay the `includeNodeIds: true` re-read of the same page and use its `nodeId`. |
 | "`route_text_links` found a match, so the screen calls this API." | Read the cited lines first; `ambiguity` > 1 needs the guide's routing rules. |
 | "The URL is built at runtime, so I'll guess the target." | Do not guess. 동적 호출 only with the call-site `file:line` where it was observed; otherwise name the actual gap. List what was tried. |
 | "The link is still missing, so it must be a dynamic call." | Missing is not dynamic. Report the actual gap as 코드로 확인 불가 with its reason. |
 | "`code_routes` on a class or container target lists 100+ routes for a one-line method." | Routes reach the class, not the method. Use the innermost method target and count only items whose `target.nodeId` is that method. |
 | "The graph says the call reaches the wrapper method, so the wrapper is affected." | A raw library client call can be linked to a same-named wrapper method by name alone (a false edge). Read the receiver at the call site to confirm its type before attributing. |
-| "`route_text_links` returned nothing for the page, so the page calls no API." | A thin wrapper page reaches its calls through other files, possibly deeper than the tool scans; retry with `{repoId, filePath}` of the component files from `route_code` / `route_relations` `via`. |
+| "`route_text_links` returned nothing for the page, so the page calls no API." | A thin wrapper page reaches its calls through other files, possibly deeper than the tool scans; retry with `{repoId, filePath}` of the component files from `route_code` nodes / `route_relations` sources (follow `parent` or `via`). |
 | "Docs are empty, so I'll run the retrieval ladder anyway." | Empty maps; stay on this code ladder. |
 
 ## Stop Conditions
@@ -535,7 +641,9 @@ runs first, and a guide-named file above the 16MB search cap gets one exact
 
 - `references/code-qa-recipes.md` — generic layer recipe, per-type recipes
   T1–T10, stop conditions.
-- `references/answer-template.md` — answer template, plain Korean wording
-  table, worked example with placeholders.
+- `references/answer-template.md` — the code track's contribution to the
+  `platty-mcp-search` answer template: evidence rows, trail format, status
+  values, plain Korean wording table, worked evidence example with
+  placeholders.
 - `references/pressure-scenarios.md` — load only when validating or changing
   this skill.

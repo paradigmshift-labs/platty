@@ -149,8 +149,11 @@ Completion:
   about product flow, capability, journey, screen, admin workflow, or
   implementation-facing behavior;
 - use `<family>_spec_resolve(itemId)` as the first bridge from selected
-  design/UCL items to screen/API Specs; use `spec_search` only when linked context is
-  absent, incomplete, stale, too broad, or leaves the exact spec id unknown;
+  design/UCL items to screen/API Specs; use `spec_search` only when the
+  resolver and the EPIC's supporting refs leave the exact spec id unknown (a
+  `platty-mcp-search` collector logs it as `ladder_exhausted:D5`); a large or
+  stale linked spec is read with `claimLimit`/`claimPath`, not replaced by a
+  search;
 - identify the user action or capability item;
 - separate journey evidence from implementation evidence.
 - for exact API or screen behavior, rank connected `api_spec` and `screen_spec`

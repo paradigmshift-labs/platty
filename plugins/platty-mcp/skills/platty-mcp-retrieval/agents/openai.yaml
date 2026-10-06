@@ -1,0 +1,6 @@
+interface:
+  display_name: "Platty MCP Retrieval"
+  short_description: "Explicit-only legacy retrieval ladder and Impact Seed Packet producer"
+  default_prompt: "Use $platty-mcp-retrieval only by name from an SDD skill or $platty-mcp-impact-analysis; project questions use $platty-mcp-search."
+policy:
+  allow_implicit_invocation: false

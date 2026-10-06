@@ -1,6 +1,7 @@
 ---
 name: platty-mcp-sdd-spec-from-figma
-description: 기존 제품 문서 유무와 관계없이 Figma URL과 함께 제품 기획, 기획서, 기능 개요, 요구사항, PRD, 사용자 스토리 또는 기능 기획의 정리, 초안 작성, 생성, 보강을 요청할 때 사용한다.
+description: "정확한 이름으로 명시 호출할 때만 동작한다(Figma URL이나 기획서 요청만으로 자동 선택되지 않음). 사용자가 이 스킬을 지명하면 기존 제품 문서 유무와 관계없이 Figma URL과 함께 제품 기획, 기획서, 기능 개요, 요구사항, PRD, 사용자 스토리 또는 기능 기획을 정리, 초안 작성, 생성, 보강한다."
+disable-model-invocation: true
 ---
 
 # Platty MCP Figma 기반 SDD 기획

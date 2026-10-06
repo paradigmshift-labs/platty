@@ -1,6 +1,7 @@
 ---
 name: platty-mcp-figma-design-sync
-description: Figma URL, 페이지, 섹션 또는 프레임을 Platty MCP 제품 기획이나 기술 설계 전에 재사용 가능하고 revision이 관리되는 디자인 근거로 만들 때 사용한다.
+description: "정확한 이름으로 명시 호출할 때만 동작한다(Figma URL만으로 자동 선택되지 않음). 사용자나 SDD 스킬이 이 스킬을 지명하면 Figma URL, 페이지, 섹션 또는 프레임을 Platty MCP 제품 기획이나 기술 설계 전에 재사용 가능하고 revision이 관리되는 디자인 근거로 만든다."
+disable-model-invocation: true
 ---
 
 # Platty MCP Figma 디자인 동기화

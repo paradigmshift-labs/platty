@@ -1,0 +1,6 @@
+interface:
+  display_name: "Platty MCP Impact Analysis"
+  short_description: "Explicit-only standalone engineering Impact Dossier"
+  default_prompt: "Use $platty-mcp-impact-analysis only by name for an Impact Dossier, Impact Seed Packet, impactRevision, or PRD §9; business impact questions use $platty-mcp-search."
+policy:
+  allow_implicit_invocation: false

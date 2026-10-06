@@ -1,6 +1,6 @@
 {
   "name": "platty-mcp",
-  "description": "Platty MCP retrieval, Figma evidence, impact analysis, memory, and approval-gated local SDD skills for configured context servers; no server or unrelated write capability.",
+  "description": "Platty MCP search skills for configured context servers: an orchestrator (platty-mcp-search) with docs and code evidence collectors, an impact investigator, a claim auditor, memory lifecycle routing, and client-side MCP endpoint setup. The SDD and Figma skills (platty-mcp-sdd-*, platty-mcp-figma-design-sync) and the legacy ladders (using-platty-mcp, platty-mcp-retrieval, platty-mcp-code-qa, platty-mcp-impact-analysis) stay installed for explicit invocation by exact name only and never auto-trigger on a question. Read-only, no server or unrelated write capability.",
   "version": "0.0.29",
   "author": {
     "name": "Paradigm Shift Labs"
@@ -11,8 +11,8 @@
   "keywords": [
     "platty",
     "mcp",
+    "search",
     "retrieval",
-    "skills",
-    "workflows"
+    "skills"
   ]
 }

@@ -37,6 +37,18 @@ resolve project ID only if unknown; context_status for freshness
 -> typed family search or spec_search only when direct maps leave IDs unknown
 ```
 
+Docs-collector rung log (`platty-mcp-search` collector contract): the rungs
+above are logged as D0 `epic_get(view:"summary")` per scoped EPIC → D1 family
+status and supporting refs (`epic_get(view:"full")` → `documentRefs`) → D2
+scoped typed lists → D3 document summaries → D4 `<family>_item_get` → D5
+`<family>_spec_resolve(itemId)` → D6 `spec_get(claimLimit:5)` → D7
+`spec_business_resolve` (reverse questions only) → S typed family search /
+`spec_search` only when D0–D6 left the ID unknown (≤ 2, each logged with
+`ladder_exhausted:D<n>`). A family whose EPIC count is 0 with no supporting
+ref is `absent` coverage: continue with the contract's fallback family in the
+same EPIC; "required" means its presence is checked and its fallback applied,
+never that an absent document is searched for until found.
+
 DESIGN is required for system design, integration, architecture, flow, capability,
 journey, admin workflow or implementation-facing work; BR supplies policy,
 UCL user actions, DD data-object/column meaning. Vocabulary is routing evidence.

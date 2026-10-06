@@ -1,6 +1,7 @@
 ---
 name: platty-mcp-sdd-design-with-figma
-description: Use when a user separately requests technical or system design from approved product documents with a Figma URL, current-session Figma evidence, or a validated figma_handoff.json discovered beside the product pair.
+description: "Explicit invocation by exact name only (never auto-selected from a design request): when a user separately requests technical or system design from approved product documents with a Figma URL, current-session Figma evidence, or a validated figma_handoff.json discovered beside the product pair, and names this skill."
+disable-model-invocation: true
 ---
 
 # Platty MCP SDD Design With Figma
