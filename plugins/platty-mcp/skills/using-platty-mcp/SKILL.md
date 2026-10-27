@@ -1,6 +1,6 @@
 ---
 name: using-platty-mcp
-description: "Internal router for the explicit-only Platty MCP SDD and Figma skills; never auto-selected for a question (project questions go to platty-mcp-search). Invoke by exact name only when a platty-mcp-sdd-* or platty-mcp-figma-design-sync skill needs its routing, tool capability checks, Figma evidence routing, client setup routing, Memory request or glossary-alias inventory routing, or MCP-grounded SDD file creation rules."
+description: "Internal router for the explicit-only Platty MCP SDD and Figma skills; never auto-selected for a question (project questions go to platty-screen-search, which hands non-screen questions to platty-mcp-search). Invoke by exact name only when a platty-mcp-sdd-* or platty-mcp-figma-design-sync skill needs its routing, tool capability checks, Figma evidence routing, client setup routing, Memory request or glossary-alias inventory routing, or MCP-grounded SDD file creation rules."
 disable-model-invocation: true
 ---
 

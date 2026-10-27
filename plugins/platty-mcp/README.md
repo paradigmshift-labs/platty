@@ -20,7 +20,8 @@ workflows.
 
 | Skill | Role |
 | --- | --- |
-| `platty-mcp:platty-mcp-search` | Main entry for every project question (business rules, screens, features, limits, states, terms, where something is, impact asked as a business question; one question or a list). Scopes the question to EPICs and route candidates (the only place discovery happens), dispatches the two collectors (impact questions: the docs collector + one impact investigator), audits their claim ledgers, runs the claim audit, answers in the fixed 현업 template. References: `scoping.md`, `job-cards.md`, `answer-template.md`, `impact.md`, `codex.md`. |
+| `platty-mcp:platty-screen-search` | Main entry for every project question. Questions about using a screen (a label, button, field, menu, list item or message; "어떻게 / 어디서 / 왜 안 돼") stay here: finds the term in the term registry, has the user confirm the menu/screen, reads the code and its writer paths, asks which situation applies, and answers in short screen words with a code-evidence attachment. Every other project question is handed to `platty-mcp-search`. Needs the `term_lookup` and `menu_lookup` MCP tools. |
+| `platty-mcp:platty-mcp-search` | Second level under `platty-screen-search`: project questions that are not about using a screen (business rules across features, limits, states, terms, where something is, impact asked as a business question, developer, batch or interface questions; one question or a list). Scopes the question to EPICs and route candidates (the only place discovery happens), dispatches the two collectors (impact questions: the docs collector + one impact investigator), audits their claim ledgers, runs the claim audit, answers in the fixed 현업 template. References: `scoping.md`, `job-cards.md`, `answer-template.md`, `impact.md`, `codex.md`. |
 | `platty-mcp:platty-mcp-doc-search` | Docs track: from the Job Card's EPIC ids and family map, reads 업무 규칙 / 화면 흐름(유스케이스) / 설계 / 데이터 사전 items and the specs their resolvers return; ≤ 2 searches, only when the map fails. Loaded by the docs collector, not a user entry point. |
 | `platty-mcp:platty-mcp-code-search` | Code track: from the Job Card's route candidates, reads spec claims as the map, the full `route_relations` checklist, and only the pointed `file:line`; both-sides, activation-proof, and failure-path rules. Loaded by the code collector (the impact investigator loads its claim, shell-input, and return rules), not a user entry point. |
 | `platty-mcp:platty-mcp-memory` | Explicit memory and glossary-alias lifecycle requests. |
@@ -41,10 +42,10 @@ through them.
 
 | Skill | Role when invoked by name |
 | --- | --- |
-| `platty-mcp:using-platty-mcp` | Router and tool mapping for the SDD and Figma skills (`references/tool-mapping.md`, `figma-evidence-contract.md`). Project questions go to `platty-mcp-search` instead. |
+| `platty-mcp:using-platty-mcp` | Router and tool mapping for the SDD and Figma skills (`references/tool-mapping.md`, `figma-evidence-contract.md`). Project questions go to `platty-screen-search` instead. |
 | `platty-mcp:platty-mcp-retrieval` | Legacy retrieval ladder and Impact Seed Packet producer used by the SDD skills and `platty-mcp-impact-analysis`. |
 | `platty-mcp:platty-mcp-code-qa` | Legacy code-track ladder (code-only mode) kept for the SDD skills. |
-| `platty-mcp:platty-mcp-impact-analysis` | Standalone engineering Impact Dossier (Impact Seed Packet, `impactRevision`, cross-EPIC traversal, PRD §9). Business or QA impact questions go to `platty-mcp-search`. |
+| `platty-mcp:platty-mcp-impact-analysis` | Standalone engineering Impact Dossier (Impact Seed Packet, `impactRevision`, cross-EPIC traversal, PRD §9). Business or QA impact questions start with `platty-screen-search`, which hands them to `platty-mcp-search`. |
 | `platty-mcp:platty-mcp-sdd-spec` | Writes `prd.md` and `user_stories.md` under `~/.platty/specs/<projectId>/SPEC-<slug>-<YYYY-MM>/`. |
 | `platty-mcp:platty-mcp-sdd-design` | Writes `system_design.md` first (technical AS-IS/TO-BE, `CHG-*` change map, DB/data-impact assessment); `tasks.md` only after the user explicitly approves the reviewed design and the bundled readiness validator passes. |
 | `platty-mcp:platty-mcp-figma-design-sync` | Reads one exact Figma target through configured Figma MCP and writes validated, revisioned evidence under `~/.platty/design-sync/<projectId>/<targetId>/reports/<reportId>/`. It does not edit Figma, product files, system design, tasks, generated SOT, or code. |

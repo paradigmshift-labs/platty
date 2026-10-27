@@ -9,7 +9,7 @@ description: Use when a user explicitly asks to inspect their Platty Memory requ
 (a server prefix such as `platty_memory_request` is real); `context_status`
 lists only tools that are `missing` / `unavailable`. This skill owns explicit
 Memory requests and reads; read-only project evidence (documents, specs,
-routes, source) is `platty-mcp-search` territory — use it to find the exact
+routes, source) is `platty-screen-search` / `platty-mcp-search` territory — use it to find the exact
 anchor IDs when they are not already known.
 
 ## Write intent and boundary

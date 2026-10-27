@@ -18,7 +18,7 @@
     },
     {
       "name": "platty-mcp",
-      "description": "Platty MCP search (docs + code evidence collectors, claim audit), memory, and explicit-only SDD handoff skills for configured remote context servers.",
+      "description": "Platty MCP screen search (entry for project questions), search with docs + code evidence collectors and claim audit, memory, and explicit-only SDD handoff skills for configured remote context servers.",
       "author": {
         "name": "Paradigm Shift Labs"
       },
