@@ -60,8 +60,11 @@ visible.
 1. Confirm runtime tools are visible and read live `tools/list` schemas.
 2. Check the concrete tools the selected skill needs, not an unrelated tier:
    `platty-screen-search` — `context_status`, `term_lookup`, `menu_lookup`,
-   `route_resolve`, `route_relations`, `spec_search`, `readonly_workspace_shell`,
-   `workspace_search`;
+   `glossary_translate`, `route_resolve`, `route_relations`, `route_code`,
+   `route_impact_candidates`, `job_dependency_trace`, `spec_list / spec_search /
+   spec_business_resolve`, `epic_get`, `business_rule_item_get /
+   use_case_item_get`, `readonly_workspace_shell`, `workspace_search`,
+   `workspace_repo_list`;
    `platty-mcp-search` — `context_status`, `domain_list/get`, `epic_list/get`,
    the typed family tools (`business_rule_* / use_case_* / design_* /
    data_dictionary_*` list, get, item_get, search, and each family's
