@@ -8,7 +8,7 @@ description: "Main entry for every Platty project question asked through Platty 
 DRAFT 2026-10-22 rev6 + 2026-10-26 opus-advisor edits E1–E24 + 2026-10-27 v1 (E25–E31: fan-out writer paths, recursive caller climb, column-carry filter, target rows, no call budget) + v2 (E32–E37: W6b action order and save checks per situation, 자동 반영, guard rows by tested column, permission = 6c only) + v3 (E38–E41: combo item names, list-filter guard, non-interactive length, 6c wording) — PoC entry skill of the platty-mcp plugin.
 
 A business user asks in the words printed on their screen. The same word means
-different things in different menus (`MD` in 상품 vs 매장), so the answer must
+different things in different menus (`담당자` in 주문 vs 정산), so the answer must
 be anchored on the screen the user actually means **before** any document or
 code is read. Start from the screen, find its EPIC, read the business documents,
 then the code. What the user can do next depends on the situation they are in,
@@ -94,7 +94,7 @@ before any tool call:
   `documentTitle` is the API. `spec_get` on a screen spec always fails
   (hundreds of thousands of characters) and on an API spec can exceed 50 KB:
   do not use it for the EPIC.
-- Screen file → menu: `menu_lookup(text: "<screen file path, e.g. MT/OG/UI_MTOG_01001.xfdl>")`
+- Screen file → menu: `menu_lookup(text: "<screen file path, e.g. <module>/<screen id>.xfdl>")`
   returns the linked menu with `match: key`. Never guess menu words from the
   question or from table comments.
 - `route_impact_candidates(tables)` lists at most 50 routes per table, mostly
@@ -107,7 +107,7 @@ before any tool call:
   `sweepStatus`, `gapCodes`, `needs_review`) describe the analysis, not the
   business. Never put them in layer 1. If one matters, say "분석 도구의 표시일
   뿐 화면이 쓰이는지와는 별개" in layer 2.
-- **Code values.** The meaning of a code value (what `A60`, `'000'`, `'3'`
+- **Code values.** The meaning of a code value (what `R10`, `'000'`, `'3'`
   stand for) counts only when one of these says so: a term card or
   dictionary row, a glossary entry, a common-code row, an enum or constant
   definition that pairs the value with a name (`("3","…")`, `DIRECT = "0"`), or
@@ -120,14 +120,14 @@ before any tool call:
   code values. A role or item name that appears in text the system itself shows
   — a screen label, a menu or screen title, a string literal of an alert or
   message — may be used as written, and quoted from that line. Example: an
-  exception argument "마진 확정자(팀장) 정보" lets you write "확정자(팀장)".
+  exception argument "요청 승인자(팀장) 정보" lets you write "승인자(팀장)".
   Do not turn it into a claim about a code value or about who in the company
   holds the role.
 - **Word bridge.** The user's screen, the screen where the action is taken and
   the error message often name the same thing with different words (one screen
-  says "확정자", another "팀장"). When the answer uses a word that is not on the
+  says "승인자", another "팀장"). When the answer uses a word that is not on the
   screen the user confirmed, add one bridge line in layer 1 stating where each
-  word appears ("마진등록신청 화면에는 '확정자', 오류 문구와 마진등록 확정(팀장)
+  word appears ("요청등록 화면에는 '승인자', 오류 문구와 요청 승인(팀장)
   화면에는 '(팀장)'으로 나옵니다."). Evidence for "same thing": both words in one
   message literal, one title, a glossary entry you read, or a W7 data-flow trace
   (step 5b). Without such
@@ -140,7 +140,7 @@ before any tool call:
 - **Quotes.** A label in quotes must be copied from a `text=` / `tooltiptext=` /
   title line you read; otherwise describe the item without quotes. A message
   text in quotes must be the string literal passed to the alert call or a row of
-  a message table you read (`appvariables.xml`: `grep -n 'CMxxxx'`). A `//`
+  a message table you read (the project's message file: `grep -n '<message ID>'`). A `//`
   comment next to the call is not the message: use only the message ID and its
   arguments in layer 2.
 - **Comparisons.** Write the operator as words with the boundary: `<` 미만
@@ -175,7 +175,7 @@ before any tool call:
     <how it is set, in screen words>로 정해지며, 이 시스템 화면에서 바꾸는 곳을
     찾지 못했습니다." (2) "담당 부서에 다음을 알려 주세요:
     <facts>." Facts = values the user sees on a screen named in layer 1 (named by that
-    screen's label) or knows (their 점포·팀, their own ID), and the message as shown;
+    screen's label) or knows (their 부서·팀, their own ID), and the message as shown;
     never a table, column or code value.
   미완 → only "<data in screen words>을(를) 어디서 바꾸는지는 아직 확인하지
     않았습니다. 이어서 확인해 볼까요?"
@@ -198,7 +198,7 @@ before any tool call:
 2. **Find the term → candidate screens**
    - Pick the screen words of the question (labels, buttons, field names,
      menu names). One `term_lookup(text, limit: 5)` per word, at most 3 words.
-     Words of 3 letters or fewer, or very common ones (`MD`, `매장`, `점포`,
+     Words of 3 letters or fewer, or very common ones (`ID`, `부서`, `상태`,
      `코드`), match hundreds of cards.
    - A result with `hasNextPage: true` or `truncated: true` is a **partial**
      candidate list. Do not treat it as complete: also run `menu_lookup(text)`
@@ -220,10 +220,10 @@ before any tool call:
      message are not screen labels: cards are often empty for them, so go by
      the menu path in the question or `menu_lookup`. Then find the throw:
      `workspace_search(<one distinctive piece of the message, e.g. a word with
-     brackets>, fixedStrings: true, limit: 30, globs: ["**/*.java", "**/appvariables.xml"])`
+     brackets>, fixedStrings: true, limit: 30, globs: ["**/*.java", "**/<message file>"])`
      — the message is a template plus an argument and the user's spacing differs, so
      never search the whole sentence. Keep the hit whose template (`grep -n '<message ID>'`
-     on `appvariables.xml`) plus argument gives the user's wording; its service →
+     on the message file) plus argument gives the user's wording; its service →
      `route_resolve` → API, and check that the confirmed screen calls that API URL.
 3. **Confirm the screen — always, even with one candidate**
    - One question (`AskUserQuestion` / `request_user_input` / plain question
@@ -265,22 +265,22 @@ before any tool call:
      screen file, the `sql_param` / `sql_result` line in the mapper).
      `route_code(api)` when the deciding branch is not on those lines.
    - **Read both sides.** For "안 돼요 / 막혀요 / 오류" questions read the screen
-     condition (read-only switches, validators, `gfnAlert` calls) **and** the
+     condition (read-only switches, validators, alert calls) **and** the
      server service/SQL, and say which side blocks (layer 2). Search the screen
-     file for the menu's save-permission switch (`savBtnUsgYn`, `SaveAuth`,
-     `set_readonly`) when the symptom is "can't edit / can't save". When the
+     file for the menu's save-permission switch (a save-button flag, an
+     authority dataset, `set_readonly`) when the symptom is "can't edit / can't save". When the
      symptom is about a combo or list, read the code that fills it, including
      its filter.
    - **Read what the condition calls.** A common function in the deciding
-     condition (`gfn*`, `mtfn*`) → read its definition once (also search
-     `nexacrolib/` when the project has it), or list it as unread. A value
+     condition (a shared library or module function) → read its definition
+     once (also search the framework library folder when the project has one), or list it as unread. A value
      compared with what a popup returned → read the popup's server query to its
      end (its service URL is in the popup source).
-   - **Role words** in the question (SM, 바이어, 팀장): look in the code for the
+   - **Role words** in the question (담당자, 승인자, 팀장): look in the code for the
      field that tells the roles apart (session user type, mapping table). If
      there is none, write "코드에는 이 역할 구분이 없음" in layer 2.
    - **Radio/combo items**: read their item names and values (the `text` /
-     `dtlCdNm` lines), not only the code that switches them.
+     display-name lines), not only the code that switches them.
    - Write down, as you read, every **deciding condition**: a value or row that
      must exist, a read-only or permission switch, an input rule (date limit,
      required field), an error-message condition, a mismatch between two
@@ -308,7 +308,7 @@ before any tool call:
        guard too (for example a use-flag column). A code
        literal is not a row: it adds its column to that table row's deciding columns
        (W2); a literal of a common-code table belongs to that table's row.
-       A menu/button permission switch (`savBtnUsgYn`, `gdsMenu`, session authority) is
+       A menu/button permission switch (a save-button flag, a menu-authority dataset, session authority) is
        not a 5b row: it is handled by 6c only.
      - **Target rows.** When the user wants to change, register or fix a value ("~을
        바꾸고 싶어요", "~이 변경되지 않아요", "~은 어디서 등록하나요"), the table.column
@@ -360,18 +360,18 @@ before any tool call:
         (an id, a flag) is dropped with that reason in layer 2.
         (d) If a kept caller is itself a shared/API service method (not a controller
         handler, a batch tasklet/step, a listener or an external-API controller), repeat
-        (b)–(d) with **its** method name. Wrappers such as `…APIService.modify…`
+        (b)–(d) with **its** method name. Wrappers such as `…CommonService.update…`
         routinely have many business callers one level up; each is its own path.
         Stop a branch only at a controller handler, a batch, a listener, an
         external-API controller, or no caller (drop with reason).
      W4 `route_resolve(query: <controller method or URL segment>)`; no API →
         `workspace_search("<method>(", globs: ["**/controller/**"])`, then `route_resolve`
         on the controller method. A batch class → **배치**. An API whose controller says it
-        is called from outside (comment, `/gyr/`, `/ext/`-style mapping) and no screen calls
+        is called from outside (comment, an `/ext/`-style mapping) and no screen calls
         it (W5) → **API만**.
      W5 `workspace_search(<API last URL segment>, fixedStrings: true,
         repoIds: [<screen repository>], globs: ["**/*.xfdl", "!design/**"])`. No hit → **API만**.
-        A hit in a popup/sub-form (opened with `gfnOpenPopup` / not a menu screen):
+        A hit in a popup/sub-form (opened with the popup-open function / not a menu screen):
         `workspace_search("<popup file name>", fixedStrings: true, repoIds: [<screen
         repository>], globs: ["**/*.xfdl", "!design/**"])` → the opener screen and the
         button/function that opens it; continue W6 on the opener; layer 1 names the popup
@@ -392,15 +392,15 @@ before any tool call:
             condition (for example: the component opens only after another combo is
             changed to a value different from the loaded one). When the branch depends on
             a combo/radio value, read that control's item names: its `innerdataset` rows,
-            or for a common-code combo the code group it loads (`cmmnCd:"<GROUP>"`) →
+            or for a common-code combo the code group it loads (the code-group argument of the combo) →
             `term_lookup(text: "<GROUP>")` / `glossary_translate` / `workspace_search` of
             the group's rows; name the item in layer 1 by that display name. Display name
             not readable → write the action as "지금과 다른 값으로 바꿉니다" plus the alert
             literal that names the allowed case, and put "콤보 표시명 확인하지 못함" in layer 2;
-        (3) the save validation of that screen (its `cfnSave` / `fnSave…Validation` to the
+        (3) the save validation of that screen (its save function and the validation it calls, to the
             end): every check that involves the column, the fields the screen clears when
             the column changes, and values of the **user's situation** (the guard value on
-            the user's screen, e.g. a filled 공간ID) — quote each alert literal;
+            the user's screen, e.g. a filled 위치 코드) — quote each alert literal;
         (4) the server branch on the path that decides whether the column is applied now
             or later (date or flag conditions read in W3).
         Layer-1 steps for this path = the order of user actions from (2), the inputs and
@@ -619,8 +619,8 @@ evidence only after you read the lines they cite.
 | "No option fits what the user said, I will pick the closest" | Offer "다른 경우" and do not stretch an option over a state it does not describe. |
 | "I must explain how the code works so the answer is trustworthy" | Trust lives in the layer-2 table. Layer 1 is what to do. |
 | "The sentence needs a caveat in every line" | One closing line in layer 1; the rest in layer 2. |
-| "The role is called 팀장 on another screen, so A60 means 팀장" | Role names from screens and messages may be used and bridged; a code value means nothing until a source says so. |
-| "The user's screen says 확정자, I will say 확정자 in the action steps" | Use the words of the screen where the action is done, and bridge the two words once. |
+| "The role is called 팀장 on another screen, so R10 means 팀장" | Role names from screens and messages may be used and bridged; a code value means nothing until a source says so. |
+| "The user's screen says 승인자, I will say 승인자 in the action steps" | Use the words of the screen where the action is done, and bridge the two words once. |
 | "I know the usual procedure (who approves, who to ask)" | Procedures count only if a source says so; otherwise one closing line. |
 | "spec_get failed, retry with a smaller claimLimit" | The size is the screen section, not the claims. Do not call it on screen specs. |
 | "The first 5 cards are the candidates" | `hasNextPage: true` means the list is partial; also use `menu_lookup`. |
@@ -630,12 +630,12 @@ evidence only after you read the lines they cite.
 | "W1 found 0 hits" | Check the pattern first: `\b` after `$` or a `\n` finds nothing by construction (`status: error`). |
 | "One path reached API만 / 배치, so the row is done" | A row is done only when **every** writer path has a status. The screen the user needs is often on another path. |
 | "The caller search was truncated; I will list the rest as unread" | Re-run with a larger `limit` or split by repository until nothing is truncated. |
-| "The caller is `…APIService.modify…`, that is the end" | A shared service is not an entry point. Climb its callers (W3 d) until a controller, batch or listener. |
-| "This writer's API name (saveShopChg, 이동퇴점재입점) has nothing to do with '층 변경'" | Relevance is decided by the column (W2, W3 c), not by words. If it sets the column, it is a path. |
+| "The caller is `…CommonService.update…`, that is the end" | A shared service is not an entry point. Climb its callers (W3 d) until a controller, batch or listener. |
+| "This writer's API name (saveTransfer, 이전 처리) has nothing to do with '위치 변경'" | Relevance is decided by the column (W2, W3 c), not by words. If it sets the column, it is a path. |
 | "The term card's write path lists one screen, so that is the only writer" | Card paths come from screen label bindings; code that sets the column through a DTO setter is not in the card. Writers come from W1/W1b + W3. |
 | "I traced the guard column; the column the user wants to change is the same table" | Trace the target column too. The guard says why it is locked; the target row says where it can be changed. |
 | "I have used many calls already" | There is no budget. Stop only at the exit conditions. |
-| "The writer screen's field is editable when 건물 has a value, so the user can change it" | Read who toggles it and on which user action (W6b 2); the field may open only after another value is changed. |
+| "The writer screen's field is editable when 위치 has a value, so the user can change it" | Read who toggles it and on which user action (W6b 2); the field may open only after another value is changed. |
 | "I found the screen where the column is saved; that is the answer for every situation" | Read that screen's save checks (W6b 3) against the situation's guard value; it may reject exactly the user's case. |
 | "This writer screen saves the column, so it is a step" | Only if the screen has a component bound to the column. Otherwise it is 자동 반영, layer 2. |
 | "The read-only switch reads a permission dataset; I will trace its writer tables" | Permission switches are 6c, not 5b rows. |
