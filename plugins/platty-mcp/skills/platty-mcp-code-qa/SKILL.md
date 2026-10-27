@@ -1,6 +1,6 @@
 ---
 name: platty-mcp-code-qa
-description: "Internal code-track ladder, explicit invocation by exact name only (never auto-selected for a question): session map, Evidence Ladder, Missing-Link Ladder, impact sweeps, and honesty levels for answering a business or operational question from source code only (code-only mode) through Enterprise MCP tools, kept for the SDD skills. To answer a user's project question use platty-mcp-search."
+description: "Internal code-track ladder, explicit invocation by exact name only (never auto-selected for a question): session map, Evidence Ladder, Missing-Link Ladder, impact sweeps, and honesty levels for answering a business or operational question from source code only (code-only mode) through Enterprise MCP tools, kept for the SDD skills. To answer a user's project question start with platty-screen-search, which hands non-screen questions to platty-mcp-search."
 disable-model-invocation: true
 ---
 

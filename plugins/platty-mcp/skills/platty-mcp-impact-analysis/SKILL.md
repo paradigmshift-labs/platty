@@ -1,6 +1,6 @@
 ---
 name: platty-mcp-impact-analysis
-description: "Explicit invocation by exact name only (never auto-selected for a question): produces a standalone engineering Impact Dossier through Platty MCP — an Impact Seed Packet, a reproducible impactRevision, cross-EPIC traversal, the SDD PRD §9 appendix, or a design-change packet for technical design — when the SDD skills or the user call it by name. Business or QA impact questions (which screens or features are affected, regression scope, bug cause) go to platty-mcp-search, which runs the impact sweeps and answers in four parts, 결론 first."
+description: "Explicit invocation by exact name only (never auto-selected for a question): produces a standalone engineering Impact Dossier through Platty MCP — an Impact Seed Packet, a reproducible impactRevision, cross-EPIC traversal, the SDD PRD §9 appendix, or a design-change packet for technical design — when the SDD skills or the user call it by name. Business or QA impact questions (which screens or features are affected, regression scope, bug cause) start with platty-screen-search, which hands them to platty-mcp-search; which runs the impact sweeps and answers in four parts, 결론 first."
 disable-model-invocation: true
 ---
 

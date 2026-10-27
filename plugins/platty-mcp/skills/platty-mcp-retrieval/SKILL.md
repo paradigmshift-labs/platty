@@ -1,6 +1,6 @@
 ---
 name: platty-mcp-retrieval
-description: "Internal retrieval ladder, explicit invocation by exact name only (never auto-selected for a question): map-first semantic and direct-first source-near routes over domain terms, epics, business documents, specs, and code locations, and the producer of the Impact Seed Packet used by platty-mcp-impact-analysis and the SDD skills. To answer a user's project question use platty-mcp-search."
+description: "Internal retrieval ladder, explicit invocation by exact name only (never auto-selected for a question): map-first semantic and direct-first source-near routes over domain terms, epics, business documents, specs, and code locations, and the producer of the Impact Seed Packet used by platty-mcp-impact-analysis and the SDD skills. To answer a user's project question start with platty-screen-search, which hands non-screen questions to platty-mcp-search."
 disable-model-invocation: true
 ---
 

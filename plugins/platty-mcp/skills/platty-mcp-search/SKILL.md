@@ -1,12 +1,14 @@
 ---
 name: platty-mcp-search
-description: Use when a user asks any question about a Platty project through Platty MCP tools — a business rule, a screen, a feature, "what happens when…", a limit, a state, a term, where something is, or change impact asked as a business question — as one question or a question list. Main entry skill for project questions; it scopes the question to EPICs and route candidates, dispatches the docs and code evidence collectors, audits their claim ledgers, and answers in four parts — 결론, 쉽게 말하면, 근거, 확인할 수 없는 부분.
+description: "Second-level search under platty-screen-search, which is the entry for every Platty project question and hands this skill the questions that are not about using a screen — a business rule or policy across features, \"what happens when…\", a limit, a state, a term, where something is, change impact asked as a business question, a developer, batch or interface question — as one question or a question list. Start with platty-screen-search unless it, or the user by exact name, sent the question here. It scopes the question to EPICs and route candidates, dispatches the docs and code evidence collectors, audits their claim ledgers, and answers in four parts — 결론, 쉽게 말하면, 근거, 확인할 수 없는 부분."
 ---
 
 # Platty MCP Search
 
 Answer project questions with evidence that was actually read, written in the
-words users see on screen. This skill is the orchestrator and the **only**
+words users see on screen. `platty-screen-search` is the entry: questions about
+using a screen stay there, and it hands every other project question to this
+skill. This skill is the orchestrator and the **only**
 place that discovers domains, EPICs, and routes: collectors receive that map
 in a Job Card and spend their calls on reading, not on re-finding it. Two
 collector skills do the reading — `platty-mcp-doc-search` (business documents

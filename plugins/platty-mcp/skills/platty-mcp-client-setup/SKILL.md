@@ -59,6 +59,9 @@ visible.
 
 1. Confirm runtime tools are visible and read live `tools/list` schemas.
 2. Check the concrete tools the selected skill needs, not an unrelated tier:
+   `platty-screen-search` — `context_status`, `term_lookup`, `menu_lookup`,
+   `route_resolve`, `route_relations`, `spec_search`, `readonly_workspace_shell`,
+   `workspace_search`;
    `platty-mcp-search` — `context_status`, `domain_list/get`, `epic_list/get`,
    the typed family tools (`business_rule_* / use_case_* / design_* /
    data_dictionary_*` list, get, item_get, search, and each family's
@@ -84,6 +87,7 @@ visible.
    availability is local authorized readiness, not an adapter-presence, network,
    remote freshness, or deployment claim.
 5. Route project questions (impact questions included) through
+   `platty-screen-search`, which hands non-screen questions to
    `platty-mcp-search`; memory and alias requests through `platty-mcp-memory`.
    Registration / listing alone is not successful execution of every tool.
 6. Plugin update check (setup task, never part of answering): run
