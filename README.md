@@ -4,8 +4,13 @@ This package connects English-speaking developers to the Platty MCP
 environment. This `feat/demo` branch contains only the `platty` plugin and
 the `platty-search` skill.
 
-Start with the [English HTML installation manual](guide/en/platty-demo.html)
-(six embedded screenshots; download the single file and open it in a browser) or the [text user guide](USER_GUIDE.md).
+Choose the English HTML manual for your client:
+
+- [Codex](guide/en/platty-demo.html): six embedded screenshots.
+- [Claude Code](guide/en/platty-claude-code.html): four embedded screenshots.
+
+Download either single HTML file and open it in a browser, or use the
+[text user guide](USER_GUIDE.md).
 
 ## Install in Codex
 

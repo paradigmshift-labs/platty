@@ -75,6 +75,36 @@ The file was opened directly from disk with networking disabled at 320, 768 and
 restored focus. Copy/selection and section navigation passed, with no outer
 horizontal overflow, external requests or JavaScript errors.
 
+## Claude Code screenshot walkthrough
+
+The separate English Claude Code HTML guide assumes Claude Code, Git and
+account sign-in are already complete. It covers Git installation, direct
+Platty Bearer token input in project `.mcp.json`, project MCP approval and
+connection checks, `/platty:platty-search` autocomplete, and an English screen
+question.
+
+An isolated Claude Code **2.1.311** environment installed `platty@platty`
+**0.0.10-demo.1** from Git branch `feat/demo`. Actual terminal UI interaction
+verified the enabled plugin, the connected `platty` project MCP with 59 tools,
+the qualified skill suggestion and Tab completion, and the drafted first
+question. Four unmodified PNGs capture these steps and are embedded
+byte-for-byte in `guide/en/platty-claude-code.html`. The question was not
+submitted; no generated Claude answer or application API execution is claimed.
+
+The Claude Code guide passed offline browser checks at **320, 768 and 1280 px**:
+all four original screenshots decoded; all viewers opened, closed using Close
+or Escape, and restored keyboard focus; all command-copy/selection buttons and
+section links worked; the JSON example parsed with the exact placeholder
+header. There was no outer horizontal overflow, external request or JavaScript
+error. Light and dark appearances were also rendered and inspected. The
+existing Codex guide passed its same offline/browser checks after linking the
+new Claude Code guide. Package verification remained **20/20**.
+
+The container reused an existing authorized test account and Platty credential;
+the guide contains only `YOUR_PLATTY_TOKEN`. The test container, terminal and
+temporary window manager were removed afterward. Existing host client and MCP
+settings were preserved.
+
 ## Existing failure outside the demo change
 
 `node scripts/check-issue-intake.mjs` fails because the unchanged

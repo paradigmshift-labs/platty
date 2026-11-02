@@ -1,10 +1,11 @@
 # Install Platty Search
 
-Use the [English HTML manual](guide/en/platty-demo.html) or the
+Choose the English HTML manual for [Codex](guide/en/platty-demo.html) or
+[Claude Code](guide/en/platty-claude-code.html), or use the
 [complete text guide](USER_GUIDE.md). Download the HTML file and open it in a
 browser, or share the file with an authorized recipient.
 
-Codex and Git are already installed, and you are already signed in.
+Your AI client and Git are already installed, and you are already signed in.
 Start by registering the Platty plugin from Git below.
 
 ## Codex: install this branch

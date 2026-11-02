@@ -7,11 +7,12 @@ This guide is for developers using the Platty code analysis environment. Choose
 `platty-search` skill. Your AI client connects to the Platty server to read
 project documents and analyzed source code.
 
-For a screen-by-screen walkthrough, open the
-[illustrated HTML manual](guide/en/platty-demo.html). Its six screenshots are
-embedded, so you can share that one file and read it offline. Each step explains
-what to enter and what to check. Use **Enlarge screenshot** for the original
-image size. The screenshots show Codex CLI on Linux.
+For a screen-by-screen walkthrough, choose the illustrated HTML manual for
+[Codex](guide/en/platty-demo.html) (six screenshots) or
+[Claude Code](guide/en/platty-claude-code.html) (four screenshots). Images are
+embedded, so you can share either single file and read it offline. Each step
+explains what to enter and what to check. Use **Enlarge screenshot** for the
+original image size. The screenshots show the actual clients on Linux.
 
 ## 1. Before you start
 
@@ -56,7 +57,8 @@ claude plugin install platty@platty --scope user
 
 The marketplace is `platty`, the plugin is `platty`, and its only skill is
 `platty-search`. Neither client needs the global Platty CLI. The
-[standalone HTML manual](guide/en/platty-demo.html) follows the Codex path.
+standalone HTML manuals cover both [Codex](guide/en/platty-demo.html) and
+[Claude Code](guide/en/platty-claude-code.html).
 
 If an earlier demo is installed, remove only that demo plugin and marketplace
 before registering this version, to avoid duplicate skill entries.
@@ -125,6 +127,12 @@ In Codex CLI, run `/skills`, choose **List skills**, and confirm
 press Enter on that entry. Codex inserts `$platty:platty-search` into the prompt;
 this confirms the installed skill is recognized. The names were checked in
 Codex CLI `0.160.0` using actual UI interaction.
+
+In Claude Code, type `/platty:` in the prompt. Select
+`/platty:platty-search` from the suggestions with **Tab**, then add a space and
+your question. Skill autocomplete and question entry were checked in Claude
+Code `2.1.311` using actual UI interaction. The Claude Code HTML guide shows
+these screens; its question screenshot is a draft, not a generated answer.
 
 Run `/mcp` in the session and check that `platty` is connected. Approve the
 intended read tools if your client asks.
