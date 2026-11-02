@@ -135,60 +135,15 @@ agent-next` / `agent-submit` 명령은 일반적인 첫 실행이 아니라 수�
 
 ---
 
-## Platty를 사용하는 두 가지 방법
+## 검색 플러그인과 CLI 워크플로
 
-Platty를 구동하는 방법은 두 가지이며, 위에서 설정한 동일한 CLI와 AI 프로바이더를
-함께 사용합니다. 여러분의 작업 방식에 맞는 쪽을 고르세요 — 어느 쪽이든 모든 것이
-여러분의 머신에서 실행됩니다.
+`feature/platty-plugin-develop-poc` 브랜치의 `platty` 플러그인에는
+`platty-search` 스킬 하나만 있습니다. 연결된 Platty MCP 도구로 코드 동작과
+변경 영향을 조사합니다. [브랜치 설치 안내](../../GETTING_STARTED.md)에 따라
+설치하고 새 에이전트 세션에서 `platty:platty-search`로 질문하세요.
 
-- **옵션 A — AI 에이전트로 Platty 구동하기**(가장 쉬움): Codex 또는 Claude Code에
-  Platty 플러그인을 설치한 다음, 평범한 말로 요청하세요.
-- **옵션 B — 직접 CLI 실행하기**: 명령어를 직접 입력하세요.
-
-### 옵션 A — AI 에이전트로 Platty 구동하기
-
-Platty는 **Codex**와 **Claude Code**용 에이전트 플러그인을 제공합니다. 설치하면
-번들된 스킬이 에이전트에게 Platty 워크플로 전체를 가르쳐 줍니다 — 그래서 여러분은
-원하는 것을 평범한 말로 설명하고, 에이전트가 올바른 명령어를 올바른 순서로
-실행하며, 사람의 결정이 필요한 지점에서 멈춥니다.
-
-**1. 플러그인을 설치합니다.**
-
-```bash
-platty install
-```
-
-Codex 수동 설치 대안:
-
-```bash
-codex plugin marketplace add paradigmshift-labs/platty
-codex plugin add platty@platty
-```
-
-Claude Code 수동 설치 대안:
-
-```bash
-claude plugin marketplace add paradigmshift-labs/platty --scope user
-claude plugin install platty@platty --scope user
-```
-
-이 명령은 일반 `platty` 플러그인만 설치합니다. MCP 전용 워크플로가 필요할 때만
-별도 `platty-mcp` 플러그인을 명시적으로 설치하세요.
-
-**2. 스킬이 로드되도록 새 에이전트 세션을 시작합니다**(Claude Code는 세션 시작
-훅도 함께 로드합니다).
-
-**3. 그냥 요청하세요.** 예를 들면:
-
-> "`~/code/myapp`에 있는 저장소를 분석하고 그 문서를 생성해 줘."
-
-에이전트는 프로젝트를 확정하고, 분석을 실행하며, 문서화 대상을 검토하고, 문서를
-생성합니다 — 사람의 결정이 필요한 단계에서는 여러분에게 확인을 받습니다. 명령어를
-외울 필요가 전혀 없습니다. 스킬이 순서, 중단 조건, 복구를 모두 책임집니다.
-
-> 에이전트도 여전히 `platty` CLI 설치([CLI 설치](#cli-설치) 참고)와
-> [AI 프로바이더](#ai-프로바이더-설정)가 필요합니다. 플러그인은 에이전트에게
-> Platty를 *어떻게* 사용하는지 가르칠 뿐, CLI를 대체하지는 않습니다.
+이 브랜치의 플러그인은 CLI 설정·분석·문서 생성을 실행하지 않습니다.
+이 문서의 CLI 명령은 해당 워크플로를 직접 실행하는 운영자를 위한 참고 자료입니다.
 
 ### 옵션 B — 직접 CLI 실행하기 (실전 시나리오)
 

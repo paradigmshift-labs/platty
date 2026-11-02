@@ -1,178 +1,36 @@
-# Platty CLI Skill
+# Platty Search
 
-Run Platty repository analysis, target review, generated documentation/business-output, sync, and memory workflows from the terminal.
+This plugin contains one skill: `platty-search`.
 
-This plugin is the public agent guidance surface for the Platty CLI. It works in Codex and Claude Code, and both runtimes load its skills natively on demand without a session-start hook.
+It investigates screens, APIs, services, SQL, tables, columns, batches, and
+change impact through an already configured Platty MCP connection. Explicit
+design requests can also produce a design draft. The supplied Shinsegae I&C
+PoC instructions and project reference notes are preserved.
 
-## Prerequisite Check
+## Install
 
-Before using Platty, check Node.js and the global Platty CLI:
+Follow the [branch installation guide](../../GETTING_STARTED.md). This package
+contains no MCP server URL, credentials, server launcher, or automatic updater.
 
-```bash
-node --version
-npm --version
-command -v platty
-platty version
-platty --help
-```
+## Invoke
 
-Platty requires Node.js 20 or newer.
-
-## Global Install
-
-Install the public npm package:
-
-```bash
-npm install -g @paradigmshift/platty
-```
-
-Then verify the global binary:
-
-```bash
-command -v platty
-platty version
-platty --help
-```
-
-## Agent Plugin Install
-
-Install the ordinary Platty agent skills into detected Codex and Claude Code
-runtimes:
-
-```bash
-platty install
-```
-
-Use `platty install --runtime codex` or `platty install --runtime claude` to
-select one runtime. This command installs `platty@platty` only; the separate
-`platty-mcp` plugin remains an explicit installation.
-
-## Output And Usage Contract
-
-People should start with the guided setup flow:
-
-```bash
-platty setup
-```
-
-`platty setup` is the human entry point for project selection, repository
-registration, progress inspection, and next-action guidance.
-
-Agents and automation may inspect setup state with `platty setup --json`, then
-explain the next action plainly before continuing. The CLI owns current state
-and next-action hints; the Platty skills own command routing, approval gates,
-stop conditions, and recovery rules.
-
-Do not copy internal worker commands into user-facing setup instructions. Keep
-this README as a short orientation page and use the routed skills for exact
-workflow commands.
-
-## Included Skills
-
-User-scoped plugin installs expose these skills:
+Claude Code:
 
 ```text
-platty:using-platty
-platty:platty-cli-router
-platty:platty-onboarding
-platty:platty-setup
-platty:platty-mcp-server-setup
-platty:platty-static-analysis
-platty:platty-docs-target-curation
-platty:platty-generated-docs
-platty:platty-sync
-platty:platty-sdd-spec
-platty:platty-sdd-design
-platty:platty-memory
-platty:platty-repository-scope
-platty:platty-connection-bindings
-platty:platty-database-source-check
-platty:platty-evidence-audit
-platty:platty-analysis-triage
-platty:platty-analysis-corrections
+/platty:platty-search 이 화면에서 저장하면 어떤 데이터가 바뀌는지 찾아줘.
 ```
 
-Use `platty:platty-mcp-server-setup` when you operate the Platty context backend
-that exposes `/api/mcp`. Use the separate `platty-mcp` plugin for client-side
-MCP registration and remote read-only retrieval.
-
-## MCP-only retrieval
-
-Install the separate `platty-mcp` plugin when you already have Platty MCP tools
-configured and only need remote read-only retrieval. The full `platty` plugin is
-for operator workflows such as setup, analysis, generated docs, sync, and memory
-writes.
-
-## Setup Model
-
-Platty stores CLI state under the user-global Platty home by default:
-
-- macOS/Linux: `~/.platty`
-- Windows: `%APPDATA%\Platty`
-- override: `PLATTY_HOME=/custom/platty-home`
-
-`projectRoot` in CLI config is this Platty home/workspace root. It is not the analyzed repository root; repositories are registered separately during setup.
-
-Use `platty:platty-setup` to create or select a project and register repositories. A filesystem repository path is never a project selector.
-
-## Public Workflow
-
-The public workflow stages are:
+Codex:
 
 ```text
-setup -> analyze -> targets -> generate-docs
+$platty:platty-search 이 컬럼을 변경하면 어떤 화면과 배치에 영향이 있는지 조사해줘.
 ```
 
-`generate-docs` includes technical docs, EPIC draft generation, automatic EPIC
-confirmation through returned CLI commands, and business-doc generation after
-confirmation. `sync` is a separate incremental refresh workflow after source or
-repository changes and fresh static analysis.
+## Contents
 
-For humans, describe this as a state-aware flow surfaced through `platty setup`.
-For agents, inspect JSON and follow `nextCommand` or `nextAction.command` unless
-a skill-specific gate says to pause. If `build_docs` failed, repair the same run
-with `platty generate-docs retry-failed` first, then follow the returned command.
+- [Skill instructions](skills/platty-search/SKILL.md)
+- [Project notes](skills/platty-search/references/project-notes.md)
+- Seven further reference documents for clarification, investigation, impact,
+  design, answer formatting, and review, loaded through the skill's instructions.
 
-Use the skills for stage-specific behavior:
-
-- `platty:platty-onboarding` for the installed first project journey from repository registration through static analysis, one LLM approval, and verified SOT/GraphView output.
-- `platty:platty-setup` for global state, projects, and repositories.
-- `platty:platty-static-analysis` for analysis progress and run inspection.
-- `platty:platty-docs-target-curation` before generation when target scope needs review.
-- `platty:platty-generated-docs` for public technical docs, EPIC draft, EPIC auto-confirm, and business-doc generation.
-- `platty:platty-sync` for incremental refresh after source or repository changes.
-- `platty:platty-mcp-server-setup` for context-backend server setup and `/api/mcp` validation.
-- `platty:platty-sdd-spec` for turning a rough idea into grounded `prd.md` and `user_stories.md`.
-- `platty:platty-sdd-design` for turning approved SDD product docs into grounded `system_design.md` and `tasks.md`.
-- `platty:platty-memory` for recording or maintaining human knowledge.
-- `platty:platty-repository-scope` for selecting approved repositories and modules for analysis.
-- `platty:platty-connection-bindings` for mapping source-proven application references to scoped repositories.
-- `platty:platty-database-source-check` for reviewing an approved remote database source before analysis.
-- `platty:platty-evidence-audit` for comparing observed static evidence with reviewed expectations.
-- `platty:platty-analysis-triage` for diagnosing failed or stalled analysis runs without retrying or patching the host.
-- `platty:platty-analysis-corrections` for source-proven Service Map edge overrides and analysis supplements.
-
-## References
-
-Open only what you need:
-
-- Entry point: `skills/using-platty/SKILL.md`
-- Onboarding: `skills/platty-onboarding/SKILL.md`
-- MCP server setup: `skills/platty-mcp-server-setup/SKILL.md`
-- Router: `skills/platty-cli-router/SKILL.md`
-- Setup: `skills/platty-setup/SKILL.md`
-- Static analysis: `skills/platty-static-analysis/SKILL.md`
-- Docs target curation: `skills/platty-docs-target-curation/SKILL.md`
-- Generated docs: `skills/platty-generated-docs/SKILL.md`
-- Sync: `skills/platty-sync/SKILL.md`
-- SDD product spec: `skills/platty-sdd-spec/SKILL.md`
-- SDD technical design: `skills/platty-sdd-design/SKILL.md`
-- Memory: `skills/platty-memory/SKILL.md`
-
-## Guardrails
-
-- Use the global `platty` binary by default.
-- Follow the Platty skills for exact command selection and stop conditions.
-- Explain internal state in user-facing language.
-- Stop on ambiguous project selection and ask for the exact project.
-- Do not claim generated docs, EPIC approval, business documents, or sync are complete until the relevant Platty workflow says so.
+The reference documents are supporting files, not additional skills.

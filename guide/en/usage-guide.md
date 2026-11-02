@@ -133,62 +133,16 @@ worker recovery, not the normal first run.
 
 ---
 
-## Two ways to use Platty
+## Search plugin and CLI workflows
 
-There are two ways to drive Platty, and they share the same CLI and AI provider
-you set up above. Pick whichever fits how you work — everything runs on your
-machine either way.
+On the `feature/platty-plugin-develop-poc` branch, the `platty` plugin contains
+only `platty-search`. It investigates code and change impact through configured
+Platty MCP tools. Follow the [branch installation guide](../../GETTING_STARTED.md)
+and start a new agent session, then ask a question with `platty:platty-search`.
 
-- **Option A — Drive Platty with an AI agent** (easiest): install the Platty
-  plugin in Codex or Claude Code, then ask in plain language.
-- **Option B — Run the CLI yourself**: type the commands directly.
-
-### Option A — Drive Platty with an AI agent
-
-Platty ships an agent plugin for **Codex** and **Claude Code**. Once installed,
-the bundled skills teach the agent the entire Platty workflow — so you describe
-what you want in plain language and the agent runs the right commands, in the
-right order, pausing when a human decision is needed.
-
-**1. Install the plugin.**
-
-```bash
-platty install
-```
-
-Codex manual fallback:
-
-```bash
-codex plugin marketplace add paradigmshift-labs/platty
-codex plugin add platty@platty
-```
-
-Claude Code manual fallback:
-
-```bash
-claude plugin marketplace add paradigmshift-labs/platty --scope user
-claude plugin install platty@platty --scope user
-```
-
-The command installs only the ordinary `platty` plugin. Install the separate
-`platty-mcp` plugin explicitly when you need MCP-only workflows.
-
-**2. Start a new agent session** so updated skills are discovered. Codex and
-Claude Code both load Platty skills natively on demand.
-
-**3. Just ask.** For example:
-
-> "Analyze the repository at `~/code/myapp` and generate its documentation."
-
-The agent resolves the project, runs analysis, reviews the documentation
-targets, and generates the docs — confirming with you at the steps that need a
-human decision. You never have to memorize commands; the skills own the order,
-the stop conditions, and recovery.
-
-> The agent still needs the `platty` CLI installed (see
-> [Install the CLI](#install-the-cli)) and an
-> [AI provider](#set-up-your-ai-provider). The plugin teaches the agent *how* to
-> use Platty — it doesn't replace the CLI.
+This branch's plugin does not run CLI setup, analysis, or document generation.
+The CLI instructions above and below remain a reference for operators who run
+those separate workflows directly.
 
 ### Option B — Run the CLI yourself (a worked scenario)
 

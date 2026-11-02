@@ -1,7 +1,7 @@
 {
   "name": "platty",
-  "description": "Shared Platty CLI and documentation workflow skills for Codex and Claude Code.",
-  "version": "0.0.7",
+  "description": "Platty MCP code search and change impact investigation for Codex and Claude Code.",
+  "version": "0.0.8",
   "author": {
     "name": "Paradigm Shift Labs"
   },
@@ -10,9 +10,9 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "keywords": [
     "platty",
-    "skills",
-    "cli",
-    "documentation",
-    "workflows"
+    "mcp",
+    "search",
+    "code",
+    "impact-analysis"
   ]
 }

@@ -1,39 +1,19 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "platty",
-  "description": "Platty CLI and MCP workflow skills for Claude Code.",
+  "description": "Platty MCP code search skill for Claude Code.",
   "owner": {
     "name": "Paradigm Shift Labs"
   },
   "plugins": [
     {
       "name": "platty",
-      "description": "Shared Platty CLI, analysis, and documentation workflow skills.",
+      "description": "Source-grounded code search and change impact investigation through configured Platty MCP tools.",
       "author": {
         "name": "Paradigm Shift Labs"
       },
       "category": "development",
       "source": "./plugins/platty",
-      "homepage": "https://github.com/paradigmshift-labs/platty"
-    },
-    {
-      "name": "platty-mcp",
-      "description": "Platty MCP screen search (entry for project questions), search with docs + code evidence collectors and claim audit, memory, and explicit-only SDD handoff skills for configured remote context servers.",
-      "author": {
-        "name": "Paradigm Shift Labs"
-      },
-      "category": "development",
-      "source": "./plugins/platty-mcp",
-      "homepage": "https://github.com/paradigmshift-labs/platty"
-    },
-    {
-      "name": "platty-design",
-      "description": "Platty Design System setup, Rapid Prototype, and conversation-first capture workflows.",
-      "author": {
-        "name": "Paradigm Shift Labs"
-      },
-      "category": "development",
-      "source": "./plugins/platty-design",
       "homepage": "https://github.com/paradigmshift-labs/platty"
     }
   ]
