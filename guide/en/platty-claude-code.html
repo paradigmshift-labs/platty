@@ -67,14 +67,13 @@
     <p>Install the plugin from Git, paste your Platty token, and ask questions backed by project source.</p>
     <p class="muted">Prepared November 2, 2026 (Asia/Seoul). The four screenshots are embedded in this file for offline sharing. Setup and project queries require network access.</p>
     <div class="actions">
-      <a class="action primary" href="#skill">Start with Claude Code</a>
-      <a class="action" href="https://github.com/paradigmshift-labs/platty/blob/feat/demo/guide/en/platty-demo.html">Codex guide</a>
+      <a class="action primary" href="#skill">Install the skill</a>
     </div>
   </header>
   <div class="layout">
     <nav aria-label="Installation steps">
       <ol>
-        <li><a href="#skill">Install from Git</a></li>
+        <li><a href="#skill">Install the skill</a></li>
         <li><a href="#connect">Paste Platty token</a></li>
         <li><a href="#verify">Check the connection</a></li>
         <li><a href="#recognize">Find the skill</a></li>
@@ -86,7 +85,11 @@
       <p>The <strong>skill</strong> tells Claude how to investigate. The <strong>platty MCP connection</strong> gives it access to authorized project documents and analyzed source. Set up both below.</p>
       <p class="muted">Screenshots show Claude Code 2.1.311 in a Linux terminal. Other versions may look different. Use <strong>Enlarge screenshot</strong> to read the original image.</p>
       <section id="skill">
-        <h2>1. Install the plugin from Git</h2>
+        <h2>1. Install the Platty skill</h2>
+        <div class="actions" aria-label="Skill installation by client">
+          <a class="action primary" href="#plugin-code" aria-current="step">Claude Code</a>
+          <a class="action" href="https://github.com/paradigmshift-labs/platty/blob/feat/demo/USER_GUIDE.md#install-in-codex">Codex</a>
+        </div>
         <p>Open your terminal and run these commands. Keep <code>#feat/demo</code> in the Git URL: the default branch contains a different distribution.</p>
         <div class="code"><button class="copy" type="button" data-copy="plugin-code">Copy</button><pre><code id="plugin-code">claude plugin marketplace add https://github.com/paradigmshift-labs/platty.git#feat/demo --scope user
 claude plugin install platty@platty --scope user

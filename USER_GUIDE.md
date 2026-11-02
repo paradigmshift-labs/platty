@@ -40,7 +40,7 @@ Git must be available. Use `feat/demo` explicitly; the default branch contains
 a different distribution. Install directly from Git without a manual download
 or local source-folder registration.
 
-For Codex:
+### Install in Codex
 
 ```bash
 codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
@@ -48,7 +48,7 @@ codex plugin add platty@platty
 codex plugin list --json
 ```
 
-For Claude Code:
+### Install in Claude Code
 
 ```bash
 claude plugin marketplace add https://github.com/paradigmshift-labs/platty.git#feat/demo --scope user
