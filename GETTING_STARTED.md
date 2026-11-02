@@ -15,18 +15,12 @@ Use `feat/demo` explicitly. The default branch contains a different distribution
 The marketplace is `meko-poc`, the plugin is `platty`, and its only skill is
 `platty-search`.
 
-## Download instead
-
-[Download the installable ZIP](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-meko-demo.zip),
-extract it to a permanent folder, open a terminal there, then run:
+## Claude Code: install the same Git branch
 
 ```bash
-codex plugin marketplace add "$PWD"
-codex plugin add platty@meko-poc
+claude plugin marketplace add https://github.com/paradigmshift-labs/platty.git#feat/demo --scope user
+claude plugin install platty@meko-poc --scope user
 ```
-
-For Claude Code, run `claude plugin marketplace add "$PWD" --scope user` and
-`claude plugin install platty@meko-poc --scope user` from the extracted folder.
 
 ## Connect and verify
 
@@ -35,5 +29,7 @@ Obtain your MEKO access token from the administrator. Follow the
 register MCP as **`platty`** at `https://meko-poc.platty-ai.com/mcp`.
 The expected project is `petshop-full`. Credentials are not included.
 
-Restart your client and verify a real repository or source read. A listed plugin
+In a new Codex CLI session, open `/skills` → **List skills** and confirm
+**`platty-search (platty)`** appears. Select it by typing `$platty` and pressing
+Enter. Then open `/mcp` and verify a real repository or source read. A listed plugin
 alone is not a successful connection test.

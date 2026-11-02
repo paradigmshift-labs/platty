@@ -7,12 +7,6 @@ the `platty-search` skill.
 Start with the [English HTML installation manual](guide/en/platty-demo.html)
 (download and open it in a browser) or the [text user guide](USER_GUIDE.md).
 
-## Download
-
-- [Full installable package](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-meko-demo.zip)
-- [English skill and its eight references](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-search-english.zip)
-- [Standalone HTML manual](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/guide/en/platty-demo.html)
-
 ## Install in Codex
 
 ```bash
@@ -51,7 +45,7 @@ repository and tool availability from the server when starting a new session.
 The currently observed capability gaps are described in the
 [project notes](plugins/platty/skills/platty-search/references/project-notes.md).
 
-Install from `feat/demo` explicitly or from its extracted download package.
+Install from Git with `feat/demo` explicitly.
 Registering the repository without a ref selects the default distribution.
 No automatic updater changes this demo to another distribution.
 The package is for authorized internal use under the included
@@ -60,7 +54,6 @@ The package is for authorized internal use under the included
 Packagers can optionally run `python3 verify-package.py .` from this folder
 with Python 3.11 or later to check manifests, reference links and configuration
 templates. This checks package structure; it does not test a recipient's access.
-Run `python3 scripts/package-demo.py` to regenerate the two ZIP downloads.
 
 [Report feedback](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml).
 

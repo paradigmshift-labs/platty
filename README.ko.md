@@ -3,8 +3,6 @@
 `feat/demo` 브랜치는 `platty` 플러그인 안에 영문 `platty-search` 스킬 하나만 제공합니다.
 
 - [영문 HTML 설치·사용 매뉴얼](guide/en/platty-demo.html): 다운로드해서 브라우저로 열거나 파일로 공유할 수 있습니다.
-- [전체 설치 패키지](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-meko-demo.zip)
-- [영문 스킬 패키지](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-search-english.zip)
 - [자세한 설치 안내](USER_GUIDE.md)
 
 ```bash

@@ -59,42 +59,30 @@ claude
 Complete sign-in, then exit the session. The plugin and MCP command syntax
 below was checked against Claude Code `2.1.311`.
 
-## 3. Install the plugin from Git or ZIP
+## 3. Install the plugin from Git
 
-To install this branch directly in Codex, Git must be available:
-
-```bash
-codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
-codex plugin add platty@meko-poc
-```
-
-Alternatively, [download the installable ZIP](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-meko-demo.zip)
-and use the local-package method below. The
-[standalone HTML manual](guide/en/platty-demo.html) follows the Codex path.
-
-Extract the ZIP to a permanent folder. Open a terminal in the extracted folder
-that contains `README.md`, `.claude-plugin`, `.agents`, and `plugins`.
-Enable hidden-file display if necessary. Keep this folder in place: the
-marketplace source refers to it.
+Git must be available. Use `feat/demo` explicitly; the default branch contains
+a different distribution. Install directly from Git without a manual download
+or local source-folder registration.
 
 For Codex:
 
 ```bash
-codex plugin marketplace add "$PWD"
+codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
 codex plugin add platty@meko-poc
+codex plugin list --json
 ```
 
 For Claude Code:
 
 ```bash
-claude plugin marketplace add "$PWD" --scope user
+claude plugin marketplace add https://github.com/paradigmshift-labs/platty.git#feat/demo --scope user
 claude plugin install platty@meko-poc --scope user
 ```
 
-The marketplace is named `meko-poc`, the plugin is named `platty`, and the skill
-is named `platty-search`. These commands install from this local package.
-The local-package method does not need GitHub access. Neither method needs
-the global Platty CLI.
+The marketplace is `meko-poc`, the plugin is `platty`, and its only skill is
+`platty-search`. Neither client needs the global Platty CLI. The
+[standalone HTML manual](guide/en/platty-demo.html) follows the Codex path.
 
 If another marketplace is already named `meko-poc`, inspect its source before
 continuing and have your administrator resolve the conflict. Another Platty
@@ -174,8 +162,16 @@ used by the session. Merely installing this skill does not replace an old token.
 ## 6. Verify the connection and skill
 
 Launch `codex` or `claude` from the terminal where the token is loaded. Start a
-new session after plugin installation. Run `/mcp` in the session and check that
-`platty` is connected. Approve the intended read tools if your client asks.
+new session after plugin installation.
+
+In Codex CLI, run `/skills`, choose **List skills**, and confirm
+**`platty-search (platty)`** appears. Type `$platty` to filter the picker, then
+press Enter on that entry. Codex inserts `$platty:platty-search` into the prompt;
+this confirms the installed skill is recognized. The names were checked in
+Codex CLI `0.160.0` using actual UI interaction.
+
+Run `/mcp` in the session and check that `platty` is connected. Approve the
+intended read tools if your client asks.
 
 Send this first prompt:
 
@@ -277,10 +273,16 @@ screenshots or logs before sharing them.
 
 ## 10. Update or remove this delivery
 
-Receive a new package from the administrator and keep it in a stable folder.
-Check its version and follow its instructions. This delivery has no automatic
-update to a public branch. If the source folder moves, update the marketplace
-registration to that new folder before reinstalling the plugin.
+For Codex, refresh the registered Git branch before reinstalling the plugin:
+
+```bash
+codex plugin marketplace upgrade meko-poc
+codex plugin add platty@meko-poc
+```
+
+Check the installed version and start a new session. Keep the marketplace
+pinned to `feat/demo` when upgrading. For Claude Code, refresh `meko-poc` in
+its plugin marketplace manager and update this plugin from that marketplace.
 
 Remove only this delivery when required:
 
@@ -305,11 +307,12 @@ when access should end. Uninstalling a plugin does not revoke its server token.
 
 ## References and verification scope
 
+- [Codex Git marketplace registration](https://developers.openai.com/plugins/build/plugins).
 - [Codex installation](https://developers.openai.com/codex/cli) and
   [MCP configuration](https://developers.openai.com/codex/mcp).
 - [Claude Code installation](https://code.claude.com/docs/en/setup),
   [MCP configuration](https://code.claude.com/docs/en/mcp), and
-  [local marketplace setup](https://code.claude.com/docs/en/plugin-marketplaces).
+  [Git marketplace setup](https://code.claude.com/docs/en/plugin-marketplaces).
 - Plugin command syntax was also checked using installed client `--help`.
   This package was installed successfully in isolated Codex CLI (Linux) and
   Claude Code configurations. Account sign-in and token authorization must be checked on that

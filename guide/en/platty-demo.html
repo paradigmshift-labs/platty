@@ -61,8 +61,6 @@
     <p class="muted">Prepared November 2, 2026 (Asia/Seoul). This file works offline; installation and project queries require network access.</p>
     <div class="actions">
       <a class="action primary" href="#skill">Install from Git</a>
-      <a class="action" href="https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-meko-demo.zip">Download installation ZIP</a>
-      <a class="action" href="https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-search-english.zip">Download skill only</a>
       <a class="action" href="https://github.com/paradigmshift-labs/platty/tree/feat/demo">View feat/demo</a>
     </div>
   </header>
@@ -82,7 +80,7 @@
     <main>
       <section id="install">
         <h2>1. Install Codex and sign in</h2>
-        <p>You need a Codex account, Git for the direct Git installation method, and a MEKO access token from your administrator. The MEKO token is separate from your AI account credentials.</p>
+        <p>You need a Codex account, Git, and a MEKO access token from your administrator. The MEKO token is separate from your AI account credentials.</p>
         <p>If Codex is already installed, run <code>codex --version</code> and continue. For macOS or Linux, use the current <a href="https://developers.openai.com/codex/cli">official installer</a>:</p>
         <div class="code"><button class="copy" type="button" data-copy="install-code">Copy</button><pre><code id="install-code">curl -fsSL https://chatgpt.com/codex/install.sh | sh
 codex --version
@@ -94,14 +92,9 @@ codex</code></pre></div>
         <h2>2. Add the English skill</h2>
         <p>Use the demo branch explicitly. It contains one plugin and one skill, with all eight English reference files.</p>
         <div class="code"><button class="copy" type="button" data-copy="plugin-code">Copy</button><pre><code id="plugin-code">codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
-codex plugin add platty@meko-poc</code></pre></div>
-        <details>
-          <summary>Install from the downloaded ZIP instead</summary>
-          <p>Extract the installation ZIP to a permanent folder. Open a terminal in its <code>meko-poc</code> folder containing <code>README.md</code>, <code>.agents</code>, <code>.claude-plugin</code>, and <code>plugins</code>.</p>
-          <div class="code"><button class="copy" type="button" data-copy="local-code">Copy</button><pre><code id="local-code">codex plugin marketplace add .
-codex plugin add platty@meko-poc</code></pre></div>
-          <p>Keep the extracted folder in place. The skill-only ZIP is for reviewing or replacing skill files in an existing installation; it does not configure MCP or contain plugin manifests.</p>
-        </details>
+codex plugin add platty@meko-poc
+codex plugin list --json</code></pre></div>
+        <p>Start a new Codex CLI session. Run <code>/skills</code>, choose <strong>List skills</strong>, and confirm <strong>platty-search (platty)</strong> appears. Type <code>$platty</code> and select that entry with Enter; Codex inserts <code>$platty:platty-search</code> into the prompt. This recognition path was tested in Codex CLI 0.160.0.</p>
         <table aria-label="Names used by this delivery"><thead><tr><th>Component</th><th>Name</th></tr></thead><tbody>
           <tr><td>MCP connection</td><td><code>platty</code></td></tr>
           <tr><td>Marketplace</td><td><code>meko-poc</code></td></tr>
@@ -173,7 +166,7 @@ Do not execute the API or change any data.</code></pre></div>
         <details><summary>401 Unauthorized / AUTHENTICATION_REQUIRED</summary><p>Confirm a valid MEKO token is loaded on the host starting Codex. Check the variable name, duplicate server entries and stale static Authorization headers. Restart the client. Ask the administrator to validate or reissue the token if it persists.</p></details>
         <details><summary>403, missing repositories, or a different project</summary><p>Check the endpoint and that token's project/repository permissions with the administrator. Do not substitute another MCP connection or assume its data belongs to MEKO.</p></details>
         <details><summary>The skill is missing</summary><p>Check that <code>platty@meko-poc</code> is installed and enabled, then start a new session. Use this package's skill picker entry when another distribution has the same skill name.</p></details>
-        <details><summary>The plugin command or branch cannot be found</summary><p>Check <code>codex plugin --help</code> and update the client through its official installation instructions. Use <code>--ref feat/demo</code>; the default branch is a different distribution. The installation ZIP is an alternative to the Git method.</p></details>
+        <details><summary>The plugin command or branch cannot be found</summary><p>Check <code>codex plugin --help</code> and update the client through its official installation instructions. Use <code>--ref feat/demo</code>; the default branch is a different distribution. Confirm that Git is installed and GitHub is reachable from the execution host.</p></details>
         <details><summary>A source path does not exist, or search is incomplete</summary><p>Use the exact repository-relative path returned by source search, including its module prefix. Follow continuation cursors and resolve truncated/timed-out repositories before concluding that a writer or feature is absent.</p></details>
         <details><summary>A token was loaded, but a desktop or remote session still fails</summary><p>That session may run on another host or have a different environment. Configure the actual execution host or start the CLI from the token-loaded terminal. Do not disable TLS certificate checks to work around a connection failure.</p></details>
         <p>For support, provide client/version, execution host, project, prompt/identifier, tool name, error code and time with timezone. Remove access credentials and confidential source excerpts before sharing logs.</p>
@@ -193,7 +186,8 @@ codex mcp remove platty</code></pre></div><p>Remove only the intended MEKO conne
       </section>
       <footer>
         <p><a href="https://github.com/paradigmshift-labs/platty/blob/feat/demo/USER_GUIDE.md">Complete text guide and Claude Code instructions</a> · <a href="https://github.com/paradigmshift-labs/platty/blob/feat/demo/LICENSE.md">License</a></p>
-        <p>Prepared for the MEKO PoC. Account sign-in and each recipient's access must be verified on that recipient's execution host. No access token is included in this guide or its packages.</p>
+        <p><a href="https://developers.openai.com/plugins/build/plugins">Official Codex Git marketplace instructions</a>. The CLI installation and skill picker were tested on Linux; the Codex desktop app was not available in the publisher's test environment.</p>
+        <p>Prepared for the MEKO PoC. Account sign-in and each recipient's access must be verified on that recipient's execution host. No access token is included in this guide or the plugin.</p>
       </footer>
     </main>
   </div>

@@ -3,7 +3,6 @@ from pathlib import Path
 import re
 import sys
 import tomllib
-import zipfile
 
 root = Path(sys.argv[1]).resolve()
 checks = []
@@ -49,10 +48,8 @@ html = root/'guide/en/platty-demo.html'
 html_text = html.read_text() if html.is_file() else ''
 check('standalone English HTML manual included', '<html lang="en">' in html_text and 'id="install"' in html_text and 'id="connect"' in html_text and 'id="verify"' in html_text)
 check('Codex Git install pinned to feat/demo', 'codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo' in html_text)
-archives = [root/'downloads/platty-meko-demo.zip', root/'downloads/platty-search-english.zip']
-if (root/'.git').exists():
-    check('both downloadable packages pass ZIP integrity checks', all(p.is_file() and zipfile.is_zipfile(p) for p in archives) and all(zipfile.ZipFile(p).testzip() is None for p in archives))
-else:
-    print('SKIP: repository-only download archive check in extracted package')
+install_docs = [root/p for p in ['README.md', 'README.ko.md', 'GETTING_STARTED.md', 'USER_GUIDE.md', 'guide/en/platty-demo.html']]
+check('installation docs use Git only', all(not re.search(r'\.zip|marketplace add [\"\']?\$PWD|marketplace add \.(?:<|\s)', p.read_text()) for p in install_docs))
+check('no installation ZIP artifacts or packager', not list((root/'downloads').glob('*.zip')) and not (root/'scripts/package-demo.py').exists())
 print(f'Result: {sum(ok for _,ok in checks)}/{len(checks)} checks passed')
 sys.exit(0 if all(ok for _,ok in checks) else 1)
