@@ -1,4 +1,4 @@
-# Platty Search — MEKO 데모
+# Platty Search
 
 `feat/demo` 브랜치는 `platty` 플러그인 안에 영문 `platty-search` 스킬 하나만 제공합니다.
 
@@ -7,10 +7,10 @@
 
 ```bash
 codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
-codex plugin add platty@meko-poc
+codex plugin add platty@platty
 ```
 
-MCP 연결 이름은 `platty`, 마켓플레이스 이름은 `meko-poc`입니다.
+MCP 연결 이름은 `platty`, 마켓플레이스 이름은 `platty`입니다.
 서버 주소는 `https://meko-poc.platty-ai.com/mcp`이며 토큰은 별도로 제공해야 합니다.
 현재 제공되는 내용은 분석된 코드와 문서 조회용입니다.
 

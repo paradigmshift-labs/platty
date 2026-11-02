@@ -1,10 +1,10 @@
-# MEKO PoC: Platty setup and user guide
+# Platty setup and user guide
 
-Version `0.0.9-meko.3` · Prepared November 2, 2026 (Asia/Seoul)
+Version `0.0.10-demo.1` · Prepared November 2, 2026 (Asia/Seoul)
 
-This guide is for developers using the MEKO code analysis environment. Choose
+This guide is for developers using the Platty code analysis environment. Choose
 **Codex** or **Claude Code**; you do not need both. The package adds one
-`platty-search` skill. Your AI client connects to the MEKO server to read
+`platty-search` skill. Your AI client connects to the Platty server to read
 project documents and analyzed source code.
 
 For a screen-by-screen walkthrough, open the
@@ -17,7 +17,7 @@ image size. The screenshots show Codex CLI on Linux.
 
 Codex (or Claude Code) and Git are already installed, and you are already
 signed in to your AI client. This guide starts with registering the Platty
-plugin. Have a MEKO PoC access token from your administrator and network
+plugin. Have a Platty access token from your administrator and network
 access to:
 
 ```text
@@ -43,7 +43,7 @@ For Codex:
 
 ```bash
 codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
-codex plugin add platty@meko-poc
+codex plugin add platty@platty
 codex plugin list --json
 ```
 
@@ -51,23 +51,26 @@ For Claude Code:
 
 ```bash
 claude plugin marketplace add https://github.com/paradigmshift-labs/platty.git#feat/demo --scope user
-claude plugin install platty@meko-poc --scope user
+claude plugin install platty@platty --scope user
 ```
 
-The marketplace is `meko-poc`, the plugin is `platty`, and its only skill is
+The marketplace is `platty`, the plugin is `platty`, and its only skill is
 `platty-search`. Neither client needs the global Platty CLI. The
 [standalone HTML manual](guide/en/platty-demo.html) follows the Codex path.
 
-If another marketplace is already named `meko-poc`, inspect its source before
+If an earlier demo is installed, remove only that demo plugin and marketplace
+before registering this version, to avoid duplicate skill entries.
+
+If another marketplace is already named `platty`, inspect its source before
 continuing and have your administrator resolve the conflict. Another Platty
 distribution can also expose `platty-search`: disable the conflicting plugin
-for the MEKO session or select this delivery explicitly rather than relying on
+for the Platty session or select this delivery explicitly rather than relying on
 ambiguous automatic skill selection. Do not remove unrelated MCP connections.
 
-## 3. Paste your Bearer token and connect
+## 3. Paste your Platty token and connect
 
-Use the token supplied by your MEKO administrator. Replace only
-`YOUR_MEKO_TOKEN` in the configuration below; keep `Bearer ` and its trailing
+Use the token supplied by your Platty administrator. Replace only
+`YOUR_PLATTY_TOKEN` in the configuration below; keep `Bearer ` and its trailing
 space. If your supplied value already starts with `Bearer `, replace the whole
 quoted value so the prefix appears once. Keep the filled configuration private
 and out of Git, chat and support screenshots.
@@ -79,7 +82,7 @@ Open `~/.codex/config.toml` on the host running Codex and merge:
 ```toml
 [mcp_servers.platty]
 url = "https://meko-poc.platty-ai.com/mcp"
-http_headers = { Authorization = "Bearer YOUR_MEKO_TOKEN" }
+http_headers = { Authorization = "Bearer YOUR_PLATTY_TOKEN" }
 ```
 
 Replace the placeholder, save the file and restart Codex. The
@@ -101,7 +104,7 @@ into the project's `.mcp.json`:
     "platty": {
       "type": "http",
       "url": "https://meko-poc.platty-ai.com/mcp",
-      "headers": { "Authorization": "Bearer YOUR_MEKO_TOKEN" }
+      "headers": { "Authorization": "Bearer YOUR_PLATTY_TOKEN" }
     }
   }
 }
@@ -156,7 +159,7 @@ $platty:platty-search Explain what POST /on/ctrt/tnnt/saveCtrtTnntList does. Use
 ```
 
 If your client displays a different qualified skill label, choose the
-`platty-search` entry belonging to `Platty for MEKO` / `platty@meko-poc` in its
+`platty-search` entry belonging to `Platty` / `platty@platty` in its
 picker. The live server operations for this prompt read source; the assistant
 must not execute the save API.
 
@@ -213,7 +216,7 @@ An empty incomplete search does not prove that a feature or writer is absent.
 | `403` or expected repositories missing | Ask the administrator to check that token's project/repository permissions. Do not substitute another connection. |
 | Token was saved but the app still fails | The app or remote VM may use another environment. Edit the configuration on the actual execution host and restart the client. |
 | Project is not `petshop-full` | Stop project retrieval and verify the endpoint, token scope and server default with the administrator. |
-| `platty-search` is not available | Check that `platty@meko-poc` is installed, enabled and loaded in a new session. Check for another plugin exposing the same skill name. |
+| `platty-search` is not available | Check that `platty@platty` is installed, enabled and loaded in a new session. Check for another plugin exposing the same skill name. |
 | The CLI does not recognize `plugin` or an installation subcommand | Check its local `--help` and use a client version that supports these plugin commands. Keep the current package; do not install a different Platty distribution as a workaround. |
 | A source read says `Path does not exist` | Use the exact repository-relative path returned by source search, including its module directory. The reported sourceRoot is not an instruction to remove that prefix. |
 | A search is truncated, times out or returns a lower-bound count | Narrow by repository/file type, follow cursors and read missing source ranges. The result is incomplete until those gaps are resolved. |
@@ -229,27 +232,27 @@ screenshots or logs before sharing them.
 For Codex, refresh the registered Git branch before reinstalling the plugin:
 
 ```bash
-codex plugin marketplace upgrade meko-poc
-codex plugin add platty@meko-poc
+codex plugin marketplace upgrade platty
+codex plugin add platty@platty
 ```
 
 Check the installed version and start a new session. Keep the marketplace
-pinned to `feat/demo` when upgrading. For Claude Code, refresh `meko-poc` in
+pinned to `feat/demo` when upgrading. For Claude Code, refresh `platty` in
 its plugin marketplace manager and update this plugin from that marketplace.
 
 Remove only this delivery when required:
 
 ```bash
 # Codex
-codex plugin remove platty@meko-poc
-codex plugin marketplace remove meko-poc
+codex plugin remove platty@platty
+codex plugin marketplace remove platty
 codex mcp remove platty
 ```
 
 ```bash
 # Claude Code: use the MCP scope chosen during setup
-claude plugin uninstall platty@meko-poc --scope user
-claude plugin marketplace remove meko-poc --scope user
+claude plugin uninstall platty@platty --scope user
+claude plugin marketplace remove platty --scope user
 claude mcp remove --scope user platty
 ```
 
@@ -265,6 +268,6 @@ when access should end. Uninstalling a plugin does not revoke its server token.
   [Git marketplace setup](https://code.claude.com/docs/en/plugin-marketplaces).
 - Plugin command syntax was also checked using installed client `--help`.
   This package was installed successfully in isolated Codex CLI (Linux) and
-  Claude Code configurations. MEKO token authorization must be checked on that
+  Claude Code configurations. Platty token authorization must be checked on that
   user's machine; the publisher's authenticated connection does not provision
   a new user's access.

@@ -1,6 +1,6 @@
-# Platty Search — MEKO demo
+# Platty Search
 
-This package connects English-speaking developers to the MEKO Platty MCP
+This package connects English-speaking developers to the Platty MCP
 environment. This `feat/demo` branch contains only the `platty` plugin and
 the `platty-search` skill.
 
@@ -11,11 +11,11 @@ Start with the [English HTML installation manual](guide/en/platty-demo.html)
 
 ```bash
 codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
-codex plugin add platty@meko-poc
+codex plugin add platty@platty
 ```
 
 Register the separate `platty` MCP connection using the
-[authentication instructions](USER_GUIDE.md#3-paste-your-bearer-token-and-connect).
+[authentication instructions](USER_GUIDE.md#3-paste-your-platty-token-and-connect).
 The plugin does not supply your access credential.
 
 | Component | Value |
@@ -23,21 +23,21 @@ The plugin does not supply your access credential.
 | MCP connection name | `platty` |
 | MCP endpoint | `https://meko-poc.platty-ai.com/mcp` |
 | Expected default project | `petshop-full` |
-| Marketplace | `meko-poc` |
+| Marketplace | `platty` |
 | Plugin | `platty` |
 | Skill | `platty-search` |
-| Package version | `0.0.9-meko.3` |
+| Package version | `0.0.10-demo.1` |
 
 The package contains one plugin, one English skill and eight English reference
 files. It includes separate [Codex](config/codex.config.toml.example) and
 [Claude Code](config/claude.mcp.json.example) connection templates.
-The marketplace name distinguishes this delivery from other Platty installations.
-Use `platty@meko-poc` when installing it.
+Register the Git source with `--ref feat/demo` to select this distribution.
+Use `platty@platty` when installing it.
 
 The search workflow reads analyzed source code and generated project documents.
 It does not require the Platty CLI, a local checkout of the customer application,
 or access to the production database. Credentials are supplied separately by the
-MEKO PoC administrator. The configuration templates use `YOUR_MEKO_TOKEN` as a placeholder; replace
+Platty administrator. The configuration templates use `YOUR_PLATTY_TOKEN` as a placeholder; replace
 it only in your private local configuration.
 
 Project observations were checked on November 2, 2026 (Asia/Seoul). Refresh

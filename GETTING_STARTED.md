@@ -1,4 +1,4 @@
-# Install Platty Search for MEKO
+# Install Platty Search
 
 Use the [English HTML manual](guide/en/platty-demo.html) or the
 [complete text guide](USER_GUIDE.md). Download the HTML file and open it in a
@@ -11,24 +11,24 @@ Start by registering the Platty plugin from Git below.
 
 ```bash
 codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
-codex plugin add platty@meko-poc
+codex plugin add platty@platty
 ```
 
 Use `feat/demo` explicitly. The default branch contains a different distribution.
-The marketplace is `meko-poc`, the plugin is `platty`, and its only skill is
+The marketplace is `platty`, the plugin is `platty`, and its only skill is
 `platty-search`.
 
 ## Claude Code: install the same Git branch
 
 ```bash
 claude plugin marketplace add https://github.com/paradigmshift-labs/platty.git#feat/demo --scope user
-claude plugin install platty@meko-poc --scope user
+claude plugin install platty@platty --scope user
 ```
 
 ## Connect and verify
 
-Obtain your MEKO access token from the administrator. Follow the
-[MEKO token steps](USER_GUIDE.md#3-paste-your-bearer-token-and-connect) to
+Obtain your Platty access token from the administrator. Follow the
+[Platty token steps](USER_GUIDE.md#3-paste-your-platty-token-and-connect) to
 configure MCP as **`platty`** at `https://meko-poc.platty-ai.com/mcp`.
 The expected project is `petshop-full`. Credentials are not included.
 
