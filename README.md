@@ -1,42 +1,67 @@
-# Platty Search PoC
+# Platty Search — MEKO demo
 
-**English** · [한국어](README.ko.md)
+This package connects English-speaking developers to the MEKO Platty MCP
+environment. This `feat/demo` branch contains only the `platty` plugin and
+the `platty-search` skill.
 
-The `feature/platty-plugin-develop-poc` branch distributes one plugin,
-`platty`, containing one skill, `platty-search`, for Codex and Claude Code.
+Start with the [English HTML installation manual](guide/en/platty-demo.html)
+(download and open it in a browser) or the [text user guide](USER_GUIDE.md).
 
-The skill investigates screens, APIs, services, SQL, tables, columns, batches,
-and change impact using configured Platty MCP tools. Answers distinguish
-source-confirmed behavior from unverified information. Design drafts are
-included only when explicitly requested.
+## Download
 
-This PoC retains the supplied skill's Shinsegae I&C project notes and tool
-assumptions. The eight files under `references/` support the single skill;
-they are not separately registered skills.
+- [Full installable package](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-meko-demo.zip)
+- [English skill and its eight references](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-search-english.zip)
+- [Standalone HTML manual](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/guide/en/platty-demo.html)
 
-## Install and use
+## Install in Codex
 
-Follow [GETTING_STARTED.md](GETTING_STARTED.md) to install from this branch's
-checkout. Configure access to the intended Platty MCP server separately; this
-package contains no server URL or credentials. The search skill uses MCP tools
-instead of running the Platty CLI.
-
-Claude Code:
-
-```text
-/platty:platty-search 이 화면에서 저장하면 어떤 데이터가 바뀌는지 찾아줘.
+```bash
+codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
+codex plugin add platty@meko-poc
 ```
 
-Codex:
+Register the separate `platty` MCP connection using the
+[authentication instructions](USER_GUIDE.md#5-register-the-meko-connection).
+The plugin does not supply your access credential.
 
-```text
-$platty:platty-search 이 컬럼을 변경하면 어떤 화면과 배치에 영향이 있는지 조사해줘.
-```
+| Component | Value |
+| --- | --- |
+| MCP connection name | `platty` |
+| MCP endpoint | `https://meko-poc.platty-ai.com/mcp` |
+| Expected default project | `petshop-full` |
+| Marketplace | `meko-poc` |
+| Plugin | `platty` |
+| Skill | `platty-search` |
+| Package version | `0.0.9-meko.3` |
 
-The [CLI usage guide](guide/en/usage-guide.md) documents the separate CLI
-workflow; CLI operator skills are not included in this branch's plugin.
+The package contains one plugin, one English skill and eight English reference
+files. It includes separate [Codex](config/codex.config.toml.example) and
+[Claude Code](config/claude.mcp.json.example) connection templates.
+The marketplace name distinguishes this delivery from other Platty installations.
+Use `platty@meko-poc` when installing it.
 
-## License and support
+The search workflow reads analyzed source code and generated project documents.
+It does not require the Platty CLI, a local checkout of the customer application,
+or access to the production database. Credentials are supplied separately by the
+MEKO PoC administrator. The configuration templates reference `MEKO_POC_TOKEN`;
+they contain no token value.
 
-Platty is proprietary software of Paradigm Shift Labs. See [LICENSE.md](LICENSE.md).
+Project observations were checked on November 2, 2026 (Asia/Seoul). Refresh
+repository and tool availability from the server when starting a new session.
+The currently observed capability gaps are described in the
+[project notes](plugins/platty/skills/platty-search/references/project-notes.md).
+
+Install from `feat/demo` explicitly or from its extracted download package.
+Registering the repository without a ref selects the default distribution.
+No automatic updater changes this demo to another distribution.
+The package is for authorized internal use under the included
+[license](LICENSE.md) and the applicable customer agreement.
+
+Packagers can optionally run `python3 verify-package.py .` from this folder
+with Python 3.11 or later to check manifests, reference links and configuration
+templates. This checks package structure; it does not test a recipient's access.
+Run `python3 scripts/package-demo.py` to regenerate the two ZIP downloads.
+
 [Report feedback](https://github.com/paradigmshift-labs/platty/issues/new?template=platty-feedback.yml).
+
+[Verification results and limits](VERIFICATION.md).

@@ -1,25 +1,23 @@
 {
   "name": "platty",
-  "version": "0.0.8",
-  "description": "Platty MCP code search and change impact investigation for Codex and Claude Code.",
+  "version": "0.0.9-meko.3",
+  "description": "English source-grounded search and change impact investigation for the MEKO PoC.",
   "author": {
     "name": "Paradigm Shift Labs"
   },
-  "homepage": "https://github.com/paradigmshift-labs/platty",
-  "repository": "https://github.com/paradigmshift-labs/platty",
   "license": "SEE LICENSE IN LICENSE.md",
   "keywords": [
     "platty",
+    "meko",
     "mcp",
-    "search",
-    "code",
+    "code-search",
     "impact-analysis"
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Platty",
-    "shortDescription": "Source-grounded code search through Platty MCP",
-    "longDescription": "Includes the platty-search skill for investigating screens, APIs, services, SQL, tables, batches, and change impact using a configured Platty MCP server. This PoC includes project-specific reference notes.",
+    "displayName": "Platty for MEKO",
+    "shortDescription": "Explore MEKO code and change impact in English",
+    "longDescription": "One English platty-search skill for the MEKO PoC. Uses the separately configured platty MCP connection for project documents, source code, and evidence-backed change impact investigation.",
     "developerName": "Paradigm Shift Labs",
     "category": "Developer Tools",
     "capabilities": [
@@ -27,8 +25,8 @@
       "Read"
     ],
     "defaultPrompt": [
-      "이 화면에서 저장하면 어떤 데이터가 바뀌는지 찾아줘.",
-      "이 컬럼을 변경하면 어떤 화면과 배치에 영향이 있는지 조사해줘."
+      "Explain what this API saves and cite the source locations.",
+      "Investigate which screens and batch jobs could be affected by changing this column."
     ]
   }
 }

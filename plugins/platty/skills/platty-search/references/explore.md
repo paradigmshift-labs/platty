@@ -1,204 +1,141 @@
-# 조사
+# Explore source and account for every candidate
 
-규칙은 여섯 가지다. (1) 앵커를 정하고 앵커 API의 호출을 호출 목록으로 하나도 빠짐없이 닫는다. (2) 목록부터 만든다. (3) 새 항목이 안 나올 때까지 되풀이한다. (4) 목록의 모든 줄에 상태 하나를 붙인다. (5) "없음·뿐·n개"는 검색 기록이 있을 때만 쓴다. (6) 코드로 닫을 수 없는 지점은 표시한다. 칸이 비면 그 단계는 끝나지 않은 것이다. 읽기는 호출 수로 접지 않고, 호출 목록·목록·슬롯에 열린 줄이 0개일 때 끝난다.
+## 1. Direct path
 
-## 1. 직접 경로 읽기 (질문의 앵커에서 시작)
+Read from the selected anchor to the operation it performs:
 
-질문의 말을 식별자로 바꾸고, 그 식별자가 실행되는 경로를 끝까지 읽는다. 결과는 항상 `식별자 + 업무 명칭` 쌍이다.
+- Screen: event/button registration, save function, pre-save validation,
+  defaults, constructed URL, controller, service, and SQL.
+- API: registration, complete root service method, subordinate calls relevant
+  to the question, repository/mapper, and complete SQL statements.
+- Batch: job and step registration, tasklet's complete relevant loop,
+  skip/retry/rollback conditions, and SQL.
+- Integration: invoking service, subordinate client, actual send operation,
+  and failure propagation or returned-error handling.
 
-| 단서 | 길 |
-|---|---|
-| 테이블·컬럼 이름 | 바로 항목 표로. 명칭은 `data_dictionary_search` → `data_dictionary_item_get` |
-| SQL id, Repository 메서드 | 호출 줄 → SQL 본문 → 테이블 |
-| URL, handler | `route_resolve` → 서비스 → SQL. URL은 호스트·접두어·채널을 뗀 끝부분으로 찾는다(`project-notes.md`) |
-| 화면, 메뉴 | 화면 저장 함수 → URL → 서비스 → SQL. 공통 버튼은 `project-notes.md` |
-| 업무 용어, 약어 | 세는 기능 묶음(`clarify.md` 1절)이 둘 이상이면 `clarify.md`로 먼저 묻는다. `term_lookup`에 `text`, `view: "summary"`, `limit: 10`을 주면 카드 한 줄마다 DB 주소(`테이블.컬럼`)가 나온다. 같은 낱말이 여러 테이블에 있으면 `clarify.md` 후보 표의 대상 칸에 주소별로 적고 SQL로 확인한다. 짧은 낱말도 summary·limit을 주면 조회할 수 있다. `menu_lookup`·데이터 사전도 쓴다. 사전에 없으면 뜻은 확인 못함 |
-| 배치·job 이름 | `JobConfig` → tasklet → SQL |
+If the anchor is an inner validator/helper, trace its callers to every root
+service method directly invoked by a controller, job, listener, or external
+entry point. Read the full root method, including calls after the validator.
+Inspect how callers consume a returned error value or swallowed exception.
+Dynamic dispatch requires its value origin and registration; a function
+definition alone does not prove execution.
 
-같은 이름이 여러 저장소·경로에 있으면 모두 찾아 구분한다. 한 길이 막히면 다른 단서의 길을 함께 쓴다.
+Keep a root/call inventory:
 
-**진입 유형별로 읽는 범위** (모두 줄 범위로 적어야 `읽음`)
+| Root and entry point | Called service/mapper | Relevant columns or state | Failure handling | Read range or justified exclusion |
+| --- | --- | --- | --- | --- |
 
-| 진입 유형 | 읽는 범위 |
-|---|---|
-| 온라인 | 화면: 저장 함수 · 저장 전 검증 함수 · 신규 행 기본값 / 컨트롤러 / 서비스 메서드 전체(시작~끝) / 서비스가 부르는 하위 호출의 뒤 단계까지 / SQL id 본문(여는 태그 ~ 닫는 태그) |
-| 배치 | `JobConfig`(step 연결) / tasklet 본 루프 끝줄까지(건너뛰는 조건, 재처리, rollback) / SQL id 본문 |
-| 외부 | 서비스 → 하위 서비스 → 송신 클래스 한 단계 더. 실패 시 동작(오류 전파 / 로그만 남김 / 무시) |
-| 공통 | 예외를 값으로 돌려주는 메서드면 호출자가 그 값을 쓰는 방식 · 호출을 감싸는 분기 조건 · 조건에 쓰이는 값을 채우는 줄 |
+Log/utilities/getters can be grouped with a reason. Judge relevance from
+column/field/getter and literal searches in the actual callee, not its name.
+Read each relevant subordinate call similarly. A later validation of the
+same state may narrow an earlier allowed set; account for both.
 
-**앵커 확정** (질문이 가리키는 진입점. 앵커는 누락 없이 읽는다)
+Record all written tables and the read tables, condition columns, values,
+and messages that determine the answer:
 
-| 질문 유형 | 앵커 |
-|---|---|
-| 위치·식별자 ("이 화면·SQL·테이블은 어디") | 질문이 준 식별자의 진입점(화면 → API → 서비스) |
-| 동작·가능 여부 ("삭제 메뉴 어디", "~할 수 있나") | 그 기능을 실행하는 API(삭제·저장 등 사건 함수를 부르는 진입점) |
-| 생성·발생 시점 ("언제 생기나") | 그 값을 만드는 함수(사건 함수)와 그것을 부르는 진입점들 |
+| Item | Written table / read table / condition column / value / message | Source range |
+| --- | --- | --- |
 
-질문에 정확한 식별자가 없으면 `clarify.md` 1절대로 후보를 찾고, 세는 기능 묶음(`clarify.md` 1절)이 둘 이상이면 **항상 묻고** 확정한 뒤에 읽는다(길이를 이유로 건너뛰지 않는다). 후보가 하나면 그대로 확정한다. 변경 영향 질문은 `impact-flow.md`의 흐름을 따른다.
+State `Decision columns: ...`. DELETE affects row existence; end date,
+enabled flag, and status updates can be alternatives to deletion. A guard
+that only reads a decision column is still relevant. A write is unrelated
+only after its actual SET/INSERT/DELETE and conditions have been inspected.
 
-**루트 메서드**: 앵커가 검사 함수나 사건 함수처럼 안쪽 함수로 잡히면, 그 함수를 부르는 곳을 컨트롤러·배치·리스너·외부 API가 직접 부르는 서비스 메서드까지 올라간다. 그 맨 위 메서드가 **루트 메서드**이고 읽는 기준이다. 안쪽 함수의 본문만 읽고 끝내지 않는다(그 함수를 부른 루트가 검사 뒤에 다른 검사를 이어서 부르는 일이 있다). 호출자가 갈라지면 갈라지는 곳마다 루트를 따로 올린다.
+## 2. Other writers and callers
 
-| 번호 | 루트 메서드 | 진입점 | 올라온 길 | 호출자 검색 (식 → 저장소 k개, 호출 줄 n개) |
-|---|---|---|---|---|
+For every written table, combine `route_impact_candidates` when available
+with all-repository source search. Read live schemas, page results, and
+retain deprecated candidates as candidates. A graph link or generated
+summary is not source confirmation. Follow callers as graph extraction can
+miss an indirect writer through another service.
 
-앵커 함수와 올라온 길의 각 메서드를 부르는 곳을 검색한 식과 걸린 호출 줄 수를 쓴다. 걸린 호출 줄마다 루트 행 번호를 적는다(같은 루트로 모이면 같은 번호. 번호가 없는 호출 줄이 있으면 끝나지 않은 것이다). 루트가 된 진입점은 모두 요약표(`answer-format.md` 2절) 행이 된다.
+`W1` is the write search. Include every discovered written table, not just
+one representative. A regex starting point for tables `A` and `B` is:
 
-**호출 목록** (루트 메서드마다. 메서드 본문 전체를 읽고 그 안의 서비스·Mapper·Repository 호출을 한 줄씩 쓴다. 로그·유틸·getter는 `제외(유틸 n개)` 한 줄로 묶는다)
-
-| 번호 | 호출 대상 (메서드·모듈) | 하는 일 (한 줄) | 판단 컬럼과 관련 | 실패 시 | 상태 |
-|---|---|---|---|---|---|
-
-- `판단 컬럼과 관련`은 이름을 보고 정하지 않는다. 호출 대상 파일과 그 파일이 부르는 클래스에서 판단 컬럼(SQL 이름·필드 이름·getter 세 가지 표기)과 허용 목록의 다른 값의 상수·리터럴(예: 한 값만 허용하는 비교)을 `rg`로 검색해 `걸림(식, 파일:줄)` 또는 `안 걸림(식)`으로 쓴다. 걸리면 관련 있음이다.
-- `실패 시`는 그 호출이 실패하거나 오류 코드를 돌려줄 때 루트가 하는 일(예외를 던짐 / 값으로 받아 분기 / 무시)이다.
-- 상태는 `읽음(경로:시작-끝)` 또는 `제외(사유 한 줄: 로그·유틸·조회만, 또는 `안 걸림`의 검색식)`뿐이다. 비어 있거나 "확인 안 함"이 있으면 답을 낼 수 없다.
-- 판단 컬럼과 관련 있는 호출(그 컬럼·상태를 읽거나 쓰거나 검사)은 그 호출 대상의 메서드 본문도 같은 방식으로 한 단계 더 들어간다. 관련 없는 호출은 거기서 닫는다.
-- 검사 호출 바로 뒤에 이어지는 호출을 건너뛰지 않는다. 앞 검사를 통과한 뒤 같은 상태를 다른 기준(예: 한 값만 허용)으로 다시 검사하는 호출이 뒤에 있는 일이 있다.
-
-읽으면서 답을 가르는 **데이터 항목**을 항목 표에 적는다. 쓰는 테이블은 전부, 조건·코드값·메시지는 답을 가르는 것만이다. 답을 가르는 조건(화면 검사, 서버 거절 조건 포함)은 "테이블.컬럼"으로 쓰고, 그 테이블이 쓰는 테이블 행에 없으면 "읽는 테이블" 행으로 올린다(W1 대상은 쓰는 테이블뿐이다).
-
-| 번호 | 항목 | 종류 (쓰는 테이블 / 읽는 테이블(조건·JOIN) / 조건 컬럼 / 코드값 / 메시지) | 근거 (저장소/경로:줄) |
-|---|---|---|---|
-
-근거 칸이 비면 항목이 아니다. 항목이 하나도 없으면 `항목: 찾지 못함(시도: <검색식>)`을 쓰고 답한다.
-
-**판단 컬럼**: 항목 표 아래에 `판단 컬럼: <이 질문을 가르는 컬럼들>` 한 줄을 쓴다.
-
-| 질문 | 판단 컬럼 |
-|---|---|
-| 삭제·종료·취소 | 행의 존재(DELETE), 종료일, 사용여부, 상태 컬럼 |
-| 생성·발생 시점 | 새 행의 INSERT와 키 컬럼 |
-| 값·상태 | 그 컬럼 |
-| 규칙·승인 | 판정이 읽는 컬럼과 통과 뒤 저장 컬럼 |
-
-**쓰기와 읽기를 나눠 거른다.**
-- 쓰기 문장: SET·INSERT·DELETE가 판단 컬럼을 건드리지 않으면 대안이 아니다(제외 (나)).
-- 읽기 검사: 판단 컬럼이나 상태를 읽어 막거나 거는 검사(허용 목록, 한 값만 허용하는 비교)는 쓰기가 아니어도 제외하지 않고 가드로 올린다.
-
-슬롯은 판단 컬럼으로 정한다.
-
-| 그 코드가 | 슬롯 |
-|---|---|
-| 판단 컬럼을 바꾸어 사건을 일으킨다 | 트리거 |
-| 판단 컬럼·상태를 읽어 사건을 막거나 조건을 건다 | 가드 |
-| 판단 컬럼을 다른 방식으로 바꾼다(삭제 질문의 종료일 UPDATE, 이동, 일괄 종료 포함) | 대안 |
-| 판단 컬럼을 안 건드리고 사건 뒤에 이어진다(송신, 알림, 연쇄 처리) | 후속 |
-
-## 2. 목록 만들기 (항목 종류마다 검색식 하나, 전체 저장소 1회)
-
-도구: `workspace_search`. `repoIds`를 주지 않고(전체 저장소), `ignoreCase: true`, `limit: 300`. 쓰기 검색의 `globs`는 `["**/src/main/**","!**/src/test/**"]`다. 화면 저장소는 전체 검색에서 시간 초과가 나니 대상에서 빼고, 화면 쪽 검사가 같은 값을 쓰는지는 `repoIds`에 화면 저장소를 지정하고 `fixedStrings: true`, `globs`는 `**/*.xfdl`·`**/*.js`로 따로 검색한다.
-
-| 항목 종류 | 검색식 | 걸린 파일이 의미하는 것 |
-|---|---|---|
-| 쓰는 테이블 (연결 조회) | `route_impact_candidates`: `tables`(한 번에 5개까지, 더 많으면 나눠 호출), `access: ["write"]`, `view: "compact"`, `routesPerTableLimit: 30` | 그 테이블에 쓰는 API·배치 진입점. 쓰기 접근자 수가 exact로 나온다 |
-| 쓰는 테이블 (코드 검색) | W1 + W1b (아래) | 그 테이블을 바꾸는 모든 파일: 다른 화면, 배치, 연동 |
-| 컬럼·코드값 | 컬럼 이름 대문자·camelCase·구 이름을 `-e`로 묶은 식, 값 리터럴 비교식 | 그 컬럼·값을 읽거나 비교하는 곳 |
-| 메시지 | 메시지 ID | 그 오류를 내는 곳 |
-| 호출자 | SQL id(`네임스페이스.id`와 id) → Repository 메서드 → 서비스 → 컨트롤러 → 화면, 단계마다 이름을 한 호출에 묶는다 | 그 코드를 부르는 곳 |
-
-- **연결 조회 먼저** (`route_impact_candidates`): 결과의 `candidates` 행(진입점 종류 api·job, 이름, 접근 작업, 근거 `경로:줄`, `specLine`)을 모두 목록 행으로 올린다. `specLine`은 분석 요약이라 후보 설명으로만 쓰고 확정 근거로 쓰지 않는다. `accessClassCounts`의 쓰기 수를 조사한 범위 줄에 쓴다. `deprecated: true`도 행으로 올린다(MT 밖 화면·배치는 deprecated로 나온다. 코드에 없다는 뜻이 아니다). `nextCursor`가 있으면 이어받는다. `callers_not_read` 항목은 무시한다. 이 도구는 다른 저장소의 서비스를 거쳐 쓰는 호출(예: 공용 등록 서비스를 부르는 완료 처리)을 접근자로 잡지 못하니, 아래 W1과 호출자 올라가기를 반드시 이어서 한다. 줄바꿈된 `DELETE ⏎ FROM`도 이 도구는 `delete` 작업으로 잡아 준다.
-- **W1** (쓰는 테이블 전부를 한 식에): `(INTO|UPDATE|DELETE(\s+FROM)?|MERGE\s+INTO)[\s(]+([A-Za-z0-9_]+\.)?(A|B|A_HIST)([^A-Za-z0-9_$]|$)`. 이름 속 `$`는 `\$`로 쓰고 끝을 `\b`로 맺지 않는다. 이름이 `$`로 끝나면(`A$`) 이름 부분을 `A\$`로 쓴다(`(A)` 뒤에 종결 문자를 붙이면 `$` 때문에 0건이 된다). 0건이 나오면 "없음"으로 쓰기 전에 이름 끝을 의심하고 `CPCO` 같은 이름 조각으로 한 번 더 검색해 본다.
-- **W1b** (연결 조회에 나오지 않은 저장소에서, 동사와 테이블 이름이 다른 줄에 있는 문장, `DELETE`⏎`FROM 테이블`): W1은 한 줄만 보므로 놓친다. 이름만 검색해(`perRepoLimit: 1`) 이름이 나온 저장소를 찾고, 그 저장소마다 `readonly_workspace_shell`로 `rg -n -U -e '<W1과 같은 식>'`을 한 번 실행한다(`-U`는 `\s`가 줄바꿈을 넘게 한다. 셸 식에는 `$`를 쓰지 않는다. `$`가 들어간 식은 "Shell control characters"로 거부된다. W1의 종결 부분 `([^A-Za-z0-9_$]|$)` 대신 `\b`나 종결 없이 쓴다. 출력이 길면 `| head -200`). W1에 없던 줄은 목록에 더한다. 다중 테이블 DELETE `DELETE\s+\w+\s*,`도 한 번 검색한다. 59건처럼 걸린 줄을 하나씩 위 줄 확인하지 않는다.
-- **W1에는 항목 표의 `쓰는 테이블` 행 전부를 넣는다.** 대표 하나만 검색하면 다른 테이블을 바꾸는 배치·화면이 통째로 빠진다. 줄 맨 앞에 `대상 n/N개`를 쓴다(N = 항목 표의 쓰는 테이블 수, n = 검색식에 넣은 테이블 수). n이 N보다 작으면 검색이 끝난 것이 아니다.
-- 조사한 범위에 적는 줄: `W1: 대상 n/N개, <패턴> → n건, 걸린 파일 m개 = 목록 행 m개, 걸린 저장소 k개(<저장소>: 파일 m개, …) / 검색한 저장소 N개, 잘림 없음`, `W1b: 이름이 나온 저장소 k개에서 rg -U → W1에 없던 줄 m건`.
-- **잘림**: `truncated: true`거나 저장소 `status`가 `timeout`·`deadline_exceeded`·`unavailable`·`error`이면 나머지는 읽지 않은 것이다. `limit`을 1000까지 올리거나 `repoIds`·`globs`로 쪼개 다시 한다. "나머지 생략"은 쓰지 않는다.
-- **되풀이**: 읽다가 새 항목·SQL id·메서드가 나오면 같은 식에 넣어 다시 검색한다. 새 파일이 0건이면 끝이다. 조사한 범위에 `회차 1: n건 / 회차 2: 신규 k건 …`을 적는다.
-- 연결 조회(`route_resolve`, `route_relations`, `spec_get`)는 후보를 더 얹는 데 쓰고, 코드 검색 결과와 합친다. 코드 검색에 걸렸는데 연결 조회에 없으면 비고에 `연결 조회 없음`.
-- 이름만 검색하면 조회 JOIN이 많아 잘린다. 쓰기를 찾을 때는 W1을 쓴다.
-- 컬럼 이름 단독 검색은 응답이 너무 커 파일로 저장되고 읽을 수 없는 일이 있다. 그러면 버리지 말고 `globs`를 확장자별(`**/*.xml`, `**/*.java`, 화면)로 나누거나 `perRepoLimit`을 30 안팎으로 줘서 저장소별 분포를 먼저 보고, 걸린 파일 이름은 `rg -l`(저장소별)로 뽑는다. 읽지 못한 검색은 조사한 범위에 `쓰지 못함 — 응답 크기`로 적는다.
-
-**W1 시점과 반복**: 질문 종류와 상관없이 항목 표에 쓰는 테이블이 있으면 W1을 한다. 직접 경로를 다 읽어 항목 표를 확정한 뒤에 돌리고, 그 뒤 읽다가 새 쓰는 테이블이 나오면 그 테이블을 더해 W1을 다시 돌린다(회차). "질문이 메뉴 위치를 묻는다" 같은 이유로 일부 테이블만 넣거나 걸린 파일을 목록에서 빼지 않는다.
-
-## 3. 목록과 상태
-
-걸린 파일은 **전부** 목록 행이 된다. 질문과 상관없어 보여도 제외 행으로 올리고 사유를 쓴다. 숫자로 맞춘다: W1 줄에 `걸린 파일 m개`, 목록에 `행 m개`(읽음 a, 제외 b, 목록만 c)를 쓰고 m이 다르면 끝난 것이 아니다. 판정하지 못한 것은 제외하지 않고 읽는다. `project-notes.md`의 제외 경로만 뺀다.
-
-| 번호 | 걸린 곳 (저장소/경로:줄) | 종류 | 슬롯 | 진입점 | 진입 상태 | 상태 | 읽은 범위 (경로:시작-끝; …) | 비고 |
-|---|---|---|---|---|---|---|---|---|
-
-- 종류: `온라인` / `배치` / `외부` / `기타`. 슬롯: 4절의 `트리거` / `가드` / `대안` / `후속` 중 하나. 배치 저장소(`project-notes.md`)의 파일은 `배치`.
-- 진입점: 온라인 = 화면 ID와 URL, 배치 = `JobConfig`의 `@Bean` job 이름, 외부 = endpoint 또는 송신 클래스. 못 찾으면 `찾지 못함(시도: …)`.
-- **진입점 확인**: 온라인·배치 행의 진입점은 파일 이름이 아니라 화면 ID(또는 API 경로, job 이름)로 적는다. 연결 조회 후보는 `name`이 이미 API 경로·job 이름이다. 코드 검색에서만 나온 행은 SQL 파일 이름 stem(예 `<SQL 파일 stem>`)으로 `route_resolve`를 불러 API 경로를 얻는다. 쓰기 문장이 `DELETE`거나 질문의 대상 컬럼을 바꾸는 행부터 최대 6행은 그 URL 끝 3구간으로 화면(`.xfdl`)을 `workspace_search`해 화면 ID를 얻는다. 못 찾으면 `찾지 못함(시도: …)`.
-- **진입 상태**(진입 상태 칸): 온라인·배치 행의 끝을 닫힌 상태 하나로 쓴다. `메뉴 확인`(화면이 `menu_lookup`의 `match: key`로 메뉴와 연결됨, 요약표 이름에 메뉴 경로를 쓴다) / `화면만`(메뉴 연결 없음) / `API만`(부르는 화면 없음) / `배치` / `소스 밖`(코드에 쓰는 곳 없음, 검색 기록 필요) / `미완`(도구가 같은 호출에서 두 번 실패한 경우만. "호출이 많아서"는 사유가 아니다). 호출자는 컨트롤러·배치·리스너·외부 API에 닿으면 올라가기를 멈춘다.
-- 비고: 쓰기 문장마다 `SET: <컬럼들>`·`WHERE: <조건 컬럼>`·`DELETE`·`INSERT`, 값 비교는 `판정: …`(`impact.md`), 개수는 `rg -c`로 센 값만.
-
-| 상태 | 쓸 수 있는 때 | 같이 쓰는 것 (빠지면 쓸 수 없음) |
-|---|---|---|
-| 읽음 | 직접 경로 행: 1절의 진입 유형별 범위를 줄 범위로 모두 적었다. 그 밖의 행(얕게): 호출 줄 앞뒤 약 20줄(감싸는 조건 포함) 또는 SQL 문장·조건 메서드 본문 하나를 줄 범위로 적었다. 비고에 `깊이: 얕게`를 쓰고 답에는 그 줄이 보여 주는 것만 쓴다 | `읽은 범위` 칸 전부 + 비고 `재검사: <같은 값을 다른 목록·상태로 다시 검사하는 줄, 없으면 "없음">` |
-| 목록만 | 찾았고 이름·진입점까지 확인했지만 읽지 않았다 | 읽지 않은 이유. 허용 이유는 셋뿐이다: `후속 슬롯`, `질문과 다른 업무로 보이는 후보`(제외 (가)로 못 닫은 것), `사용자 제외`(후보 확인에서 사용자가 고르지 않음). `호출 상한`, `SET 컬럼 미읽음`, `호출자 미확인`은 이유가 아니다. 읽지 않은 행의 동작은 답에 쓰지 않는다 |
-| 못 읽음 | 열어 보려 했지만 닫지 못했다 | 비고 `시도: <명령>`. 허용 사유는 둘뿐이다: 분석된 저장소 안에 소스가 없음, 같은 호출이 도구 오류로 두 번 실패. 정규식 오류로 중단, `rg -A`로 앞 몇 줄만 봄, 호출자·JobConfig를 찾아보지 않음은 시도가 아니니 읽는다 |
-| 제외 | 아래 세 사유 중 하나 | 사유 기호와 근거 |
-
-제외 사유 (셋뿐. 질문의 말이 아니라 그 문장이 무엇을 바꾸는지로 판정):
-- (가) 다른 업무: 항목 표에 없는 테이블만 쓰는 곳. 쓰는 테이블 이름을 같이 적는다.
-- (나) 판단 컬럼 무관: 항목 표의 테이블을 쓰지만 SET·INSERT·DELETE가 판단 컬럼을 건드리지 않는 문장(행을 지우는 DELETE는 판단 컬럼을 건드린 것이다). 그 SQL 문장을 읽은 줄 범위와 `SET: <컬럼들>`을 같이 적는다.
-- (다) 실행 안 됨: 테스트, 주석 처리, 연결 안 된 정의. 테스트 경로, 주석 줄, 호출부 검색식을 적는다.
-- 금지 사유: 질문의 말과 달라 보임, 이름·label로 판단, 개수가 많음, 지저분함.
-
-## 4. 슬롯과 읽는 순서
-
-질문의 사건(동사: 생성·삭제·변경·실행 등)을 정하고, 그 사건을 하는 함수를 `사건 함수`라 한다(새 행을 넣는 서비스 메서드, 삭제 분기 등). 목록의 모든 행에 슬롯 하나를 붙인다. 변경 영향 질문(`impact-flow.md`)에서는 `impact.md` 3-1절의 뜻을 쓴다.
-
-| 슬롯 | 뜻 | 읽기 |
-|---|---|---|
-| 트리거 | 사건 함수를 부르는 모든 호출자를 진입점(화면, API, 배치, 이벤트)에 닿을 때까지 올라가며 찾는다. 올라가는 길에서 호출자가 갈라지는 지점마다 행으로 올린다. 같은 파일의 다른 메서드(예: 수기 처리 메서드)도 포함 | 전부 읽는다 |
-| 가드 | 사건을 막거나 조건을 거는 검사(화면 검증, 서버 재검사, 권한, 값 허용 목록) | 전부 읽는다 |
-| 대안 | 질문의 사건을 대신하거나 같은 종류로 처리하는 다른 화면·배치(삭제 질문이면 종료일만 바꾸는 UPDATE, 이동, 일괄 종료). 신규 등록·수정만 하는 파일은 후속 | 전부 읽는다 |
-| 후속 | 사건 뒤에 이어지는 일(송신, 알림, 연쇄 처리) | 목록만 둔다 |
-
-읽는 순서와 규칙:
-- 직접 경로(1절)를 먼저 모두 읽는다. 그다음 트리거 → 가드 → 대안 순서다.
-- 트리거·가드·대안 행은 **개수 제한 없이** 메인이 직접 모두 읽는다. 기본은 얕게(3절 `읽음`)이고, 얕게 읽은 줄에 답을 바꾸는 분기가 더 있으면 그 행만 1절의 진입 유형별 전체 범위로 깊게 읽는다. 앵커 API는 1절 호출 목록으로 닫는다.
-- 삭제·종료·취소 질문의 대안 슬롯에서 종료일·사용여부·상태 컬럼(`*_END_YMD`, `*_USG_YN`, `*_STUS_CD` 류)만 바꾸는 UPDATE는 SET과 WHERE를 모두 읽는다. SET만 보고 대상 범위를 단정하지 않는다.
-- 호출 줄은 앞뒤 약 20줄에 더해, 그 메서드에서 호출 뒤에 이어지는 호출과 반환값을 쓰는 줄까지 읽는다(같은 값을 다른 목록으로 다시 검사하는 호출이 뒤에 있는 일이 있다).
-- 슬롯에 행이 없으면 `없음(검색식)`을 쓴다. 비어 있는 채로 두지 않는다.
-- 호출 수로 읽기를 접지 않는다. 답을 내기 전에 트리거·가드·대안 슬롯의 모든 행이 `읽음`, `제외`, `못 읽음`(도구가 두 번 실패, 시도 기록) 중 하나여야 한다.
-
-**배치 한 줄 요약** (배치 행은 읽지 않아도 `목록만`에 요약을 단다. 목록의 배치 행 전부에 단다. 개수 상한은 없고, 서로 독립인 호출은 한 메시지에 모아 부른다):
-1. job 이름·진입점: 연결 조회 후보의 `entryPointId`를 쓴다. 코드 검색에서만 나온 배치면 SQL 파일 이름의 숫자 부분(예 `btxxyy0001`)으로 `route_resolve`(`kinds:["job"]`)를 불러 얻는다.
-2. `job_dependency_trace`에 `job: {"entryPointId": "<위 값>"}`(또는 `{"name": "<Bean 이름>"}`), `direction: "both"`, `depth: 1`을 준다. `text`로 불러 후보만 돌아오면 돌려받은 이름으로 다시 부른다. `root.description`(스케줄 설명), `root.folder`, `root.status`, 선행·후행 job을 쓴다.
-3. 요약 서식: `스케줄 설명: <description> / 스케줄 상태: <status>(스케줄 스냅샷) / 선행: <job 이름들 또는 없음(스케줄 정보 범위)> / 후행: <같음> / 코드: <W1 줄에서 본 동작, 예 UPDATE 테이블 SET 컬럼>`. 주기·마지막 실행은 이 결과에 없으니 `확인 못함`이다. 읽지 않은 동작은 쓰지 않는다. `선행·후행: 조회 안 함(<사유>)`의 사유는 둘뿐이다: `제외 행` / `NOT_FOUND(시도한 인자 2가지)`. `text`로만 부른 것은 조회가 아니다. 후속 슬롯 배치도 같다.
-
-## 5. 부정·개수 주장
-
-- "없음", "0건", "쓰는 곳 없음", "~뿐", "n개"는 주장 검산표(`answer-format.md` 5절)에 검색식 원문·넣은 동사·W1b 여부·대상 범위·잘림 여부를 적을 수 있을 때만 쓴다. 쓸 수 없으면 "확인한 범위에서는"으로 낮춘다.
-- 한 줄 검색 하나나 동사 하나로 "없음"을 만들지 않는다. 주석에 걸린 줄은 근거가 아니다.
-- 개수는 `rg -c`·`rg -l`로 센 값과 나열한 항목 수가 같을 때만 쓴다. 센 값이 없으면 "여러 건".
-
-## 6. 코드로 닫을 수 없는 지점 (만났을 때만 표시)
-
-| 만난 것 | 표시와 다음 행동 |
-|---|---|
-| 조립된 함수명·URL(`"cfn"+버튼`, `"…/"+변수`), 인터페이스 ID 조립 | 값이 정해지는 곳까지 따라간다. 못 찾으면 `코드로 닫을 수 없음 — 조립된 이름`, 이름 규칙·URL 조각으로 따로 검색한 식을 적는다 |
-| `${}` 테이블 이름, 문자열로 만든 SQL | 값이 정해지는 곳을 읽는다. 못 읽으면 `못 읽음` + 시도 |
-| 주석 처리된 SQL·호출 | 호출 줄이 주석이 아닌지 `sed -n`으로 본다. 주석이면 제외 (다) |
-| 소스 없는 라이브러리, DB 내부 객체(프로시저·뷰·트리거), 운영 DB 값, 스케줄러, 업무 정책 | `코드로 닫을 수 없음` + 사유 종류 + 확인할 위치. 답에서는 [추론] |
-| 같은 이름의 SQL·메서드가 여러 곳 | 실제로 실행되는 쪽을 호출 줄에서 확인 |
-| 예외를 삼키거나 값으로 돌려줌 | 호출자가 그 값을 쓰는 방식을 읽는다 |
-
-SQL 인라인 주석·메서드 이름은 근거가 아니다. 용어의 뜻은 용어 사전·데이터 사전·테이블 comment로 확인한다.
-
-## 7. 도구 요령
-
-- `readonly_workspace_shell`: `repoId`가 필수이고 저장소 하나씩 실행한다. 파일은 `sed -n 120,160p <file>`로만 읽는다. 한 호출에 명령 하나. `rg -n -U -e '(A|B)\s+C'`처럼 괄호·파이프가 있는 식은 실행되지만 `$`가 들어가면 거부된다. 거부되면 `.`으로 바꾸거나 `-e`로 나눈다. 출력이 길면 `maxBytes`를 늘리거나 경로로 좁힌다.
-- `route_relations`는 화면 공통 버튼 경유 호출만 빠진다. `route_impact_candidates` 테이블 모드는 `repoIds` 없이도 되고, 응답이 커지면 `tables`를 3개씩 나누거나 `routesPerTableLimit`을 줄인다. `spec_get`은 `claimLimit`을 작게 준다. 너무 커서 못 읽으면 `<도구>: 쓰지 못함 — 응답 크기`로 적고 코드 검색 결과를 쓴다.
-- `term_lookup`은 짧은 단어가 크게 나온다. 단독으로 부르지 않는다.
-- 메모리: `spec_get`의 `memories`, `memory_list`, `memory_get`(`scope:"approved"`). 준비 단계 건수가 0이면 생략.
-- 읽은 범위 표기: `저장소/모듈경로/파일:시작-끝`(띄어쓰기 없이), 여러 범위는 `;`. `sed -n 120,160p`는 `120-160`, `rg -A/-B/-C N`은 히트 줄 ±N줄. 검색 히트 줄만 보고 쓴 범위는 읽은 범위가 아니다(도구 호출 기록과 대조된다).
-
-## 8. 작업 메모 (실행자 자신의 진행 추적용, 사용자용 아님)
-
-쓰기 도구가 있으면 `.platty-notes/<질문 요약>.md`(환경이 경로를 지정하면 그 경로)에 쓴다. 쓸 수 없으면 조사한 범위의 `W1:` 줄로 대신한다. 갱신은 직접 경로 끝, 목록 끝, 읽기 끝, 답 직전의 네 번이다.
-
+```text
+(INTO|UPDATE|DELETE(\s+FROM)?|MERGE\s+INTO)[\s(]+([A-Za-z0-9_]+\.)?(A|B)([^A-Za-z0-9_$]|$)
 ```
-질문: <한 줄> / 사건: <동사 한 줄> / 사건 함수: <이름>
-항목 표: 쓰는 테이블 N개 <이름들> / 판단 컬럼: <컬럼들>
-앵커: <API·화면·job> / 루트 메서드: <이름들> / 호출 목록: 루트별 호출 n개 = 읽음 a + 제외 b (열린 c)
-검색: W1 대상 n/N, <건수> / W1b 저장소 n/N / 회차별 신규 건수
-트리거: <행 번호들 또는 없음(검색식)> — 모두 읽음? <예·아니오>
-가드: <행 번호들 또는 없음(검색식)> — 모두 읽음? <예·아니오>
-대안: <행 번호들 또는 없음(검색식)> — 모두 읽음? <예·아니오>
-후속: <행 번호들>
-목록: <3절 표>
-열린 행: <트리거·가드·대안 중 읽음이 아닌 행 번호들>
-다음 할 일: <한 줄>
-```
+
+Escape table names as regex literals, including `$`; a word boundary is not
+a safe terminator for every identifier. Include INSERT/UPDATE/DELETE/MERGE,
+optional schema prefixes, and multiline SQL (`multiline: true` when supported).
+Also inspect multi-target DELETE forms. `W1b` accounts for multiline and
+alternate write forms not covered by W1: search table names to discover
+additional files, then read/search complete statements in those files.
+Do not infer a write from a comment or a read-only JOIN.
+
+Search backend source/SQL and relevant screens/JavaScript. Partition by
+repository and file type when needed; a narrow SQL glob does not cover
+screen guards or dynamically assembled statements. Keep test code and
+comments distinguishable from executable callers. Discover actual module
+layout rather than assuming all files are below the reported sourceRoot.
+
+Record for each search: pattern, options/globs, repositories, table coverage
+`n/N`, match/file counts when exact, repository completion/errors, cursor,
+`complete`, `truncated`, and `countKind`. Follow the same query's cursor until
+complete; changed query inputs may invalidate it. An incomplete search
+cannot establish absence. Do not turn a lower-bound count into an exact total.
+
+Search column spellings (SQL, camelCase, getter), literals and reference-code
+lookups, messages, SQL IDs, repository methods, and callers as appropriate.
+When reads expose new tables, columns, SQL IDs, or methods, extend the search.
+Repeat until no new relevant candidate appears. Record iterations and reconcile
+matched files with listed candidate rows.
+
+## 3. Candidate status and reading order
+
+| Repository/path | Entry point and kind | Role | Status | Exact read ranges | Reason/gap |
+| --- | --- | --- | --- | --- | --- |
+
+Roles are trigger (causes the event), guard (permits/blocks it), alternative
+(changes the same decision data differently), and downstream effect (runs
+after it). Entry kinds are online, batch, external, or other. Verify entry
+registration from source; do not use a filename as a job or screen identity.
+
+Read the direct path fully, then every trigger, guard, and alternative.
+Start related candidates with the surrounding branch/complete relevant SQL;
+deepen when it could change the answer. For UPDATE/DELETE read SET and WHERE.
+Include calls following a validator and the use of return/error values.
+Do not stop because a preset number of candidates has been reached.
+
+Each row has one state:
+
+- `Read`: list exact ranges and reading depth; assert only what those lines show.
+- `Listed only`: a downstream effect, a distinct unselected business candidate,
+  or a user-excluded entry. State the reason and do not infer its behavior.
+- `Excluded`: another business target, an inspected statement unrelated to the
+  decision columns, or proven non-executable test/comment/unconnected code.
+  Give the actual table, SET/WHERE, source range, or caller search proving it.
+- `Unread`: source is absent or an actual source read still fails after one
+  appropriate retry. Record attempts. Fix an invalid path/regex instead of
+  counting it as proof the source is absent.
+- `Unavailable`: a required capability/import is missing according to live
+  status. Record its reason and the exact claim left open; no retry is needed.
+
+For a batch candidate, verify its registered job/step and SQL behavior from
+code. Query scheduler metadata only when available. Otherwise write
+`Scheduler dependencies and operational schedule unverified: scheduler_not_imported`.
+A source-defined job does not prove it is enabled, ran, or follows another job.
+Keep downstream effects visible even when their bodies remain unread.
+
+## 4. Evidence boundaries
+
+Use `readonly_workspace_shell` with the returned `repoId` and
+repository-relative path, e.g. `sed -n '120,170p' module/path/File.java`.
+Inspect `truncated` and read remaining ranges. Cite actual line numbers from
+search/source mapping; a plain sed window does not itself print line numbers.
+Search hits alone do not constitute a complete method or SQL read.
+
+Dynamic table/function/URL strings require their binding origins. For missing
+library source, database triggers/views/procedures, runtime values, external
+systems, or policy, state the boundary and where it can be verified.
+
+`None`, `only`, `all`, and exact counts require an audit of the relevant
+complete search scope, every matched branch, and the counted candidates.
+Otherwise use `Within the inspected scope...` and name what remains unverified.
+
+Keep a conversation-local investigation ledger: question/anchor; roots/calls;
+written tables and decision columns; W1/W1b coverage and iterations; candidate
+statuses; evidence ranges; open gaps; next reads. Update it after the direct
+path, enumeration, reading, and pre-answer review. It need not be written to a
+local file. Do not write memories or modify project/application data.

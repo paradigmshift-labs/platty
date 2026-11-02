@@ -1,35 +1,30 @@
-# 설계 요청 처리 (영향 조사 뒤에 설계 에이전트가 설계 초안을 쓴다)
+# Explicit design requests
 
-## 1. 언제 부르나
-**설계를 명시적으로 요청한 질문일 때만** 부른다. 설계 요청은 변경이나 신규 기능을 **어떻게 만들지**를 묻는 경우다: "설계해 줘", "설계안", "어떻게 개발/구현하면 되나", "수정 방법", "요구사항을 반영하려면 어떻게", "~를 추가하려면 어떻게 하나".
-- "어디가 깨지나", "어디를 고쳐야 하나" 같은 영향 질문은 영향 조사 답까지만 한다. 설계 에이전트를 부르지 않는다.
-- 현재 동작·위치·뜻을 묻는 질문에는 부르지 않는다.
-- 설계 요청인지 애매하면 부르지 않고, 영향 조사 답 끝에 `설계 초안이 필요하시면 요청해 주세요.` 한 줄만 쓴다.
+Add a design draft only when the user explicitly asks how to implement a
+change, requests a design, or asks for an implementation approach. A question
+about existing behavior or what a change affects stops at evidence/impact.
 
-## 2. 순서
-1. `impact-flow.md` 흐름으로 영향 조사를 끝낸다(변경 대상 확정, 핵심 DB, 영향 검색, 읽기, 답 초안, 리뷰와 보충 반영까지).
-2. Agent 도구로 서브에이전트를 **하나** 부른다. 모델은 Agent 도구의 `model` 인자에 `opus`를 준다(지정할 수 없으면 기본 모델). 지시문은 3절이고, 아래를 붙여 준다: 질문 원문, 변경 대상 표, 핵심 DB·동반, 영향 목록(슬롯·읽은 줄 범위·비고), 호출 목록, 확인하지 못한 부분, 조사한 범위.
-3. 돌려받은 초안을 4절 서식으로 최종 답에 붙인다. 초안이 인용한 줄이 영향 목록의 읽은 범위 밖이면 메인이 그 줄을 읽어 확인하고, 확인하지 못하면 `가정`으로 내린다.
-4. Agent 도구가 없으면 메인이 3절 지시문대로 직접 쓰고 조사한 범위에 `설계 에이전트: 메인이 직접(Agent 없음)`을 쓴다.
+Complete impact investigation and review first. Then use one design subagent
+when available, with the active runtime's available model; otherwise draft
+in-session and state that independent design delegation was unavailable.
+Supply the question, change target, core/companion data, impact inventory,
+root-call inventory, exact read ranges, and unresolved findings.
 
-## 3. 설계 에이전트 지시문
-```
-당신은 설계 담당입니다. 아래 조사 결과를 근거로 변경 설계 초안을 씁니다. 코드를 고치지 말고 설계만 씁니다.
-- 근거는 조사 결과에 적힌 읽은 줄 범위, 그리고 필요하면 readonly_workspace_shell(sed -n)으로 직접 읽은 줄뿐입니다. 새 영향 검색은 하지 않습니다. 빠진 곳을 발견하면 "추가 조사 필요"로 적습니다.
-- 문장마다 구분합니다: 사실(코드에서 읽은 것, 저장소/경로:줄), 제안(당신의 설계 판단), 가정(읽지 않았거나 코드 밖인 것). 운영 DB 값, 외부 시스템, 업무 정책은 단정하지 않습니다.
-- 시간과 길이보다 정확도가 중요합니다. 필요한 만큼 자세히 씁니다.
-출력:
-1. 설계 목표와 범위: 질문을 한 문단으로, 변경 대상 포함.
-2. 설계안: A안과 B안(대안이 하나뿐이면 하나). 각 안은 변경 요지, 고칠 곳(저장소/경로:줄과 메서드), 장점, 위험. 마지막에 추천 안과 이유.
-3. 고칠 곳 표: 번호 / 위치 / 무엇을 바꾸나 / 근거 줄 / 영향 목록 행 번호.
-4. 깨질 수 있는 곳과 막는 방법: 영향 목록 행 번호 기준.
-5. 데이터 변경과 이행(DB 변경이 있을 때만).
-6. 테스트 시나리오: 정상, 예외, 회귀(영향 목록 행별).
-7. 확인하지 못한 부분과 구현 전에 정해야 할 것.
-```
+The design author may read named source ranges through the same authorized
+MEKO connection. It must not edit code, change data, invent missing impact
+evidence, or invoke the application APIs. Additional investigation needs are
+returned as gaps. Label each material statement:
 
-## 4. 답에 붙이는 법
-- **1층**: `설계 요약`을 3~5줄 업무 말로 쓴다(무엇을 어떻게 바꾸는 설계인지, 추천 안, 영향 받는 화면·배치·연동, 주의할 점). 바로 아래에 `설계 초안입니다. 코드로 확인된 사실과 제안을 구분했고 구현 전에 개발자 검토가 필요합니다.`를 쓴다.
-- **2층 맨 앞**(근거 표 앞)에 `설계 초안` 블록으로 설계 에이전트의 출력을 붙인다. 코드 이름·경로를 쓸 수 있다.
-- 설계 초안의 문장은 확신도 표 대신 `사실` / `제안` / `가정`으로 구분한다. `사실` 문장의 근거 줄은 영향 목록의 읽은 범위 안에 있어야 한다.
-- 설계 초안의 개수·위치를 말하는 `사실` 문장 중 3개 이상을 메인이 직접 확인한다.
+- `Fact`: directly supported by a cited source range.
+- `Proposal`: an engineering choice with its reason and tradeoff.
+- `Assumption`: an unresolved source, runtime, policy, or integration dependency.
+
+Draft: goal/scope; feasible approach and alternatives; changed locations;
+affected callers and safeguards; migration when applicable; normal, failure,
+and regression scenarios; decisions required before implementation.
+Trace changed locations and tests back to the inspected impact rows.
+
+The main agent checks cited facts against its actual read ledger and performs
+any necessary bounded verification reads. Put a short plain-English design
+summary above the developer appendix. Clearly label the result `Design draft`;
+it is not an implemented or tested change.

@@ -1,0 +1,317 @@
+# MEKO PoC: installation and user guide
+
+Version `0.0.9-meko.3` · Prepared November 2, 2026 (Asia/Seoul)
+
+This guide is for developers using the MEKO code analysis environment. Choose
+**Codex** or **Claude Code**; you do not need both. The package adds one
+`platty-search` skill. Your AI client connects to the MEKO server to read
+project documents and analyzed source code.
+
+## 1. Before you start
+
+You need an authorized AI-client account, a MEKO PoC access token supplied by
+your administrator, and network access to:
+
+```text
+https://meko-poc.platty-ai.com/mcp
+```
+
+The expected project is `petshop-full`. The token for this connection is
+separate from your OpenAI/Anthropic account credentials. Request an individual
+or otherwise administrator-approved token; this package does not contain one.
+
+Examples below use Bash on macOS, Linux, or Windows WSL. Run the configuration
+commands on the same computer or remote host where the AI client makes its MCP
+requests. Settings on your laptop do not automatically configure a remote VM.
+Native Windows users should follow their AI client's platform-specific
+installer and adapt shell syntax; the Bash token commands below are not
+PowerShell commands.
+
+## 2. Install your AI client
+
+If it is already installed and signed in, check its version and skip the installer.
+
+### Option A: Codex
+
+Use the [official Codex CLI installation guide](https://developers.openai.com/codex/cli).
+The current macOS/Linux installer is:
+
+```bash
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+codex --version
+codex
+```
+
+Complete sign-in, then exit the session before continuing with configuration.
+The plugin commands below were checked against Codex CLI `0.160.0`.
+
+### Option B: Claude Code
+
+Use the [official Claude Code installation guide](https://code.claude.com/docs/en/setup).
+For macOS, Linux, or WSL:
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+claude --version
+claude
+```
+
+Complete sign-in, then exit the session. The plugin and MCP command syntax
+below was checked against Claude Code `2.1.311`.
+
+## 3. Extract and install this package
+
+To install this branch directly in Codex, Git must be available:
+
+```bash
+codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
+codex plugin add platty@meko-poc
+```
+
+Alternatively, [download the installable ZIP](https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-meko-demo.zip)
+and use the local-package method below. The
+[standalone HTML manual](guide/en/platty-demo.html) follows the Codex path.
+
+Extract the ZIP to a permanent folder. Open a terminal in the extracted folder
+that contains `README.md`, `.claude-plugin`, `.agents`, and `plugins`.
+Enable hidden-file display if necessary. Keep this folder in place: the
+marketplace source refers to it.
+
+For Codex:
+
+```bash
+codex plugin marketplace add "$PWD"
+codex plugin add platty@meko-poc
+```
+
+For Claude Code:
+
+```bash
+claude plugin marketplace add "$PWD" --scope user
+claude plugin install platty@meko-poc --scope user
+```
+
+The marketplace is named `meko-poc`, the plugin is named `platty`, and the skill
+is named `platty-search`. These commands install from this local package.
+The local-package method does not need GitHub access. Neither method needs
+the global Platty CLI.
+
+If another marketplace is already named `meko-poc`, inspect its source before
+continuing and have your administrator resolve the conflict. Another Platty
+distribution can also expose `platty-search`: disable the conflicting plugin
+for the MEKO session or select this delivery explicitly rather than relying on
+ambiguous automatic skill selection. Do not remove unrelated MCP connections.
+
+## 4. Load your access token
+
+In the same Bash terminal you will use to launch the AI client:
+
+```bash
+read -r -s -p 'MEKO PoC token: ' MEKO_POC_TOKEN
+printf '\n'
+export MEKO_POC_TOKEN
+test -n "$MEKO_POC_TOKEN" && printf 'Token loaded (value hidden).\n'
+```
+
+Paste the token when prompted. Supply the **token alone**, without the
+`Bearer ` prefix. The prompt hides it and avoids placing the value in a
+command-line example or shell history. If no confirmation prints, load it again.
+Do not paste the token into a chat or send it with a support report.
+
+This environment variable lasts for that shell and its child processes.
+Reopen the shell or expire the token and you must load a valid token again.
+Use your organization's approved secret-management method for persistent use.
+A desktop app launched elsewhere may not inherit this terminal's environment;
+use the CLI from this terminal, or configure the app's MCP authentication on
+its actual execution host and restart it.
+
+## 5. Register the MEKO connection
+
+Choose the section matching your client. Configure the MCP name **`platty`**
+and the exact URL, including `/mcp`.
+
+The MCP connection name `platty` is separate from the marketplace name
+`meko-poc`. If a `platty` connection already points to another server or project,
+confirm the intended configuration before replacing it. Do not overwrite an
+unrelated connection or leave two competing entries for the same name.
+
+### Codex
+
+```bash
+codex mcp add platty --url https://meko-poc.platty-ai.com/mcp --bearer-token-env-var MEKO_POC_TOKEN
+```
+
+Alternatively, merge the section from
+[codex.config.toml.example](config/codex.config.toml.example) into your host's
+`~/.codex/config.toml`. Preserve other settings. If `platty` already exists,
+edit that entry rather than adding a duplicate table. Remove any old static
+`Authorization` header for this entry when switching to the environment token.
+Restart the client to pick up the configuration.
+
+Codex reads the token variable and supplies the `Bearer` header itself; do not
+write `Bearer ${MEKO_POC_TOKEN}` into a static TOML header. See the
+[official Codex MCP configuration](https://developers.openai.com/codex/mcp).
+
+### Claude Code
+
+The single quotes in this command preserve the variable reference so that
+Claude Code resolves it when it starts:
+
+```bash
+claude mcp add-json --scope user platty '{"type":"http","url":"https://meko-poc.platty-ai.com/mcp","headers":{"Authorization":"Bearer ${MEKO_POC_TOKEN}"}}'
+```
+
+For project-scoped configuration, merge the server entry from
+[claude.mcp.json.example](config/claude.mcp.json.example) into that project's
+`.mcp.json` instead. Preserve existing entries and follow the client's project
+trust/approval prompt. Choose one scope for this connection; a duplicate local
+entry can override a user entry. Environment expansion is documented in the
+[official Claude Code MCP guide](https://code.claude.com/docs/en/mcp#environment-variable-expansion-in-mcp-json).
+
+If `platty` already exists, update its configuration in the scope actually
+used by the session. Merely installing this skill does not replace an old token.
+
+## 6. Verify the connection and skill
+
+Launch `codex` or `claude` from the terminal where the token is loaded. Start a
+new session after plugin installation. Run `/mcp` in the session and check that
+`platty` is connected. Approve the intended read tools if your client asks.
+
+Send this first prompt:
+
+```text
+Use only the platty MCP connection. Check context_status and list the
+authorized repositories. Confirm the project name and report unavailable
+capabilities. Do not print credentials or use another MCP connection.
+Answer in English.
+```
+
+The server should identify `petshop-full` (use `project_get` if its name is
+not in the status response). On November 2, 2026, ten repositories were
+available; their source analysis was dated October 30. Your token may have
+narrower access and later snapshots can differ. A project mismatch should be
+resolved with your administrator before asking project-specific questions.
+
+Now select the installed skill from the client's skill picker, or type:
+
+Claude Code:
+
+```text
+/platty:platty-search Explain what POST /on/ctrt/tnnt/saveCtrtTnntList does. Use only platty, answer in English, and cite source locations.
+```
+
+Codex:
+
+```text
+$platty:platty-search Explain what POST /on/ctrt/tnnt/saveCtrtTnntList does. Use only platty, answer in English, and cite source locations.
+```
+
+If your client displays a different qualified skill label, choose the
+`platty-search` entry belonging to `Platty for MEKO` / `platty@meko-poc` in its
+picker. The live server operations for this prompt read source; the assistant
+must not execute the save API.
+
+Successful setup means a real project/repository call and a real document or
+source read succeed. A plugin appearing in a list or a green server label alone
+does not verify all tools. The observed repository/capability details are in
+the [project notes](plugins/platty/skills/platty-search/references/project-notes.md).
+
+## 7. Ask useful questions
+
+Include an exact screen/file/API/table identifier when you know one. For a
+change-impact question, include what will change and the proposed value or
+condition. These prompts illustrate read-only investigations:
+
+| Goal | Example prompt |
+| --- | --- |
+| Read a business rule | Find the document titled "매장 휴무 및 운영 관리 업무 규칙" and explain two rules in English. Mark document-only statements. |
+| Explain a screen | In pts-adm-web/SHOP/SHOP0103.xfdl, explain the save function's validation and confirmation checks. Cite the source and identify unread server-side checks. |
+| Trace an API | Trace POST /on/ctrt/tnnt/saveCtrtTnntList from controller to service and SQL. List the written tables, SQL IDs, conditions, and returned values. |
+| Investigate other writers | Find the APIs and batch jobs that write CTRT_TNNT_M. Report search completeness and cite the statements actually read. |
+| Evaluate a planned change | I plan to change [exact column or condition] from [current] to [proposed]. Investigate affected screens, APIs, jobs, and integrations. Do not edit code or data. |
+
+Answers should give a short English conclusion followed by a developer
+appendix with repository/file/line evidence and explicit unknowns. Original
+identifiers and Korean UI text remain unchanged; explanatory English labels
+are translations. The assistant may ask which similarly named function you
+mean before investigating it.
+
+## 8. Understand the available evidence
+
+This environment provides analyzed source code and project documents. It can
+show code paths, SQL statements, data definitions, and documented rules. It
+does not establish today's database rows, actual permissions, a successful
+production execution, or current external-system behavior.
+
+The current snapshot has three known gaps:
+
+| Gap | What still works | What remains unverified |
+| --- | --- | --- |
+| Code search guide not supplied | Repository discovery, source search and exact file reads | A prewritten project-navigation guide |
+| Menu context not supplied | Screen files, API and source-based tracing | Exact authorized menu paths and menu visibility |
+| Scheduler data not imported | Batch source definitions and SQL | Scheduler dependency order, enabled state and actual execution times |
+
+These gaps do not mean authentication failed. The skill records them and
+continues supported reads. Results marked `needs_review`, incomplete document
+coverage, unread candidates, and truncated search pages need explicit handling.
+An empty incomplete search does not prove that a feature or writer is absent.
+
+## 9. Troubleshooting
+
+| Symptom | Check and next action |
+| --- | --- |
+| `401 Unauthorized` / `AUTHENTICATION_REQUIRED` | Confirm that a valid MEKO token is loaded on the host launching the client. Check the variable name, duplicate connection entries and stale static Authorization headers. Restart; ask the administrator to validate/reissue the token if it persists. |
+| `403` or expected repositories missing | Ask the administrator to check that token's project/repository permissions. Do not substitute another connection. |
+| Token was set but the app still fails | The app or remote VM may use another environment. Configure the actual execution host or launch the CLI from the token-loaded shell. |
+| Project is not `petshop-full` | Stop project retrieval and verify the endpoint, token scope and server default with the administrator. |
+| `platty-search` is not available | Check that `platty@meko-poc` is installed, enabled and loaded in a new session. Check for another plugin exposing the same skill name. |
+| The CLI does not recognize `plugin` or an installation subcommand | Check its local `--help` and update through the official client installation guide. Keep the current package; do not install a different Platty distribution as a workaround. |
+| A source read says `Path does not exist` | Use the exact repository-relative path returned by source search, including its module directory. The reported sourceRoot is not an instruction to remove that prefix. |
+| A search is truncated, times out or returns a lower-bound count | Narrow by repository/file type, follow cursors and read missing source ranges. The result is incomplete until those gaps are resolved. |
+| Timeout or TLS/network error | Confirm access to the exact HTTPS endpoint from the execution host and check organization proxy/firewall policy. Do not disable certificate checks. |
+
+For support, provide the client/version, execution host, connection name,
+project, prompt/identifier, tool name, error code, and time with timezone.
+Remove tokens, Authorization headers and confidential source excerpts from
+screenshots or logs before sharing them.
+
+## 10. Update or remove this delivery
+
+Receive a new package from the administrator and keep it in a stable folder.
+Check its version and follow its instructions. This delivery has no automatic
+update to a public branch. If the source folder moves, update the marketplace
+registration to that new folder before reinstalling the plugin.
+
+Remove only this delivery when required:
+
+```bash
+# Codex
+codex plugin remove platty@meko-poc
+codex plugin marketplace remove meko-poc
+codex mcp remove platty
+```
+
+```bash
+# Claude Code: use the MCP scope chosen during setup
+claude plugin uninstall platty@meko-poc --scope user
+claude plugin marketplace remove meko-poc --scope user
+claude mcp remove --scope user platty
+```
+
+For a project `.mcp.json` entry, remove only that server key from the file
+instead of removing a user-scope entry. Close active sessions, run
+`unset MEKO_POC_TOKEN` in the shell, and have the administrator revoke a token
+when access should end. Uninstalling a plugin does not revoke its server token.
+
+## References and verification scope
+
+- [Codex installation](https://developers.openai.com/codex/cli) and
+  [MCP configuration](https://developers.openai.com/codex/mcp).
+- [Claude Code installation](https://code.claude.com/docs/en/setup),
+  [MCP configuration](https://code.claude.com/docs/en/mcp), and
+  [local marketplace setup](https://code.claude.com/docs/en/plugin-marketplaces).
+- Plugin command syntax was also checked using installed client `--help`.
+  This package was installed successfully in isolated Codex CLI (Linux) and
+  Claude Code configurations. Account sign-in and token authorization must be checked on that
+  user's machine; the publisher's authenticated connection does not provision
+  a new user's access.

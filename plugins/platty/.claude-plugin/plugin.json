@@ -1,18 +1,16 @@
 {
   "name": "platty",
-  "description": "Platty MCP code search and change impact investigation for Codex and Claude Code.",
-  "version": "0.0.8",
+  "description": "English source-grounded search and change impact investigation for the MEKO PoC.",
+  "version": "0.0.9-meko.3",
   "author": {
     "name": "Paradigm Shift Labs"
   },
-  "homepage": "https://github.com/paradigmshift-labs/platty",
-  "repository": "https://github.com/paradigmshift-labs/platty",
   "license": "SEE LICENSE IN LICENSE.md",
   "keywords": [
     "platty",
+    "meko",
     "mcp",
-    "search",
-    "code",
+    "code-search",
     "impact-analysis"
   ]
 }

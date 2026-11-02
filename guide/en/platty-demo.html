@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Install the MEKO Platty Search skill in Codex, configure the platty MCP connection, and verify source-backed answers.">
+  <title>Platty Search for MEKO — Codex installation guide</title>
+  <style>
+    :root { color-scheme: light dark; --page: light-dark(#fafaf9,#161817); --surface: light-dark(#ffffff,#202321); --ink: light-dark(#202822,#edf1ed); --quiet: light-dark(#55645a,#b4c2b8); --line: light-dark(#d9e0da,#3e4b42); --action: light-dark(#235c3e,#9ed7b3); --on-action: light-dark(#ffffff,#183b28); --soft: light-dark(#edf4ee,#273b2d); }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 1rem/1.65 system-ui,sans-serif; }
+    a { color: var(--action); text-underline-offset: .2em; overflow-wrap: anywhere; }
+    button, summary { cursor: pointer; }
+    button { font: inherit; }
+    .shell { max-width: 72rem; margin: auto; padding: 2rem 1.5rem 4rem; }
+    header { padding-block: 1rem 2rem; border-bottom: 1px solid var(--line); }
+    .eyebrow, .muted { color: var(--quiet); }
+    .eyebrow { letter-spacing: .06em; text-transform: uppercase; font-size: .8rem; }
+    h1,h2,h3 { font-weight: 500; line-height: 1.25; }
+    h1 { font-size: clamp(2rem,5vw,3.2rem); margin: .6rem 0 1rem; }
+    h2 { font-size: 1.6rem; margin: 0 0 1rem; }
+    h3 { font-size: 1.1rem; margin-top: 1.6rem; }
+    p { margin: .8rem 0; }
+    .actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.5rem; }
+    .action { display: inline-block; padding: .65rem 1rem; border: 1px solid var(--line); border-radius: .45rem; text-decoration: none; background: var(--surface); }
+    .action.primary { background: var(--action); color: var(--on-action); border-color: var(--action); }
+    .layout { display: grid; grid-template-columns: 12rem minmax(0,1fr); gap: 3rem; padding-top: 2.4rem; }
+    nav ol { padding-left: 1.2rem; margin: 0; }
+    nav li { padding: .35rem 0; }
+    nav a { text-decoration: none; }
+    main { min-width: 0; }
+    section { margin-bottom: 3.5rem; scroll-margin-top: 1rem; }
+    .note { padding: .8rem 1rem; border-left: .2rem solid var(--action); background: var(--soft); margin-block: 1.2rem; }
+    .code { position: relative; margin: 1rem 0; }
+    pre { margin: 0; padding: 3rem 1rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface); border: 1px solid var(--line); border-radius: .45rem; }
+    code { font: .9em/1.65 ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap: anywhere; }
+    .copy { position: absolute; inset: .45rem .55rem auto auto; color: var(--ink); background: var(--page); border: 1px solid var(--line); border-radius: .3rem; padding: .15rem .65rem; }
+    .tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1rem; }
+    .tabs button { padding: .4rem .75rem; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: .35rem; }
+    .tabs button[aria-selected="true"] { background: var(--action); color: var(--on-action); border-color: var(--action); }
+    [hidden] { display: none !important; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th,td { padding: .65rem .4rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+    th { font-weight: 500; }
+    details { margin: 1rem 0; padding-block: .7rem; border-block: 1px solid var(--line); }
+    summary { font-weight: 500; }
+    footer { border-top: 1px solid var(--line); padding-top: 1.4rem; color: var(--quiet); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    @media (max-width: 760px) { .layout { grid-template-columns: 1fr; gap: 2rem; } .shell { padding-inline: 1rem; } nav ol { display: flex; flex-wrap: wrap; gap: .3rem 1.7rem; } nav li { margin-left: 1rem; } }
+    @media (pointer: coarse) { button, .action { min-height: 44px; } }
+    @media print { .copy,.actions,nav,.tabs { display: none; } .layout { display: block; } [role="tabpanel"][hidden] { display: block !important; } body { background: var(--surface); } section { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+<div class="shell" id="platty-demo-guide">
+  <header>
+    <div class="eyebrow">MEKO PoC · English guide · 0.0.9-meko.3</div>
+    <h1>Platty Search for MEKO</h1>
+    <p>Install the search skill in Codex, connect to your project, and ask questions backed by source evidence.</p>
+    <p class="muted">Prepared November 2, 2026 (Asia/Seoul). This file works offline; installation and project queries require network access.</p>
+    <div class="actions">
+      <a class="action primary" href="https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-meko-demo.zip">Download installation ZIP</a>
+      <a class="action" href="https://raw.githubusercontent.com/paradigmshift-labs/platty/refs/heads/feat/demo/downloads/platty-search-english.zip">Download skill only</a>
+      <a class="action" href="https://github.com/paradigmshift-labs/platty/tree/feat/demo">View feat/demo</a>
+    </div>
+  </header>
+  <div class="layout">
+    <nav aria-label="Installation steps">
+      <ol>
+        <li><a href="#install">Install Codex</a></li>
+        <li><a href="#skill">Add the skill</a></li>
+        <li><a href="#token">Load your token</a></li>
+        <li><a href="#connect">Connect MCP</a></li>
+        <li><a href="#verify">Verify access</a></li>
+        <li><a href="#use">Ask a question</a></li>
+      </ol>
+      <p><a href="#troubleshooting">Troubleshooting</a></p>
+      <p><a href="#scope">Evidence and limits</a></p>
+    </nav>
+    <main>
+      <section id="install">
+        <h2>1. Install Codex and sign in</h2>
+        <p>You need a Codex account, Git for the direct Git installation method, and a MEKO access token from your administrator. The MEKO token is separate from your AI account credentials.</p>
+        <p>If Codex is already installed, run <code>codex --version</code> and continue. For macOS or Linux, use the current <a href="https://developers.openai.com/codex/cli">official installer</a>:</p>
+        <div class="code"><button class="copy" type="button" data-copy="install-code">Copy</button><pre><code id="install-code">curl -fsSL https://chatgpt.com/codex/install.sh | sh
+codex --version
+codex</code></pre></div>
+        <p>Complete sign-in, then exit Codex before configuration. Native Windows users should follow the Windows tab in the official guide; Bash commands in this document require Bash or WSL.</p>
+        <p class="note">Run configuration on the same computer or remote host where Codex makes MCP requests. A laptop's settings do not automatically configure a remote VM.</p>
+      </section>
+      <section id="skill">
+        <h2>2. Add the English skill</h2>
+        <p>Use the demo branch explicitly. It contains one plugin and one skill, with all eight English reference files.</p>
+        <div class="code"><button class="copy" type="button" data-copy="plugin-code">Copy</button><pre><code id="plugin-code">codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo
+codex plugin add platty@meko-poc</code></pre></div>
+        <details>
+          <summary>Install from the downloaded ZIP instead</summary>
+          <p>Extract the installation ZIP to a permanent folder. Open a terminal in its <code>meko-poc</code> folder containing <code>README.md</code>, <code>.agents</code>, <code>.claude-plugin</code>, and <code>plugins</code>.</p>
+          <div class="code"><button class="copy" type="button" data-copy="local-code">Copy</button><pre><code id="local-code">codex plugin marketplace add .
+codex plugin add platty@meko-poc</code></pre></div>
+          <p>Keep the extracted folder in place. The skill-only ZIP is for reviewing or replacing skill files in an existing installation; it does not configure MCP or contain plugin manifests.</p>
+        </details>
+        <table aria-label="Names used by this delivery"><thead><tr><th>Component</th><th>Name</th></tr></thead><tbody>
+          <tr><td>MCP connection</td><td><code>platty</code></td></tr>
+          <tr><td>Marketplace</td><td><code>meko-poc</code></td></tr>
+          <tr><td>Plugin / skill</td><td><code>platty</code> / <code>platty-search</code></td></tr>
+          <tr><td>Expected project</td><td><code>petshop-full</code></td></tr>
+        </tbody></table>
+        <p>If another marketplace already uses <code>meko-poc</code>, check its source before replacing it. If another installed plugin exposes the same skill, select this delivery explicitly or disable the conflicting plugin for the session.</p>
+      </section>
+      <section id="token">
+        <h2>3. Load your MEKO access token</h2>
+        <p>Obtain a valid token from your administrator. Enter the token alone, without <code>Bearer </code>. Use the same terminal to start Codex afterward. Do not paste your token into a chat.</p>
+        <div class="tabs" role="tablist" aria-label="Token entry shell">
+          <button type="button" id="bash-tab" role="tab" aria-controls="bash-panel" aria-selected="true">Bash / WSL</button>
+          <button type="button" id="powershell-tab" role="tab" aria-controls="powershell-panel" aria-selected="false">PowerShell</button>
+        </div>
+        <div id="bash-panel" role="tabpanel" aria-labelledby="bash-tab">
+          <div class="code"><button class="copy" type="button" data-copy="bash-token-code">Copy</button><pre><code id="bash-token-code">read -r -s -p 'MEKO PoC token: ' MEKO_POC_TOKEN
+printf '\n'
+export MEKO_POC_TOKEN
+test -n "$MEKO_POC_TOKEN" &amp;&amp; printf 'Token loaded (value hidden).\n'</code></pre></div>
+        </div>
+        <div id="powershell-panel" role="tabpanel" aria-labelledby="powershell-tab" hidden>
+          <div class="code"><button class="copy" type="button" data-copy="powershell-token-code">Copy</button><pre><code id="powershell-token-code">$mekoSecureToken = Read-Host 'MEKO PoC token' -AsSecureString
+$env:MEKO_POC_TOKEN = [System.Net.NetworkCredential]::new('', $mekoSecureToken).Password</code></pre></div>
+        </div>
+        <p>The value is hidden while you enter it. It lasts for this shell and child processes; a new shell needs the token loaded again. A desktop app launched elsewhere may not inherit it. Use your organization's approved secret manager for persistent access.</p>
+      </section>
+      <section id="connect">
+        <h2>4. Register MCP as platty</h2>
+        <p>Installing the skill and connecting the server are separate steps. Register the exact endpoint:</p>
+        <div class="code"><button class="copy" type="button" data-copy="mcp-code">Copy</button><pre><code id="mcp-code">codex mcp add platty --url https://meko-poc.platty-ai.com/mcp --bearer-token-env-var MEKO_POC_TOKEN</code></pre></div>
+        <details>
+          <summary>Configure config.toml manually</summary>
+          <p>Merge this section into <code>~/.codex/config.toml</code> on the execution host. Preserve unrelated settings. Codex adds the Bearer header from the named environment variable.</p>
+          <div class="code"><button class="copy" type="button" data-copy="toml-code">Copy</button><pre><code id="toml-code">[mcp_servers.platty]
+url = "https://meko-poc.platty-ai.com/mcp"
+bearer_token_env_var = "MEKO_POC_TOKEN"</code></pre></div>
+        </details>
+        <p class="note">If a <code>platty</code> connection already exists, inspect its endpoint and project before changing it. Update the intended entry instead of creating duplicate TOML tables. Remove a stale static Authorization header when switching that entry to the environment token.</p>
+        <p>See the <a href="https://developers.openai.com/codex/mcp">official Codex MCP guide</a> for client configuration. A local alias does not prove the server's identity; verify the project next.</p>
+      </section>
+      <section id="verify">
+        <h2>5. Verify the actual connection</h2>
+        <p>Start a new Codex session from the token-loaded terminal. Run <code>/mcp</code> and check that <code>platty</code> is connected. Approve the intended read tools if your client asks.</p>
+        <div class="code"><button class="copy" type="button" data-copy="verify-code">Copy</button><pre><code id="verify-code">Use only the platty MCP connection. Check context_status and project_get,
+then list the authorized repositories. Confirm that the project is petshop-full.
+Report unavailable capabilities. Do not print credentials or use another
+MCP connection. Answer in English.</code></pre></div>
+        <p>Successful setup requires a real project/repository call and a real document or source read. A plugin in a list or a green connection label alone does not verify every tool. If the project differs, stop and check the endpoint and access scope with the administrator.</p>
+        <p>The publisher observed ten available repositories and an October 30, 2026 source snapshot on November 2. Your permitted repositories or later snapshots may differ.</p>
+      </section>
+      <section id="use">
+        <h2>6. Ask a source-backed question</h2>
+        <p>Select <code>platty-search</code> from the skill picker, or use this prompt. It asks the assistant to inspect the save API's source; it does not execute the API.</p>
+        <div class="code"><button class="copy" type="button" data-copy="question-code">Copy</button><pre><code id="question-code">$platty:platty-search Explain what POST /on/ctrt/tnnt/saveCtrtTnntList does.
+Use only platty, answer in English, and cite the source locations.
+Do not execute the API or change any data.</code></pre></div>
+        <h3>More questions to try</h3>
+        <ul>
+          <li>In <code>pts-adm-web/SHOP/SHOP0103.xfdl</code>, explain the save function's validation and confirmation checks. Identify unread server-side checks.</li>
+          <li>Trace the tenant save API from controller to service and SQL. List written tables, SQL IDs, conditions, and returned values.</li>
+          <li>Find the APIs and batch jobs that write <code>CTRT_TNNT_M</code>. Report search completeness and cite statements actually read.</li>
+          <li>I plan to change [exact column or condition] from [current] to [proposed]. Investigate affected screens, APIs, jobs and integrations. Do not edit code or data.</li>
+        </ul>
+        <p>Include an exact identifier and the intended change when known. Expect an English answer, a developer evidence appendix, and explicit unknowns. Identifiers and original UI labels remain exact; English renderings of original labels are translations.</p>
+      </section>
+      <section id="troubleshooting">
+        <h2>When something does not work</h2>
+        <details><summary>401 Unauthorized / AUTHENTICATION_REQUIRED</summary><p>Confirm a valid MEKO token is loaded on the host starting Codex. Check the variable name, duplicate server entries and stale static Authorization headers. Restart the client. Ask the administrator to validate or reissue the token if it persists.</p></details>
+        <details><summary>403, missing repositories, or a different project</summary><p>Check the endpoint and that token's project/repository permissions with the administrator. Do not substitute another MCP connection or assume its data belongs to MEKO.</p></details>
+        <details><summary>The skill is missing</summary><p>Check that <code>platty@meko-poc</code> is installed and enabled, then start a new session. Use this package's skill picker entry when another distribution has the same skill name.</p></details>
+        <details><summary>The plugin command or branch cannot be found</summary><p>Check <code>codex plugin --help</code> and update the client through its official installation instructions. Use <code>--ref feat/demo</code>; the default branch is a different distribution. The installation ZIP is an alternative to the Git method.</p></details>
+        <details><summary>A source path does not exist, or search is incomplete</summary><p>Use the exact repository-relative path returned by source search, including its module prefix. Follow continuation cursors and resolve truncated/timed-out repositories before concluding that a writer or feature is absent.</p></details>
+        <details><summary>A token was loaded, but a desktop or remote session still fails</summary><p>That session may run on another host or have a different environment. Configure the actual execution host or start the CLI from the token-loaded terminal. Do not disable TLS certificate checks to work around a connection failure.</p></details>
+        <p>For support, provide client/version, execution host, project, prompt/identifier, tool name, error code and time with timezone. Remove access credentials and confidential source excerpts before sharing logs.</p>
+      </section>
+      <section id="scope">
+        <h2>What the answers can establish</h2>
+        <p>Platty reads analyzed source code and project documents. It can explain code paths and SQL, but it cannot infer today's production rows, permissions, actual execution outcomes, or external-system behavior from a source snapshot.</p>
+        <table aria-label="Current context gaps"><thead><tr><th>Current gap</th><th>Available investigation</th><th>Still unverified</th></tr></thead><tbody>
+          <tr><td>Search guide not supplied</td><td>Repository discovery and exact source reads</td><td>A prewritten navigation guide</td></tr>
+          <tr><td>Menu context not supplied</td><td>Screen/API tracing from source</td><td>Authorized menu paths and visibility</td></tr>
+          <tr><td>Scheduler not imported</td><td>Job definitions and SQL</td><td>Scheduler order, enabled state and actual run times</td></tr>
+        </tbody></table>
+        <p>These gaps do not mean authentication failed. They must remain explicit in the answer. Generated documents may need review; source confirmation requires reading the relevant code. An incomplete empty search never proves absence.</p>
+        <details><summary>Remove this delivery</summary><div class="code"><button class="copy" type="button" data-copy="remove-code">Copy</button><pre><code id="remove-code">codex plugin remove platty@meko-poc
+codex plugin marketplace remove meko-poc
+codex mcp remove platty</code></pre></div><p>Remove only the intended MEKO connection. Close active sessions and clear the environment variable when finished. Uninstalling a plugin does not revoke its server token; ask the administrator to revoke access when required.</p></details>
+      </section>
+      <footer>
+        <p><a href="https://github.com/paradigmshift-labs/platty/blob/feat/demo/USER_GUIDE.md">Complete text guide and Claude Code instructions</a> · <a href="https://github.com/paradigmshift-labs/platty/blob/feat/demo/LICENSE.md">License</a></p>
+        <p>Prepared for the MEKO PoC. Account sign-in and each recipient's access must be verified on that recipient's execution host. No access token is included in this guide or its packages.</p>
+      </footer>
+    </main>
+  </div>
+  <div id="copy-status" class="sr-only" role="status" aria-live="polite"></div>
+</div>
+<script>
+(() => {
+  const root = document.getElementById('platty-demo-guide');
+  const status = document.getElementById('copy-status');
+  for (const button of root.querySelectorAll('[data-copy]')) {
+    button.addEventListener('click', async () => {
+      const target = document.getElementById(button.dataset.copy);
+      try {
+        if (!navigator.clipboard) throw new Error('Clipboard unavailable');
+        await navigator.clipboard.writeText(target.textContent);
+        button.textContent = 'Copied';
+        status.textContent = 'Command copied to the clipboard.';
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(target);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        button.textContent = 'Selected';
+        status.textContent = 'Command selected. Use your system copy shortcut.';
+      }
+      setTimeout(() => { button.textContent = 'Copy'; }, 1800);
+    });
+  }
+  const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+  function selectTab(tab) {
+    for (const item of tabs) {
+      const active = item === tab;
+      item.setAttribute('aria-selected', String(active));
+      document.getElementById(item.getAttribute('aria-controls')).hidden = !active;
+    }
+  }
+  for (const tab of tabs) {
+    tab.addEventListener('click', () => selectTab(tab));
+    tab.addEventListener('keydown', event => {
+      if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+      event.preventDefault();
+      const index = tabs.indexOf(tab);
+      const next = event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs[tabs.length - 1] : tabs[(index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
+      selectTab(next);
+      next.focus();
+    });
+  }
+})();
+</script>
+</body>
+</html>

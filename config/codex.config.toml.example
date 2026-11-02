@@ -1,0 +1,6 @@
+# Merge this section into config.toml on the host running your Codex session.
+# Supply MEKO_POC_TOKEN in that process's environment before starting Codex.
+# The variable holds the token alone, without the "Bearer " prefix.
+[mcp_servers.platty]
+url = "https://meko-poc.platty-ai.com/mcp"
+bearer_token_env_var = "MEKO_POC_TOKEN"

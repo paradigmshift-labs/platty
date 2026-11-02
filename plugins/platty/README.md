@@ -1,36 +1,24 @@
-# Platty Search
+# Platty Search for MEKO
 
-This plugin contains one skill: `platty-search`.
+This plugin contains one English skill: `platty-search`, with eight reference
+files. It investigates screens, APIs, services, SQL, data definitions, batch
+source, and change impact through the configured **`platty`** MCP connection.
+It checks that the project is the expected `petshop-full` before retrieving
+project content. Design drafts require an explicit request.
 
-It investigates screens, APIs, services, SQL, tables, columns, batches, and
-change impact through an already configured Platty MCP connection. Explicit
-design requests can also produce a design draft. The supplied Shinsegae I&C
-PoC instructions and project reference notes are preserved.
+Follow the [installation guide](../../GETTING_STARTED.md) or the
+[HTML manual](../../guide/en/platty-demo.html). MCP authentication is separate
+from plugin installation. No access token or automatic updater is included.
 
-## Install
-
-Follow the [branch installation guide](../../GETTING_STARTED.md). This package
-contains no MCP server URL, credentials, server launcher, or automatic updater.
-
-## Invoke
-
-Claude Code:
+In Codex, select the `platty-search` skill or use:
 
 ```text
-/platty:platty-search 이 화면에서 저장하면 어떤 데이터가 바뀌는지 찾아줘.
+$platty:platty-search Explain what POST /on/ctrt/tnnt/saveCtrtTnntList does. Use only platty, answer in English, and cite the source.
 ```
 
-Codex:
-
-```text
-$platty:platty-search 이 컬럼을 변경하면 어떤 화면과 배치에 영향이 있는지 조사해줘.
-```
-
-## Contents
+In Claude Code, use `/platty:platty-search` with the same question.
 
 - [Skill instructions](skills/platty-search/SKILL.md)
-- [Project notes](skills/platty-search/references/project-notes.md)
-- Seven further reference documents for clarification, investigation, impact,
-  design, answer formatting, and review, loaded through the skill's instructions.
+- [MEKO project reference](skills/platty-search/references/project-notes.md)
 
-The reference documents are supporting files, not additional skills.
+The eight reference documents support this one skill; they are not separate skills.

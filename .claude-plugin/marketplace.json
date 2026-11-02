@@ -1,20 +1,13 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "platty",
-  "description": "Platty MCP code search skill for Claude Code.",
-  "owner": {
-    "name": "Paradigm Shift Labs"
-  },
+  "name": "meko-poc",
+  "description": "English Platty Search delivery for the MEKO PoC.",
+  "owner": { "name": "Paradigm Shift Labs" },
   "plugins": [
     {
       "name": "platty",
-      "description": "Source-grounded code search and change impact investigation through configured Platty MCP tools.",
-      "author": {
-        "name": "Paradigm Shift Labs"
-      },
-      "category": "development",
+      "description": "Investigate MEKO code and change impact through its authorized MCP connection.",
       "source": "./plugins/platty",
-      "homepage": "https://github.com/paradigmshift-labs/platty"
+      "category": "development"
     }
   ]
 }

@@ -1,66 +1,63 @@
 ---
 name: platty-search
-description: 신세계아이앤씨 개발자가 platty 프로젝트의 코드에 대해 묻는 질문에 platty MCP만 호출해 답한다. 화면·API·서비스·SQL·테이블·컬럼·코드값·배치가 무엇인지, 어디에 있는지, 실행되면 어떻게 동작하는지, 데이터가 어디서 어떻게 바뀌는지를 묻는 질문에 쓴다. 질문의 앵커(화면·API·테이블 등)에서 시작해 직접 경로를 읽고, 같은 데이터를 바꾸는 다른 화면·배치의 목록을 만든 뒤, 읽은 줄 범위와 함께 확인된 것만 확정으로 답한다. 질문에 코드나 데이터를 바꾸려는 계획이 드러나면("바꾸면/빼면/추가하면 어디가 깨지나·무엇을 고치나") 이 스킬이 변경 영향 조사까지 하고, 설계를 명시적으로 요청하면 마지막에 설계 에이전트(Opus)가 설계 초안을 쓴다.
+description: Use when developers ask about MEKO PoC screens, APIs, services, SQL, tables, columns, batch jobs, or the impact of changing code or data in the connected project.
 ---
 
-# platty-search
+# Platty Search for MEKO
 
-## 최우선 원칙
+Answer from the authorized project's source evidence. Accuracy takes priority
+over a quick answer. Read [project notes](references/project-notes.md) first.
 
-**정확도가 시간·비용·턴 수·호출 수보다 앞선다.** 턴이나 시간, 호출 수를 아끼려고 조사 단계를 줄이거나 읽기를 접거나 확인 칸을 비우지 않는다. 필요한 만큼 조사하고 읽는다. 이 스킬은 턴·시간 제한을 두지 않는다.
+## Connection and preparation
 
-코드를 직접 고치는 개발자의 질문에 답한다. 식별자와 근거 줄 위치가 답의 핵심이다. 1차 답을 완결해서 주고, 읽지 않은 곳은 목록으로 보여 주며 더 읽을지 묻는다.
+Use only the configured `platty` MCP connection for project retrieval. Verify
+its project identity; the connection name alone does not prove which server
+it serves. Inspect live tool schemas; runtime prefixes can vary. Do not run the
+Platty CLI, read local
+application files, change data, or invoke the application APIs being studied.
 
-## 원칙
+Once per session, call `context_status`, `workspace_repo_list`, and
+`code_search_guide_get` on this connection. Omit `projectId` to use its default;
+check the echoed project against the expected `petshop-full` (use `project_get`
+with `view: summary` for its name if status returns only its ID). If it differs,
+report the mismatch and clarify the intended project before reading its content.
+Map repository names to the returned `repoId` values.
 
-- 틀린 답보다 "확인하지 못함"이 낫다. 정확성이 먼저이고 호출 수·시간·턴 수는 따지지 않는다.
-- 원본 코드가 판정한다. "확정"은 주장을 받치는 원본 코드 줄을 직접 읽었을 때만 쓴다. 읽었다는 증거는 `저장소/경로:시작-끝` 줄 범위다. 검색 결과에 나온 줄은 읽은 범위가 아니다.
-- **읽지 않은 것은 추론하지 않는다.** 목록에 이름만 있는 후보의 동작을 짐작해 쓰지 않는다. 이름·종류·진입점·근거가 있는 한 줄만 쓰고 "읽지 않음"으로 표시한다.
-- 도구 결과가 비었거나 잘렸으면 "없음"이 아니라 "찾지 못함"이다.
-- 코드로 닫을 수 없는 것(운영 DB 값, 스케줄 주기, 업무 정책, 외부 시스템)은 사실처럼 쓰지 않고 [추론] 또는 확인하지 못한 부분으로 쓴다.
+If a tool is missing or a guide is unavailable, follow the explicit capability
+branches in the project notes. Continue supported retrieval; record what cannot
+be verified. Retry neither an absent capability nor an unavailable import as if
+it were a transient failure. Use repository-relative paths exactly as returned.
 
-## 환경
+## Retrieval workflow
 
-platty MCP 도구만 호출한다(예외: 작업 메모 `explore.md` 8절, 서브에이전트 Agent 도구). 로컬 셸·로컬 파일·CLI는 쓰지 않는다. projectId는 넣지 않는다. 원본 코드는 `workspace_search`(여러 저장소)와 `readonly_workspace_shell`(`repoId` 하나)로 읽는다.
+1. Resolve the question's anchor using [clarification](references/clarify.md).
+   Different business actions require an explicit target selection.
+2. Read the anchor and direct execution path using
+   [exploration](references/explore.md): caller, complete root service method,
+   subordinate calls, and complete relevant SQL. Keep a call inventory.
+3. For every written table, enumerate other writers and the callers, guards,
+   alternatives, and downstream effects. Keep a status and source range for
+   every candidate. Revisit searches when new tables or identifiers appear.
+4. For a proposed change, use the [impact flow](references/impact-flow.md) and
+   [impact rules](references/impact.md). Do not implement the change.
+5. Compose the two-layer [answer](references/answer-format.md), then apply
+   [review](references/review.md). Use [design](references/design.md) only when
+   the user explicitly requests an implementation design.
 
-## 읽을 파일
+## Evidence and language
 
-| 파일 | 언제 | 담긴 것 |
-|---|---|---|
-| `references/project-notes.md` | 준비 단계에서 한 번 | 저장소·모듈 구조, 공통 버튼, URL, 배치, 도구 상태 |
-| `references/clarify.md` | 질문의 낱말로 앵커를 찾을 때 | 후보 찾기, 묻는 조건, 질문 형식, 비대화형 처리 |
-| `references/explore.md` | 조사를 시작할 때 | 앵커·호출 목록, 판단 컬럼, 목록 만들기(W1), 경로 상태, 읽는 순서, 배치 한 줄 요약, 부정 주장 규칙 |
-| `references/impact-flow.md` · `references/impact.md` | 질문이 변경을 전제로 할 때 | 변경 영향 조사 흐름, 변경 대상 표, 핵심 DB·동반, 값 판정 서식 |
-| `references/design.md` | 설계를 명시적으로 요청했을 때 | 설계 에이전트 호출 조건·지시문·답에 붙이는 법 |
-| `references/answer-format.md` | 답을 쓰기 전 | 답 구성, 확신도, 검산표, 후보 표, 예시 |
-| `references/review.md` | 답 초안을 쓴 뒤 | 리뷰어에게 줄 지시문, 보충 규칙 |
+Answer in English by default, or in the language explicitly requested.
+Preserve repository names, paths, identifiers, code values, and original UI
+labels exactly. Label any English rendering of a Korean label as a translation.
+Do not infer business meaning from an abbreviation.
 
-## 흐름
+`Confirmed` requires a direct source read supporting the exact claim and a
+`repository/path:start-end` citation. Generated documents and search hits locate
+evidence; they do not replace a source read. Separate document-only statements,
+inferences, unread candidates, and information unavailable from code.
 
-```
-준비 → 변경 영향·설계 여부 확인 → 앵커 후보 확인(세는 기능 묶음이 둘 이상이면 질문) → ① 앵커와 직접 경로 → ② 목록 → ③ 읽기 → ④ 답 초안 → ⑤ 리뷰 → (설계 요청이면) ⑥ 설계 → 답
-```
-
-**준비** (대화당 1회): `context_status`로 쓸 수 없는 도구를 본다. `workspace_repo_list`의 저장소 이름을 `project-notes.md` 저장소 표와 대조해 이름→repoId 표를 만든다. `code_search_guide_get`을 한 번 읽는다.
-
-**변경 영향·설계 여부 확인**: "바꾸면/빼면/추가하면 어디가 깨지나·무엇을 고치나"처럼 변경을 전제로 한 질문이면 `references/impact-flow.md`의 흐름으로 이 스킬 안에서 변경 대상 확정과 영향 조사를 한다(앵커·W1·읽기 규칙은 `explore.md` 그대로). 설계를 명시적으로 요청했으면 ⑥에서 설계 에이전트를 부른다(`design.md`). 그 밖의 질문은 모두 아래 ①~④로 조사한다(위치·뜻을 묻는 질문도 같다). 질문 종류와 상관없이 ① 뒤에 ②(목록)를 만든다. 항목 표에 쓰는 테이블이 하나도 없을 때만 W1을 `해당 없음(쓰는 테이블 없음)`으로 쓴다. 용어·컬럼 뜻은 용어 사전·데이터 사전으로 닫고, 운영 데이터 값이나 실행 결과를 묻는 질문은 `answer-format.md` 6절의 "소스로 답할 수 없는 질문" 형식으로 쓴다.
-
-**① 앵커와 직접 경로** (`explore.md` 1절): 질문 유형에 맞는 앵커를 정하고(`clarify.md`: 후보 표의 세는 기능 묶음이 둘 이상이면 조사 전에 항상 묻는다), 앵커가 안쪽 함수면 호출자를 올라가 **루트 메서드**(컨트롤러·배치·리스너가 직접 부르는 서비스 메서드)를 확정한다. 루트 메서드마다 본문 전체를 읽고 그 안의 모든 서비스·Mapper 호출을 **호출 목록**으로 하나도 빠짐없이 닫는다. 읽으며 항목 표(쓰는 테이블, 읽는 테이블, 조건이 읽는 컬럼, 코드값)와 판단 컬럼을 채운다.
-
-**② 목록** (`explore.md` 2~3절): 항목 표에 쓰는 테이블이 있으면 질문 종류와 상관없이 그 테이블 **전부**(대표 하나가 아니라)를 연결 조회(`route_impact_candidates`)와 W1로 검색한다. 걸린 파일을 모두 목록 행으로 만들고 종류·슬롯·진입 상태를 붙이며, 판단 컬럼을 건드리지 않는 쓰기 문장은 제외 (나)로 보낸다(읽기 검사는 제외하지 않고 가드로 올린다). 쓰는 테이블이 하나도 없으면 W1은 `해당 없음(쓰는 테이블 없음)`.
-
-**③ 읽기** (`explore.md` 4절): 트리거·가드·대안 행은 개수 제한 없이 메인이 모두 읽는다(기본은 얕게). 후속 행은 `목록만`으로 두되 배치는 한 줄 요약을 단다.
-
-**④ 답** (`answer-format.md` 1절): **두 층**으로 쓴다. 1층은 현업이 읽는 짧은 답(한 줄 답, 핵심 정리 표, 이렇게 하세요, 막히는 경우, 다른 방법, 확인이 필요한 것)이고 코드 이름·경로·확신도는 쓰지 않는다. 2층 `검수용 첨부`에 근거 표(1층 문장마다 한 행), 연결된 곳 요약표, 호출 목록, 조사한 범위, 조사 대상, 검산표, 확인하지 못한 부분, 번호 질문을 쓴다. 읽은 대안 행은 모두 1층 `다른 방법`에 올린다. 사용자가 번호를 고르면 그 행만 같은 깊이로 읽고 달라진 점을 맨 위에 쓴다.
-
-**⑤ 리뷰** (`references/review.md`): 답을 확정하기 전에 서브에이전트(Agent 도구)에게 답 초안을 보내 누락을 점검받는다. 보충 지시는 한 번만 수행하고 답에 반영한다. Agent 도구가 없으면 `리뷰: 생략(도구 없음)`을 조사한 범위에 쓴다.
-
-**⑥ 설계** (`design.md`, 설계를 명시적으로 요청했을 때만): 영향 조사와 리뷰 보충이 끝난 뒤 Agent 도구로 설계 에이전트를 하나 부른다(`model: opus`). 영향 조사 결과와 읽은 줄 범위를 근거로 설계 초안을 쓰게 하고, 사실·제안·가정을 구분해 최종 답에 붙인다.
-
-## 일의 양
-
-호출 수로 읽기를 접지 않는다. 같은 호출을 되풀이하지 않고 한 검색에 여러 이름(`-e`)을 묶는다. 읽지 못한 행은 도구가 같은 호출에서 두 번 실패했을 때만 `못 읽음`으로 두고 시도를 적는다.
-
-## 사용자에게 보이는 문장
-
-1층에는 업무 말(화면 title, 메뉴 경로, 화면에 찍힌 낱말)만 쓴다. 식별자와 사용자·저장소·API·화면의 이름은 2층에 번역·축약하지 않고 정확히 쓴다. 이 스킬의 내부 용어(단계 번호)와 도구 이름, SOT·spec·EPIC은 1층에 쓰지 않는다. 예외는 2층의 표 제목·칸 이름과 `W1:` 줄이다.
+Empty or truncated results do not establish absence. Follow cursors, inspect
+repository completion, and bound every negative claim to the scope searched.
+Production values, permissions, scheduler state, and actual execution outcomes
+need their own authorized evidence. Never present this source snapshot as live
+production data. Keep credentials out of prompts, examples, and answers.

@@ -1,65 +1,61 @@
-# 변경 영향 조사
+# Evaluate a proposed change
 
-## 1. 변경 대상
+## Change target
 
-| 칸 | 쓰는 값 | 비었을 때 |
-|---|---|---|
-| 무엇을 | 식별자 + 업무 명칭(컬럼, 코드값, 테이블, API, 화면, 조건) | 조회로 채운다. 후보가 세는 기능 묶음(`clarify.md` 1절)으로 둘 이상이면 `clarify.md`로 먼저 묻고, 못 채우면 한 번 묻는다 |
-| 어떻게 | 추가 / 제거 / 값 변경 / 삭제 / 조건 변경 | 비면 전체(추가·제거·값 변경·삭제)로 조사하고 묻지 않는다. 해석 줄에 `방식 미지정—전체로 조사`를 쓴다 |
-| 대상 컬럼 | 값이 사는 `테이블.컬럼`. 코드값이면 코드 그룹 컬럼 | `찾지 못함(시도: …)` 후 계속 |
+| Target identifier and business name | Proposed operation | Table.column / code group | Source evidence or open question |
+| --- | --- | --- | --- |
 
-## 2. 핵심 DB와 동반
+Separate core decision data from companion/history/integration data. Present
+up to five core items and ten companion items for readability; if more are
+material, retain them with reasons rather than silently excluding them from
+write coverage. The search covers every discovered written table.
 
-핵심 DB는 **최대 5개**(테이블 또는 테이블.컬럼)다. 아래 중 하나 이상에 해당하는 것을 고른다.
-- (가) 변경 대상 값이 저장되는 테이블.컬럼
-- (나) 변경 대상 값을 읽어 판정하는 조건·가드·검증이 읽는 테이블.컬럼
-- (다) 변경 대상 값을 기록(INSERT·UPDATE)하는 쓰기 SQL의 테이블
+Core items store the changed value, are read by a relevant guard, or are
+written by the affected statement. Each requires a source range and a role
+(read, compare, insert, update, delete). A table name alone is not evidence.
 
-해당하는 것이 5개를 넘으면 해당 기준이 많은 순으로 5개를 핵심으로 하고, 6번째가 꼭 필요하면 사유를 쓴다. 나머지는 **동반**(최대 10개, 이름과 역할 한 줄)이다: 같이 처리될 뿐인 테이블(연쇄 삭제 대상, 이력, 연계).
+## Search and inspect
 
-| 번호 | 핵심 DB (테이블 / 테이블.컬럼 / 코드값) | 해당 기준 (가·나·다) | 역할 (쓰기·읽기·비교) | 근거 (저장소/경로:줄) |
-|---|---|---|---|---|
+| Search | What it establishes after a source read |
+| --- | --- |
+| All table writers, graph candidates plus W1/W1b | Other API, screen, batch, and integration paths touching the data |
+| SQL/field/getter spellings of the target column | Reads and guards, including screen validation |
+| Literal comparisons and assignments | Allowed sets, excluded values, and origins of new values |
+| Code-group/reference-column lookups | Behavior dependent on stored configuration |
+| Caller and callee registration | Whether the operation is reachable on the selected path |
 
-근거 칸이 비면 핵심 DB가 아니다. 동반은 표 아래 `동반: <테이블> — <역할>` 줄로 쓴다.
+Do not search only the proposed new literal. A validator comparing the column
+against a different single value can reject it. Trace every such guard to the
+root service method, including rechecks following an earlier allowed set.
 
-## 3. 영향 검색
+For each comparison record:
 
-`explore.md` 2절의 방식으로 전체 저장소에 한 번씩 검색한다.
+```text
+Literal comparison: operator and full allowed set; proposed value included/excluded;
+branch outcome; source range; later recheck confirmed/unverified.
+Reference lookup: table.reference_column; required stored row/value;
+production value unverified; source range of the lookup and consuming branch.
+```
 
-| 검색 | 대상 | 걸린 파일의 의미 |
-|---|---|---|
-| 쓰기 (연결 조회) | 핵심+동반 테이블을 `route_impact_candidates`로(`tables` 5개씩, `access: ["write"]`, `view: "compact"`) | 그 데이터에 쓰는 API·배치 진입점(`explore.md` 2절) |
-| 쓰기 (W1·W1b) | 핵심+동반 테이블 전부(최대 15개를 한 식에) | 그 데이터를 바꾸는 곳: 화면, 다른 화면, 배치, 연동 |
-| 컬럼 검색 | 대상 컬럼 이름의 대문자·camelCase·구 이름 | 그 컬럼을 읽거나 조건으로 쓰는 곳(화면 `.xfdl`·`.js` 포함) |
-| 값 검색 | 대상 값 리터럴의 비교(`= '21'`, `IN (…)`, `equals("21")`, 화면 필터) | 그 값을 직접 쓰는 곳 |
-| 값 기록 검색 | 대상 값을 대입·INSERT·SET으로 기록하는 곳(`setXxx(`) | 그 값을 만들어 내는 곳 |
-| 참조 컬럼 검색 | 코드 그룹 id, 코드 테이블 이름 | 리터럴 없이 코드 테이블로 판정하는 곳 |
+Read both SET and WHERE for updates/deletes. A changed column outside the
+question's decision data is not automatically an alternative. Grouping many
+similar candidates is a presentation choice: list their members, identify
+which were actually read, and bound any representative-based inference.
 
-- 읽다가 새 컬럼 이름·값·SQL id가 나오면 같은 식에 넣어 다시 검색한다(회차별 신규 건수를 적는다).
-- 화면 쪽 검사(버튼 노출, 날짜·상태 비교)도 같은 값을 쓰므로 `.xfdl`·`.js`를 검색에서 빼지 않는다.
-- 값 검색이 많은 파일을 돌려주면(20개 초과) 저장소·모듈 단위 묶음 행으로 쓴다: `걸린 곳: <저장소/모듈경로> (묶음: 파일 m개, rg -c n건) / 진입 job: <배치 저장소 파일이면 경로의 job 디렉터리 이름 또는 SQL 파일 이름의 job 번호 전체, 중복 제거. 아니면 -> / 형태별 대표: <읽은 파일>`, 비고에 파일 이름 전체 목록(job 디렉터리·SQL 파일 이름에서 얻은 값은 소문자 번호다. 등록 이름(Bean 이름)은 연결 조회나 `job_dependency_trace`로 확인한 것만 그 이름으로 쓴다). 형태(목록 길이, 방향, 직접 비교 / 참조 컬럼)마다 대표 1개 이상을 읽고, 형태가 하나뿐인 파일은 전부 읽는다. 묶음에 기댄 서술은 "n개 중 m개를 읽은 형태 기준"으로 한정한다.
+## Report
 
-## 3-1. 슬롯의 뜻 (변경 영향)
-- 트리거: 변경 대상 값을 만들어 기록하는 곳(대입·INSERT·SET).
-- 가드: 변경 대상 값을 허용 목록으로 읽거나 비교하는 검사. 한 값만 허용하는 검사(예: 다른 값만 `=`로 비교)도 가드다. 가드가 잡히면 호출자를 루트 메서드(컨트롤러·배치가 직접 부르는 서비스 메서드)까지(explore.md 1절 표, 호출자 검색 칸 포함) 올라가 루트의 호출 목록으로 닫는다. 검사 호출 뒤에 이어지는 호출이 같은 컬럼을 다른 기준(예: 한 값만 허용)으로 다시 검사하는지가 두 번째 가드다. 허용 목록의 다른 값의 상수·리터럴도 `rg`로 검색한다.
-- 대안: 같은 데이터를 다르게 바꾸는 곳. 후속: 변경 뒤에 이어지는 일.
+Separate screens/online actions, automated jobs, and external integrations.
+For each, state the change required, the behavior affected and its condition,
+the source that supports it, and remaining uncertainty.
 
-## 4. 값 판정 서식 (값 검색·참조 컬럼 검색에 걸린 행의 비고)
+- `Must change`: an inspected code location whose logic needs adaptation.
+- `Affected`: an inspected condition shows how the proposed change changes behavior.
+- `Unaffected within inspected scope`: the relevant statement/guard was read
+  and does not depend on the changed data; give its scope.
+- `Impact unverified`: a candidate is unread, source is unavailable, or the
+  deciding runtime value is unknown.
 
-- 리터럴 비교: `판정: 리터럴 비교 / 형태: <IN·NOT IN·=·equals·화면 필터>, 목록 n개 / 새 값: 빠짐 또는 포함 / 허용 또는 막힘`
-- 참조 컬럼: `판정: 참조 컬럼 / <코드 테이블.참조 컬럼> / 새 값 행에 그 컬럼 값이 있어야 동작(운영 DB 값)`
-- 한 방식에서 찾은 곳이 없으면 그 방식의 행 하나를 `걸린 곳: <검색식> 0건`으로 둔다.
-- 같은 흐름의 뒤 단계에서 같은 값을 다른 허용 목록(예: 한 값만 허용)으로 다시 검사하는 곳을 찾아 비고 `재검사:`에 쓴다. 앞 단계 허용과 뒤 단계 막힘이 다르면 그 차이가 영향이다. **`재검사: 없음`은 그 검사를 부르는 메서드의 본문 전체(검사 호출 뒤에 이어지는 호출 포함)를 읽은 뒤에만 쓴다.** 읽지 않았으면 `재검사: 미확인`이고 그 행은 "유일한 관문" 같은 단정의 근거가 못 된다.
-- 같은 컬럼을 다른 값으로만 비교하는 곳(예: 허용 목록에 대상 값이 없는 `= '13'`)도 값 검색의 결과다. 컬럼 검색에 걸린 비교식 중 대상 값이 없는 것을 따로 모아 "허용 목록이 다른 곳"으로 목록에 올리고, 같은 흐름이면 읽는다.
-
-## 5. 결론 형식
-
-| 칸 | 쓰는 값 | 확신도 |
-|---|---|---|
-| 고칠 곳 | 변경을 반영하려면 수정해야 하는 코드 위치(읽음 행에서만) | 확정 |
-| 깨지는 것 | 변경 후 동작이 달라지는 곳과 어떻게 달라지는지(읽음 행의 조건 원문 근거) | 확정 |
-| 안 깨지는 것 | 같은 데이터를 쓰지만 대상 컬럼·값과 무관하다고 **줄을 읽어서** 확인한 곳. 검색 줄만 본 곳은 여기에 쓰지 않고 영향 여부 미확인으로 쓴다 | 확정 |
-| 영향 여부 미확인 | `목록만`·`못 읽음` 행 | 확인 못함 |
-| 운영 값에 달린 것 | 코드 테이블 값, 메뉴·권한 값 | 추론 + 확인할 위치 |
-
-1층은 `화면에서 / 자동 처리(배치)에서 / 다른 시스템 연동에서`로 나누고(2층 표는 온라인·배치·외부) 해당하는 것이 없어도 한 줄로 쓴다. 아래 칸의 확신도는 2층 근거 표에 쓴다. 변경 전부터 이미 생기는 불일치(예: 조회와 저장이 다른 값을 허용)가 읽혔으면 영향과 구분해 따로 쓴다.
+Distinguish pre-existing inconsistencies from effects of the proposed change.
+Production permissions, scheduler configuration, code-table contents, and
+external-system behavior remain separate verification tasks. The code search
+connection does not grant permission to edit the production data.

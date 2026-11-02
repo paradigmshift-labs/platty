@@ -1,17 +1,26 @@
-# 리뷰 (답을 확정하기 전)
+# Review before answering
 
-답 초안을 쓴 뒤 서브에이전트(Agent 도구, 일반 목적)를 한 번 부른다. 서브에이전트에게는 아래 지시문에 답 초안 전문(조사한 범위, 호출 목록, 조사 대상 목록, 작업 메모 포함)과 질문을 붙여 준다. 서브에이전트는 platty MCP 도구를 쓸 수 있다. Agent 도구를 쓸 수 없으면 `리뷰: 생략(도구 없음)`을 쓰고 아래 3개를 메인이 직접 한 번 점검한다.
+Use one reviewer subagent when the runtime offers delegation. Give it the
+question, selected connection/project, draft, exact search inputs, source
+ranges, data items, call inventory, candidates, and known capability gaps.
+Keep it on the same authorized MCP connection. Use the active runtime's
+available model; this package has no mandatory model/provider switch.
 
-**지시문**
-```
-당신은 답 초안의 누락 점검자입니다. 답을 고쳐 쓰지 말고 점검 결과만 돌려주세요. 질문과 답 초안을 읽고 다음 셋을 확인합니다.
-1. 조사한 범위에 적힌 W1 검색식을 같은 옵션(repoIds 없이 전체, 같은 globs, ignoreCase true, limit 300)으로 workspace_search로 다시 실행해 걸린 파일을 얻고, 조사 대상 목록에 없는 파일을 모두 적습니다. 항목 표의 쓰는 테이블 수와 W1 대상 수가 같은지도 봅니다.
-2. 루트 메서드를 직접 다시 열어(readonly_workspace_shell sed -n), 호출 목록에 없는 서비스·Mapper 호출이 있는지, 검사 호출 바로 뒤에 이어지는 호출이 목록에 있는지 적습니다. 호출 목록의 모든 칸이 읽음 또는 제외로 닫혔는지, 판단 컬럼과 관련 칸이 검색 결과(걸림/안 걸림)로 적혀 있는지도 봅니다.
-3. 트리거·가드·대안 슬롯 행이 모두 읽음/제외/못 읽음인지, 읽은 대안 행이 1층의 다른 방법에 업무 말로 올랐고 2층 요약표에 번호로 있는지, 1층에 코드 이름·API 경로·메시지 ID·파일 경로·확신도 표기가 없고 1층 문장마다 2층 근거 표 행이 있는지, 부정("없음", "뿐", "유일")·개수 주장에 검산표 행이 있는지, 읽지 않은 행의 동작을 추론해 쓰지 않았는지 봅니다.
-결과 형식(12줄 이내): 빠진 파일 / 호출 목록에 없는 호출 / 추가로 읽을 곳 최대 8개(저장소/경로:줄 범위 또는 검색식) / 규칙 위반. 문제가 없으면 "누락 없음".
-```
+Ask it to return findings, not rewrite the answer:
 
-**보충 규칙**
-- 돌려받은 `추가로 읽을 곳`을 한 번만 읽고 목록·답을 고친다. 두 번째 리뷰는 하지 않는다.
-- 빠진 파일은 목록 행으로 더하고, 질문과 무관해 보여도 제외 사유와 함께 행으로 둔다. 읽은 행의 사실만 1층에 쓴다.
-- 조사한 범위에 `리뷰: n개 누락 지적, m개 보충`을 쓴다.
+1. Reproduce relevant writer-search scope where supported. Identify missing
+   candidate files, incomplete repositories/pages, or written tables absent
+   from W1. Do not treat a truncated result as a complete match set.
+2. Reopen the root methods and compare all relevant service/mapper calls,
+   calls following validators, and error handling with the call inventory.
+3. Check evidence for every conclusion, unread-row claims, negative/exact-count
+   audits, alternatives, and correct unavailable-tool handling. Confirm that
+   the answer preserves identifiers and labels and uses the requested language.
+
+Return: missing candidates; missing calls; up to eight concrete repair reads;
+unsupported claims; capability gaps. If none, say `No omissions identified`.
+
+Perform one repair pass and update the draft/inventory. Name gaps remaining
+after repair. Record the reviewer result and repair outcome. If delegation is
+unavailable, run the same checklist yourself and record `Self-review;
+independent review unavailable`. Do not claim an independent review occurred.
