@@ -64,7 +64,10 @@ def valid_screenshot(attrs):
     original = root/'guide/en/verification'/attrs['data-screenshot']
     prefix = 'data:image/png;base64,'
     return bool(attrs.get('alt')) and original.is_file() and attrs.get('src', '').startswith(prefix) and base64.b64decode(attrs['src'][len(prefix):], validate=True) == original.read_bytes()
-check('six original screenshots embedded for offline sharing', len(parser.screenshots) == 6 and all(valid_screenshot(a) for a in parser.screenshots))
+check('ten original screenshots embedded for both clients offline', len(parser.screenshots) == 10 and len({a['data-screenshot'] for a in parser.screenshots}) == 10 and all(valid_screenshot(a) for a in parser.screenshots))
+check('both client tabs and complete instructions included in one file', all(s in html_text for s in ['role="tablist"', 'id="tab-codex"', 'id="tab-claude"', 'id="codex-content"', 'id="claude-content"', 'role="tabpanel"', 'claude plugin install platty@platty --scope user']))
+claude_html = (root/'guide/en/platty-claude-code.html').read_text()
+check('previous Claude entry contains the same switchable manual', claude_html.replace('data-default-client="claude"', 'data-default-client="codex"', 1) == html_text)
 install_docs = [root/p for p in ['README.md', 'README.ko.md', 'GETTING_STARTED.md', 'USER_GUIDE.md', 'guide/en/platty-demo.html']]
 check('installation docs use Git only', all(not re.search(r'\.zip|marketplace add [\"\']?\$PWD|marketplace add \.(?:<|\s)', p.read_text()) for p in install_docs))
 check('no installation ZIP artifacts or packager', not list((root/'downloads').glob('*.zip')) and not (root/'scripts/package-demo.py').exists())
