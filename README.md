@@ -5,7 +5,7 @@ environment. This `feat/demo` branch contains only the `platty` plugin and
 the `platty-search` skill.
 
 Start with the [English HTML installation manual](guide/en/platty-demo.html)
-(seven embedded screenshots; download the single file and open it in a browser) or the [text user guide](USER_GUIDE.md).
+(six embedded screenshots; download the single file and open it in a browser) or the [text user guide](USER_GUIDE.md).
 
 ## Install in Codex
 
@@ -15,7 +15,7 @@ codex plugin add platty@meko-poc
 ```
 
 Register the separate `platty` MCP connection using the
-[authentication instructions](USER_GUIDE.md#4-register-the-meko-connection).
+[authentication instructions](USER_GUIDE.md#3-paste-your-bearer-token-and-connect).
 The plugin does not supply your access credential.
 
 | Component | Value |
@@ -37,8 +37,8 @@ Use `platty@meko-poc` when installing it.
 The search workflow reads analyzed source code and generated project documents.
 It does not require the Platty CLI, a local checkout of the customer application,
 or access to the production database. Credentials are supplied separately by the
-MEKO PoC administrator. The configuration templates reference `MEKO_POC_TOKEN`;
-they contain no token value.
+MEKO PoC administrator. The configuration templates use `YOUR_MEKO_TOKEN` as a placeholder; replace
+it only in your private local configuration.
 
 Project observations were checked on November 2, 2026 (Asia/Seoul). Refresh
 repository and tool availability from the server when starting a new session.

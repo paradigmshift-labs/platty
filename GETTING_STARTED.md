@@ -28,8 +28,8 @@ claude plugin install platty@meko-poc --scope user
 ## Connect and verify
 
 Obtain your MEKO access token from the administrator. Follow the
-[MEKO token steps](USER_GUIDE.md#3-load-your-access-token), then
-register MCP as **`platty`** at `https://meko-poc.platty-ai.com/mcp`.
+[MEKO token steps](USER_GUIDE.md#3-paste-your-bearer-token-and-connect) to
+configure MCP as **`platty`** at `https://meko-poc.platty-ai.com/mcp`.
 The expected project is `petshop-full`. Credentials are not included.
 
 In a new Codex CLI session, open `/skills` → **List skills** and confirm

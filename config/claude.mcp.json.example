@@ -4,7 +4,7 @@
       "type": "http",
       "url": "https://meko-poc.platty-ai.com/mcp",
       "headers": {
-        "Authorization": "Bearer ${MEKO_POC_TOKEN}"
+        "Authorization": "Bearer YOUR_MEKO_TOKEN"
       }
     }
   }

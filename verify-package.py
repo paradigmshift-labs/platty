@@ -40,8 +40,8 @@ try:
     check('no bundled MCP credentials or auto updater', not list((root/'plugins').rglob('.mcp.json')) and not list((root/'plugins').rglob('platty-update-check')) and all('mcpServers' not in m for m in manifests))
     codex_config = tomllib.loads((root/'config/codex.config.toml.example').read_text())['mcp_servers']['platty']
     claude_config = json.loads((root/'config/claude.mcp.json.example').read_text())['mcpServers']['platty']
-    check('Codex uses environment bearer token and correct endpoint', codex_config['url'] == 'https://meko-poc.platty-ai.com/mcp' and codex_config['bearer_token_env_var'] == 'MEKO_POC_TOKEN' and 'http_headers' not in codex_config)
-    check('Claude uses environment bearer token and correct endpoint', claude_config['url'] == codex_config['url'] and claude_config['headers']['Authorization'] == 'Bearer ${MEKO_POC_TOKEN}')
+    check('Codex uses direct Bearer placeholder and correct endpoint', codex_config['url'] == 'https://meko-poc.platty-ai.com/mcp' and codex_config['http_headers']['Authorization'] == 'Bearer YOUR_MEKO_TOKEN' and 'bearer_token_env_var' not in codex_config)
+    check('Claude uses direct Bearer placeholder and correct endpoint', claude_config['url'] == codex_config['url'] and claude_config['headers']['Authorization'] == 'Bearer YOUR_MEKO_TOKEN')
 except (OSError,ValueError,KeyError) as e:
     check('complete manifests and token-free configuration templates', False)
     print(type(e).__name__ + ': ' + str(e))
@@ -64,7 +64,7 @@ def valid_screenshot(attrs):
     original = root/'guide/en/verification'/attrs['data-screenshot']
     prefix = 'data:image/png;base64,'
     return bool(attrs.get('alt')) and original.is_file() and attrs.get('src', '').startswith(prefix) and base64.b64decode(attrs['src'][len(prefix):], validate=True) == original.read_bytes()
-check('seven original screenshots embedded for offline sharing', len(parser.screenshots) == 7 and all(valid_screenshot(a) for a in parser.screenshots))
+check('six original screenshots embedded for offline sharing', len(parser.screenshots) == 6 and all(valid_screenshot(a) for a in parser.screenshots))
 install_docs = [root/p for p in ['README.md', 'README.ko.md', 'GETTING_STARTED.md', 'USER_GUIDE.md', 'guide/en/platty-demo.html']]
 check('installation docs use Git only', all(not re.search(r'\.zip|marketplace add [\"\']?\$PWD|marketplace add \.(?:<|\s)', p.read_text()) for p in install_docs))
 check('no installation ZIP artifacts or packager', not list((root/'downloads').glob('*.zip')) and not (root/'scripts/package-demo.py').exists())

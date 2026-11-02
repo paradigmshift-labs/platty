@@ -29,10 +29,12 @@ are not distributed with the plugin.
   **`$platty:platty-search`**. This tests discovery and insertion, without
   submitting a model prompt. See [skill list](guide/en/verification/codex-skills.png)
   and [selected skill](guide/en/verification/codex-skill-selected.png).
-- Registered MCP as **`platty`** using the documented environment-token
-  configuration. An existing authorized MEKO credential was privately supplied
-  only to the disposable environment. After restart, the actual Codex `/mcp`
-  screen showed **`platty: connected (59 tools)`**. See
+- Registered MCP as **`platty`** using direct
+  `http_headers = { Authorization = "Bearer …" }` configuration in a disposable
+  container, without `bearer_token_env_var`. Codex's actual `/mcp` screen showed
+  **`platty: connected (59 tools)`**; a fresh `project_get` confirmed
+  **petshop-full**. The real credential was supplied privately and is absent
+  from the repository and screenshots. See
   [MCP connection](guide/en/verification/codex-mcp.png).
 - An authenticated MCP transport test using that `platty` configuration
   confirmed **petshop-full**, listed **10 authorized repositories** with no
@@ -45,33 +47,31 @@ are not distributed with the plugin.
 - `git diff --check`: exit 0.
 
 The English skill and project-specific behavior were previously checked
-against missing-tool, wrong-project and incomplete-search scenarios. This
-Git-only revision does not alter skill behavior.
+against missing-tool, wrong-project and incomplete-search scenarios. These
+manual and connection-template revisions do not alter skill behavior.
 
 ## Screenshot walkthrough revision
 
 Codex, Git and AI-client sign-in are prerequisites already completed by the
-recipient. Client installation/login instructions and the sign-in screenshot
-have been removed. The six-step walkthrough starts with Platty Git registration.
+recipient. The five-step guide starts with Platty Git registration, then covers
+skill recognition, direct Bearer token input, connection verification and a
+first question. The recipient replaces only `YOUR_MEKO_TOKEN` in their personal
+configuration; no shell environment-variable steps are required.
 
-The English HTML manual now includes seven unedited screenshots: Git
-installation, installed/enabled plugin status, skill list, selected skill, hidden token entry, MCP registration and live MCP connection.
-Four screenshots of Git installation, plugin status,
-hidden token entry and MCP registration were captured in a fresh disposable
-container through Computer Use; the three previously verified skill/connection
-screenshots are reused unchanged.
+The English HTML manual includes six original screenshots: Git installation,
+installed/enabled plugin status, skill list, selected skill, a Bearer
+configuration example and a live connection. The first four retain the earlier
+Computer Use captures. The configuration example and connection proof were
+captured in the direct-token test. The example contains only a placeholder;
+the live connection used an already authorized MEKO credential. No generated
+answer is pictured. All six PNGs are embedded byte-for-byte for offline sharing,
+with captions, alternative text and an original-size viewer. Originals remain
+in `guide/en/verification/`.
 
-The token-entry screenshot uses a nonfunctional placeholder, explicitly marked
-in its caption. No generated answer is pictured. The live connection screenshot
-remains the earlier authorized MEKO test. All seven original PNGs are embedded byte-for-byte in the HTML for
-offline sharing, with captions, alternative text and a keyboard-accessible
-original-size viewer. The original PNGs remain in `guide/en/verification/`.
-
-The illustrated file was opened directly from disk with networking disabled at
-320, 768 and 1280 px. All seven images decoded, all seven original-size viewers
-opened and closed using Close or Escape, and focus returned to the invoking
-button. No outer horizontal overflow, external requests or JavaScript errors
-were observed. Existing copy, tab and navigation checks also passed.
+The file was opened directly from disk with networking disabled at 320, 768 and
+1280 px. All six images decoded; all viewers opened, closed with Close or
+Escape, and restored focus. Copy/selection and section navigation also passed.
+No outer horizontal overflow, external requests or JavaScript errors occurred.
 
 ## Existing failure outside the demo change
 
@@ -92,8 +92,7 @@ permissions.
 
 The Codex desktop app was not installed in this environment: the screen test
 covers the **actual Codex CLI UI**, not desktop-app installation or its plugin
-directory. Native Windows setup and the PowerShell token example were not
-executed in the Linux test. Test credentials and containers are removed after
+directory. Native Windows setup was not executed in the Linux test. Test credentials and containers are removed after
 verification; the host's existing MCP configuration is preserved.
 
 The MCP name is `platty`; the endpoint remains

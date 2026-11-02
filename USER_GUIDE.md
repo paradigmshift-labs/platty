@@ -8,7 +8,7 @@ This guide is for developers using the MEKO code analysis environment. Choose
 project documents and analyzed source code.
 
 For a screen-by-screen walkthrough, open the
-[illustrated HTML manual](guide/en/platty-demo.html). Its seven screenshots are
+[illustrated HTML manual](guide/en/platty-demo.html). Its six screenshots are
 embedded, so you can share that one file and read it offline. Each step explains
 what to enter and what to check. Use **Enlarge screenshot** for the original
 image size. The screenshots show Codex CLI on Linux.
@@ -31,8 +31,7 @@ or otherwise administrator-approved token; this package does not contain one.
 Examples below use Bash on macOS, Linux, or Windows WSL. Run the configuration
 commands on the same computer or remote host where the AI client makes its MCP
 requests. Settings on your laptop do not automatically configure a remote VM.
-Native Windows users can use the PowerShell token example in the HTML manual.
-The Bash token commands below require Bash or WSL.
+Edit the configuration on the execution host, including for remote sessions.
 
 ## 2. Install the plugin from Git
 
@@ -65,78 +64,57 @@ distribution can also expose `platty-search`: disable the conflicting plugin
 for the MEKO session or select this delivery explicitly rather than relying on
 ambiguous automatic skill selection. Do not remove unrelated MCP connections.
 
-## 3. Load your access token
+## 3. Paste your Bearer token and connect
 
-In the same Bash terminal you will use to launch the AI client:
-
-```bash
-read -r -s -p 'MEKO PoC token: ' MEKO_POC_TOKEN
-printf '\n'
-export MEKO_POC_TOKEN
-test -n "$MEKO_POC_TOKEN" && printf 'Token loaded (value hidden).\n'
-```
-
-Paste the token when prompted. Supply the **token alone**, without the
-`Bearer ` prefix. The prompt hides it and avoids placing the value in a
-command-line example or shell history. If no confirmation prints, load it again.
-Do not paste the token into a chat or send it with a support report.
-
-This environment variable lasts for that shell and its child processes.
-Reopen the shell or expire the token and you must load a valid token again.
-Use your organization's approved secret-management method for persistent use.
-A desktop app launched elsewhere may not inherit this terminal's environment;
-use the CLI from this terminal, or configure the app's MCP authentication on
-its actual execution host and restart it.
-
-## 4. Register the MEKO connection
-
-Choose the section matching your client. Configure the MCP name **`platty`**
-and the exact URL, including `/mcp`.
-
-The MCP connection name `platty` is separate from the marketplace name
-`meko-poc`. If a `platty` connection already points to another server or project,
-confirm the intended configuration before replacing it. Do not overwrite an
-unrelated connection or leave two competing entries for the same name.
+Use the token supplied by your MEKO administrator. Replace only
+`YOUR_MEKO_TOKEN` in the configuration below; keep `Bearer ` and its trailing
+space. If your supplied value already starts with `Bearer `, replace the whole
+quoted value so the prefix appears once. Keep the filled configuration private
+and out of Git, chat and support screenshots.
 
 ### Codex
 
-```bash
-codex mcp add platty --url https://meko-poc.platty-ai.com/mcp --bearer-token-env-var MEKO_POC_TOKEN
+Open `~/.codex/config.toml` on the host running Codex and merge:
+
+```toml
+[mcp_servers.platty]
+url = "https://meko-poc.platty-ai.com/mcp"
+http_headers = { Authorization = "Bearer YOUR_MEKO_TOKEN" }
 ```
 
-Alternatively, merge the section from
-[codex.config.toml.example](config/codex.config.toml.example) into your host's
-`~/.codex/config.toml`. Preserve other settings. If `platty` already exists,
-edit that entry rather than adding a duplicate table. Remove any old static
-`Authorization` header for this entry when switching to the environment token.
-Restart the client to pick up the configuration.
-
-Codex reads the token variable and supplies the `Bearer` header itself; do not
-write `Bearer ${MEKO_POC_TOKEN}` into a static TOML header. See the
-[official Codex MCP configuration](https://developers.openai.com/codex/mcp).
+Replace the placeholder, save the file and restart Codex. The
+[Codex template](config/codex.config.toml.example) contains the same example.
+If `platty` already exists, update it instead of creating a duplicate table.
+When switching this entry to direct input, remove an old `bearer_token_env_var`
+setting or other Authorization source. Preserve unrelated settings and servers.
+The [official Codex MCP guide](https://learn.chatgpt.com/docs/extend/mcp?surface=cli)
+documents static `http_headers` values.
 
 ### Claude Code
 
-The single quotes in this command preserve the variable reference so that
-Claude Code resolves it when it starts:
+Merge the server from [claude.mcp.json.example](config/claude.mcp.json.example)
+into the project's `.mcp.json`:
 
-```bash
-claude mcp add-json --scope user platty '{"type":"http","url":"https://meko-poc.platty-ai.com/mcp","headers":{"Authorization":"Bearer ${MEKO_POC_TOKEN}"}}'
+```json
+{
+  "mcpServers": {
+    "platty": {
+      "type": "http",
+      "url": "https://meko-poc.platty-ai.com/mcp",
+      "headers": { "Authorization": "Bearer YOUR_MEKO_TOKEN" }
+    }
+  }
+}
 ```
 
-For project-scoped configuration, merge the server entry from
-[claude.mcp.json.example](config/claude.mcp.json.example) into that project's
-`.mcp.json` instead. Preserve existing entries and follow the client's project
-trust/approval prompt. Choose one scope for this connection; a duplicate local
-entry can override a user entry. Environment expansion is documented in the
-[official Claude Code MCP guide](https://code.claude.com/docs/en/mcp#environment-variable-expansion-in-mcp-json).
+Replace the placeholder, preserve unrelated entries, keep the filled file out
+of Git, and restart Claude Code. Follow the client's project trust prompt.
+If `platty` already exists in another scope, update the entry actually used by
+your session. Merely installing the skill does not replace an old credential.
 
-If `platty` already exists, update its configuration in the scope actually
-used by the session. Merely installing this skill does not replace an old token.
+## 4. Verify the connection and skill
 
-## 5. Verify the connection and skill
-
-Launch `codex` or `claude` from the terminal where the token is loaded. Start a
+Restart `codex` or `claude` after saving your token. Start a
 new session after plugin installation.
 
 In Codex CLI, run `/skills`, choose **List skills**, and confirm
@@ -187,7 +165,7 @@ source read succeed. A plugin appearing in a list or a green server label alone
 does not verify all tools. The observed repository/capability details are in
 the [project notes](plugins/platty/skills/platty-search/references/project-notes.md).
 
-## 6. Ask useful questions
+## 5. Ask useful questions
 
 Include an exact screen/file/API/table identifier when you know one. For a
 change-impact question, include what will change and the proposed value or
@@ -207,7 +185,7 @@ identifiers and Korean UI text remain unchanged; explanatory English labels
 are translations. The assistant may ask which similarly named function you
 mean before investigating it.
 
-## 7. Understand the available evidence
+## 6. Understand the available evidence
 
 This environment provides analyzed source code and project documents. It can
 show code paths, SQL statements, data definitions, and documented rules. It
@@ -227,13 +205,13 @@ continues supported reads. Results marked `needs_review`, incomplete document
 coverage, unread candidates, and truncated search pages need explicit handling.
 An empty incomplete search does not prove that a feature or writer is absent.
 
-## 8. Troubleshooting
+## 7. Troubleshooting
 
 | Symptom | Check and next action |
 | --- | --- |
-| `401 Unauthorized` / `AUTHENTICATION_REQUIRED` | Confirm that a valid MEKO token is loaded on the host launching the client. Check the variable name, duplicate connection entries and stale static Authorization headers. Restart; ask the administrator to validate/reissue the token if it persists. |
+| `401 Unauthorized` / `AUTHENTICATION_REQUIRED` | Replace the token placeholder in the active configuration. Check the exact URL, one `Bearer ` prefix and duplicate connection entries. Restart; ask the administrator to validate/reissue the token if it persists. |
 | `403` or expected repositories missing | Ask the administrator to check that token's project/repository permissions. Do not substitute another connection. |
-| Token was set but the app still fails | The app or remote VM may use another environment. Configure the actual execution host or launch the CLI from the token-loaded shell. |
+| Token was saved but the app still fails | The app or remote VM may use another environment. Edit the configuration on the actual execution host and restart the client. |
 | Project is not `petshop-full` | Stop project retrieval and verify the endpoint, token scope and server default with the administrator. |
 | `platty-search` is not available | Check that `platty@meko-poc` is installed, enabled and loaded in a new session. Check for another plugin exposing the same skill name. |
 | The CLI does not recognize `plugin` or an installation subcommand | Check its local `--help` and use a client version that supports these plugin commands. Keep the current package; do not install a different Platty distribution as a workaround. |
@@ -246,7 +224,7 @@ project, prompt/identifier, tool name, error code, and time with timezone.
 Remove tokens, Authorization headers and confidential source excerpts from
 screenshots or logs before sharing them.
 
-## 9. Update or remove this delivery
+## 8. Update or remove this delivery
 
 For Codex, refresh the registered Git branch before reinstalling the plugin:
 
@@ -276,8 +254,7 @@ claude mcp remove --scope user platty
 ```
 
 For a project `.mcp.json` entry, remove only that server key from the file
-instead of removing a user-scope entry. Close active sessions, run
-`unset MEKO_POC_TOKEN` in the shell, and have the administrator revoke a token
+instead of removing a user-scope entry. Close active sessions, remove the saved token, and have the administrator revoke it
 when access should end. Uninstalling a plugin does not revoke its server token.
 
 ## References and verification scope
