@@ -7,6 +7,12 @@ This guide is for developers using the MEKO code analysis environment. Choose
 `platty-search` skill. Your AI client connects to the MEKO server to read
 project documents and analyzed source code.
 
+For a screen-by-screen walkthrough, open the
+[illustrated HTML manual](guide/en/platty-demo.html). Its eight screenshots are
+embedded, so you can share that one file and read it offline. Each step explains
+what to enter and what to check. Use **Enlarge screenshot** for the original
+image size. The screenshots show Codex CLI on Linux.
+
 ## 1. Before you start
 
 You need an authorized AI-client account, a MEKO PoC access token supplied by

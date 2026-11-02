@@ -11,7 +11,7 @@ are not distributed with the plugin.
 
 ## Verified
 
-- `python3 verify-package.py .`: **18/18 checks passed**. Before the Git-only
+- `python3 verify-package.py .`: **19/19 checks passed**. Before the Git-only
   changes, the new checks failed on installation alternatives and archive
   artifacts (**16/18**), then passed after those were removed.
 - `claude plugin validate .`: **Validation passed**. A nonblocking README
@@ -47,6 +47,29 @@ are not distributed with the plugin.
 The English skill and project-specific behavior were previously checked
 against missing-tool, wrong-project and incomplete-search scenarios. This
 Git-only revision does not alter skill behavior.
+
+## Screenshot walkthrough revision
+
+The English HTML manual now includes eight unedited screenshots: sign-in
+choices, Git installation, installed/enabled plugin status, skill list,
+selected skill, hidden token entry, MCP registration and live MCP connection.
+Five new screenshots of sign-in choices, Git installation, plugin status,
+hidden token entry and MCP registration were captured in a fresh disposable
+container through Computer Use; the three previously verified skill/connection
+screenshots are reused unchanged.
+
+The token-entry screenshot uses a nonfunctional placeholder, explicitly marked
+in its caption. The sign-in screenshot shows choices only. No generated answer
+is pictured. The live connection screenshot remains the earlier authorized
+MEKO test. All eight original PNGs are embedded byte-for-byte in the HTML for
+offline sharing, with captions, alternative text and a keyboard-accessible
+original-size viewer. The original PNGs remain in `guide/en/verification/`.
+
+The illustrated file was opened directly from disk with networking disabled at
+320, 768 and 1280 px. All eight images decoded, all eight original-size viewers
+opened and closed using Close or Escape, and focus returned to the invoking
+button. No outer horizontal overflow, external requests or JavaScript errors
+were observed. Existing copy, tab and navigation checks also passed.
 
 ## Existing failure outside the demo change
 

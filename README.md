@@ -5,7 +5,7 @@ environment. This `feat/demo` branch contains only the `platty` plugin and
 the `platty-search` skill.
 
 Start with the [English HTML installation manual](guide/en/platty-demo.html)
-(download and open it in a browser) or the [text user guide](USER_GUIDE.md).
+(eight embedded screenshots; download the single file and open it in a browser) or the [text user guide](USER_GUIDE.md).
 
 ## Install in Codex
 
