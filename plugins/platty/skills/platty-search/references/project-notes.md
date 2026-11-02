@@ -1,4 +1,4 @@
-# MEKO project reference
+# Platty project reference
 
 Observed November 2, 2026 (Asia/Seoul). These facts are a starting map; live MCP
 results take precedence. This reference describes one deployment, not a rule
@@ -16,7 +16,7 @@ for other Platty customers.
 
 Omit `projectId` initially and verify the returned default. The ID above is an
 observation, not a substitute for current authorization. Never use another MCP
-connection to fill a missing MEKO capability.
+connection to fill a missing Platty capability.
 
 ## Repositories
 

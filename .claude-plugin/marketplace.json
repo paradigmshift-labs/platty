@@ -1,11 +1,13 @@
 {
-  "name": "meko-poc",
-  "description": "English Platty Search delivery for the MEKO PoC.",
-  "owner": { "name": "Paradigm Shift Labs" },
+  "name": "platty",
+  "description": "English Platty Search plugin.",
+  "owner": {
+    "name": "Paradigm Shift Labs"
+  },
   "plugins": [
     {
       "name": "platty",
-      "description": "Investigate MEKO code and change impact through its authorized MCP connection.",
+      "description": "Investigate code and change impact through the authorized Platty MCP connection.",
       "source": "./plugins/platty",
       "category": "development"
     }

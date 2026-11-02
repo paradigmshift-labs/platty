@@ -1,14 +1,13 @@
 {
   "name": "platty",
-  "description": "English source-grounded search and change impact investigation for the MEKO PoC.",
-  "version": "0.0.9-meko.3",
+  "description": "English source-grounded search and change impact investigation through Platty.",
+  "version": "0.0.10-demo.1",
   "author": {
     "name": "Paradigm Shift Labs"
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "keywords": [
     "platty",
-    "meko",
     "mcp",
     "code-search",
     "impact-analysis"

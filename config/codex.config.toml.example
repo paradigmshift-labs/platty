@@ -1,6 +1,6 @@
 # Merge into ~/.codex/config.toml on the host running Codex.
-# Replace YOUR_MEKO_TOKEN with your token. Keep "Bearer " (including the space).
+# Replace YOUR_PLATTY_TOKEN with your token. Keep "Bearer " (including the space).
 # Keep the filled configuration private; never commit or share it.
 [mcp_servers.platty]
 url = "https://meko-poc.platty-ai.com/mcp"
-http_headers = { Authorization = "Bearer YOUR_MEKO_TOKEN" }
+http_headers = { Authorization = "Bearer YOUR_PLATTY_TOKEN" }

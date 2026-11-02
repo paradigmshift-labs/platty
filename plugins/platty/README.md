@@ -1,4 +1,4 @@
-# Platty Search for MEKO
+# Platty Search
 
 This plugin contains one English skill: `platty-search`, with eight reference
 files. It investigates screens, APIs, services, SQL, data definitions, batch
@@ -19,6 +19,6 @@ $platty:platty-search Explain what POST /on/ctrt/tnnt/saveCtrtTnntList does. Use
 In Claude Code, use `/platty:platty-search` with the same question.
 
 - [Skill instructions](skills/platty-search/SKILL.md)
-- [MEKO project reference](skills/platty-search/references/project-notes.md)
+- [Platty project reference](skills/platty-search/references/project-notes.md)
 
 The eight reference documents support this one skill; they are not separate skills.

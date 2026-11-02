@@ -1,23 +1,22 @@
 {
   "name": "platty",
-  "version": "0.0.9-meko.3",
-  "description": "English source-grounded search and change impact investigation for the MEKO PoC.",
+  "version": "0.0.10-demo.1",
+  "description": "English source-grounded search and change impact investigation through Platty.",
   "author": {
     "name": "Paradigm Shift Labs"
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "keywords": [
     "platty",
-    "meko",
     "mcp",
     "code-search",
     "impact-analysis"
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Platty for MEKO",
-    "shortDescription": "Explore MEKO code and change impact in English",
-    "longDescription": "One English platty-search skill for the MEKO PoC. Uses the separately configured platty MCP connection for project documents, source code, and evidence-backed change impact investigation.",
+    "displayName": "Platty",
+    "shortDescription": "Explore code and change impact in English",
+    "longDescription": "One English platty-search skill. Uses the separately configured platty MCP connection for project documents, source code, and evidence-backed change impact investigation.",
     "developerName": "Paradigm Shift Labs",
     "category": "Developer Tools",
     "capabilities": [

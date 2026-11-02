@@ -1,9 +1,9 @@
 ---
 name: platty-search
-description: Use when developers ask about MEKO PoC screens, APIs, services, SQL, tables, columns, batch jobs, or the impact of changing code or data in the connected project.
+description: Use when developers ask about screens, APIs, services, SQL, tables, columns, batch jobs, or the impact of changing code or data in a project connected through Platty.
 ---
 
-# Platty Search for MEKO
+# Platty Search
 
 Answer from the authorized project's source evidence. Accuracy takes priority
 over a quick answer. Read [project notes](references/project-notes.md) first.

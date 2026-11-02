@@ -11,7 +11,7 @@ Supply the question, change target, core/companion data, impact inventory,
 root-call inventory, exact read ranges, and unresolved findings.
 
 The design author may read named source ranges through the same authorized
-MEKO connection. It must not edit code, change data, invent missing impact
+Platty connection. It must not edit code, change data, invent missing impact
 evidence, or invoke the application APIs. Additional investigation needs are
 returned as gaps. Label each material statement:
 
