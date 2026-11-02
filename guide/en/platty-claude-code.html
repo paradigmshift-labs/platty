@@ -80,8 +80,6 @@
         <li><a href="#recognize">Find the skill</a></li>
         <li><a href="#use">Ask a question</a></li>
       </ol>
-      <p><a href="#troubleshooting">Troubleshooting</a></p>
-      <p><a href="#scope">Evidence and limits</a></p>
     </nav>
     <main>
       <p class="note"><strong>Before you start:</strong> Claude Code and Git are already installed, and you are already signed in to Claude Code. Have the Platty access token supplied by your administrator ready.</p>
@@ -134,7 +132,7 @@ then list the authorized repositories. Confirm that the project is petshop-full.
 Report unavailable capabilities. Read one source file to verify source access.
 Do not print credentials, execute application APIs, or change data.
 Answer in English.</code></pre></div>
-        <p>The expected project is <code>petshop-full</code>. If another project appears, stop project retrieval and check the endpoint and token scope with your administrator. A connection checkmark proves tool discovery; a successful project call and source read establish access to that evidence.</p>
+        <p>Claude should identify <code>petshop-full</code> and return a source reference. If access fails or another project appears, check the token and endpoint with your Platty administrator.</p>
       </section>
       <section id="recognize">
         <h2>4. Find the Platty skill</h2>
@@ -156,7 +154,6 @@ Answer in English.</code></pre></div>
           <figcaption><strong>Screen 4 · The skill and question are ready.</strong> The draft starts with /platty:platty-search and includes an English question. Submit your own draft with Enter.</figcaption>
           <button type="button" class="enlarge" aria-label="Enlarge: Claude Code prompt containing the Platty skill command and an English SHOP0103 question">Enlarge screenshot</button>
         </figure>
-        <p class="muted">This screenshot shows the selected skill and question ready to submit. An answer was not submitted or generated during this screenshot walkthrough.</p>
         <p class="checkpoint"><strong>What a useful answer contains:</strong> an English explanation of Save versus Confirm, exact repository/file/line evidence, and explicit unknowns about backend persistence and actual execution.</p>
         <h3>More questions to try</h3>
         <ul>
@@ -165,31 +162,7 @@ Answer in English.</code></pre></div>
           <li>In SHOP0201, what does the Total label count? Distinguish it from the sales column.</li>
           <li>In SHOP0501, how is progress status loaded and saved? Separate proven code behavior from unverified status values and transitions.</li>
         </ul>
-        <h3>Understand the tool activity</h3>
-        <p>Claude may use <code>Read</code> to open the installed skill's reference instructions. Project retrieval uses <code>platty</code> MCP tools such as <code>context_status</code>, <code>workspace_search</code>, and <code>readonly_workspace_shell</code>. A shell command passed to that last tool runs on the authorized remote source workspace.</p>
-        <p>Inspect the tool entries shown by your Claude Code version to see their inputs and results. Skill recognition and a connected MCP server are separate checks; both are needed.</p>
       </section>
-      <section id="troubleshooting">
-        <h2>When something does not work</h2>
-        <details><summary>The skill command is missing</summary><p>Run <code>claude plugin list</code> and check that <code>platty@platty</code> is enabled. Start a new session after installation. Confirm that the registered marketplace uses <code>#feat/demo</code>. If another plugin exposes the same skill, select this qualified command.</p></details>
-        <details><summary>Platty is absent from /mcp</summary><p>Check that <code>.mcp.json</code> is in the project folder where you started Claude Code. Preserve its <code>mcpServers</code> wrapper and <code>type: http</code>. Review project trust and MCP approval prompts. A user- or local-scope entry with the same name may take precedence; update the entry your session actually uses.</p></details>
-        <details><summary>401 Unauthorized or authentication required</summary><p>Replace the placeholder with a valid Platty token. Check the exact URL, one <code>Bearer </code> prefix, and accidental whitespace. Save the active configuration and restart Claude Code. Ask the administrator to validate or reissue the token if the error persists.</p></details>
-        <details><summary>A different project, 403, or missing repositories</summary><p>Check the endpoint and the token's project/repository permissions with your administrator. Keep retrieval on the intended <code>platty</code> connection.</p></details>
-        <details><summary>A guide is missing or a source search is incomplete</summary><p>A missing search guide does not imply failed authentication. Supported repository and source reads can continue. Use the exact returned repository-relative paths, follow continuation cursors, and resolve truncated searches before claiming absence.</p></details>
-      </section>
-      <section id="scope">
-        <h2>Evidence and verification limits</h2>
-        <p>The publisher verified Git installation, enabled plugin status, MCP discovery, skill autocomplete and question entry in Claude Code 2.1.311 on Linux. The screenshots show these actual steps. Each recipient still needs to verify their own project and source access.</p>
-        <p>Platty retrieves analyzed source and project documents. A source snapshot cannot establish current production rows, runtime permissions, actual save outcomes, or current external-system behavior. Original identifiers and Korean labels remain exact; English renderings are translations.</p>
-        <details><summary>Update or remove this delivery</summary><p>To refresh this Git distribution, run:</p><div class="code"><button class="copy" type="button" data-copy="update-code">Copy</button><pre><code id="update-code">claude plugin marketplace update platty
-claude plugin update platty@platty --scope user</code></pre></div><p>Check the installed version and start a new session. To remove this delivery, run:</p><div class="code"><button class="copy" type="button" data-copy="remove-code">Copy</button><pre><code id="remove-code">claude plugin uninstall platty@platty --scope user
-claude plugin marketplace remove platty --scope user</code></pre></div><p>For the project MCP entry used here, remove only the <code>platty</code> key from <code>.mcp.json</code> and its saved token. Uninstalling the plugin does not revoke server access.</p></details>
-      </section>
-      <footer>
-        <p><a href="https://github.com/paradigmshift-labs/platty/tree/feat/demo">Git distribution</a> · <a href="https://github.com/paradigmshift-labs/platty/blob/feat/demo/USER_GUIDE.md">Complete text guide</a> · <a href="https://github.com/paradigmshift-labs/platty/blob/feat/demo/guide/en/platty-demo.html">Codex guide</a></p>
-        <p>Official references: <a href="https://code.claude.com/docs/en/plugins">Claude Code plugins and skill commands</a> · <a href="https://code.claude.com/docs/en/mcp">MCP configuration, project approval and connection status</a>.</p>
-        <p>Prepared for Platty. No access token is included in this guide or the plugin.</p>
-      </footer>
     </main>
   </div>
   <dialog id="screenshot-viewer" aria-labelledby="viewer-title">
