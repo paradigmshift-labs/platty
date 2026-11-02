@@ -48,7 +48,7 @@ except (OSError,ValueError,KeyError) as e:
 check('English user manual included', (root/'USER_GUIDE.md').is_file())
 html = root/'guide/en/platty-demo.html'
 html_text = html.read_text() if html.is_file() else ''
-check('standalone English HTML manual included', '<html lang="en">' in html_text and 'id="install"' in html_text and 'id="connect"' in html_text and 'id="verify"' in html_text)
+check('standalone English HTML manual included', '<html lang="en">' in html_text and 'id="skill"' in html_text and 'id="connect"' in html_text and 'id="verify"' in html_text)
 check('Codex Git install pinned to feat/demo', 'codex plugin marketplace add paradigmshift-labs/platty --ref feat/demo' in html_text)
 class ScreenshotParser(HTMLParser):
     def __init__(self):
@@ -64,7 +64,7 @@ def valid_screenshot(attrs):
     original = root/'guide/en/verification'/attrs['data-screenshot']
     prefix = 'data:image/png;base64,'
     return bool(attrs.get('alt')) and original.is_file() and attrs.get('src', '').startswith(prefix) and base64.b64decode(attrs['src'][len(prefix):], validate=True) == original.read_bytes()
-check('eight original screenshots embedded for offline sharing', len(parser.screenshots) == 8 and all(valid_screenshot(a) for a in parser.screenshots))
+check('seven original screenshots embedded for offline sharing', len(parser.screenshots) == 7 and all(valid_screenshot(a) for a in parser.screenshots))
 install_docs = [root/p for p in ['README.md', 'README.ko.md', 'GETTING_STARTED.md', 'USER_GUIDE.md', 'guide/en/platty-demo.html']]
 check('installation docs use Git only', all(not re.search(r'\.zip|marketplace add [\"\']?\$PWD|marketplace add \.(?:<|\s)', p.read_text()) for p in install_docs))
 check('no installation ZIP artifacts or packager', not list((root/'downloads').glob('*.zip')) and not (root/'scripts/package-demo.py').exists())

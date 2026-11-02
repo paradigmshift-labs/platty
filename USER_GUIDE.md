@@ -1,4 +1,4 @@
-# MEKO PoC: installation and user guide
+# MEKO PoC: Platty setup and user guide
 
 Version `0.0.9-meko.3` · Prepared November 2, 2026 (Asia/Seoul)
 
@@ -8,15 +8,17 @@ This guide is for developers using the MEKO code analysis environment. Choose
 project documents and analyzed source code.
 
 For a screen-by-screen walkthrough, open the
-[illustrated HTML manual](guide/en/platty-demo.html). Its eight screenshots are
+[illustrated HTML manual](guide/en/platty-demo.html). Its seven screenshots are
 embedded, so you can share that one file and read it offline. Each step explains
 what to enter and what to check. Use **Enlarge screenshot** for the original
 image size. The screenshots show Codex CLI on Linux.
 
 ## 1. Before you start
 
-You need an authorized AI-client account, a MEKO PoC access token supplied by
-your administrator, and network access to:
+Codex (or Claude Code) and Git are already installed, and you are already
+signed in to your AI client. This guide starts with registering the Platty
+plugin. Have a MEKO PoC access token from your administrator and network
+access to:
 
 ```text
 https://meko-poc.platty-ai.com/mcp
@@ -29,43 +31,10 @@ or otherwise administrator-approved token; this package does not contain one.
 Examples below use Bash on macOS, Linux, or Windows WSL. Run the configuration
 commands on the same computer or remote host where the AI client makes its MCP
 requests. Settings on your laptop do not automatically configure a remote VM.
-Native Windows users should follow their AI client's platform-specific
-installer and adapt shell syntax; the Bash token commands below are not
-PowerShell commands.
+Native Windows users can use the PowerShell token example in the HTML manual.
+The Bash token commands below require Bash or WSL.
 
-## 2. Install your AI client
-
-If it is already installed and signed in, check its version and skip the installer.
-
-### Option A: Codex
-
-Use the [official Codex CLI installation guide](https://developers.openai.com/codex/cli).
-The current macOS/Linux installer is:
-
-```bash
-curl -fsSL https://chatgpt.com/codex/install.sh | sh
-codex --version
-codex
-```
-
-Complete sign-in, then exit the session before continuing with configuration.
-The plugin commands below were checked against Codex CLI `0.160.0`.
-
-### Option B: Claude Code
-
-Use the [official Claude Code installation guide](https://code.claude.com/docs/en/setup).
-For macOS, Linux, or WSL:
-
-```bash
-curl -fsSL https://claude.ai/install.sh | bash
-claude --version
-claude
-```
-
-Complete sign-in, then exit the session. The plugin and MCP command syntax
-below was checked against Claude Code `2.1.311`.
-
-## 3. Install the plugin from Git
+## 2. Install the plugin from Git
 
 Git must be available. Use `feat/demo` explicitly; the default branch contains
 a different distribution. Install directly from Git without a manual download
@@ -96,7 +65,7 @@ distribution can also expose `platty-search`: disable the conflicting plugin
 for the MEKO session or select this delivery explicitly rather than relying on
 ambiguous automatic skill selection. Do not remove unrelated MCP connections.
 
-## 4. Load your access token
+## 3. Load your access token
 
 In the same Bash terminal you will use to launch the AI client:
 
@@ -119,7 +88,7 @@ A desktop app launched elsewhere may not inherit this terminal's environment;
 use the CLI from this terminal, or configure the app's MCP authentication on
 its actual execution host and restart it.
 
-## 5. Register the MEKO connection
+## 4. Register the MEKO connection
 
 Choose the section matching your client. Configure the MCP name **`platty`**
 and the exact URL, including `/mcp`.
@@ -165,7 +134,7 @@ entry can override a user entry. Environment expansion is documented in the
 If `platty` already exists, update its configuration in the scope actually
 used by the session. Merely installing this skill does not replace an old token.
 
-## 6. Verify the connection and skill
+## 5. Verify the connection and skill
 
 Launch `codex` or `claude` from the terminal where the token is loaded. Start a
 new session after plugin installation.
@@ -218,7 +187,7 @@ source read succeed. A plugin appearing in a list or a green server label alone
 does not verify all tools. The observed repository/capability details are in
 the [project notes](plugins/platty/skills/platty-search/references/project-notes.md).
 
-## 7. Ask useful questions
+## 6. Ask useful questions
 
 Include an exact screen/file/API/table identifier when you know one. For a
 change-impact question, include what will change and the proposed value or
@@ -238,7 +207,7 @@ identifiers and Korean UI text remain unchanged; explanatory English labels
 are translations. The assistant may ask which similarly named function you
 mean before investigating it.
 
-## 8. Understand the available evidence
+## 7. Understand the available evidence
 
 This environment provides analyzed source code and project documents. It can
 show code paths, SQL statements, data definitions, and documented rules. It
@@ -258,7 +227,7 @@ continues supported reads. Results marked `needs_review`, incomplete document
 coverage, unread candidates, and truncated search pages need explicit handling.
 An empty incomplete search does not prove that a feature or writer is absent.
 
-## 9. Troubleshooting
+## 8. Troubleshooting
 
 | Symptom | Check and next action |
 | --- | --- |
@@ -267,7 +236,7 @@ An empty incomplete search does not prove that a feature or writer is absent.
 | Token was set but the app still fails | The app or remote VM may use another environment. Configure the actual execution host or launch the CLI from the token-loaded shell. |
 | Project is not `petshop-full` | Stop project retrieval and verify the endpoint, token scope and server default with the administrator. |
 | `platty-search` is not available | Check that `platty@meko-poc` is installed, enabled and loaded in a new session. Check for another plugin exposing the same skill name. |
-| The CLI does not recognize `plugin` or an installation subcommand | Check its local `--help` and update through the official client installation guide. Keep the current package; do not install a different Platty distribution as a workaround. |
+| The CLI does not recognize `plugin` or an installation subcommand | Check its local `--help` and use a client version that supports these plugin commands. Keep the current package; do not install a different Platty distribution as a workaround. |
 | A source read says `Path does not exist` | Use the exact repository-relative path returned by source search, including its module directory. The reported sourceRoot is not an instruction to remove that prefix. |
 | A search is truncated, times out or returns a lower-bound count | Narrow by repository/file type, follow cursors and read missing source ranges. The result is incomplete until those gaps are resolved. |
 | Timeout or TLS/network error | Confirm access to the exact HTTPS endpoint from the execution host and check organization proxy/firewall policy. Do not disable certificate checks. |
@@ -277,7 +246,7 @@ project, prompt/identifier, tool name, error code, and time with timezone.
 Remove tokens, Authorization headers and confidential source excerpts from
 screenshots or logs before sharing them.
 
-## 10. Update or remove this delivery
+## 9. Update or remove this delivery
 
 For Codex, refresh the registered Git branch before reinstalling the plugin:
 
@@ -314,13 +283,11 @@ when access should end. Uninstalling a plugin does not revoke its server token.
 ## References and verification scope
 
 - [Codex Git marketplace registration](https://developers.openai.com/plugins/build/plugins).
-- [Codex installation](https://developers.openai.com/codex/cli) and
-  [MCP configuration](https://developers.openai.com/codex/mcp).
-- [Claude Code installation](https://code.claude.com/docs/en/setup),
-  [MCP configuration](https://code.claude.com/docs/en/mcp), and
+- [Codex MCP configuration](https://developers.openai.com/codex/mcp).
+- [Claude Code MCP configuration](https://code.claude.com/docs/en/mcp) and
   [Git marketplace setup](https://code.claude.com/docs/en/plugin-marketplaces).
 - Plugin command syntax was also checked using installed client `--help`.
   This package was installed successfully in isolated Codex CLI (Linux) and
-  Claude Code configurations. Account sign-in and token authorization must be checked on that
+  Claude Code configurations. MEKO token authorization must be checked on that
   user's machine; the publisher's authenticated connection does not provision
   a new user's access.

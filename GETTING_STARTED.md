@@ -4,6 +4,9 @@ Use the [English HTML manual](guide/en/platty-demo.html) or the
 [complete text guide](USER_GUIDE.md). Download the HTML file and open it in a
 browser, or share the file with an authorized recipient.
 
+Codex and Git are already installed, and you are already signed in.
+Start by registering the Platty plugin from Git below.
+
 ## Codex: install this branch
 
 ```bash
@@ -25,7 +28,7 @@ claude plugin install platty@meko-poc --scope user
 ## Connect and verify
 
 Obtain your MEKO access token from the administrator. Follow the
-[client authentication steps](USER_GUIDE.md#4-load-your-access-token), then
+[MEKO token steps](USER_GUIDE.md#3-load-your-access-token), then
 register MCP as **`platty`** at `https://meko-poc.platty-ai.com/mcp`.
 The expected project is `petshop-full`. Credentials are not included.
 

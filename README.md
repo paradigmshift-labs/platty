@@ -5,7 +5,7 @@ environment. This `feat/demo` branch contains only the `platty` plugin and
 the `platty-search` skill.
 
 Start with the [English HTML installation manual](guide/en/platty-demo.html)
-(eight embedded screenshots; download the single file and open it in a browser) or the [text user guide](USER_GUIDE.md).
+(seven embedded screenshots; download the single file and open it in a browser) or the [text user guide](USER_GUIDE.md).
 
 ## Install in Codex
 
@@ -15,7 +15,7 @@ codex plugin add platty@meko-poc
 ```
 
 Register the separate `platty` MCP connection using the
-[authentication instructions](USER_GUIDE.md#5-register-the-meko-connection).
+[authentication instructions](USER_GUIDE.md#4-register-the-meko-connection).
 The plugin does not supply your access credential.
 
 | Component | Value |
