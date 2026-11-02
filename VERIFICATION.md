@@ -18,6 +18,11 @@ are not distributed with the package, and no access credential is bundled.
   enabled, inside a disposable Linux container without network or host user
   configuration. The extracted installation ZIP was also installed in that
   isolated environment.
+- After publication, a fresh container successfully registered
+  `paradigmshift-labs/platty --ref feat/demo` as a Git marketplace, installed
+  `platty@meko-poc` at version `0.0.9-meko.3`, and listed it as enabled.
+- Public downloads for both ZIPs and the HTML manual returned HTTP 200 and
+  matched the committed source bytes.
 - Browser verification at **320, 768 and 1280 px**: no horizontal overflow;
   shell tabs and keyboard navigation, command copy, section links, and details
   all passed. Light/dark rendering succeeded with no JavaScript errors.

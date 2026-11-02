@@ -59,7 +59,7 @@ claude
 Complete sign-in, then exit the session. The plugin and MCP command syntax
 below was checked against Claude Code `2.1.311`.
 
-## 3. Extract and install this package
+## 3. Install the plugin from Git or ZIP
 
 To install this branch directly in Codex, Git must be available:
 
