@@ -16,9 +16,20 @@ On 2026-11-16 the expected project changed from `petshop-full` to
 deactivated on the server. The project notes, guides and example questions
 now use yugabyted-ui facts observed that day. The Claude Code first-question
 screenshot showed the retired question and was removed, so the manual now
-embeds nine screenshots. The results below were recorded for `0.0.10-demo.1`;
-live re-verification against `yugabyted-ui` is recorded separately.
-`python3 verify-package.py .` passed **22/22 checks** after the change.
+embeds nine screenshots. The results below this section were recorded for
+`0.0.10-demo.1`. `python3 verify-package.py .` passed **22/22 checks** after
+the change.
+
+Live check of `0.0.10-demo.2` on 2026-11-16 with Codex CLI 0.160.0 on Linux,
+plugin installed from this branch in a clean Codex home with only the `platty`
+MCP entry:
+
+- The step 3 verification prompt identified `yugabyted-ui`
+  (`GFJFxAeR3ukQlw0-IynSq`), listed the two repositories, read one source file,
+  and reported the six unavailable tools.
+- The first question returned `GET /api/slow_queries`, `GetSlowQueries`, and
+  the `pg_stat_statements` join with `pg_database` and `pg_authid`, with
+  repository, file, and line evidence.
 
 ## Verified
 
