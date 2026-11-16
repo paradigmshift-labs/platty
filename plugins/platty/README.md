@@ -3,7 +3,7 @@
 This plugin contains one English skill: `platty-search`, with eight reference
 files. It investigates screens, APIs, services, SQL, data definitions, batch
 source, and change impact through the configured **`platty`** MCP connection.
-It checks that the project is the expected `petshop-full` before retrieving
+It checks that the project is the expected `yugabyted-ui` before retrieving
 project content. Design drafts require an explicit request.
 
 Follow the [installation guide](../../GETTING_STARTED.md) or the
@@ -13,7 +13,7 @@ from plugin installation. No access token or automatic updater is included.
 In Codex, select the `platty-search` skill or use:
 
 ```text
-$platty:platty-search Explain what POST /on/ctrt/tnnt/saveCtrtTnntList does. Use only platty, answer in English, and cite the source.
+$platty:platty-search Which API does the Slow Queries screen call, and which database views does the backend query? Use only platty, answer in English, and cite the source.
 ```
 
 In Claude Code, use `/platty:platty-search` with the same question.

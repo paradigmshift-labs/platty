@@ -9,6 +9,28 @@ marketplace pinned to `feat/demo`. Installation archives and their packager
 have been removed. Application source, production rows and access credentials
 are not distributed with the plugin.
 
+## Project target change
+
+On 2026-11-16 the expected project changed from `petshop-full` to
+`yugabyted-ui` in version `0.0.10-demo.2`, because `petshop-full` was
+deactivated on the server. The project notes, guides and example questions
+now use yugabyted-ui facts observed that day. The Claude Code first-question
+screenshot showed the retired question and was removed, so the manual now
+embeds nine screenshots. The results below this section were recorded for
+`0.0.10-demo.1`. `python3 verify-package.py .` passed **22/22 checks** after
+the change.
+
+Live check of `0.0.10-demo.2` on 2026-11-16 with Codex CLI 0.160.0 on Linux,
+plugin installed from this branch in a clean Codex home with only the `platty`
+MCP entry:
+
+- The step 3 verification prompt identified `yugabyted-ui`
+  (`GFJFxAeR3ukQlw0-IynSq`), listed the two repositories, read one source file,
+  and reported the six unavailable tools.
+- The first question returned `GET /api/slow_queries`, `GetSlowQueries`, and
+  the `pg_stat_statements` join with `pg_database` and `pg_authid`, with
+  repository, file, and line evidence.
+
 ## Verified
 
 - `python3 verify-package.py .`: **22/22 checks passed**.
@@ -30,14 +52,10 @@ are not distributed with the plugin.
 - Registered MCP as **`platty`** using direct
   `http_headers = { Authorization = "Bearer …" }` configuration in a disposable
   container, without `bearer_token_env_var`. Codex's actual `/mcp` screen showed
-  **`platty: connected (59 tools)`**; a fresh `project_get` confirmed
-  **petshop-full**. The real credential was supplied privately and is absent
+  **`platty: connected (59 tools)`**; a fresh `project_get` confirmed the
+  expected project of that time. The real credential was supplied privately and is absent
   from the repository and screenshots. See
   [MCP connection](guide/en/verification/codex-mcp.png).
-- Earlier authenticated delivery validation confirmed **petshop-full**, listed **10 authorized repositories** with no
-  next page, and read **473 characters of real Java source** from the tenant
-  controller in `pts-env`. Source text and credentials were not printed or
-  added to this repository.
 - Browser verification at **320, 768 and 1280 px**: no horizontal overflow;
   screenshot viewers, keyboard closing/focus restoration, command copy/selection
   and section links all passed with no JavaScript errors.
@@ -143,6 +161,6 @@ directory. Native Windows setup was not executed in the Linux test. Test
 credentials and containers are removed after verification; the host's existing MCP configuration is preserved.
 
 The MCP name is `platty`; the endpoint remains
-`https://meko-poc.platty-ai.com/mcp` and the expected project is `petshop-full`.
+`https://meko-poc.platty-ai.com/mcp` and the expected project is `yugabyted-ui`.
 Missing menu context, scheduler imports and search-guide content remain explicit
 evidence gaps as described in the manual.

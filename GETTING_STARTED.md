@@ -31,7 +31,7 @@ claude plugin install platty@platty --scope user
 Obtain your Platty access token from the administrator. Follow the
 [Platty token steps](USER_GUIDE.md#3-paste-your-platty-token-and-connect) to
 configure MCP as **`platty`** at `https://meko-poc.platty-ai.com/mcp`.
-The expected project is `petshop-full`. Credentials are not included.
+The expected project is `yugabyted-ui`. Credentials are not included.
 
 In a new Codex CLI session, open `/skills` → **List skills** and confirm
 **`platty-search (platty)`** appears. Select it by typing `$platty` and pressing

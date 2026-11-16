@@ -18,10 +18,10 @@ skill_root = root / 'plugins/platty/skills/platty-search'
 files = list(skill_root.rglob('*.md'))
 text = '\n'.join(p.read_text() for p in files)
 check('English skill and eight English references', len(list((skill_root / 'references').glob('*.md'))) == 8 and not re.search(r'[\uac00-\ud7a3]', text))
-check('MCP connection name is platty with expected project', 'Use only the configured `platty` MCP connection' in text and 'petshop-full' in text)
+check('MCP connection name is platty with expected project', 'Use only the configured `platty` MCP connection' in text and 'yugabyted-ui' in text)
 check('no previous customer repository assumptions', not re.search(r'ssgdx|shinsegae|heroines|developer-search-v7132', text, re.I))
 check('all three capability gaps explicitly handled', all(s in text for s in ['guide_file_missing','authorized_context_missing','scheduler_not_imported']))
-check('repository-relative paths retain module prefix', 'repository-relative' in text and 'pts-env-app/src/' in text)
+check('repository-relative paths with a tested example', 'repository-relative' in text and 'cmd/server/handlers/' in text)
 check('incomplete searches cannot establish absence', 'complete' in text and 'truncated' in text and 'absence' in text)
 broken = []
 for p in root.rglob('*.md'):
@@ -64,7 +64,7 @@ def valid_screenshot(attrs):
     original = root/'guide/en/verification'/attrs['data-screenshot']
     prefix = 'data:image/png;base64,'
     return bool(attrs.get('alt')) and original.is_file() and attrs.get('src', '').startswith(prefix) and base64.b64decode(attrs['src'][len(prefix):], validate=True) == original.read_bytes()
-check('ten original screenshots embedded for both clients offline', len(parser.screenshots) == 10 and len({a['data-screenshot'] for a in parser.screenshots}) == 10 and all(valid_screenshot(a) for a in parser.screenshots))
+check('nine original screenshots embedded for both clients offline', len(parser.screenshots) == 9 and len({a['data-screenshot'] for a in parser.screenshots}) == 9 and all(valid_screenshot(a) for a in parser.screenshots))
 check('both client tabs and complete instructions included in one file', all(s in html_text for s in ['role="tablist"', 'id="tab-codex"', 'id="tab-claude"', 'id="codex-content"', 'id="claude-content"', 'role="tabpanel"', 'claude plugin install platty@platty --scope user']))
 claude_html = (root/'guide/en/platty-claude-code.html').read_text()
 check('previous Claude entry contains the same switchable manual', claude_html.replace('data-default-client="claude"', 'data-default-client="codex"', 1) == html_text)
