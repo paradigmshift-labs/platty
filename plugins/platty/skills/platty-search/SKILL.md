@@ -18,7 +18,7 @@ application files, change data, or invoke the application APIs being studied.
 
 Once per session, call `context_status`, `workspace_repo_list`, and
 `code_search_guide_get` on this connection. Omit `projectId` to use its default;
-check the echoed project against the expected `petshop-full` (use `project_get`
+check the echoed project against the expected `yugabyted-ui` (use `project_get`
 with `view: summary` for its name if status returns only its ID). If it differs,
 report the mismatch and clarify the intended project before reading its content.
 Map repository names to the returned `repoId` values.
