@@ -29,7 +29,7 @@ The plugin does not supply your access credential.
 | Marketplace | `platty` |
 | Plugin | `platty` |
 | Skill | `platty-search` |
-| Package version | `0.0.10-demo.1` |
+| Package version | `0.0.10-demo.2` |
 
 The package contains one plugin, one English skill and eight English reference
 files. It includes separate [Codex](config/codex.config.toml.example) and

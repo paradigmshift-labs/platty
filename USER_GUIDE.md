@@ -1,6 +1,6 @@
 # Platty setup and user guide
 
-Version `0.0.10-demo.1` · Prepared November 2, 2026 (Asia/Seoul)
+Version `0.0.10-demo.2` · Prepared November 16, 2026 (Asia/Seoul)
 
 This guide is for developers using the Platty code analysis environment. Choose
 **Codex** or **Claude Code**; you do not need both. The package adds one
