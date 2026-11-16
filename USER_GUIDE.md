@@ -25,7 +25,7 @@ access to:
 https://meko-poc.platty-ai.com/mcp
 ```
 
-The expected project is `petshop-full`. The token for this connection is
+The expected project is `yugabyted-ui`. The token for this connection is
 separate from your OpenAI/Anthropic account credentials. Request an individual
 or otherwise administrator-approved token; this package does not contain one.
 
@@ -146,9 +146,9 @@ capabilities. Do not print credentials or use another MCP connection.
 Answer in English.
 ```
 
-The server should identify `petshop-full` (use `project_get` if its name is
-not in the status response). On November 2, 2026, ten repositories were
-available; their source analysis was dated October 30. Your token may have
+The server should identify `yugabyted-ui` (use `project_get` if its name is
+not in the status response). On November 16, 2026, two repositories were
+available; their source analysis was dated November 14. Your token may have
 narrower access and later snapshots can differ. A project mismatch should be
 resolved with your administrator before asking project-specific questions.
 
@@ -157,19 +157,19 @@ Now select the installed skill from the client's skill picker, or type:
 Claude Code:
 
 ```text
-/platty:platty-search Explain what POST /on/ctrt/tnnt/saveCtrtTnntList does. Use only platty, answer in English, and cite source locations.
+/platty:platty-search Which API does the Slow Queries screen call, and which database views does the backend query? Use only platty, answer in English, and cite source locations.
 ```
 
 Codex:
 
 ```text
-$platty:platty-search Explain what POST /on/ctrt/tnnt/saveCtrtTnntList does. Use only platty, answer in English, and cite source locations.
+$platty:platty-search Which API does the Slow Queries screen call, and which database views does the backend query? Use only platty, answer in English, and cite source locations.
 ```
 
 If your client displays a different qualified skill label, choose the
 `platty-search` entry belonging to `Platty` / `platty@platty` in its
 picker. The live server operations for this prompt read source; the assistant
-must not execute the save API.
+must not execute the APIs it reads about.
 
 Successful setup means a real project/repository call and a real document or
 source read succeed. A plugin appearing in a list or a green server label alone
@@ -184,10 +184,11 @@ condition. These prompts illustrate read-only investigations:
 
 | Goal | Example prompt |
 | --- | --- |
-| Read a business rule | Find the document titled "매장 휴무 및 운영 관리 업무 규칙" and explain two rules in English. Mark document-only statements. |
-| Explain a screen | In pts-adm-web/SHOP/SHOP0103.xfdl, explain the save function's validation and confirmation checks. Cite the source and identify unread server-side checks. |
-| Trace an API | Trace POST /on/ctrt/tnnt/saveCtrtTnntList from controller to service and SQL. List the written tables, SQL IDs, conditions, and returned values. |
-| Investigate other writers | Find the APIs and batch jobs that write CTRT_TNNT_M. Report search completeness and cite the statements actually read. |
+| Trace a screen to its data | Which API does the Slow Queries screen call, and which database views does the backend query? |
+| Explain a screen state | When is a node shown as Bootstrapping on the Nodes tab? |
+| Find where a value is stored | Where is the on/off state of an alert configuration saved? |
+| Explain a calculation | What does "Fault Tolerance" on the overview page mean, and how is None/Node/Zone/Region decided? |
+| Inventory related APIs | List the xCluster APIs. Does the UI call the safe-time API? |
 | Evaluate a planned change | I plan to change [exact column or condition] from [current] to [proposed]. Investigate affected screens, APIs, jobs, and integrations. Do not edit code or data. |
 
 Answers should give a short English conclusion followed by a developer
@@ -203,13 +204,17 @@ show code paths, SQL statements, data definitions, and documented rules. It
 does not establish today's database rows, actual permissions, a successful
 production execution, or current external-system behavior.
 
-The current snapshot has three known gaps:
+The current snapshot has six unavailable tools:
 
 | Gap | What still works | What remains unverified |
 | --- | --- | --- |
 | Code search guide not supplied | Repository discovery, source search and exact file reads | A prewritten project-navigation guide |
-| Menu context not supplied | Screen files, API and source-based tracing | Exact authorized menu paths and menu visibility |
-| Scheduler data not imported | Batch source definitions and SQL | Scheduler dependency order, enabled state and actual execution times |
+| Term and menu context not supplied (`term_lookup`, `menu_lookup`) | Glossary documents, screen files, routes and source-based tracing | Authorized term lookups, exact menu paths and menu visibility |
+| Term alias tools unavailable (`term_alias_add`, `term_alias_remove`) | Read-only retrieval | Adding or removing term aliases |
+| Scheduler data not imported | Source reads; this project has no batch jobs | Scheduler dependency tracing |
+
+Data dictionary documents hold no items and there is no DB catalog, so answers
+about data come from source reads.
 
 These gaps do not mean authentication failed. The skill records them and
 continues supported reads. Results marked `needs_review`, incomplete document
@@ -223,7 +228,7 @@ An empty incomplete search does not prove that a feature or writer is absent.
 | `401 Unauthorized` / `AUTHENTICATION_REQUIRED` | Replace the token placeholder in the active configuration. Check the exact URL, one `Bearer ` prefix and duplicate connection entries. Restart; ask the administrator to validate/reissue the token if it persists. |
 | `403` or expected repositories missing | Ask the administrator to check that token's project/repository permissions. Do not substitute another connection. |
 | Token was saved but the app still fails | The app or remote VM may use another environment. Edit the configuration on the actual execution host and restart the client. |
-| Project is not `petshop-full` | Stop project retrieval and verify the endpoint, token scope and server default with the administrator. |
+| Project is not `yugabyted-ui` | Stop project retrieval and verify the endpoint, token scope and server default with the administrator. |
 | `platty-search` is not available | Check that `platty@platty` is installed, enabled and loaded in a new session. Check for another plugin exposing the same skill name. |
 | The CLI does not recognize `plugin` or an installation subcommand | Check its local `--help` and use a client version that supports these plugin commands. Keep the current package; do not install a different Platty distribution as a workaround. |
 | A source read says `Path does not exist` | Use the exact repository-relative path returned by source search, including its module directory. The reported sourceRoot is not an instruction to remove that prefix. |

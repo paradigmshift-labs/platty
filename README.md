@@ -25,7 +25,7 @@ The plugin does not supply your access credential.
 | --- | --- |
 | MCP connection name | `platty` |
 | MCP endpoint | `https://meko-poc.platty-ai.com/mcp` |
-| Expected default project | `petshop-full` |
+| Expected default project | `yugabyted-ui` |
 | Marketplace | `platty` |
 | Plugin | `platty` |
 | Skill | `platty-search` |
@@ -43,7 +43,7 @@ or access to the production database. Credentials are supplied separately by the
 Platty administrator. The configuration templates use `YOUR_PLATTY_TOKEN` as a placeholder; replace
 it only in your private local configuration.
 
-Project observations were checked on November 2, 2026 (Asia/Seoul). Refresh
+Project observations were checked on November 16, 2026 (Asia/Seoul). Refresh
 repository and tool availability from the server when starting a new session.
 The currently observed capability gaps are described in the
 [project notes](plugins/platty/skills/platty-search/references/project-notes.md).
