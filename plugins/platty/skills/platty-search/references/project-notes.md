@@ -1,6 +1,6 @@
 # Platty project reference
 
-Observed November 16, 2026 (Asia/Seoul). These facts are a starting map; live MCP
+Observed November 16, 2026 (Asia/Seoul); capability table re-checked the same day after the term registry was seeded. These facts are a starting map; live MCP
 results take precedence. This reference describes one deployment, not a rule
 for other Platty customers.
 
@@ -50,26 +50,34 @@ The UI client calls `/<path>` with base `/api` (`src/helpers/api.ts`,
 
 ## Capability branches
 
-The server listed 59 tools; 53 were available and these six were reported
-missing by `context_status.toolAvailability`:
+The server listed 59 tools; 56 were available and these three were reported
+missing by `context_status.toolAvailability` (re-checked November 16, 2026,
+after the term registry was seeded). Call `context_status` first and follow
+its live `toolAvailability`: a tool it lists as available is used even if an
+older note says otherwise.
 
 | Tool | Observed reason | Retrieval behavior |
 | --- | --- | --- |
 | `code_search_guide_get` | `guide_file_missing` | Use the repository inventory, bounded source search, and exact source reads to establish navigation facts. Record that the guide is unavailable. |
 | `job_dependency_trace` | `scheduler_not_imported` | This project has no batch jobs. Report scheduler dependency order and run status as not applicable rather than inferring them. |
-| `term_lookup` | `authorized_context_missing` | Returns `availability: "not_imported"` with zero results. Establish terms from glossary documents and source. |
 | `menu_lookup` | `authorized_context_missing` | Returns `availability: "not_imported"` with zero results. Locate screens using source and route evidence; do not invent menu paths or visibility. |
-| `term_alias_add` | `authorized_context_missing` | Write tool; unavailable. Do not attempt alias changes. |
-| `term_alias_remove` | `authorized_context_missing` | Write tool; unavailable. Do not attempt alias changes. |
 
 A deterministic missing capability is a valid `Unavailable` state, not a reason
 to repeat the same failed call twice. If the server later supplies it, use its
 live schema and response. A transport/authentication failure is a separate
 connection problem: stop retrieval on that connection and report it.
 
-Data dictionary documents exist but hold 0 items, and there is no DB catalog.
-Answers come from source reads with `workspace_search` and
-`readonly_workspace_shell`. Use live schemas instead of old workarounds. Check
+`term_lookup` is available. The term registry holds cards for the two Voyager
+tables in the DB catalog, `ybvoyager_visualizer.ybvoyager_visualizer_metadata`
+(15 columns) and `ybvoyager_visualizer.ybvoyager_visualizer_table_metrics`
+(8 columns): 2 table cards and 23 column cards. Use it to resolve column names
+and their tables before searching source. The other tables the backend reads
+(`pg_stat_statements`, `pg_authid`, `pg_database`, `pg_stat_all_indexes`,
+`pg_stat_progress_create_index`, `system.metrics`) have no catalog entry and no
+card; trace them in source. Screen labels are not in the registry, so screen
+words still come from screen files and `src/translations/en.json`. Data
+dictionary documents still hold 0 items. Source reads with `workspace_search`
+and `readonly_workspace_shell` confirm every claim. Use live schemas instead of old workarounds. Check
 `complete`, `truncated`, `countKind`, repository statuses, and continuation
 cursors before claiming a complete inventory or absence.
 
