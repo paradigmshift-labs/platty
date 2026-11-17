@@ -20,7 +20,7 @@ text = '\n'.join(p.read_text() for p in files)
 check('English skill and eight English references', len(list((skill_root / 'references').glob('*.md'))) == 8 and not re.search(r'[\uac00-\ud7a3]', text))
 check('MCP connection name is platty with expected project', 'Use only the configured `platty` MCP connection' in text and 'yugabyted-ui' in text)
 check('no previous customer repository assumptions', not re.search(r'ssgdx|shinsegae|heroines|developer-search-v7132', text, re.I))
-check('all three capability gaps explicitly handled', all(s in text for s in ['guide_file_missing','authorized_context_missing','scheduler_not_imported']))
+check('both capability gaps explicitly handled and menu lookup documented', all(s in text for s in ['guide_file_missing','scheduler_not_imported','`menu_lookup` is available']))
 check('repository-relative paths with a tested example', 'repository-relative' in text and 'cmd/server/handlers/' in text)
 check('incomplete searches cannot establish absence', 'complete' in text and 'truncated' in text and 'absence' in text)
 broken = []
