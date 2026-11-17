@@ -1,6 +1,6 @@
 # Platty setup and user guide
 
-Version `0.0.10-demo.2` · Prepared November 16, 2026 (Asia/Seoul)
+Version `0.0.10-demo.3` · Prepared November 17, 2026 (Asia/Seoul)
 
 This guide is for developers using the Platty code analysis environment. Choose
 **Codex** or **Claude Code**; you do not need both. The package adds one
@@ -204,17 +204,19 @@ show code paths, SQL statements, data definitions, and documented rules. It
 does not establish today's database rows, actual permissions, a successful
 production execution, or current external-system behavior.
 
-The current snapshot has six unavailable tools:
+The current snapshot has three unavailable tools:
 
 | Gap | What still works | What remains unverified |
 | --- | --- | --- |
 | Code search guide not supplied | Repository discovery, source search and exact file reads | A prewritten project-navigation guide |
-| Term and menu context not supplied (`term_lookup`, `menu_lookup`) | Glossary documents, screen files, routes and source-based tracing | Authorized term lookups, exact menu paths and menu visibility |
-| Term alias tools unavailable (`term_alias_add`, `term_alias_remove`) | Read-only retrieval | Adding or removing term aliases |
+| Menu context not supplied (`menu_lookup`) | Screen files, routes and source-based tracing | Exact menu paths and menu visibility |
 | Scheduler data not imported | Source reads; this project has no batch jobs | Scheduler dependency tracing |
 
-Data dictionary documents hold no items and there is no DB catalog, so answers
-about data come from source reads.
+`term_lookup` returns a screen-term glossary: 35 YugabyteDB terms with their
+screen labels, and 12 Migrations labels tied to Voyager table columns. The
+definitions are drafts, and the cards do not yet carry screen locations, so the
+skill confirms each value path in source. Data dictionary documents hold no
+items; other answers about data come from source reads.
 
 These gaps do not mean authentication failed. The skill records them and
 continues supported reads. Results marked `needs_review`, incomplete document

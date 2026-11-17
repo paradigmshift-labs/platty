@@ -1,6 +1,7 @@
 # Platty project reference
 
-Observed November 16, 2026 (Asia/Seoul). These facts are a starting map; live MCP
+Observed November 16, 2026 (Asia/Seoul); tool availability and the term
+registry were rechecked November 17, 2026. These facts are a starting map; live MCP
 results take precedence. This reference describes one deployment, not a rule
 for other Platty customers.
 
@@ -50,25 +51,42 @@ The UI client calls `/<path>` with base `/api` (`src/helpers/api.ts`,
 
 ## Capability branches
 
-The server listed 59 tools; 53 were available and these six were reported
-missing by `context_status.toolAvailability`:
+The server listed 59 tools on November 17, 2026; 56 were available and these
+three were reported missing by `context_status.toolAvailability`:
 
 | Tool | Observed reason | Retrieval behavior |
 | --- | --- | --- |
 | `code_search_guide_get` | `guide_file_missing` | Use the repository inventory, bounded source search, and exact source reads to establish navigation facts. Record that the guide is unavailable. |
 | `job_dependency_trace` | `scheduler_not_imported` | This project has no batch jobs. Report scheduler dependency order and run status as not applicable rather than inferring them. |
-| `term_lookup` | `authorized_context_missing` | Returns `availability: "not_imported"` with zero results. Establish terms from glossary documents and source. |
 | `menu_lookup` | `authorized_context_missing` | Returns `availability: "not_imported"` with zero results. Locate screens using source and route evidence; do not invent menu paths or visibility. |
-| `term_alias_add` | `authorized_context_missing` | Write tool; unavailable. Do not attempt alias changes. |
-| `term_alias_remove` | `authorized_context_missing` | Write tool; unavailable. Do not attempt alias changes. |
+
+`term_alias_add` and `term_alias_remove` are listed as available, but they are
+write tools. This delivery is read-only: do not call them.
+
+### Screen-term glossary (`term_lookup`)
+
+`term_lookup` is available. Use it first when a question names a screen label or
+a YugabyteDB term (for example Leader Tablets, PITR, xCluster, Started On).
+
+- 35 concept cards cover the terms used on the UI screens. Each has a short
+  definition and the screen labels that mean it as aliases.
+- 12 Migrations screen labels are also names on column cards of
+  `ybvoyager_visualizer.ybvoyager_visualizer_metadata` (for example Started On
+  is `invocation_timestamp`). The screen label Complexity is not that table's
+  `complexity` column: the list shows the assessment report value instead.
+- Definitions are drafts written from the source, not confirmed by the
+  customer. Treat a card as a lead and confirm the value path in source.
+- Cards have no screen or API locations yet (`totalLocations: 0`). Find the
+  screen, API and handler with source reads.
 
 A deterministic missing capability is a valid `Unavailable` state, not a reason
 to repeat the same failed call twice. If the server later supplies it, use its
 live schema and response. A transport/authentication failure is a separate
 connection problem: stop retrieval on that connection and report it.
 
-Data dictionary documents exist but hold 0 items, and there is no DB catalog.
-Answers come from source reads with `workspace_search` and
+Data dictionary documents exist but hold 0 items. The only DB catalog is the two
+Voyager tables, visible through `term_lookup` column cards. Other answers about
+data come from source reads with `workspace_search` and
 `readonly_workspace_shell`. Use live schemas instead of old workarounds. Check
 `complete`, `truncated`, `countKind`, repository statuses, and continuation
 cursors before claiming a complete inventory or absence.
