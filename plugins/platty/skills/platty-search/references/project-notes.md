@@ -52,7 +52,9 @@ The UI client calls `/<path>` with base `/api` (`src/helpers/api.ts`,
 ## Capability branches
 
 The server listed 59 tools on November 17, 2026; 56 were available and these
-three were reported missing by `context_status.toolAvailability`:
+three were reported missing by `context_status.toolAvailability`. Follow the
+live `toolAvailability` over this table: use a tool it lists as available, and
+treat one it lists as missing as unavailable, even when this note says otherwise.
 
 | Tool | Observed reason | Retrieval behavior |
 | --- | --- | --- |
