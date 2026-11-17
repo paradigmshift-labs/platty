@@ -214,7 +214,6 @@ The current snapshot has three unavailable tools:
 
 `term_lookup` returns a screen-term glossary: 35 YugabyteDB terms with their
 screen labels, and 12 Migrations labels tied to Voyager table columns. The
-definitions are drafts, and the cards do not yet carry screen locations, so the
 skill confirms each value path in source. Data dictionary documents hold no
 items; other answers about data come from source reads.
 
