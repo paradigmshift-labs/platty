@@ -31,27 +31,6 @@ MCP entry:
   the `pg_stat_statements` join with `pg_database` and `pg_authid`, with
   repository, file, and line evidence.
 
-## Term lookup update (0.0.10-demo.3)
-
-On 2026-11-17 the server gained a screen-term glossary: 35 concept cards with
-their screen labels, and 12 Migrations labels on Voyager column cards.
-`context_status` now reports 56 of 59 tools available; only
-`code_search_guide_get`, `job_dependency_trace` and `menu_lookup` are missing.
-The project notes and user guide were updated to match, and the version was
-raised to `0.0.10-demo.3`. `python3 verify-package.py .` passed **22/22 checks**
-and `claude plugin validate .` passed.
-
-Live check on 2026-11-17 with Claude Code 2.1.294 on Linux, using this plugin
-directory and only the `platty` MCP entry, from an empty folder:
-
-- The step 3 verification prompt identified `yugabyted-ui`, listed both
-  repositories, read a source file, and reported the three missing tools.
-- Natural questions without a tool hint ("What does Leader Tablets mean on the
-  Nodes table…", "what does the Complexity column show…") called
-  `term_lookup` first, then confirmed the value path in source:
-  `GET /api/nodes` and `user_tablets_leaders + system_tablets_leaders`, and the
-  assessment report value that overwrites the `complexity` column.
-
 ## Verified
 
 - `python3 verify-package.py .`: **22/22 checks passed**.

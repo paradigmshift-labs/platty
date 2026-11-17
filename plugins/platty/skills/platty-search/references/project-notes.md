@@ -76,10 +76,9 @@ a YugabyteDB term (for example Leader Tablets, PITR, xCluster, Started On).
   `ybvoyager_visualizer.ybvoyager_visualizer_metadata` (for example Started On
   is `invocation_timestamp`). The screen label Complexity is not that table's
   `complexity` column: the list shows the assessment report value instead.
-- Definitions are drafts written from the source, not confirmed by the
-  customer. Treat a card as a lead and confirm the value path in source.
-- Cards have no screen or API locations yet (`totalLocations: 0`). Find the
-  screen, API and handler with source reads.
+- Treat a card as a lead and confirm the value path in source.
+- The 12 Migrations labels return file and line locations; start from them.
+  For other screens, find the screen, API and handler with source reads.
 
 A deterministic missing capability is a valid `Unavailable` state, not a reason
 to repeat the same failed call twice. If the server later supplies it, use its
