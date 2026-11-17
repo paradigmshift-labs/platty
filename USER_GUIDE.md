@@ -204,12 +204,11 @@ show code paths, SQL statements, data definitions, and documented rules. It
 does not establish today's database rows, actual permissions, a successful
 production execution, or current external-system behavior.
 
-The current snapshot has three unavailable tools:
+The current snapshot has two unavailable tools:
 
 | Gap | What still works | What remains unverified |
 | --- | --- | --- |
 | Code search guide not supplied | Repository discovery, source search and exact file reads | A prewritten project-navigation guide |
-| Menu context not supplied (`menu_lookup`) | Screen files, routes and source-based tracing | Exact menu paths and menu visibility |
 | Scheduler data not imported | Source reads; this project has no batch jobs | Scheduler dependency tracing |
 
 `term_lookup` returns a screen-term glossary: 35 YugabyteDB terms with their

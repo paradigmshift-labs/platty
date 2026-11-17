@@ -51,8 +51,8 @@ The UI client calls `/<path>` with base `/api` (`src/helpers/api.ts`,
 
 ## Capability branches
 
-The server listed 59 tools on November 17, 2026; 56 were available and these
-three were reported missing by `context_status.toolAvailability`. Follow the
+The server listed 59 tools on November 17, 2026; 57 were available and these
+two were reported missing by `context_status.toolAvailability`. Follow the
 live `toolAvailability` over this table: use a tool it lists as available, and
 treat one it lists as missing as unavailable, even when this note says otherwise.
 
@@ -60,7 +60,13 @@ treat one it lists as missing as unavailable, even when this note says otherwise
 | --- | --- | --- |
 | `code_search_guide_get` | `guide_file_missing` | Use the repository inventory, bounded source search, and exact source reads to establish navigation facts. Record that the guide is unavailable. |
 | `job_dependency_trace` | `scheduler_not_imported` | This project has no batch jobs. Report scheduler dependency order and run status as not applicable rather than inferring them. |
-| `menu_lookup` | `authorized_context_missing` | Returns `availability: "not_imported"` with zero results. Locate screens using source and route evidence; do not invent menu paths or visibility. |
+
+`menu_lookup` is available. The sidebar menu is imported as the `yugabyted-ui`
+set: Universe > Universe (`/`), Universe > Databases (`/databases`),
+Universe > Performance (`/performance/metrics`), Universe > Alerts
+(`/alerts/tabNotifications`) and Migrations > Migrations (`/migrations`).
+`route_resolve` page rows carry the same `menuPaths`. Overview tabs (Nodes,
+xCluster, Activity, Settings) and Databases tabs have no menu entry of their own.
 
 `term_alias_add` and `term_alias_remove` are listed as available, but they are
 write tools. This delivery is read-only: do not call them.
